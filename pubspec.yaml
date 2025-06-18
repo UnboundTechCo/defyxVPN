@@ -1,0 +1,66 @@
+name: defyx_vpn
+description: "A new Vpn app."
+publish_to: 'none'
+version: 2.3.2+35
+
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Backend Packages
+  flutter_riverpod: ^2.6.1
+  go_router: ^15.1.2
+  shared_preferences: ^2.2.2
+  dio: ^5.8.0+1
+  shimmer: ^3.0.0
+  shake: ^3.0.0
+  vibration: ^3.1.3
+  google_mobile_ads: ^6.0.0
+  url_launcher: ^6.3.1
+  intl: ^0.20.2
+  flame: ^1.29.0
+  webview_flutter: ^4.13.0
+
+
+  # Frontend Packages
+  flutter_screenutil: ^5.9.3
+  flutter_svg: ^2.1.0
+  cupertino_icons: ^1.0.8
+  lottie: ^3.3.1
+  fluttertoast: ^8.2.12
+  path_drawing: ^1.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+    - assets/lottie/
+    - assets/flags/
+    - assets/settings/config.json
+
+  
+  fonts:
+    - family: Lato
+      fonts:
+        - asset: assets/fonts/Lato-Regular.ttf
+        - asset: assets/fonts/Lato-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Lato-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Lato-Thin.ttf
+          weight: 100
+        - asset: assets/fonts/Lato-Black.ttf
+          weight: 900
