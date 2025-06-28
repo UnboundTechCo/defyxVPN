@@ -64,7 +64,14 @@ The app is built using:
 
 ## License
 
-This project is licensed under the [LICENSE] - see the LICENSE file for details.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+## Third-Party Licenses
+
+This project uses the following third-party components:
+
+- [Warp Plus](https://github.com/bepass-org/warp-plus): License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
+- [Outline](https://github.com/Jigsaw-Code/outline-apps): License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
 
 ## Support
 
