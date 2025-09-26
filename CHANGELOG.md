@@ -2,7 +2,10 @@
 
 | Version | Build | Date | Changes| Force |
 |---------|-------|------|--------|-------|
-| v2.3.0  | 34 | 2025-06-09 | • Adjust height of SizedBox for layout consistency. | ✅ |
+| v2.6.0  | 51 | 2025-07-22 | • Disable screen rotation on iPhone<br>• Enable screen rotation on iPad<br>• Update scanner for the Warp-Plus core<br>• Upgrade API to version 2<br>• Fix minor issues | ✅ |
+| v2.4.0  | 41 | 2025-06-26 | • Fixed the Outline core<br>• Dynamic app color changes based on different states<br>• Fixed Warp-Plus core instability in the first step of Flowline<br>• Fixed issue with the Dino game not running when offline<br>• Resolved advertisement display issue<br>• Minor other changes | ✅ |
+| v2.4.0  | 40 | 2025-06-23 | • Added Outline<br>• Flowline added in a way to get data from api | ✅ |
+| v2.3.1  | 34 | 2025-06-09 | • Adjust height of SizedBox for layout consistency. | ✅ |
 | v2.3.0  | 33 | 2025-06-08 | • add TipsWidget to main_screen.dart for improved user guidance | ✅ |
 | v2.2.1  | 31 | 2025-06-05 | • Fix scroll to top after ads countdown | ✅ |
 | v2.2.0  | 29 | 2025-06-05 | • Added path_drawing dependency<br>• Introduced Shield SVG asset<br>• Enhanced connection button animations | ✅ |
@@ -23,6 +26,27 @@
 | v1.0.0  | 10 | 2025-04-20 | • Initial beta release  | ❌|
 
 ## Detailed Changes
+
+## v2.6.8 (Build 61)
+- Preferences UI added
+- Update dialog added
+
+## v2.5.7 (Build 50)
+- Fixed UI rotation bug on iPadOS
+- Prevented UI rotation on Android and iOS
+- Updated Google Ads configuration
+
+## v2.4.0 (Build 41)
+- Fixed the Outline core
+- Dynamic app color changes based on different states
+- Fixed Warp-Plus core instability in the first step of Flowline
+- Fixed issue with the Dino game not running when offline
+- Resolved advertisement display issue
+- Minor other changes
+
+## v2.4.0 (Build 40)
+- Added Outline
+- Flowline added in a way to get data from api
 
 ## v2.3.1 (Build 34)
 - Adjust height of SizedBox for layout consistency.

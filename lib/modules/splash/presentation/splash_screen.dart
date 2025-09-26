@@ -1,4 +1,3 @@
-import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -56,11 +55,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [
-            AppColors.topGradient,
-            AppColors.middleGradient,
-            AppColors.bottomGradient,
-          ],
+          colors: [Color(0xFF18181E), Color(0xFF1C443B), Color(0xFF1F5F4D)],
           stops: [0.2, 0.7, 1.0],
         ),
       ),

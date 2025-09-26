@@ -27,12 +27,10 @@ class _ConnectionButtonState extends State<ConnectionButton>
   late Animation<double> _scaleAnimation;
   late Animation<double> _shieldRotationAnimation;
 
-  // Timer variables
   Timer? _timer;
   int _seconds = 0;
   String _formattedTime = "00:00:00";
 
-  // Keys for shared preferences
   static const String _connectionStartTimeKey = 'connection_start_time';
   static const String _lastSecondsCountKey = 'last_seconds_count';
   static const String _isConnectedKey = 'is_connected';
@@ -85,9 +83,10 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
   @override
   void dispose() {
+    _timer?.cancel();
+    _timer = null;
     _animationController.dispose();
     _shieldLoadingController.dispose();
-    _timer?.cancel();
     super.dispose();
   }
 
@@ -140,13 +139,20 @@ class _ConnectionButtonState extends State<ConnectionButton>
     _updateFormattedTime();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _seconds++;
-        _updateFormattedTime();
-        if (_seconds % 5 == 0) {
-          _saveConnectionTime();
-        }
-      });
+      if (!mounted) return;
+
+      _seconds++;
+      _updateFormattedTime();
+
+      // CRITICAL FIX: Only setState if actually mounted and timer display is needed
+      if (mounted) {
+        setState(() {});
+      }
+
+      // Save less frequently to reduce I/O operations
+      if (_seconds % 10 == 0) {
+        _saveConnectionTime();
+      }
     });
 
     _saveConnectionTime();
@@ -181,8 +187,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
     final hours = _seconds ~/ 3600;
     final minutes = (_seconds % 3600) ~/ 60;
     final seconds = _seconds % 60;
-    _formattedTime =
-        "${hours.toString().padLeft(2, '0')}:"
+    _formattedTime = "${hours.toString().padLeft(2, '0')}:"
         "${minutes.toString().padLeft(2, '0')}:"
         "${seconds.toString().padLeft(2, '0')}";
   }
@@ -231,6 +236,10 @@ class _ConnectionButtonState extends State<ConnectionButton>
         // Start shield loading animation
         _shieldLoadingController.repeat();
         break;
+      case vpn.ConnectionStatus.disconnecting:
+        // Start shield loading animation
+        _shieldLoadingController.repeat();
+        break;
       default:
         if (_timer != null) _stopTimer();
         _shieldLoadingController.stop();
@@ -244,6 +253,12 @@ class _ConnectionButtonState extends State<ConnectionButton>
         return Stack(
           alignment: Alignment.center,
           children: [
+            // Extra outer ring
+            _buildPulseRing(
+              opacity: (0.3 * (1 - _pulseAnimation.value)).clamp(0.02, 0.1),
+              scale: 1.1 + (_pulseAnimation.value * 0.2),
+            ),
+
             // Outer ring
             _buildPulseRing(
               opacity: (0.35 * (1 - _pulseAnimation.value)).clamp(0.05, 0.15),
@@ -296,7 +311,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
           AppIcons.shieldAnime(width: _buttonSize, height: _buttonSize),
 
           // Shield loading animation overlay (only for analyzing state)
-          if (connectionState.status == vpn.ConnectionStatus.analyzing)
+          if (connectionState.status == vpn.ConnectionStatus.analyzing ||
+              connectionState.status == vpn.ConnectionStatus.disconnecting)
             AnimatedBuilder(
               animation: _shieldRotationAnimation,
               builder: (context, child) {
@@ -366,7 +382,6 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
   Widget _buildStatusIcon(vpn.ConnectionStatus status) {
     Widget icon;
-
     switch (status) {
       case vpn.ConnectionStatus.connected:
         icon = AppIcons.defyxCheck(width: _iconSize, height: _iconSize);
@@ -379,9 +394,11 @@ class _ConnectionButtonState extends State<ConnectionButton>
         break;
       case vpn.ConnectionStatus.loading:
       case vpn.ConnectionStatus.analyzing:
+        icon = AppIcons.defyxLoading(width: _iconSize, height: _iconSize);
+        break;
       case vpn.ConnectionStatus.disconnected:
       default:
-        icon = AppIcons.logo(width: _iconSize, height: _iconSize);
+        icon = AppIcons.defyxStandby(width: _iconSize, height: _iconSize);
     }
 
     return icon;
@@ -448,13 +465,12 @@ class SvgShieldClipper extends CustomClipper<Path> {
     final offsetY = (clipSize.height - scaledHeight) / 2;
 
     // Transform the path
-    final matrix4 =
-        Matrix4.identity()
-          ..translate(
-            offsetX - (bounds.left * scale),
-            offsetY - (bounds.top * scale),
-          )
-          ..scale(scale, scale);
+    final matrix4 = Matrix4.identity()
+      ..translate(
+        offsetX - (bounds.left * scale),
+        offsetY - (bounds.top * scale),
+      )
+      ..scale(scale, scale);
 
     return path.transform(matrix4.storage);
   }
@@ -489,13 +505,12 @@ class ShieldLoadingPainter extends CustomPainter {
     final offsetX = (canvasSize.width - scaledWidth) / 2;
     final offsetY = (canvasSize.height - scaledHeight) / 2;
 
-    final matrix4 =
-        Matrix4.identity()
-          ..translate(
-            offsetX - (bounds.left * scale),
-            offsetY - (bounds.top * scale),
-          )
-          ..scale(scale, scale);
+    final matrix4 = Matrix4.identity()
+      ..translate(
+        offsetX - (bounds.left * scale),
+        offsetY - (bounds.top * scale),
+      )
+      ..scale(scale, scale);
 
     final transformedPath = path.transform(matrix4.storage);
 
@@ -517,13 +532,12 @@ class ShieldLoadingPainter extends CustomPainter {
       transform: GradientRotation(progress * 2 * math.pi),
     );
 
-    final paint =
-        Paint()
-          ..shader = sweepGradient.createShader(
-            Rect.fromLTWH(0, 0, canvasSize.width, canvasSize.height),
-          )
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0;
+    final paint = Paint()
+      ..shader = sweepGradient.createShader(
+        Rect.fromLTWH(0, 0, canvasSize.width, canvasSize.height),
+      )
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
 
     canvas.drawPath(transformedPath, paint);
   }
