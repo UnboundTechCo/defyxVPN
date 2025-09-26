@@ -1,9 +1,11 @@
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
 enum ConnectionStatus {
+  disconnecting,
   disconnected,
   loading,
   connected,
@@ -41,16 +43,101 @@ final connectionStateProvider =
 class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   static const String _connectionStatusKey = 'connection_status';
 
-  ConnectionStateNotifier() : super(const ConnectionState());
+  // Method channel for receiving events from iOS
+  static const EventChannel _eventChannel = EventChannel(
+    'com.defyx.vpn_events',
+  );
+  static const MethodChannel _methodChannel = MethodChannel(
+    'com.defyx.vpn',
+  );
+
+  StreamSubscription? _eventSubscription;
+
+  ConnectionStateNotifier() : super(const ConnectionState()) {
+    // Initialize VPN status listener first, then load saved state
+    _initVpnStatusListener();
+  }
+
+  // Initialize the listener for VPN status events from native side
+  Future<void> _initVpnStatusListener() async {
+    _eventSubscription = _eventChannel.receiveBroadcastStream().listen(
+      (dynamic event) {
+        if (event is Map) {
+          // Cast to Map<String, dynamic> to work with the event
+          final Map<String, dynamic> statusEvent = Map<String, dynamic>.from(
+            event,
+          );
+
+          // Check if this is a status event
+          if (statusEvent.containsKey('status')) {
+            final String vpnStatus = statusEvent['status'] as String;
+            debugPrint('VPN status update received: $vpnStatus');
+
+            // Always update the UI based on the actual VPN status
+            debugPrint('VPN status : $vpnStatus');
+            // Update the state based on the VPN status from iOS
+            switch (state.status) {
+              case ConnectionStatus.analyzing:
+                break;
+              case ConnectionStatus.error:
+                break;
+              case ConnectionStatus.noInternet:
+                break;
+              case ConnectionStatus.connected:
+                if (vpnStatus == "disconnected") {
+                  debugPrint('VPN status is disconnected from case');
+                  setDisconnected();
+                }
+                break;
+              default:
+                break;
+            }
+          }
+        }
+      },
+      onError: (dynamic error) {
+        debugPrint('Error from VPN event channel: $error');
+        // On error, assume we're disconnected
+        setDisconnected();
+      },
+    );
+
+    // Check the initial VPN status
+    await _checkInitialVpnStatus();
+  }
+
+  // Check VPN status when app starts
+  Future<void> _checkInitialVpnStatus() async {
+    try {
+      // Request current VPN status from iOS side
+      final String? currentStatus = await _methodChannel.invokeMethod(
+        'getVpnStatus',
+      );
+      debugPrint('Initial VPN status: $currentStatus');
+
+      // Update state based on the actual VPN status
+      switch (currentStatus) {
+        case 'connected':
+          setConnected();
+          break;
+        default:
+          break;
+      }
+    } catch (e) {
+      debugPrint('Error checking initial VPN status: $e');
+      // On error, assume we're disconnected
+      setDisconnected();
+    }
+  }
 
   // Save the current connection state to SharedPreferences
   Future<void> _saveState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_connectionStatusKey, state.status.toInt());
-      print('Saved connection state: ${state.status}');
+      debugPrint('Saved connection state: ${state.status}');
     } catch (e) {
-      print('Error saving connection state: $e');
+      debugPrint('Error saving connection state: $e');
     }
   }
 
@@ -69,6 +156,11 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
     _saveState();
   }
 
+  void setDisconnecting() {
+    state = state.copyWith(status: ConnectionStatus.disconnecting);
+    _saveState();
+  }
+
   void setError() {
     state = state.copyWith(status: ConnectionStatus.error);
     _saveState();
@@ -84,5 +176,10 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
     _saveState();
   }
 
-
+  @override
+  void dispose() {
+    // Cancel the subscription when the notifier is disposed
+    _eventSubscription?.cancel();
+    super.dispose();
+  }
 }

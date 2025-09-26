@@ -7,18 +7,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:go_router/go_router.dart';
 
 class DefyxNavBar extends ConsumerWidget {
   const DefyxNavBar({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentScreen = ref.watch(currentScreenProvider);
+    final location = GoRouterState.of(context).uri.path;
+    final currentScreen = _getCurrentScreenFromLocation(location);
 
-    return Padding(
-      padding: EdgeInsets.only(bottom: 40.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+    return SafeArea(
+        child: Padding(
+      padding: EdgeInsets.only(bottom: 20.h),
+      child: Stack(
+        alignment: Alignment.center,
         children: [
           Container(
             width: 200.w,
@@ -40,27 +43,68 @@ class DefyxNavBar extends ConsumerWidget {
                   screen: AppScreen.home,
                   icon: "chield",
                   current: currentScreen,
-                  onTap:
-                      () =>
-                          ref.read(currentScreenProvider.notifier).state =
-                              AppScreen.home,
+                  onTap: () => _navigateToHome(context),
                 ),
                 _DefyxNavItem(
-                  screen: AppScreen.share,
-                  icon: "share",
+                  screen: AppScreen.settings,
+                  icon: "info",
                   current: currentScreen,
                   onTap: () => _showShareDialog(context, ref),
                 ),
               ],
             ),
           ),
+          // Positioned(
+          //   right: 24.w,
+          //   child: GestureDetector(
+          //     onTap: () => _showShareDialog(context, ref),
+          //     child: Container(
+          //       width: 60.w,
+          //       height: 60.w,
+          //       decoration: const BoxDecoration(
+          //         color: Colors.black,
+          //         shape: BoxShape.circle,
+          //       ),
+          //       child: Center(
+          //         child: SvgPicture.asset(
+          //           'assets/icons/info.svg',
+          //           width: 25.w,
+          //           height: 25.w,
+          //           colorFilter: const ColorFilter.mode(
+          //             Colors.white,
+          //             BlendMode.srcIn,
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
-    );
+    ));
   }
 
   void _handleSpeedTest(BuildContext context, WidgetRef ref) {
     showWebViewBottomSheet(context, 'https://speed.cloudflare.com/');
+  }
+
+  void _navigateToHome(BuildContext context) {
+    context.go('/main');
+  }
+
+  void _navigateToSettings(BuildContext context) {
+    context.go('/settings');
+  }
+
+  AppScreen _getCurrentScreenFromLocation(String location) {
+    switch (location) {
+      case '/main':
+        return AppScreen.home;
+      case '/settings':
+        return AppScreen.settings;
+      default:
+        return AppScreen.home;
+    }
   }
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
@@ -127,6 +171,7 @@ class _DefyxShareDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       backgroundColor: Colors.white,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
       child: Container(

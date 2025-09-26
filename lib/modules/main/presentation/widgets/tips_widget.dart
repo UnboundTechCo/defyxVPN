@@ -1,21 +1,17 @@
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-// Provider for managing current page index
 final tipsCurrentPageProvider = StateProvider<int>((ref) => 0);
 
-// Provider for managing page controller
 final tipsPageControllerProvider = Provider<PageController>((ref) {
   final controller = PageController();
   ref.onDispose(controller.dispose);
   return controller;
 });
 
-// Provider for managing the auto-scroll timer
 final tipsTimerProvider = Provider<Timer?>((ref) {
   final pageController = ref.watch(tipsPageControllerProvider);
   final currentPageNotifier = ref.read(tipsCurrentPageProvider.notifier);
@@ -92,7 +88,7 @@ class TipsSlider extends ConsumerWidget {
 
     // Add height for title if exists
     if (title != null && title.isNotEmpty) {
-      baseHeight += 25.h; // Title height + spacing
+      baseHeight += 21.h; // Title height + spacing
     }
 
     // Add dynamic height for message
@@ -226,10 +222,9 @@ class TipsSlider extends ConsumerWidget {
                   width: index == currentPage ? 16.w : 6.w,
                   height: 6.h,
                   decoration: BoxDecoration(
-                    color:
-                        index == currentPage
-                            ? Colors.white
-                            : Colors.white.withOpacity(0.3),
+                    color: index == currentPage
+                        ? Colors.white
+                        : Colors.white.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(3.r),
                   ),
                 ),

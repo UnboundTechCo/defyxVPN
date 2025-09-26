@@ -8,8 +8,9 @@ class AppColors {
   static const Color topGradient = Color(0xFF18181E);
 
   // Gradient Colors (Ready To Connect)
-  static const Color middleGradient = Color(0xFF1C443B);
-  static const Color bottomGradient = Color(0xFF1F5F4D);
+  static const Color topGradientReadyToConnect = Color(0xFF1C1C1C);
+  static const Color middleGradient = Color(0xFF1C1C1C);
+  static const Color bottomGradient = Color(0xFF585858);
 
   // Gradient Colors (Connected)
   static const Color middleGradientConnected = Color(0xFF1C443B);
@@ -22,4 +23,9 @@ class AppColors {
   // Gradient Colors (Failed To Connect)
   static const Color middleGradientFailedToConnect = Color(0xFF867229);
   static const Color bottomGradientFailedToConnect = Color(0xFFD9B639);
+
+  // Connecting Colors
+  static const Color topGradientConnecting = Color(0xFF18181E);
+  static const Color middleGradientConnecting = Color(0xFF4161A6);
+  static const Color bottomGradientConnecting = Color(0xFF23499C);
 }

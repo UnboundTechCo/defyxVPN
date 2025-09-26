@@ -51,3 +51,27 @@ class FlagPlaceholder extends StatelessWidget {
     );
   }
 }
+
+class StepsPlaceholder extends StatelessWidget {
+  final double width;
+
+  const StepsPlaceholder({Key? key, required this.width}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: width,
+          height: 16.0.h,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(9.0.r),
+          ),
+        ),
+      ],
+    );
+  }
+}

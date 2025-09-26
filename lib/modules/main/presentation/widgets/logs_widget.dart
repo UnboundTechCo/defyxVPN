@@ -1,4 +1,4 @@
-import 'package:defyx_vpn/modules/core/warp_plus.dart';
+import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -24,7 +24,8 @@ class LogsNotifier extends StateNotifier<LogsState> {
   LogsNotifier() : super(LogsState());
   Timer? _refreshTimer;
   bool _isFetching = false; // Track if a fetch operation is in progress
-  Set<String> _existingLogs = {}; // Track existing logs to avoid duplicates
+  final Set<String> _existingLogs = {};
+  final log = Log(); // Track existing logs to avoid duplicates
 
   Future<void> fetchLogs() async {
     // Don't start a new fetch if one is already in progress
@@ -36,17 +37,16 @@ class LogsNotifier extends StateNotifier<LogsState> {
     try {
       // Get only new logs from native code
 
-      final String newLogs = await WarpPlus.getWarpLogs();
+      final String newLogs = log.getLogs();
 
       if (newLogs.isNotEmpty) {
         // Split new logs by newline
         List<String> newLogEntries = newLogs.split('\n');
 
         // Filter out empty lines and already shown logs
-        List<String> filteredNewLogs =
-            newLogEntries
-                .where((log) => log.isNotEmpty && !_existingLogs.contains(log))
-                .toList();
+        List<String> filteredNewLogs = newLogEntries
+            .where((log) => log.isNotEmpty && !_existingLogs.contains(log))
+            .toList();
 
         if (filteredNewLogs.isNotEmpty) {
           // Add new logs to the existing logs set to avoid duplicates
@@ -69,7 +69,7 @@ class LogsNotifier extends StateNotifier<LogsState> {
         }
       }
     } catch (e) {
-      print('Error fetching logs: $e');
+      debugPrint('Error fetching logs: $e');
 
       // If there was an error, make sure the timer is still running
       // This ensures auto-refresh recovers from errors
@@ -89,7 +89,7 @@ class LogsNotifier extends StateNotifier<LogsState> {
     state = state.copyWith(logs: []);
 
     // Clear logs in WarpPlus too and ensure clearUILogs is true since this is explicitly called to clear UI
-    WarpPlus.clearWarpLogs(clearUILogs: true);
+    Log().clearLogs();
   }
 
   // Check if the auto-refresh timer is active
@@ -137,53 +137,10 @@ class ShakeLogDetector extends ConsumerStatefulWidget {
 }
 
 class _ShakeLogDetectorState extends ConsumerState<ShakeLogDetector> {
-  bool _isPopupShowing = false;
 
   @override
   void initState() {
     super.initState();
-  }
-
-  void _showLogPopup() async {
-    _isPopupShowing = true;
-
-    final logsNotifier = ref.read(logsProvider.notifier);
-
-    final allLogs = await WarpPlus.getWarpLogs();
-
-    if (allLogs.isNotEmpty) {
-      List<String> logEntries = allLogs.split('\n');
-
-      List<String> filteredLogs =
-          logEntries.where((log) => log.isNotEmpty).toList();
-
-      if (filteredLogs.isNotEmpty) {
-        logsNotifier._existingLogs.clear();
-        logsNotifier._existingLogs.addAll(filteredLogs);
-
-        logsNotifier.state = logsNotifier.state.copyWith(logs: filteredLogs);
-      }
-    }
-
-    // Start auto-refresh to get new logs
-    ref.read(logsProvider.notifier).startAutoRefresh();
-
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          child: const LogPopupContent(),
-        );
-      },
-    ).then((_) {
-      _isPopupShowing = false;
-      ref.read(logsProvider.notifier).stopAutoRefresh();
-    });
   }
 
   @override
@@ -214,7 +171,7 @@ class LogPopupContent extends ConsumerWidget {
           //   curve: Curves.easeOut,
           // );
         } catch (e) {
-          print('Error scrolling to bottom: $e');
+          debugPrint('Error scrolling to bottom: $e');
         }
       }
     });
@@ -248,10 +205,9 @@ class LogPopupContent extends ConsumerWidget {
                     height: 8,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color:
-                          ref.read(logsProvider.notifier).isRefreshing()
-                              ? Colors.green
-                              : Colors.red,
+                      color: ref.read(logsProvider.notifier).isRefreshing()
+                          ? Colors.green
+                          : Colors.red,
                     ),
                   ),
                   const SizedBox(width: 4),
@@ -266,8 +222,8 @@ class LogPopupContent extends ConsumerWidget {
                   const SizedBox(width: 6),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed:
-                        () => ref.read(logsProvider.notifier).fetchLogs(),
+                    onPressed: () =>
+                        ref.read(logsProvider.notifier).fetchLogs(),
                   ),
                 ],
               ),
@@ -435,7 +391,7 @@ class _LogScreenState extends ConsumerState<LogScreen> {
     // Show logs immediately
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // Get the full logs from WarpPlus
-      final allLogs = await WarpPlus.getWarpLogs();
+      final allLogs = Log().getLogs();
 
       if (allLogs.isNotEmpty) {
         final logsNotifier = ref.read(logsProvider.notifier);
@@ -477,7 +433,6 @@ class _LogScreenState extends ConsumerState<LogScreen> {
         );
       },
     ).then((_) {
-      // After dialog is closed, pop this screen too if it's still showing
       ref.read(logsProvider.notifier).stopAutoRefresh();
       if (mounted) {
         Navigator.of(context).pop();

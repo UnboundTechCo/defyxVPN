@@ -20,7 +20,6 @@ void showWebViewBottomSheet(BuildContext context, String url) {
         ),
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Row(
@@ -45,7 +44,6 @@ void showWebViewBottomSheet(BuildContext context, String url) {
             ),
             Divider(height: 1),
 
-            // WebView
             Expanded(child: WebViewWidget(controller: webViewController)),
           ],
         ),
