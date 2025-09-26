@@ -4,6 +4,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 class AppIcons {
   static const String logoPath = 'assets/icons/logo.svg';
   static const String defyxCheckPath = 'assets/icons/defyx_check.svg';
+  static const String defyxLoadingPath = 'assets/icons/defyx_loading.svg';
+  static const String defyxStandbyPath = 'assets/icons/defyx_standby.svg';
   static const String defyxReloadPath = 'assets/icons/defyx_reload.svg';
   static const String defyxErrorPath = 'assets/icons/defyx_error.svg';
 
@@ -16,6 +18,8 @@ class AppIcons {
   static const String copyPath = 'assets/icons/copy.svg';
   static const String chevronLeftPath = 'assets/icons/chevron-left.svg';
   static const String shieldAnimePath = 'assets/icons/Shield.svg';
+  static const String infoPath = 'assets/icons/info.svg';
+  static const String checkCirclePath = 'assets/icons/check-circle.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -23,6 +27,14 @@ class AppIcons {
 
   static SvgPicture defyxCheck({double? width, double? height}) {
     return SvgPicture.asset(defyxCheckPath, width: width, height: height);
+  }
+
+  static SvgPicture defyxLoading({double? width, double? height}) {
+    return SvgPicture.asset(defyxLoadingPath, width: width, height: height);
+  }
+
+  static SvgPicture defyxStandby({double? width, double? height}) {
+    return SvgPicture.asset(defyxStandbyPath, width: width, height: height);
   }
 
   static SvgPicture defyxReload({double? width, double? height}) {
@@ -63,6 +75,14 @@ class AppIcons {
 
   static SvgPicture chevronLeft({double? width, double? height}) {
     return SvgPicture.asset(chevronLeftPath, width: width, height: height);
+  }
+
+  static SvgPicture info({double? width, double? height}) {
+    return SvgPicture.asset(infoPath, width: width, height: height);
+  }
+
+  static SvgPicture checkCircle({double? width, double? height}) {
+    return SvgPicture.asset(checkCirclePath, width: width, height: height);
   }
 
   static Widget shieldAnime({

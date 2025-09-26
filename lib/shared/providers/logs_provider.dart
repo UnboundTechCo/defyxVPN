@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-enum LoggerStatus { scanning, connecting, change_method }
+enum LoggerStatus { loading, connecting, switching_method }
 
 class LoggerState {
   final LoggerStatus status;
 
-  const LoggerState({this.status = LoggerStatus.scanning});
+  const LoggerState({this.status = LoggerStatus.loading});
 
   LoggerState copyWith({LoggerStatus? status}) {
     return LoggerState(status: status ?? this.status);
@@ -20,15 +20,15 @@ final loggerStateProvider =
 class LoggerStateNotifier extends StateNotifier<LoggerState> {
   LoggerStateNotifier() : super(const LoggerState());
 
-  void setScanning() {
-    state = LoggerState(status: LoggerStatus.scanning);
+  void setLoading() {
+    state = LoggerState(status: LoggerStatus.loading);
   }
 
   void setConnecting() {
     state = LoggerState(status: LoggerStatus.connecting);
   }
 
-  void setChangeMethod() {
-    state = LoggerState(status: LoggerStatus.change_method);
+  void setSwitchingMethod() {
+    state = LoggerState(status: LoggerStatus.switching_method);
   }
 }

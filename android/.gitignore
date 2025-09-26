@@ -12,3 +12,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Remove Core
+app/libs/DXcore-sources.jar
+app/libs/DXcore.aar
