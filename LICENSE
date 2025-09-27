@@ -22,11 +22,12 @@ SOFTWARE.
 
 ---
 
-## Third-Party Licenses
+Third-Party Licenses
 
 This project uses the following third-party components:
 
-- Warp Plus: https://github.com/bepass-org/warp-plus — License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
+- Warp-Plus: https://github.com/bepass-org/warp-plus — License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
 - Outline: https://github.com/Jigsaw-Code/outline-apps — License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
+- Xray: https://github.com/XTLS/Xray-core — License type and copyright © respective owners. Please refer to the official Xray documentation for license details.
 
 If you are a copyright holder and believe your license is not properly attributed, please contact us.
