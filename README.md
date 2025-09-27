@@ -20,45 +20,21 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 - Dart SDK ≥ 3.0.0
 - Xcode for iOS/macOS development
 
-### 🔐 Git Hook Enforced Repository
-
-This repository uses a Git pre-commit hook to ensure all commits follow strict identity rules — enforced for security and accountability.
-
-### ✅ Commit Requirements
-
-To commit to this repository, your Git configuration **must meet the following**:
-
-- **Email must end with:** `@unboundtech.de`
-- **Username must be one of**:
-  - `infiniteBullshit`
-  - `immortalut`
-  - `goku-kamehameha`
-
-Any other combination will block your commits automatically.
-
 ### 🧑‍💻 How to Set Up
 
-1. Clone the repository:
-
-```bash
-git clone https://github.com/yourusername/defyxVPN.git
-cd defyxVPN
-./setup-hooks.sh
-```
-
-2. Install dependencies:
+1. Install dependencies:
 
 ```bash
 flutter pub get
 ```
 
-3. Run the application:
+2. Run the application:
 
 ```bash
 flutter run
 ```
 
-4. Build for iOS:
+3. Build for iOS:
 
 ```bash
 make build-ios
