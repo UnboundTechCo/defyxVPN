@@ -1,18 +1,16 @@
 # Defyx VPN
 
-A modern, secure VPN application built with Flutter that provides internet freedom and privacy protection.
+A modern, relatively smart, secure, and open-source VPN application built with Flutter, providing free internet access and privacy protection with a fresh user experience.
+
+![Cover](.github/images/cover.jpg)
 
 ## Features
 
-- Secure connection through WarpPlus technology
-- Beautiful, intuitive user interface
-- Connection status monitoring
+- Simple, with a beautiful and user-friendly interface
 - One-tap connect/disconnect functionality
-- Speed test capability
-
-## Screenshots
-
-<!-- Add screenshot images here when available -->
+- Powered by Warp, Psiphon, Warp-in-Warp, Xray, & Outline cores
+- Relatively smart, requiring no manual configuration
+- Ability to test internet speed and quality
 
 ## Installation
 
@@ -22,6 +20,31 @@ A modern, secure VPN application built with Flutter that provides internet freed
 - Dart SDK ≥ 3.0.0
 - Xcode for iOS/macOS development
 
+### 🔐 Git Hook Enforced Repository
+
+This repository uses a Git pre-commit hook to ensure all commits follow strict identity rules — enforced for security and accountability.
+
+### ✅ Commit Requirements
+
+To commit to this repository, your Git configuration **must meet the following**:
+
+- **Email must end with:** `@unboundtech.de`
+- **Username must be one of**:
+  - `infiniteBullshit`
+  - `immortalut`
+  - `goku-kamehameha`
+
+Any other combination will block your commits automatically.
+
+### 🧑‍💻 How to Set Up
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/defyxVPN.git
+cd defyxVPN
+./setup-hooks.sh
+```
 
 2. Install dependencies:
 
@@ -42,6 +65,7 @@ make build-ios
 ```
 
 This will:
+
 - Clean the Flutter build
 - Clean pub cache
 - Build the IPA file
@@ -70,8 +94,9 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 This project uses the following third-party components:
 
-- [Warp Plus](https://github.com/bepass-org/warp-plus): License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
+- [Warp-Plus](https://github.com/bepass-org/warp-plus): License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
 - [Outline](https://github.com/Jigsaw-Code/outline-apps): License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
+- [Xray](https://github.com/XTLS/Xray-core): License type and copyright © respective owners. Please refer to the official Xray documentation for license details.
 
 ## Support
 
