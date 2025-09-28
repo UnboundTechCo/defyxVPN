@@ -8,7 +8,7 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 
 - Simple, with a beautiful and user-friendly interface
 - One-tap connect/disconnect functionality
-- Powered by Warp, Psiphon, Warp-in-Warp, Xray, & Outline cores
+- Powered by [DXcore](https://github.com/UnboundTechCo/DXcore), which unifies Warp, Psiphon, Warp-in-Warp, Xray, Outline, and exclusive proprietary protocols
 - Relatively smart, requiring no manual configuration
 - Ability to test internet speed and quality
 
@@ -20,21 +20,45 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 - Dart SDK ≥ 3.0.0
 - Xcode for iOS/macOS development
 
+### 🔐 Git Hook Enforced Repository
+
+This repository uses a Git pre-commit hook to ensure all commits follow strict identity rules — enforced for security and accountability.
+
+### ✅ Commit Requirements
+
+To commit to this repository, your Git configuration **must meet the following**:
+
+- **Email must end with:** `@unboundtech.de`
+- **Username must be one of**:
+  - `infiniteBullshit`
+  - `immortalut`
+  - `goku-kamehameha`
+
+Any other combination will block your commits automatically.
+
 ### 🧑‍💻 How to Set Up
 
-1. Install dependencies:
+1. Clone the repository:
+
+```bash
+git clone https://github.com/yourusername/defyxVPN.git
+cd defyxVPN
+./setup-hooks.sh
+```
+
+2. Install dependencies:
 
 ```bash
 flutter pub get
 ```
 
-2. Run the application:
+3. Run the application:
 
 ```bash
 flutter run
 ```
 
-3. Build for iOS:
+4. Build for iOS:
 
 ```bash
 make build-ios
@@ -65,14 +89,6 @@ The app is built using:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Third-Party Licenses
-
-This project uses the following third-party components:
-
-- [Warp-Plus](https://github.com/bepass-org/warp-plus): License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
-- [Outline](https://github.com/Jigsaw-Code/outline-apps): License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
-- [Xray](https://github.com/XTLS/Xray-core): License type and copyright © respective owners. Please refer to the official Xray documentation for license details.
 
 ## Support
 

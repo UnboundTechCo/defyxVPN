@@ -19,15 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-Third-Party Licenses
-
-This project uses the following third-party components:
-
-- Warp-Plus: https://github.com/bepass-org/warp-plus — License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
-- Outline: https://github.com/Jigsaw-Code/outline-apps — License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
-- Xray: https://github.com/XTLS/Xray-core — License type and copyright © respective owners. Please refer to the official Xray documentation for license details.
-
-If you are a copyright holder and believe your license is not properly attributed, please contact us.
