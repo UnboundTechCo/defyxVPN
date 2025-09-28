@@ -8,7 +8,7 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 
 - Simple, with a beautiful and user-friendly interface
 - One-tap connect/disconnect functionality
-- Powered by Warp, Psiphon, Warp-in-Warp, Xray, & Outline cores
+- Powered by [DXcore](https://github.com/UnboundTechCo/DXcore), which unifies Warp, Psiphon, Warp-in-Warp, Xray, Outline, and exclusive proprietary protocols
 - Relatively smart, requiring no manual configuration
 - Ability to test internet speed and quality
 
@@ -65,14 +65,6 @@ The app is built using:
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
-
-## Third-Party Licenses
-
-This project uses the following third-party components:
-
-- [Warp-Plus](https://github.com/bepass-org/warp-plus): License type and copyright © respective owners. Please refer to the official Warp Plus documentation for license details.
-- [Outline](https://github.com/Jigsaw-Code/outline-apps): License type and copyright © respective owners. Please refer to the official Outline documentation for license details.
-- [Xray](https://github.com/XTLS/Xray-core): License type and copyright © respective owners. Please refer to the official Xray documentation for license details.
 
 ## Support
 
