@@ -3,13 +3,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -219,16 +219,10 @@ class VPN {
 
   Future<bool> _checkNetwork() async {
     try {
-      final dio = Dio();
-      await dio.get(
-        'https://www.google.com/generate_204',
-        options: Options(
-          responseType: ResponseType.bytes,
-          sendTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
-        ),
-      );
-      return true;
+      final httpClient = _container?.read(httpClientProvider);
+      if (httpClient == null) return false;
+
+      return await httpClient.checkConnectivity();
     } catch (e) {
       debugPrint('Error checking network: $e');
       return false;
