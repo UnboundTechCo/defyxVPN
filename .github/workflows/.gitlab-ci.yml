@@ -36,18 +36,6 @@ jobs:
           echo "Updating Dart SDK constraint in pubspec.yaml"
           sed -i 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true  # Ensure SDK allows Dart 3.6.0
 
-      - name: Modify pubspec.yaml to fix async dependency
-        run: |
-          echo "Adding dependency override for async in pubspec.yaml"
-          sed -i '/^dependency_overrides:/d' pubspec.yaml || true
-          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
-      - name: Fix flutter_test in pubspec.yaml
-        run: |
-          echo "Ensuring correct flutter_test dependency"
-          sed -i '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
-      - name: Debug pubspec.yaml
-        run: cat pubspec.yaml
-
       - name: Create key.properties for signing
         run: |
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
