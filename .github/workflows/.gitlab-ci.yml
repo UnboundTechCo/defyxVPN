@@ -61,7 +61,6 @@ jobs:
           echo "Sending APK to Telegram..."
           curl -F chat_id="$TELEGRAM_CHAT_ID" \
                -F document=@release/app-release.apk \
-               -F caption="🚀 New DXcore Android Build
-📌 Version: $APP_VERSION
-🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               -F caption="$(echo -e "🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}")" \
                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+
