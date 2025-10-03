@@ -73,6 +73,7 @@ build_android_github() {
 current_version=$(get_current_version)
 new_version=$(increment_version "$current_version" "patch")
 update_version "$new_version"
+echo "APP_VERSION=$new_version" >> $CI_PROJECT_DIR/build_version.env
 
 build_android_github
 
