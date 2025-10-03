@@ -25,22 +25,41 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: "3.35.5"  
-          channel: "stable"         
-          architecture: "x64"      
+          channel: "stable"
+          architecture: "x64"
+
+      - name: Verify Flutter version
+        run: flutter --version  # Debug step to confirm Flutter/Dart version
+
+      - name: Update Dart SDK constraint in pubspec.yaml
+        run: |
+          echo "Updating Dart SDK constraint in pubspec.yaml"
+          sed -i 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true  # Ensure SDK allows Dart 3.6.0
+
       - name: Modify pubspec.yaml to fix async dependency
         run: |
           echo "Adding dependency override for async in pubspec.yaml"
-          sed -i '/^dependency_overrides:/d' pubspec.yaml || true  # Remove existing overrides if any
-          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml  # Add override for async 2.11.0
-          
-      - name: Install dependencies
-        run: flutter pub get
+          sed -i '/^dependency_overrides:/d' pubspec.yaml || true
+          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Create key.properties for signing
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=/home/runner/work/defyxVPN/defyxVPN/android/app/keystore.jks" >> android/key.properties
 
-      - name: Save version info
-        run: echo "APP_VERSION=$(date +'%Y.%m.%d.%H%M')" >> $GITHUB_ENV
+      - name: Decode and save keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+
+      - name: Make build_ci.sh executable
+        run: chmod +x scripts/build_ci.sh
+
+      - name: Run build_ci.sh
+        run: ./scripts/build_ci.sh
 
       - name: Upload artifact (for debugging/download)
         uses: actions/upload-artifact@v4
@@ -70,4 +89,3 @@ jobs:
                -F document=@release/app-release.apk \
                -F caption="$(echo -e "🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}")" \
                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
-
