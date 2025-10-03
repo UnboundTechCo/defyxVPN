@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/main/application/defyx_navbar_prodiver.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/speed_test.dart';
@@ -89,11 +90,11 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _navigateToHome(BuildContext context) {
-    context.go('/main');
+    context.go(DefyxVPNRoutes.main.route);
   }
 
   void _navigateToSettings(BuildContext context) {
-    context.go('/settings');
+    context.go(DefyxVPNRoutes.settings.route);
   }
 
   AppScreen _getCurrentScreenFromLocation(String location) {

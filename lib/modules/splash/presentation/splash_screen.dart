@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +21,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   void _navigateToMain() async {
     await Future.delayed(const Duration(seconds: 3));
-    if (mounted) context.go('/main');
+    if (mounted) context.go(DefyxVPNRoutes.main.route);
   }
 
   @override
