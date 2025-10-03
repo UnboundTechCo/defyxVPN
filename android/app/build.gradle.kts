@@ -76,7 +76,7 @@ flutter {
 }
 
 repositories {
-    flatDir {ِ
+    flatDir {
         dirs("libs")
     }
 }
