@@ -50,7 +50,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),
             ),
