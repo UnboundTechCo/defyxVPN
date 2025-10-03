@@ -1,0 +1,54 @@
+#!by atomic
+
+stages:
+  - build
+  - release
+  - notify
+
+variables:
+  FLUTTER_CHANNEL: "stable"
+  FLUTTER_VERSION: "3.24.3"   
+
+before_script:
+  - apt-get update -y
+  - apt-get install -y curl unzip git xz-utils zip libglu1-mesa
+
+  - curl -O https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_${FLUTTER_VERSION}-${FLUTTER_CHANNEL}.tar.xz
+  - tar xf flutter_linux_${FLUTTER_VERSION}-${FLUTTER_CHANNEL}.tar.xz
+  - export PATH="$PATH:$CI_PROJECT_DIR/flutter/bin"
+  - flutter doctor -v
+  - yes | flutter doctor --android-licenses || true
+
+build_android_github:
+  stage: build
+  image: openjdk:17-jdk
+  script:
+    - chmod +x build.sh
+    - echo "4" | ./build.sh
+  artifacts:
+    paths:
+      - build/app/outputs/flutter-apk/app-release.apk
+    expire_in: 1 week
+
+release_apk:
+  stage: release
+  needs: ["build_android_github"]
+  script:
+    - echo "Releasing APK..."
+    - mkdir -p release
+    - cp build/app/outputs/flutter-apk/app-release.apk release/DXcore-android-github.apk
+  artifacts:
+    paths:
+      - release/DXcore-android-github.apk
+    expire_in: 1 month
+
+send_to_telegram:
+  stage: notify
+  needs: ["release_apk"]
+  rules:
+    - if: '$SEND_TELEGRAM == "true"'
+  script:
+    - echo "Sending APK to Telegram group..."
+    - curl -F chat_id=$TELEGRAM_CHAT_ID \
+           -F document=@release/DXcore-android-github.apk \
+           "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
