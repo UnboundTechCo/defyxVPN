@@ -31,10 +31,6 @@ jobs:
       - name: Verify Flutter version
         run: flutter --version  # Debug step to confirm Flutter/Dart version
 
-      - name: Update Dart SDK constraint in pubspec.yaml
-        run: |
-          echo "Updating Dart SDK constraint in pubspec.yaml"
-          sed -i 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true  # Ensure SDK allows Dart 3.6.0
 
       - name: Create key.properties for signing
         run: |
