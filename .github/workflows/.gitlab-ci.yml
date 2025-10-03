@@ -25,6 +25,7 @@ build_android_github:
   artifacts:
     paths:
       - build/app/outputs/flutter-apk/app-release.apk
+      - build_version.env
     expire_in: 1 week
 
 release_apk:
@@ -33,9 +34,12 @@ release_apk:
   script:
     - mkdir -p release
     - cp build/app/outputs/flutter-apk/app-release.apk release/DXcore-android-github.apk
+    # Keep version info for next stage
+    - cp build_version.env release/
   artifacts:
     paths:
       - release/DXcore-android-github.apk
+      - release/build_version.env
     expire_in: 1 month
 
 send_to_telegram:
@@ -44,7 +48,10 @@ send_to_telegram:
   rules:
     - if: '$SEND_TELEGRAM == "true"'
   script:
+    - source release/build_version.env
     - echo "Sending APK to Telegram channel..."
-    - curl -F chat_id=$TELEGRAM_CHAT_ID \
+    - |
+      curl -F chat_id=$TELEGRAM_CHAT_ID \
            -F document=@release/DXcore-android-github.apk \
+           -F caption="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: $CI_PROJECT_URL/-/jobs/$CI_JOB_ID" \
            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
