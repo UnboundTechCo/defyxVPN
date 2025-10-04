@@ -17,9 +17,9 @@ class SemicircularProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2 - strokeWidth / 2;
 
-    // Arc parameters: 75% of circle (270 degrees)
-    const startAngle = math.pi * 0.78; // Start at ~112.5°
-    const sweepAngle = math.pi * 1.45; // Sweep 315° (87.5% of circle)
+    // Arc parameters: 65% of circle (234 degrees) centered on y-axis (1.5π)
+    const startAngle = math.pi * 0.85; // Start at ~153°
+    const sweepAngle = math.pi * 1.3; // Sweep 234° (65% of circle)
 
     // Draw background track (light gray/white)
     final backgroundPaint = Paint()
@@ -94,8 +94,8 @@ class SemicircularProgressPainter extends CustomPainter {
       ];
     }
 
-    const startAngle = math.pi * 0.75;
-    const sweepAngle = math.pi * 1.5;
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
 
     return SweepGradient(
       colors: gradientColors,
@@ -107,8 +107,8 @@ class SemicircularProgressPainter extends CustomPainter {
   void _drawProgressIndicator(Canvas canvas, Offset center, double radius,
       double progress, Color color) {
     // Calculate position of the indicator dot at the end of the arc
-    const startAngle = math.pi * 0.75;
-    const sweepAngle = math.pi * 1.5;
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
     final angle = startAngle + (sweepAngle * progress);
     final dotX = center.dx + radius * math.cos(angle);
     final dotY = center.dy + radius * math.sin(angle);
@@ -157,9 +157,9 @@ class SemicircularDividerPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2;
 
-    // Arc parameters: 75% of circle (same as progress painter)
-    const startAngle = math.pi * 0.75; // Start at ~112.5°
-    const sweepAngle = math.pi * 1.5; // Sweep 315° (87.5% of circle)
+    // Arc parameters: 65% of circle (same as progress painter) centered on y-axis (1.5π)
+    const startAngle = math.pi * 0.85; // Start at ~153°
+    const sweepAngle = math.pi * 1.3; // Sweep 234° (65% of circle)
 
     final paint = Paint()
       ..color = Colors.grey.shade700
