@@ -203,22 +203,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     return ScaleTransition(
       scale: _scaleAnimation,
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildProgressIndicator(
-                    progress: 0.0,
-                    color: Colors.green,
-                    showButton: true,
-                  ),
-                ],
-              ),
-            ),
+          SizedBox(height: 30.h),
+          _buildProgressIndicator(
+            progress: 0.0,
+            color: Colors.green,
+            showButton: true,
+            result: state.result,
           ),
-          _buildBottomMetrics(state.result),
         ],
       ),
     );
@@ -227,23 +220,16 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   Widget _buildLoadingState() {
     final state = ref.watch(speedTestProvider);
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildProgressIndicator(
-                  progress: 0.0,
-                  color: Colors.blue,
-                  showButton: false,
-                  showLoadingIndicator: true,
-                ),
-              ],
-            ),
-          ),
+        SizedBox(height: 30.h),
+        _buildProgressIndicator(
+          progress: 0.0,
+          color: Colors.blue,
+          showButton: false,
+          showLoadingIndicator: true,
+          result: state.result,
         ),
-        _buildBottomMetrics(state.result),
       ],
     );
   }
@@ -254,25 +240,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildProgressIndicator(
-                  progress: combinedProgress,
-                  color: Colors.green,
-                  showButton: false,
-                  centerText:
-                      '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
-                  subtitle: 'DOWNLOAD',
-                ),
-              ],
-            ),
-          ),
+        SizedBox(height: 30.h),
+        _buildProgressIndicator(
+          progress: combinedProgress,
+          color: Colors.green,
+          showButton: false,
+          centerText:
+              '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
+          subtitle: 'DOWNLOAD',
+          result: state.result,
         ),
-        _buildBottomMetrics(state.result),
       ],
     );
   }
@@ -283,25 +262,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildProgressIndicator(
-                  progress: combinedProgress,
-                  color: Colors.blue,
-                  showButton: false,
-                  centerText:
-                      '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
-                  subtitle: 'UPLOAD',
-                ),
-              ],
-            ),
-          ),
+        SizedBox(height: 30.h),
+        _buildProgressIndicator(
+          progress: combinedProgress,
+          color: Colors.blue,
+          showButton: false,
+          centerText:
+              '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
+          subtitle: 'UPLOAD',
+          result: state.result,
         ),
-        _buildBottomMetrics(state.result),
       ],
     );
   }
@@ -323,83 +295,67 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     }
 
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildProgressIndicator(
-                  progress: 1.0,
-                  color: Colors.orange,
-                  showButton: true,
-                  showRetryButton: true,
-                ),
-                SizedBox(height: 40.h),
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.orange,
-                  size: 60.sp,
-                ),
-                SizedBox(height: 20.h),
-                Text(
-                  state.errorMessage != null
-                      ? 'Test Failed'
-                      : 'Connection Unstable',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 20.sp,
-                    fontFamily: 'Lato',
-                    color: Colors.orange,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(height: 10.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40.w),
-                  child: Text(
-                    'Tap the retry button or shake your phone to test again',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontFamily: 'Lato',
-                      color: Colors.white70,
-                      height: 1.5,
-                    ),
-                  ),
-                ),
-              ],
+        SizedBox(height: 30.h),
+        _buildProgressIndicator(
+          progress: 1.0,
+          color: Colors.orange,
+          showButton: true,
+          showRetryButton: true,
+          result: state.result,
+        ),
+        SizedBox(height: 40.h),
+        Icon(
+          Icons.warning_amber_rounded,
+          color: Colors.orange,
+          size: 60.sp,
+        ),
+        SizedBox(height: 20.h),
+        Text(
+          state.errorMessage != null ? 'Test Failed' : 'Connection Unstable',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 20.sp,
+            fontFamily: 'Lato',
+            color: Colors.orange,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        SizedBox(height: 10.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 40.w),
+          child: Text(
+            'Tap the retry button or shake your phone to test again',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14.sp,
+              fontFamily: 'Lato',
+              color: Colors.white70,
+              height: 1.5,
             ),
           ),
         ),
-        _buildBottomMetrics(state.result),
       ],
     );
   }
 
   Widget _buildAdsState(SpeedTestState state) {
     return Column(
+      mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Expanded(
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildProgressIndicator(
-                  progress: 1.0,
-                  color: Colors.green,
-                  showButton: true,
-                ),
-                SizedBox(height: 40.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: _googleAds,
-                ),
-              ],
-            ),
-          ),
+        SizedBox(height: 30.h),
+        _buildProgressIndicator(
+          progress: 1.0,
+          color: Colors.green,
+          showButton: true,
+          result: state.result,
         ),
-        _buildBottomMetrics(state.result),
+        SizedBox(height: 40.h),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: 20.w),
+          child: _googleAds,
+        ),
       ],
     );
   }
@@ -412,6 +368,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     bool showRetryButton = false,
     String? centerText,
     String? subtitle,
+    SpeedTestResult? result,
   }) {
     return Column(
       children: [
@@ -443,9 +400,21 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 ),
               if (centerText != null)
                 Positioned(
-                  bottom: 30.h,
+                  bottom: 0.h,
                   child: Column(
                     children: [
+                      if (subtitle != null) ...[
+                        SizedBox(height: 4.h),
+                        Text(
+                          subtitle,
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            fontFamily: 'Lato',
+                            color: color,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                       Text(
                         centerText,
                         textAlign: TextAlign.center,
@@ -457,18 +426,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                           height: 1.2,
                         ),
                       ),
-                      if (subtitle != null) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontFamily: 'Lato',
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),
@@ -484,6 +441,130 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           size: Size(250.w, 0.h),
           painter: SemicircularDividerPainter(strokeWidth: 2.w),
         ),
+        if (result != null) ...[
+          SizedBox(height: 75.h),
+          _buildMetricsUnderProgress(result),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildMetricsUnderProgress(SpeedTestResult result) {
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 40.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // First row: DOWNLOAD and UPLOAD
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            spacing: 20.h,
+            children: [
+              _buildMetricItemCompact('DOWNLOAD', result.downloadSpeed),
+              _buildMetricItemCompact('PING', result.ping, unit: 'ms'),
+            ],
+          ),
+          // Second row: PING on left, LATENCY/JITTER/P.LOSS on right
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 20.h,
+            children: [
+              _buildMetricItemCompact('UPLOAD', result.uploadSpeed),
+              Column(
+                spacing: 8.h,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildMetricItemHorizontal('LATENCY', result.latency,
+                      unit: 'ms'),
+                  _buildMetricItemHorizontal('JITTER', result.jitter,
+                      unit: 'ms'),
+                  _buildMetricItemHorizontal('P.LOSS', result.packetLoss,
+                      unit: '%'),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMetricItemCompact(String label, num value,
+      {String unit = 'Mbps'}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      spacing: 2.h,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.sp,
+            fontFamily: 'Lato',
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(height: 4.h),
+        value > 0
+            ? Text(
+                '${value.toStringAsFixed(1)} $unit',
+                style: TextStyle(
+                  fontSize: 20.sp,
+                  fontFamily: 'Lato',
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : Container(
+                width: 65.w,
+                height: 3.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF307065),
+                  borderRadius: BorderRadius.circular(15.r),
+                  border: Border.all(width: 15.w),
+                ),
+              ),
+      ],
+    );
+  }
+
+  Widget _buildMetricItemHorizontal(String label, num value,
+      {String unit = 'Mbps'}) {
+    return Row(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11.sp,
+            fontFamily: 'Lato',
+            color: Colors.grey.shade500,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        SizedBox(width: 8.w),
+        value > 0
+            ? Text(
+                '${value.toStringAsFixed(1)} $unit',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  fontFamily: 'Lato',
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : Container(
+                width: 50.w,
+                height: 3.h,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF307065),
+                  borderRadius: BorderRadius.circular(15.r),
+                  border: Border.all(width: 10.w),
+                ),
+              ),
       ],
     );
   }
@@ -528,50 +609,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           size: 36.sp,
         ),
       ),
-    );
-  }
-
-  Widget _buildBottomMetrics(SpeedTestResult result) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildMetricItem('DOWNLOAD', result.downloadSpeed),
-          _buildMetricItem('UPLOAD', result.uploadSpeed),
-          _buildMetricItem('PING', result.ping, unit: 'ms'),
-          _buildMetricItem('LATENCY', result.latency, unit: 'ms'),
-          _buildMetricItem('JITTER', result.jitter, unit: 'ms'),
-          _buildMetricItem('P.LOSS', result.packetLoss, unit: '%'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricItem(String label, num value, {String unit = 'Mbps'}) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10.sp,
-            fontFamily: 'Lato',
-            color: Colors.grey.shade400,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(height: 4.h),
-        Text(
-          value > 0 ? '${value.toStringAsFixed(1)} $unit' : '--',
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontFamily: 'Lato',
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
     );
   }
 }
