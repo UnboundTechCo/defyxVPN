@@ -83,11 +83,21 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     final speedTestState = ref.watch(speedTestProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B1A),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.only(bottom: 100),
-          child: _buildContent(speedTestState),
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF18181E), Color(0xFF1C443B), Color(0xFF1F5F4D)],
+            stops: [0.2, 0.7, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 100),
+            child: _buildContent(speedTestState),
+          ),
         ),
       ),
     );
@@ -350,7 +360,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 painter: SemicircularProgressPainter(
                   progress: progress,
                   color: color,
-                  strokeWidth: 12.w,
+                  strokeWidth: 2.w,
                 ),
               ),
               if (showLoadingIndicator)
@@ -404,9 +414,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
             ],
           ),
         ),
-        SizedBox(height: 20.h),
         CustomPaint(
-          size: Size(280.w, 5.h),
+          size: Size(250.w, 0.h),
           painter: SemicircularDividerPainter(strokeWidth: 2.w),
         ),
       ],
