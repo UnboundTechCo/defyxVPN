@@ -55,7 +55,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       final gForce = event.x.abs() + event.y.abs() + event.z.abs();
       if (gForce > threshold * 9.81) {
         final state = ref.read(speedTestProvider);
-        if (state.step == SpeedTestStep.toast && !state.isConnectionStable) {
+        // Allow shake retry only in toast state with error
+        if (state.step == SpeedTestStep.toast) {
           ref.read(speedTestProvider.notifier).retryConnection();
           Fluttertoast.showToast(
             msg: "Retrying connection...",
@@ -182,15 +183,20 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildDownloadState(SpeedTestState state) {
+    // Calculate progress based on speed (0-100 Mbps range, normalized)
+    final speedProgress = (state.currentSpeed / 100).clamp(0.0, 1.0);
+    final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
+
     return Column(
       children: [
         Expanded(
           child: Center(
             child: _buildProgressIndicator(
-              progress: state.progress,
+              progress: combinedProgress,
               color: Colors.green,
               showButton: false,
-              centerText: '${state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
+              centerText:
+                  '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
               subtitle: 'DOWNLOAD',
             ),
           ),
@@ -201,15 +207,20 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildUploadState(SpeedTestState state) {
+    // Calculate progress based on speed (0-50 Mbps range for upload, normalized)
+    final speedProgress = (state.currentSpeed / 50).clamp(0.0, 1.0);
+    final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
+
     return Column(
       children: [
         Expanded(
           child: Center(
             child: _buildProgressIndicator(
-              progress: state.progress,
+              progress: combinedProgress,
               color: Colors.blue,
               showButton: false,
-              centerText: '${state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
+              centerText:
+                  '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
               subtitle: 'UPLOAD',
             ),
           ),
@@ -220,10 +231,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildToastState(SpeedTestState state) {
-    if (!state.isConnectionStable) {
+    if (!state.isConnectionStable || state.errorMessage != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        final message = state.errorMessage ??
+            "Connection isn't stable. Tap retry to test again.";
         Fluttertoast.showToast(
-          msg: "Connection isn't stable, shake phone to establish a new connection",
+          msg: message,
           toastLength: Toast.LENGTH_LONG,
           gravity: ToastGravity.BOTTOM,
           backgroundColor: Colors.orange,
@@ -244,6 +257,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                   progress: 1.0,
                   color: Colors.orange,
                   showButton: true,
+                  showRetryButton: true,
                 ),
                 SizedBox(height: 40.h),
                 Icon(
@@ -253,7 +267,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 ),
                 SizedBox(height: 20.h),
                 Text(
-                  'Connection Unstable',
+                  state.errorMessage != null
+                      ? 'Test Failed'
+                      : 'Connection Unstable',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.sp,
@@ -266,7 +282,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 40.w),
                   child: Text(
-                    'Shake your phone to retry\nor tap the button to continue',
+                    'Tap the retry button or shake your phone to test again',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 14.sp,
@@ -317,6 +333,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     required Color color,
     required bool showButton,
     bool showLoadingIndicator = false,
+    bool showRetryButton = false,
     String? centerText,
     String? subtitle,
   }) {
@@ -382,7 +399,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               if (showButton)
                 Positioned(
                   bottom: 30.h,
-                  child: _buildStartButton(),
+                  child: _buildStartButton(showRetryButton: showRetryButton),
                 ),
             ],
           ),
@@ -396,16 +413,19 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildStartButton() {
+  Widget _buildStartButton({bool showRetryButton = false}) {
     final state = ref.watch(speedTestProvider);
 
     return GestureDetector(
       onTap: () {
         if (state.step == SpeedTestStep.ready) {
+          // Start new test
           ref.read(speedTestProvider.notifier).startTest();
         } else if (state.step == SpeedTestStep.toast) {
-          ref.read(speedTestProvider.notifier).moveToAds();
+          // Always retry on toast state (whether error or unstable)
+          ref.read(speedTestProvider.notifier).retryConnection();
         } else if (state.step == SpeedTestStep.ads) {
+          // Complete and go back to ready
           ref.read(speedTestProvider.notifier).completeTest();
         }
       },
@@ -427,7 +447,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           state.step == SpeedTestStep.ready
               ? Icons.play_arrow_rounded
               : state.step == SpeedTestStep.toast
-                  ? Icons.arrow_forward_rounded
+                  ? Icons.refresh_rounded
                   : Icons.check_rounded,
           color: const Color(0xFF0D1B1A),
           size: 36.sp,
