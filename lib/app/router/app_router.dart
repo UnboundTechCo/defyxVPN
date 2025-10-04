@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
+import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
 import '../../modules/main/presentation/widgets/defyx_navbar.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
@@ -146,6 +147,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               const SettingsScreen(),
               state.pageKey,
               SlideDirection.rightToLeft,
+            ),
+          ),
+          GoRoute(
+            path: DefyxVPNRoutes.speedTest.route,
+            pageBuilder: (context, state) => _createPageAnimation(
+              const SpeedTestScreen(),
+              state.pageKey,
+              SlideDirection.leftToRight,
             ),
           ),
         ],

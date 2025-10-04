@@ -1,11 +1,10 @@
 name: defyx_vpn
 description: "A new Vpn app."
-publish_to: 'none'
+publish_to: "none"
 version: 2.7.66+133
 
 environment:
   sdk: ^3.5.3
-
 
 dependencies:
   flutter:
@@ -54,8 +53,6 @@ dev_dependencies:
   freezed: ^2.5.7
   riverpod_generator: ^2.4.3
 
-
-
 flutter:
   uses-material-design: true
 
@@ -68,7 +65,6 @@ flutter:
     - assets/settings/config.json
     - .env
 
-  
   fonts:
     - family: Lato
       fonts:
