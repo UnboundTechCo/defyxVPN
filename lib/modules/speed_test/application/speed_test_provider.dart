@@ -209,7 +209,31 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         _latencies.add(latency);
         consecutiveFailures = 0; // Reset on success
 
-        print('   📡 Latency ${i + 1}/$numPackets: ${latency}ms');
+        // Update metrics immediately after each latency measurement
+        final avgLatency = _latencies.isNotEmpty
+            ? (_latencies.reduce((a, b) => a + b) / _latencies.length).round()
+            : 0;
+
+        // Calculate jitter if we have at least 2 measurements
+        int jitter = 0;
+        if (_latencies.length >= 2) {
+          int jitterSum = 0;
+          for (int j = 1; j < _latencies.length; j++) {
+            jitterSum += (_latencies[j] - _latencies[j - 1]).abs();
+          }
+          jitter = (jitterSum / (_latencies.length - 1)).round();
+        }
+
+        state = state.copyWith(
+          result: state.result.copyWith(
+            ping: avgLatency,
+            latency: avgLatency,
+            jitter: jitter,
+          ),
+        );
+
+        print(
+            '   📡 Latency ${i + 1}/$numPackets: ${latency}ms (Avg: ${avgLatency}ms, Jitter: ${jitter}ms)');
       } catch (e) {
         consecutiveFailures++;
         print('   ❌ Latency measurement ${i + 1} failed: $e');
@@ -253,25 +277,37 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           _downloadSpeeds.add(speed);
           consecutiveFailures = 0; // Reset on success
 
-          // Calculate max speed for display
+          // Calculate current metrics
           final maxSpeed = _downloadSpeeds.reduce((a, b) => a > b ? a : b);
-
+          final avgSpeed =
+              _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
           final avgLatency = _latencies.isNotEmpty
               ? (_latencies.reduce((a, b) => a + b) / _latencies.length).round()
               : 0;
 
-          // Update state with current speed and max speed
+          // Calculate jitter
+          int jitter = 0;
+          if (_latencies.length >= 2) {
+            int jitterSum = 0;
+            for (int j = 1; j < _latencies.length; j++) {
+              jitterSum += (_latencies[j] - _latencies[j - 1]).abs();
+            }
+            jitter = (jitterSum / (_latencies.length - 1)).round();
+          }
+
+          // Update state with current speed and metrics immediately
           state = state.copyWith(
             currentSpeed: speed,
             result: state.result.copyWith(
               downloadSpeed: maxSpeed,
               ping: avgLatency,
               latency: avgLatency,
+              jitter: jitter,
             ),
           );
 
           print(
-              '   📥 Download ${i + 1}/$count: ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps)');
+              '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
@@ -309,8 +345,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           _uploadSpeeds.add(speed);
           consecutiveFailures = 0; // Reset on success
 
-          // Calculate max speed for display
+          // Calculate current metrics
           final maxSpeed = _uploadSpeeds.reduce((a, b) => a > b ? a : b);
+          final avgSpeed =
+              _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
 
           // Calculate jitter from latency measurements
           int jitter = 0;
@@ -322,17 +360,29 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
             jitter = (jitterSum / (_latencies.length - 1)).round();
           }
 
-          // Update state with current speed and max speed
+          // Calculate packet loss
+          double packetLoss = 0.0;
+          if (_latencies.length > 10) {
+            final expectedPackets = _measurements
+                .where((m) => m['type'] == 'latency')
+                .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
+            packetLoss =
+                ((expectedPackets - _latencies.length) / expectedPackets * 100)
+                    .clamp(0.0, 100.0);
+          }
+
+          // Update state with current speed and all metrics immediately
           state = state.copyWith(
             currentSpeed: speed,
             result: state.result.copyWith(
               uploadSpeed: maxSpeed,
               jitter: jitter,
+              packetLoss: packetLoss,
             ),
           );
 
           print(
-              '   📤 Upload ${i + 1}/$count: ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps)');
+              '   📤 Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
