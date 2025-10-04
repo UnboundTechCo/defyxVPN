@@ -94,11 +94,89 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           ),
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(bottom: 100),
-            child: _buildContent(speedTestState),
+          child: Column(
+            children: [
+              SizedBox(height: 45.h),
+              _buildHeader(speedTestState.step),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 100),
+                  child: _buildContent(speedTestState),
+                ),
+              ),
+            ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(SpeedTestStep step) {
+    String upperText;
+    String bottomText;
+
+    switch (step) {
+      case SpeedTestStep.loading:
+      case SpeedTestStep.download:
+      case SpeedTestStep.upload:
+        upperText = 'is';
+        bottomText = 'testing speed ...';
+        break;
+      case SpeedTestStep.ready:
+      case SpeedTestStep.toast:
+      case SpeedTestStep.ads:
+        upperText = 'is ready';
+        bottomText = 'to speed test';
+        break;
+    }
+
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'D',
+                style: TextStyle(
+                  fontSize: 35.sp,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFFFC927),
+                ),
+              ),
+              Text(
+                'efyx ',
+                style: TextStyle(
+                  fontSize: 32.sp,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFFFFC927),
+                ),
+              ),
+              Text(
+                upperText,
+                style: TextStyle(
+                  fontSize: 32.sp,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            bottomText,
+            style: TextStyle(
+              fontSize: 32.sp,
+              fontFamily: 'Lato',
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -136,17 +214,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                     color: Colors.green,
                     showButton: true,
                   ),
-                  SizedBox(height: 40.h),
-                  Text(
-                    'Defyx is ready\nto speed test',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontFamily: 'Lato',
-                      color: Colors.white70,
-                      height: 1.5,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -172,17 +239,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                   showButton: false,
                   showLoadingIndicator: true,
                 ),
-                SizedBox(height: 40.h),
-                Text(
-                  'Defyx is\ntesting speed ...',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontFamily: 'Lato',
-                    color: Colors.white70,
-                    height: 1.5,
-                  ),
-                ),
               ],
             ),
           ),
@@ -201,13 +257,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       children: [
         Expanded(
           child: Center(
-            child: _buildProgressIndicator(
-              progress: combinedProgress,
-              color: Colors.green,
-              showButton: false,
-              centerText:
-                  '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
-              subtitle: 'DOWNLOAD',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildProgressIndicator(
+                  progress: combinedProgress,
+                  color: Colors.green,
+                  showButton: false,
+                  centerText:
+                      '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
+                  subtitle: 'DOWNLOAD',
+                ),
+              ],
             ),
           ),
         ),
@@ -225,13 +286,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       children: [
         Expanded(
           child: Center(
-            child: _buildProgressIndicator(
-              progress: combinedProgress,
-              color: Colors.blue,
-              showButton: false,
-              centerText:
-                  '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
-              subtitle: 'UPLOAD',
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildProgressIndicator(
+                  progress: combinedProgress,
+                  color: Colors.blue,
+                  showButton: false,
+                  centerText:
+                      '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
+                  subtitle: 'UPLOAD',
+                ),
+              ],
             ),
           ),
         ),
