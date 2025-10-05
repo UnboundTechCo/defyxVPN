@@ -25,6 +25,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   Timer? _toastTimer;
   Timer? _adsCountdownTimer;
   int _adsCountdown = 10;
+  bool _hasCountdownStarted = false;
 
   @override
   void initState() {
@@ -234,28 +235,34 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       _toastTimer = null;
     }
 
-    // Start countdown when entering ads state
-    if (state.step == SpeedTestStep.ads && _adsCountdownTimer == null) {
-      _adsCountdown = 10;
-      _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (mounted) {
-          setState(() {
-            _adsCountdown--;
-            if (_adsCountdown <= 0) {
-              _adsCountdownTimer?.cancel();
-              _adsCountdownTimer = null;
-              ref.read(speedTestProvider.notifier).completeTest();
-            }
-          });
-        } else {
-          timer.cancel();
-        }
-      });
-    } else if (state.step != SpeedTestStep.ads && _adsCountdownTimer != null) {
-      // Cancel timer if we leave ads state
+    // Start countdown when entering ads state (only once)
+    if (state.step == SpeedTestStep.ads) {
+      if (!_hasCountdownStarted) {
+        _hasCountdownStarted = true;
+        _adsCountdown = 10;
+        _adsCountdownTimer =
+            Timer.periodic(const Duration(seconds: 1), (timer) {
+          if (mounted) {
+            setState(() {
+              if (_adsCountdown > 0) {
+                _adsCountdown--;
+              }
+              // Stop the timer when countdown reaches 0
+              if (_adsCountdown <= 0) {
+                timer.cancel();
+                _adsCountdownTimer = null;
+              }
+            });
+          } else {
+            timer.cancel();
+          }
+        });
+      }
+    } else if (state.step == SpeedTestStep.ready) {
+      // Reset countdown flag when returning to ready state
+      _hasCountdownStarted = false;
       _adsCountdownTimer?.cancel();
       _adsCountdownTimer = null;
-      _adsCountdown = 10;
     }
 
     switch (state.step) {
@@ -382,7 +389,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "If the connection isn't stable, shake your\nphone to establish a new connection.",
+                state.errorMessage ?? 'Connection unstable. Please try again.',
                 style: TextStyle(
                   fontSize: 12.sp,
                   fontFamily: 'Lato',
@@ -441,14 +448,48 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                         letterSpacing: 0.5,
                       ),
                     ),
-                    Text(
-                      'Closing in ${_adsCountdown}s',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        fontFamily: 'Lato',
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w400,
-                      ),
+                    Row(
+                      spacing: 8.w,
+                      children: [
+                        Text(
+                          'Closing in ${_adsCountdown}s',
+                          style: TextStyle(
+                            fontSize: 10.sp,
+                            fontFamily: 'Lato',
+                            color: Colors.grey.shade500,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        GestureDetector(
+                          onTap: _adsCountdown <= 0
+                              ? () {
+                                  _adsCountdownTimer?.cancel();
+                                  _adsCountdownTimer = null;
+                                  _hasCountdownStarted = false;
+                                  ref
+                                      .read(speedTestProvider.notifier)
+                                      .completeTest();
+                                }
+                              : null,
+                          child: Container(
+                            width: 20.w,
+                            height: 20.w,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: _adsCountdown <= 0
+                                  ? Colors.grey.shade700
+                                  : Colors.grey.shade800,
+                            ),
+                            child: Icon(
+                              Icons.close_rounded,
+                              size: 14.sp,
+                              color: _adsCountdown <= 0
+                                  ? Colors.white
+                                  : Colors.grey.shade600,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -654,6 +695,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
   Widget _buildMetricItemHorizontal(String label, num value,
       {String unit = 'Mbps'}) {
+    // For packet loss, 0.0 is a valid value (good connection)
+    // For other metrics, 0 means no data yet
+    final bool hasValue = (label == 'P.LOSS') ? true : value > 0;
+
     return SizedBox(
       width: 115.w,
       height: 20.h,
@@ -674,7 +719,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               ),
             ),
           ),
-          value > 0
+          hasValue
               ? Positioned(
                   bottom: 0,
                   right: 0,
@@ -720,12 +765,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           // Always retry on toast state (whether error or unstable)
           ref.read(speedTestProvider.notifier).retryConnection();
         } else if (state.step == SpeedTestStep.ads) {
-          // Cancel countdown timer and complete
-          _adsCountdownTimer?.cancel();
-          _adsCountdownTimer = null;
-          _adsCountdown = 7;
-          // Complete and go back to ready
-          ref.read(speedTestProvider.notifier).completeTest();
+          // Only allow closing when countdown reaches 0
+          if (_adsCountdown <= 0) {
+            // Cancel countdown timer and complete
+            _adsCountdownTimer?.cancel();
+            _adsCountdownTimer = null;
+            _hasCountdownStarted = false;
+            // Complete and go back to ready
+            ref.read(speedTestProvider.notifier).completeTest();
+          }
         }
       },
       child: Container(
