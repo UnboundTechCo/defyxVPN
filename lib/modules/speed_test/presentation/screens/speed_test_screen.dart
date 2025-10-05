@@ -26,6 +26,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   Timer? _adsCountdownTimer;
   int _adsCountdown = 10;
   bool _hasCountdownStarted = false;
+  SpeedTestStep? _previousStep;
+  SpeedTestStep? _stepBeforeAds;
 
   @override
   void initState() {
@@ -221,6 +223,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildContent(SpeedTestState state) {
+    // Update previous step for next build
+    if (_previousStep != state.step) {
+      // Capture the step before transitioning to ads
+      if (state.step == SpeedTestStep.ads && _previousStep != null) {
+        _stepBeforeAds = _previousStep;
+      }
+      _previousStep = state.step;
+    }
+
     // Start timer when entering toast state
     if (state.step == SpeedTestStep.toast && _toastTimer == null) {
       _toastTimer = Timer(const Duration(seconds: 10), () {
@@ -263,6 +274,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       _hasCountdownStarted = false;
       _adsCountdownTimer?.cancel();
       _adsCountdownTimer = null;
+      _stepBeforeAds = null;
     }
 
     switch (state.step) {
@@ -277,7 +289,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       case SpeedTestStep.toast:
         return _buildToastState(state);
       case SpeedTestStep.ads:
-        return _buildAdsState(state);
+        return _buildAdsState(state, previousStep: _stepBeforeAds);
     }
   }
 
@@ -404,7 +416,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildAdsState(SpeedTestState state) {
+  Widget _buildAdsState(SpeedTestState state, {SpeedTestStep? previousStep}) {
     return Stack(
       children: [
         // Main content with progress indicator
@@ -414,9 +426,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
             SizedBox(height: 30.h),
             _buildProgressIndicator(
               progress: 1.0,
-              color: Colors.green,
+              color: previousStep == SpeedTestStep.toast
+                  ? Colors.orange
+                  : Colors.green,
               showButton: true,
               result: state.result,
+              previousStep: previousStep,
             ),
           ],
         ),
@@ -513,6 +528,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     String? centerUnit,
     String? subtitle,
     SpeedTestResult? result,
+    SpeedTestStep? previousStep,
   }) {
     return Column(
       children: [
@@ -595,7 +611,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               if (showButton)
                 Positioned(
                   bottom: 30.h,
-                  child: _buildStartButton(showRetryButton: showRetryButton),
+                  child: _buildStartButton(
+                    showRetryButton: showRetryButton,
+                    previousStep: previousStep,
+                  ),
                 ),
             ],
           ),
@@ -750,38 +769,36 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildStartButton({bool showRetryButton = false}) {
+  Widget _buildStartButton({
+    bool showRetryButton = false,
+    SpeedTestStep? previousStep,
+  }) {
     final state = ref.watch(speedTestProvider);
 
+    // Disable button when in ads state
+    final bool isEnabled = state.step != SpeedTestStep.ads;
+
     return GestureDetector(
-      onTap: () {
-        if (state.step == SpeedTestStep.ready) {
-          // Start new test
-          ref.read(speedTestProvider.notifier).startTest();
-        } else if (state.step == SpeedTestStep.toast) {
-          // Cancel the auto-transition timer and retry
-          _toastTimer?.cancel();
-          _toastTimer = null;
-          // Always retry on toast state (whether error or unstable)
-          ref.read(speedTestProvider.notifier).retryConnection();
-        } else if (state.step == SpeedTestStep.ads) {
-          // Only allow closing when countdown reaches 0
-          if (_adsCountdown <= 0) {
-            // Cancel countdown timer and complete
-            _adsCountdownTimer?.cancel();
-            _adsCountdownTimer = null;
-            _hasCountdownStarted = false;
-            // Complete and go back to ready
-            ref.read(speedTestProvider.notifier).completeTest();
-          }
-        }
-      },
+      onTap: isEnabled
+          ? () {
+              if (state.step == SpeedTestStep.ready) {
+                // Start new test
+                ref.read(speedTestProvider.notifier).startTest();
+              } else if (state.step == SpeedTestStep.toast) {
+                // Cancel the auto-transition timer and retry
+                _toastTimer?.cancel();
+                _toastTimer = null;
+                // Always retry on toast state (whether error or unstable)
+                ref.read(speedTestProvider.notifier).retryConnection();
+              }
+            }
+          : null,
       child: Container(
         width: 60.w,
         height: 60.w,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: Colors.white,
+          color: isEnabled ? Colors.white : Colors.grey.shade700,
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.3),
@@ -795,8 +812,11 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               ? Icons.play_arrow_rounded
               : state.step == SpeedTestStep.toast
                   ? Icons.refresh_rounded
-                  : Icons.check_rounded,
-          color: const Color(0xFF0D1B1A),
+                  : (state.step == SpeedTestStep.ads &&
+                          previousStep == SpeedTestStep.toast)
+                      ? Icons.refresh_rounded
+                      : Icons.check_rounded,
+          color: isEnabled ? const Color(0xFF0D1B1A) : Colors.grey.shade500,
           size: 36.sp,
         ),
       ),
