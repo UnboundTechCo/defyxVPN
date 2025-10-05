@@ -24,12 +24,10 @@ class CustomUpdateDialog {
           canPop: updateType == UpdateType.optional,
           child: Dialog(
             backgroundColor: Colors.transparent,
-            insetPadding:
-                EdgeInsets.symmetric(horizontal: 28.w, vertical: 24.h),
+            insetPadding: EdgeInsets.symmetric(horizontal: 28.w, vertical: 24.h),
             child: Container(
               width: MediaQuery.of(context).size.width - 32.w,
-              padding: EdgeInsets.only(
-                  left: 31.w, right: 31.w, top: 24.h, bottom: 24.h),
+              padding: EdgeInsets.only(left: 31.w, right: 31.w, top: 24.h, bottom: 24.h),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(16.r),
@@ -39,9 +37,7 @@ class CustomUpdateDialog {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    updateType == UpdateType.optional
-                        ? 'Update available'
-                        : 'Update required',
+                    updateType == UpdateType.optional ? 'Update available' : 'Update required',
                     style: TextStyle(
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w700,
@@ -73,15 +69,12 @@ class CustomUpdateDialog {
                       ),
                     ),
                   ],
-                  if (updateType == UpdateType.optional &&
-                      features != null) ...[
+                  if (updateType == UpdateType.optional && features != null) ...[
                     SizedBox(height: 16.h),
-                    ...features
-                        .map((feature) => Padding(
-                              padding: EdgeInsets.only(bottom: 8.h),
-                              child: _buildFeatureItem(feature),
-                            ))
-                        .toList(),
+                    ...features.map((feature) => Padding(
+                          padding: EdgeInsets.only(bottom: 8.h),
+                          child: _buildFeatureItem(feature),
+                        )),
                   ],
                   SizedBox(height: 20.h),
                   SizedBox(
@@ -208,16 +201,13 @@ class CustomUpdateDialogAlternative {
           ),
           content: Container(
             width: 343.w,
-            padding: EdgeInsets.only(
-                left: 31.w, right: 31.w, top: 24.h, bottom: 24.h),
+            padding: EdgeInsets.only(left: 31.w, right: 31.w, top: 24.h, bottom: 24.h),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  updateType == UpdateType.optional
-                      ? 'Update available'
-                      : 'Update required',
+                  updateType == UpdateType.optional ? 'Update available' : 'Update required',
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w700,
