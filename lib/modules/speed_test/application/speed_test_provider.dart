@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/http_client.dart';
 import '../../../core/network/http_client_interface.dart';
@@ -136,7 +137,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     // Reset state to initial
     state = const SpeedTestState();
 
-    print('🛑 Speed test stopped and reset');
+    debugPrint('🛑 Speed test stopped and reset');
   }
 
   void stopTestOnly() {
@@ -155,7 +156,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _uploadSpeeds.clear();
     _latencies.clear();
 
-    print('🛑 Speed test stopped (without state reset)');
+    debugPrint('🛑 Speed test stopped (without state reset)');
   }
 
   Future<void> startTest() async {
@@ -165,7 +166,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     }
 
     _isTestCanceled = false;
-    print('🚀 Cloudflare Speed Test Started');
+    debugPrint('🚀 Cloudflare Speed Test Started');
     _measurementId = _generateMeasurementId();
 
     state = state.copyWith(
@@ -189,7 +190,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
       // Check if test was canceled during execution
       if (_isTestCanceled) {
-        print('🛑 Speed test was canceled');
+        debugPrint('🛑 Speed test was canceled');
         return;
       }
 
@@ -198,9 +199,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
       // Check connection stability and move to next step
       _checkConnectionStability();
-      print('🏁 Speed test completed successfully');
+      debugPrint('🏁 Speed test completed successfully');
     } catch (e) {
-      print('❌ Speed test error: $e');
+      debugPrint('❌ Speed test error: $e');
       // Show toast state with error, then allow retry
       state = state.copyWith(
         errorMessage: 'Speed test failed. Please try again.',
@@ -217,7 +218,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     for (int i = 0; i < _measurements.length; i++) {
       // Check if test was canceled
       if (_isTestCanceled) {
-        print('🛑 Measurement sequence canceled');
+        debugPrint('🛑 Measurement sequence canceled');
         return;
       }
 
@@ -237,7 +238,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         state = state.copyWith(step: SpeedTestStep.upload);
       }
 
-      print('📊 Running measurement ${i + 1}/$_totalMeasurements: $type');
+      debugPrint('📊 Running measurement ${i + 1}/$_totalMeasurements: $type');
 
       switch (type) {
         case 'latency':
@@ -269,7 +270,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     for (int i = 0; i < numPackets; i++) {
       // Check if test was canceled
       if (_isTestCanceled) {
-        print('🛑 Latency measurement canceled');
+        debugPrint('🛑 Latency measurement canceled');
         return;
       }
 
@@ -283,7 +284,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
         // Check if test was canceled before processing latency result
         if (_isTestCanceled) {
-          print('   🛑 Latency measurement canceled after completion');
+          debugPrint('   🛑 Latency measurement canceled after completion');
           return;
         }
 
@@ -313,11 +314,11 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           ),
         );
 
-        print(
+        debugPrint(
             '   📡 Latency ${i + 1}/$numPackets: ${latency}ms (Avg: ${avgLatency}ms, Jitter: ${jitter}ms)');
       } catch (e) {
         consecutiveFailures++;
-        print('   ❌ Latency measurement ${i + 1} failed: $e');
+        debugPrint('   ❌ Latency measurement ${i + 1} failed: $e');
 
         // If we have too many consecutive failures, throw to stop the test
         if (consecutiveFailures >= maxConsecutiveFailures) {
@@ -354,7 +355,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     for (int i = 0; i < count; i++) {
       // Check if test was canceled
       if (_isTestCanceled) {
-        print('🛑 Download measurement canceled');
+        debugPrint('🛑 Download measurement canceled');
         return;
       }
 
@@ -393,12 +394,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
             ),
           );
 
-          print(
+          debugPrint(
               '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
-        print('   ❌ Download measurement ${i + 1} failed: $e');
+        debugPrint('   ❌ Download measurement ${i + 1} failed: $e');
 
         // If we have too many consecutive failures, throw to stop the test
         if (consecutiveFailures >= maxConsecutiveFailures) {
@@ -428,7 +429,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     for (int i = 0; i < count; i++) {
       // Check if test was canceled
       if (_isTestCanceled) {
-        print('🛑 Upload measurement canceled');
+        debugPrint('🛑 Upload measurement canceled');
         return;
       }
 
@@ -474,12 +475,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
             ),
           );
 
-          print(
+          debugPrint(
               '   📤 Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
-        print('   ❌ Upload measurement ${i + 1} failed: $e');
+        debugPrint('   ❌ Upload measurement ${i + 1} failed: $e');
 
         // If we have too many consecutive failures, throw to stop the test
         if (consecutiveFailures >= maxConsecutiveFailures) {
@@ -494,7 +495,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   Future<double> _measureDownloadSpeed(int bytes) async {
     // Check if test was canceled before starting
     if (_isTestCanceled) {
-      print('   🛑 Download measurement canceled before start');
+      debugPrint('   🛑 Download measurement canceled before start');
       return 0.0;
     }
 
@@ -527,7 +528,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
       // Check if test was canceled during the request
       if (_isTestCanceled) {
-        print('   🛑 Download measurement canceled after completion');
+        debugPrint('   🛑 Download measurement canceled after completion');
         return 0.0;
       }
 
@@ -543,7 +544,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
       return mbps;
     } catch (e) {
-      print('   ❌ Download measurement error: $e');
+      debugPrint('   ❌ Download measurement error: $e');
       throw Exception('Download failed: $e');
     }
   }
@@ -551,7 +552,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   Future<double> _measureUploadSpeed(int bytes) async {
     // Check if test was canceled before starting
     if (_isTestCanceled) {
-      print('   🛑 Upload measurement canceled before start');
+      debugPrint('   🛑 Upload measurement canceled before start');
       return 0.0;
     }
 
@@ -604,7 +605,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       ).then((_) {
         // Check if test was canceled during upload
         if (_isTestCanceled) {
-          print('   🛑 Upload measurement canceled after completion');
+          debugPrint('   🛑 Upload measurement canceled after completion');
           completer.complete(0.0);
           return;
         }
@@ -622,7 +623,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         final mbps = bps / 1000000;
         completer.complete(mbps);
       }).catchError((e) {
-        print('   ❌ Upload measurement error: $e');
+        debugPrint('   ❌ Upload measurement error: $e');
         if (!streamController.isClosed) {
           streamController.close();
         }
@@ -631,7 +632,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
       return completer.future;
     } catch (e) {
-      print('   ❌ Upload measurement error: $e');
+      debugPrint('   ❌ Upload measurement error: $e');
       throw Exception('Upload failed: $e');
     }
   }
@@ -712,9 +713,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       };
 
       await _api.logMeasurement(logData: logData);
-      print('📊 Results logged to Cloudflare');
+      debugPrint('📊 Results logged to Cloudflare');
     } catch (e) {
-      print('⚠️ Failed to log results to Cloudflare: $e');
+      debugPrint('⚠️ Failed to log results to Cloudflare: $e');
     }
   }
 

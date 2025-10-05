@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:vibration/vibration.dart';
 import 'dart:async';
 
 class SpeedTestScreen extends ConsumerStatefulWidget {
@@ -107,8 +108,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       try {
         ref.read(speedTestProvider.notifier).stopAndResetTest();
       } catch (e) {
-        // Handle case where provider might already be disposed
-        print('Speed test provider already disposed: $e');
+        debugPrint('Speed test provider already disposed: $e');
       }
     });
 
@@ -238,6 +238,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
         if (mounted) {
           ref.read(speedTestProvider.notifier).moveToAds();
           _toastTimer = null;
+        }
+      });
+
+      Vibration.hasVibrator().then((hasVibrator) {
+        if (hasVibrator == true) {
+          Vibration.vibrate(
+            pattern: [0, 200, 100, 200],
+            intensities: [0, 128, 0, 255],
+          );
         }
       });
     } else if (state.step != SpeedTestStep.toast && _toastTimer != null) {
