@@ -490,7 +490,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.start,
-            spacing: 20.h,
+            spacing: 10.h,
             children: [
               _buildMetricItemCompact('DOWNLOAD', result.downloadSpeed),
               _buildMetricItemCompact('PING', result.ping, unit: 'ms'),
@@ -500,20 +500,19 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 20.h,
+            spacing: 10.h,
             children: [
               _buildMetricItemCompact('UPLOAD', result.uploadSpeed),
               Column(
-                spacing: 8.h,
+                spacing: 5.h,
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildMetricItemHorizontal('LATENCY', result.latency,
                       unit: 'ms'),
-                  _buildMetricItemHorizontal('JITTER', result.jitter,
-                      unit: 'ms'),
                   _buildMetricItemHorizontal('P.LOSS', result.packetLoss,
                       unit: '%'),
+                  _buildMetricItemHorizontal('JITTER', result.jitter,
+                      unit: 'ms'),
                 ],
               ),
             ],
@@ -528,7 +527,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
-      spacing: 2.h,
+      spacing: 6.h,
       children: [
         Text(
           label,
@@ -539,7 +538,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
             fontWeight: FontWeight.w600,
           ),
         ),
-        SizedBox(height: 4.h),
         value > 0
             ? Text(
                 '${value.toStringAsFixed(1)} $unit',
@@ -551,12 +549,11 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 ),
               )
             : Container(
-                width: 65.w,
-                height: 3.h,
+                width: 75.w,
+                height: 10.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFF307065),
                   borderRadius: BorderRadius.circular(15.r),
-                  border: Border.all(width: 15.w),
                 ),
               ),
       ],
@@ -565,38 +562,54 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
   Widget _buildMetricItemHorizontal(String label, num value,
       {String unit = 'Mbps'}) {
-    return Row(
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontFamily: 'Lato',
-            color: Colors.grey.shade500,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        SizedBox(width: 8.w),
-        value > 0
-            ? Text(
-                '${value.toStringAsFixed(1)} $unit',
-                style: TextStyle(
-                  fontSize: 14.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            : Container(
-                width: 50.w,
-                height: 3.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF307065),
-                  borderRadius: BorderRadius.circular(15.r),
-                  border: Border.all(width: 10.w),
-                ),
+    return SizedBox(
+      width: 115.w,
+      height: 20.h,
+      child: Stack(
+        // spacing: 8.w,
+        alignment: Alignment.centerLeft,
+        children: [
+          Positioned(
+            top: 5.h,
+            left: 0,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 11.sp,
+                fontFamily: 'Lato',
+                color: Colors.grey.shade500,
+                fontWeight: FontWeight.w600,
               ),
-      ],
+            ),
+          ),
+          value > 0
+              ? Positioned(
+                  bottom: 0,
+                  right: 0,
+                  child: Text(
+                    '${value.toStringAsFixed(1)} $unit',
+                    style: TextStyle(
+                      fontSize: 13.sp,
+                      fontFamily: 'Lato',
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : Positioned(
+                  bottom: 2.5.h,
+                  right: 0,
+                  child: Container(
+                    width: 60.w,
+                    height: 7.5.h,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF307065),
+                      borderRadius: BorderRadius.circular(15.r),
+                    ),
+                  ),
+                ),
+        ],
+      ),
     );
   }
 
