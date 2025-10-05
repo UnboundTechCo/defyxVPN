@@ -47,6 +47,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
 
     _setupShakeDetector();
+
+    // Reset speed test when entering the screen
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(speedTestProvider.notifier).stopAndResetTest();
+        }
+      });
+    });
   }
 
   void _setupShakeDetector() {
@@ -72,7 +81,28 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   @override
+  void deactivate() {
+    // Stop the speed test when the widget is deactivated (e.g., navigating away)
+    Future.microtask(() {
+      if (mounted) {
+        ref.read(speedTestProvider.notifier).stopAndResetTest();
+      }
+    });
+    super.deactivate();
+  }
+
+  @override
   void dispose() {
+    // Ensure speed test is stopped and reset when leaving the screen (deferred)
+    Future.microtask(() {
+      try {
+        ref.read(speedTestProvider.notifier).stopAndResetTest();
+      } catch (e) {
+        // Handle case where provider might already be disposed
+        print('Speed test provider already disposed: $e');
+      }
+    });
+
     _animationController.dispose();
     _accelerometerSubscription?.cancel();
     super.dispose();
@@ -476,6 +506,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               Column(
                 spacing: 8.h,
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _buildMetricItemHorizontal('LATENCY', result.latency,
                       unit: 'ms'),

@@ -46,7 +46,8 @@ class SpeedTestState {
   }
 }
 
-final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
+final speedTestProvider =
+    StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
   final httpClient = ref.read(httpClientProvider);
   return SpeedTestNotifier(httpClient);
 });
@@ -54,6 +55,11 @@ final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestStat
 class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final IHttpClient _httpClient;
   late final SpeedTestApi _api;
+
+  // Cancellation and cleanup
+  bool _isTestCanceled = false;
+  Timer? _testTimer;
+  final List<StreamSubscription> _activeSubscriptions = [];
 
   // Measurement configuration following Cloudflare's protocol
   // Organized by step: LOADING (latency) → DOWNLOAD → UPLOAD
@@ -86,7 +92,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final List<int> _latencies = [];
 
   // Progress tracking
-  static const int _totalMeasurements = 14; // Total measurements in our sequence
+  static const int _totalMeasurements =
+      14; // Total measurements in our sequence
 
   SpeedTestNotifier(this._httpClient) : super(const SpeedTestState()) {
     // Get the underlying Dio instance from HttpClient
@@ -106,7 +113,60 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     return (Random().nextDouble() * 1e16).round().toString();
   }
 
+  @override
+  void dispose() {
+    stopTestOnly();
+    super.dispose();
+  }
+
+  void stopAndResetTest() {
+    _isTestCanceled = true;
+    _testTimer?.cancel();
+    _testTimer = null;
+
+    // Cancel all active subscriptions
+    for (final subscription in _activeSubscriptions) {
+      subscription.cancel();
+    }
+    _activeSubscriptions.clear();
+
+    // Clear measurement data
+    _downloadSpeeds.clear();
+    _uploadSpeeds.clear();
+    _latencies.clear();
+
+    // Reset state to initial
+    state = const SpeedTestState();
+
+    print('🛑 Speed test stopped and reset');
+  }
+
+  void stopTestOnly() {
+    _isTestCanceled = true;
+    _testTimer?.cancel();
+    _testTimer = null;
+
+    // Cancel all active subscriptions
+    for (final subscription in _activeSubscriptions) {
+      subscription.cancel();
+    }
+    _activeSubscriptions.clear();
+
+    // Clear measurement data
+    _downloadSpeeds.clear();
+    _uploadSpeeds.clear();
+    _latencies.clear();
+
+    print('🛑 Speed test stopped (without state reset)');
+  }
+
   Future<void> startTest() async {
+    // Stop any existing test first
+    if (!_isTestCanceled) {
+      stopAndResetTest();
+    }
+
+    _isTestCanceled = false;
     print('🚀 Cloudflare Speed Test Started');
     _measurementId = _generateMeasurementId();
 
@@ -128,6 +188,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     try {
       // Start the measurement sequence
       await _runMeasurementSequence();
+
+      // Check if test was canceled during execution
+      if (_isTestCanceled) {
+        print('🛑 Speed test was canceled');
+        return;
+      }
 
       // Calculate final results
       _calculateFinalResults();
@@ -151,6 +217,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     String currentPhase = '';
 
     for (int i = 0; i < _measurements.length; i++) {
+      // Check if test was canceled
+      if (_isTestCanceled) {
+        print('🛑 Measurement sequence canceled');
+        return;
+      }
+
       final measurement = _measurements[i];
       final progress = (i + 1) / _totalMeasurements;
       final type = measurement['type'] as String;
@@ -197,6 +269,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     const maxConsecutiveFailures = 3; // Stop after 3 consecutive failures
 
     for (int i = 0; i < numPackets; i++) {
+      // Check if test was canceled
+      if (_isTestCanceled) {
+        print('🛑 Latency measurement canceled');
+        return;
+      }
+
       try {
         final startTime = DateTime.now();
         await _api.latencyTest(
@@ -204,6 +282,13 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           measurementId: _measurementId,
         );
         final latency = DateTime.now().difference(startTime).inMilliseconds;
+
+        // Check if test was canceled before processing latency result
+        if (_isTestCanceled) {
+          print('   🛑 Latency measurement canceled after completion');
+          return;
+        }
+
         _latencies.add(latency);
         consecutiveFailures = 0; // Reset on success
 
@@ -238,7 +323,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
         // If we have too many consecutive failures, throw to stop the test
         if (consecutiveFailures >= maxConsecutiveFailures) {
-          throw Exception('Network connection failed. Please check your internet connection.');
+          throw Exception(
+              'Network connection failed. Please check your internet connection.');
         }
       }
 
@@ -247,11 +333,13 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     // If we have no successful measurements at all, throw error
     if (_latencies.isEmpty) {
-      throw Exception('Failed to measure latency. Please check your internet connection.');
+      throw Exception(
+          'Failed to measure latency. Please check your internet connection.');
     }
   }
 
-  Future<void> _runDownloadMeasurement(Map<String, dynamic> config, double progress) async {
+  Future<void> _runDownloadMeasurement(
+      Map<String, dynamic> config, double progress) async {
     final bytes = config['bytes'] as int;
     final count = config['count'] as int;
     final sizeLabel = _formatBytes(bytes);
@@ -266,6 +354,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     const maxConsecutiveFailures = 3;
 
     for (int i = 0; i < count; i++) {
+      // Check if test was canceled
+      if (_isTestCanceled) {
+        print('🛑 Download measurement canceled');
+        return;
+      }
+
       try {
         final speed = await _measureDownloadSpeed(bytes);
         if (speed > 0) {
@@ -274,7 +368,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
           // Calculate current metrics
           final maxSpeed = _downloadSpeeds.reduce((a, b) => a > b ? a : b);
-          final avgSpeed = _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
+          final avgSpeed =
+              _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
           final avgLatency = _latencies.isNotEmpty
               ? (_latencies.reduce((a, b) => a + b) / _latencies.length).round()
               : 0;
@@ -317,7 +412,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     }
   }
 
-  Future<void> _runUploadMeasurement(Map<String, dynamic> config, double progress) async {
+  Future<void> _runUploadMeasurement(
+      Map<String, dynamic> config, double progress) async {
     final bytes = config['bytes'] as int;
     final count = config['count'] as int;
     final sizeLabel = _formatBytes(bytes);
@@ -332,15 +428,22 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     const maxConsecutiveFailures = 3;
 
     for (int i = 0; i < count; i++) {
+      // Check if test was canceled
+      if (_isTestCanceled) {
+        print('🛑 Upload measurement canceled');
+        return;
+      }
+
       try {
         final speed = await _measureUploadSpeed(bytes);
-        if (speed > 0) {
+        if (speed > 0 && !_isTestCanceled) {
           _uploadSpeeds.add(speed);
           consecutiveFailures = 0; // Reset on success
 
           // Calculate current metrics
           final maxSpeed = _uploadSpeeds.reduce((a, b) => a > b ? a : b);
-          final avgSpeed = _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
+          final avgSpeed =
+              _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
 
           // Calculate jitter from latency measurements
           int jitter = 0;
@@ -359,7 +462,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
                 .where((m) => m['type'] == 'latency')
                 .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
             packetLoss =
-                ((expectedPackets - _latencies.length) / expectedPackets * 100).clamp(0.0, 100.0);
+                ((expectedPackets - _latencies.length) / expectedPackets * 100)
+                    .clamp(0.0, 100.0);
           }
 
           // Update state with current speed and all metrics immediately
@@ -390,6 +494,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   Future<double> _measureDownloadSpeed(int bytes) async {
+    // Check if test was canceled before starting
+    if (_isTestCanceled) {
+      print('   🛑 Download measurement canceled before start');
+      return 0.0;
+    }
+
     try {
       final startTime = DateTime.now();
       DateTime? lastUpdateTime;
@@ -403,8 +513,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           final elapsed = now.difference(startTime).inMilliseconds / 1000.0;
 
           // Update UI every 100ms to show real-time progress
-          if (elapsed > 0.05 &&
-              (lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds > 100)) {
+          if (!_isTestCanceled &&
+              elapsed > 0.05 &&
+              (lastUpdateTime == null ||
+                  now.difference(lastUpdateTime!).inMilliseconds > 100)) {
             final currentSpeedBps = (received * 8) / elapsed;
             final currentSpeedMbps = currentSpeedBps / 1000000;
 
@@ -414,6 +526,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           }
         },
       );
+
+      // Check if test was canceled during the request
+      if (_isTestCanceled) {
+        print('   🛑 Download measurement canceled after completion');
+        return 0.0;
+      }
 
       final duration = DateTime.now().difference(startTime);
       final durationSeconds = duration.inMilliseconds / 1000.0;
@@ -433,6 +551,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   Future<double> _measureUploadSpeed(int bytes) async {
+    // Check if test was canceled before starting
+    if (_isTestCanceled) {
+      print('   🛑 Upload measurement canceled before start');
+      return 0.0;
+    }
+
     try {
       final startTime = DateTime.now();
       DateTime? lastUpdateTime;
@@ -451,7 +575,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           final chunk = List<int>.generate(size, (_) => random.nextInt(256));
           streamController.add(chunk);
           sentBytes += size;
-          await Future.delayed(const Duration(microseconds: 1)); // Allow event loop to process
+          await Future.delayed(
+              const Duration(microseconds: 1)); // Allow event loop to process
         }
         await streamController.close();
       });
@@ -466,8 +591,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           final elapsed = now.difference(startTime).inMilliseconds / 1000.0;
 
           // Update UI every 100ms to show real-time progress
-          if (elapsed > 0.05 &&
-              (lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds > 100)) {
+          if (!_isTestCanceled &&
+              elapsed > 0.05 &&
+              (lastUpdateTime == null ||
+                  now.difference(lastUpdateTime!).inMilliseconds > 100)) {
             final currentSpeedBps = (sent * 8) / elapsed;
             final currentSpeedMbps = currentSpeedBps / 1000000;
 
@@ -477,6 +604,13 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           }
         },
       ).then((_) {
+        // Check if test was canceled during upload
+        if (_isTestCanceled) {
+          print('   🛑 Upload measurement canceled after completion');
+          completer.complete(0.0);
+          return;
+        }
+
         final duration = DateTime.now().difference(startTime);
         final durationSeconds = duration.inMilliseconds / 1000.0;
 
@@ -509,7 +643,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     final finalDownloadSpeed = _calculatePercentile(_downloadSpeeds, 0.9);
     final finalUploadSpeed = _calculatePercentile(_uploadSpeeds, 0.9);
     final finalLatency =
-        _calculatePercentile(_latencies.map((e) => e.toDouble()).toList(), 0.5).round();
+        _calculatePercentile(_latencies.map((e) => e.toDouble()).toList(), 0.5)
+            .round();
 
     // Calculate jitter and packet loss
     int jitter = 0;
@@ -530,7 +665,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           .where((m) => m['type'] == 'latency')
           .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
       packetLoss =
-          ((expectedPackets - _latencies.length) / expectedPackets * 100).clamp(0.0, 100.0);
+          ((expectedPackets - _latencies.length) / expectedPackets * 100)
+              .clamp(0.0, 100.0);
     }
 
     state = state.copyWith(
@@ -602,14 +738,18 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   void resetTest() {
-    state = const SpeedTestState();
+    stopAndResetTest();
   }
 
   void retryConnection() {
-    // Reset to ready state first
-    state = const SpeedTestState();
-    // Then start the test
-    startTest();
+    // Stop current test and reset, then start new test
+    stopAndResetTest();
+    // Small delay to ensure cleanup is complete
+    Future.delayed(const Duration(milliseconds: 100), () {
+      if (!_isTestCanceled) {
+        startTest();
+      }
+    });
   }
 
   void moveToAds() {
