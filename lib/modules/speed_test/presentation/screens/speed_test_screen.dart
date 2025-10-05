@@ -22,6 +22,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   late Animation<double> _scaleAnimation;
   StreamSubscription? _accelerometerSubscription;
   late final GoogleAds _googleAds;
+  Timer? _toastTimer;
+  Timer? _adsCountdownTimer;
+  int _adsCountdown = 10;
 
   @override
   void initState() {
@@ -66,6 +69,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
         final state = ref.read(speedTestProvider);
         // Allow shake retry only in toast state with error
         if (state.step == SpeedTestStep.toast) {
+          // Cancel the auto-transition timer
+          _toastTimer?.cancel();
+          _toastTimer = null;
           ref.read(speedTestProvider.notifier).retryConnection();
           Fluttertoast.showToast(
             msg: "Retrying connection...",
@@ -105,6 +111,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
     _animationController.dispose();
     _accelerometerSubscription?.cancel();
+    _toastTimer?.cancel();
+    _adsCountdownTimer?.cancel();
     super.dispose();
   }
 
@@ -212,6 +220,44 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildContent(SpeedTestState state) {
+    // Start timer when entering toast state
+    if (state.step == SpeedTestStep.toast && _toastTimer == null) {
+      _toastTimer = Timer(const Duration(seconds: 10), () {
+        if (mounted) {
+          ref.read(speedTestProvider.notifier).moveToAds();
+          _toastTimer = null;
+        }
+      });
+    } else if (state.step != SpeedTestStep.toast && _toastTimer != null) {
+      // Cancel timer if we leave toast state
+      _toastTimer?.cancel();
+      _toastTimer = null;
+    }
+
+    // Start countdown when entering ads state
+    if (state.step == SpeedTestStep.ads && _adsCountdownTimer == null) {
+      _adsCountdown = 10;
+      _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (mounted) {
+          setState(() {
+            _adsCountdown--;
+            if (_adsCountdown <= 0) {
+              _adsCountdownTimer?.cancel();
+              _adsCountdownTimer = null;
+              ref.read(speedTestProvider.notifier).completeTest();
+            }
+          });
+        } else {
+          timer.cancel();
+        }
+      });
+    } else if (state.step != SpeedTestStep.ads && _adsCountdownTimer != null) {
+      // Cancel timer if we leave ads state
+      _adsCountdownTimer?.cancel();
+      _adsCountdownTimer = null;
+      _adsCountdown = 10;
+    }
+
     switch (state.step) {
       case SpeedTestStep.ready:
         return _buildReadyState();
@@ -277,8 +323,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           progress: combinedProgress,
           color: Colors.green,
           showButton: false,
-          centerText:
-              '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.downloadSpeed.toStringAsFixed(1)}\nMbps',
+          centerValue: state.currentSpeed > 0
+              ? state.currentSpeed
+              : state.result.downloadSpeed,
+          centerUnit: 'Mbps',
           subtitle: 'DOWNLOAD',
           result: state.result,
         ),
@@ -299,8 +347,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           progress: combinedProgress,
           color: Colors.blue,
           showButton: false,
-          centerText:
-              '${state.currentSpeed > 0 ? state.currentSpeed.toStringAsFixed(1) : state.result.uploadSpeed.toStringAsFixed(1)}\nMbps',
+          centerValue: state.currentSpeed > 0
+              ? state.currentSpeed
+              : state.result.uploadSpeed,
+          centerUnit: 'Mbps',
           subtitle: 'UPLOAD',
           result: state.result,
         ),
@@ -309,21 +359,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildToastState(SpeedTestState state) {
-    if (!state.isConnectionStable || state.errorMessage != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final message = state.errorMessage ??
-            "Connection isn't stable. Tap retry to test again.";
-        Fluttertoast.showToast(
-          msg: message,
-          toastLength: Toast.LENGTH_LONG,
-          gravity: ToastGravity.BOTTOM,
-          backgroundColor: Colors.orange,
-          textColor: Colors.white,
-          fontSize: 14.sp,
-        );
-      });
-    }
-
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
@@ -336,34 +371,26 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           result: state.result,
         ),
         SizedBox(height: 40.h),
-        Icon(
-          Icons.warning_amber_rounded,
-          color: Colors.orange,
-          size: 60.sp,
-        ),
-        SizedBox(height: 20.h),
-        Text(
-          state.errorMessage != null ? 'Test Failed' : 'Connection Unstable',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 20.sp,
-            fontFamily: 'Lato',
-            color: Colors.orange,
-            fontWeight: FontWeight.bold,
+        Container(
+          margin: EdgeInsets.symmetric(horizontal: 20.w),
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A1A),
+            borderRadius: BorderRadius.circular(10.r),
           ),
-        ),
-        SizedBox(height: 10.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 40.w),
-          child: Text(
-            'Tap the retry button or shake your phone to test again',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14.sp,
-              fontFamily: 'Lato',
-              color: Colors.white70,
-              height: 1.5,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "If the connection isn't stable, shake your\nphone to establish a new connection.",
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontFamily: 'Lato',
+                  color: Colors.white,
+                  height: 1.4,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -371,20 +398,65 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   }
 
   Widget _buildAdsState(SpeedTestState state) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
+    return Stack(
       children: [
-        SizedBox(height: 30.h),
-        _buildProgressIndicator(
-          progress: 1.0,
-          color: Colors.green,
-          showButton: true,
-          result: state.result,
+        // Main content with progress indicator
+        Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 30.h),
+            _buildProgressIndicator(
+              progress: 1.0,
+              color: Colors.green,
+              showButton: true,
+              result: state.result,
+            ),
+          ],
         ),
-        SizedBox(height: 40.h),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 20.w),
-          child: _googleAds,
+        // Ad overlay positioned near bottom
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            margin: EdgeInsets.symmetric(horizontal: 20.w),
+            padding: EdgeInsets.all(12.w),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1A1A1A),
+              borderRadius: BorderRadius.circular(10.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'ADVERTISEMENT',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontFamily: 'Lato',
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    Text(
+                      'Closing in ${_adsCountdown}s',
+                      style: TextStyle(
+                        fontSize: 10.sp,
+                        fontFamily: 'Lato',
+                        color: Colors.grey.shade500,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 8.h),
+                _googleAds,
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -396,7 +468,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     required bool showButton,
     bool showLoadingIndicator = false,
     bool showRetryButton = false,
-    String? centerText,
+    double? centerValue,
+    String? centerUnit,
     String? subtitle,
     SpeedTestResult? result,
   }) {
@@ -428,7 +501,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                     ),
                   ),
                 ),
-              if (centerText != null)
+              if (centerValue != null)
                 Positioned(
                   bottom: 0.h,
                   child: Column(
@@ -445,16 +518,35 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                           ),
                         ),
                       ],
-                      Text(
-                        centerText,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 28.sp,
-                          fontFamily: 'Lato',
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          height: 1.2,
-                        ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        spacing: 4.w,
+                        children: [
+                          Text(
+                            centerValue.toStringAsFixed(1),
+                            style: TextStyle(
+                              fontSize: 50.sp,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              height: 1.0,
+                            ),
+                          ),
+                          Padding(
+                            padding: EdgeInsets.only(bottom: 6.h),
+                            child: Text(
+                              centerUnit ?? '',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w400,
+                                color: Colors.grey.shade400,
+                                height: 1.0,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
@@ -622,9 +714,16 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           // Start new test
           ref.read(speedTestProvider.notifier).startTest();
         } else if (state.step == SpeedTestStep.toast) {
+          // Cancel the auto-transition timer and retry
+          _toastTimer?.cancel();
+          _toastTimer = null;
           // Always retry on toast state (whether error or unstable)
           ref.read(speedTestProvider.notifier).retryConnection();
         } else if (state.step == SpeedTestStep.ads) {
+          // Cancel countdown timer and complete
+          _adsCountdownTimer?.cancel();
+          _adsCountdownTimer = null;
+          _adsCountdown = 7;
           // Complete and go back to ready
           ref.read(speedTestProvider.notifier).completeTest();
         }
