@@ -62,27 +62,25 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final List<StreamSubscription> _activeSubscriptions = [];
 
   // Measurement configuration following Cloudflare's protocol
+  // Optimized for fast, accurate results with fewer measurements
   // Organized by step: LOADING (latency) → DOWNLOAD → UPLOAD
   static const List<Map<String, dynamic>> _measurements = [
-    // LOADING PHASE: Latency measurements
+    // LOADING PHASE: Latency measurements (reduced for speed)
     {'type': 'latency', 'numPackets': 1}, // initial TTFB estimation
-    {'type': 'latency', 'numPackets': 20}, // detailed latency measurements
+    {'type': 'latency', 'numPackets': 10}, // quick latency sample
 
-    // DOWNLOAD PHASE: Progressive download tests
-    {'type': 'download', 'bytes': 100000, 'count': 1},
-    {'type': 'download', 'bytes': 100000, 'count': 9},
-    {'type': 'download', 'bytes': 1000000, 'count': 8},
-    // {'type': 'download', 'bytes': 10000000, 'count': 6},
-    // {'type': 'download', 'bytes': 25000000, 'count': 4},
-    // {'type': 'download', 'bytes': 100000000, 'count': 3},
-    // {'type': 'download', 'bytes': 250000000, 'count': 2},
+    // DOWNLOAD PHASE: Optimized progressive download tests (safe sizes)
+    {'type': 'download', 'bytes': 100000, 'count': 1}, // 100KB warmup
+    {'type': 'download', 'bytes': 1000000, 'count': 3}, // 1MB - fast ramp-up
+    {'type': 'download', 'bytes': 5000000, 'count': 2}, // 5MB - medium speed
+    {'type': 'download', 'bytes': 10000000, 'count': 2}, // 10MB - high speed
+    {'type': 'download', 'bytes': 25000000, 'count': 1}, // 25MB - max speed
 
-    // UPLOAD PHASE: Progressive upload tests
-    {'type': 'upload', 'bytes': 100000, 'count': 8},
-    {'type': 'upload', 'bytes': 1000000, 'count': 6},
-    // {'type': 'upload', 'bytes': 10000000, 'count': 4},
-    // {'type': 'upload', 'bytes': 25000000, 'count': 4},
-    // {'type': 'upload', 'bytes': 50000000, 'count': 3},
+    // UPLOAD PHASE: Optimized progressive upload tests
+    {'type': 'upload', 'bytes': 100000, 'count': 2}, // 100KB warmup
+    {'type': 'upload', 'bytes': 1000000, 'count': 2}, // 1MB medium test
+    {'type': 'upload', 'bytes': 5000000, 'count': 2}, // 5MB high speed
+    {'type': 'upload', 'bytes': 10000000, 'count': 1}, // 10MB max speed
   ];
 
   // Real-time measurement tracking
@@ -93,7 +91,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
   // Progress tracking
   static const int _totalMeasurements =
-      14; // Total measurements in our sequence
+      11; // Total measurements in our optimized sequence
 
   SpeedTestNotifier(this._httpClient) : super(const SpeedTestState()) {
     // Get the underlying Dio instance from HttpClient
