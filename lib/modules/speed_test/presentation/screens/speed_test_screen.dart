@@ -5,8 +5,6 @@ import 'package:defyx_vpn/modules/speed_test/presentation/widgets/semicircular_p
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:sensors_plus/sensors_plus.dart';
 import 'package:vibration/vibration.dart';
 import 'dart:async';
 
@@ -21,7 +19,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _scaleAnimation;
-  StreamSubscription? _accelerometerSubscription;
   late final GoogleAds _googleAds;
   Timer? _toastTimer;
   Timer? _adsCountdownTimer;
@@ -53,40 +50,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       cornerRadius: 10.0.r,
     );
 
-    _setupShakeDetector();
-
-    // Reset speed test when entering the screen
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.microtask(() {
         if (mounted) {
           ref.read(speedTestProvider.notifier).stopAndResetTest();
         }
       });
-    });
-  }
-
-  void _setupShakeDetector() {
-    const threshold = 2.7;
-    _accelerometerSubscription = accelerometerEventStream().listen((event) {
-      final gForce = event.x.abs() + event.y.abs() + event.z.abs();
-      if (gForce > threshold * 9.81) {
-        final state = ref.read(speedTestProvider);
-        // Allow shake retry only in toast state with error
-        if (state.step == SpeedTestStep.toast) {
-          // Cancel the auto-transition timer
-          _toastTimer?.cancel();
-          _toastTimer = null;
-          ref.read(speedTestProvider.notifier).retryConnection();
-          Fluttertoast.showToast(
-            msg: "Retrying connection...",
-            toastLength: Toast.LENGTH_SHORT,
-            gravity: ToastGravity.BOTTOM,
-            backgroundColor: Colors.green,
-            textColor: Colors.white,
-            fontSize: 14.sp,
-          );
-        }
-      }
     });
   }
 
@@ -113,7 +82,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     });
 
     _animationController.dispose();
-    _accelerometerSubscription?.cancel();
     _toastTimer?.cancel();
     _adsCountdownTimer?.cancel();
     super.dispose();
