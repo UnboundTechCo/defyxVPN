@@ -364,8 +364,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           _downloadSpeeds.add(speed);
           consecutiveFailures = 0; // Reset on success
 
-          // Calculate current metrics
-          final maxSpeed = _downloadSpeeds.reduce((a, b) => a > b ? a : b);
+          // Calculate current metrics using 90th percentile (consistent with final results)
+          final percentileSpeed = _calculatePercentile(_downloadSpeeds, 0.9);
           final avgSpeed =
               _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
           final avgLatency = _latencies.isNotEmpty
@@ -386,7 +386,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           state = state.copyWith(
             currentSpeed: speed,
             result: state.result.copyWith(
-              downloadSpeed: maxSpeed,
+              downloadSpeed: percentileSpeed,
               ping: avgLatency,
               latency: avgLatency,
               jitter: jitter,
@@ -394,7 +394,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           );
 
           print(
-              '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
+              '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
@@ -438,8 +438,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           _uploadSpeeds.add(speed);
           consecutiveFailures = 0; // Reset on success
 
-          // Calculate current metrics
-          final maxSpeed = _uploadSpeeds.reduce((a, b) => a > b ? a : b);
+          // Calculate current metrics using 90th percentile (consistent with final results)
+          final percentileSpeed = _calculatePercentile(_uploadSpeeds, 0.9);
           final avgSpeed =
               _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
 
@@ -468,14 +468,14 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           state = state.copyWith(
             currentSpeed: speed,
             result: state.result.copyWith(
-              uploadSpeed: maxSpeed,
+              uploadSpeed: percentileSpeed,
               jitter: jitter,
               packetLoss: packetLoss,
             ),
           );
 
           print(
-              '   📤 Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (Max: ${maxSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
+              '   📤 Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
