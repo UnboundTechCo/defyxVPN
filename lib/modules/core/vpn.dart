@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
@@ -97,6 +97,7 @@ class VPN {
   Future<void> _connect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     final loggerNotifier = ref.read(loggerStateProvider.notifier);
+    final settings = ref.read(settingsProvider.notifier);
 
     _setConnectionStep(1);
 
@@ -126,21 +127,11 @@ class VPN {
     final flowLineStorage =
         await ref.read(secureStorageProvider).read('flowLine');
 
-    final pattern = await _getPattern(ref);
+    final pattern = settings.getPattern();
     await _methodChannel.invokeMethod(
         "startVPN", {"flowLine": flowLineStorage, "pattern": pattern});
   }
 
-  Future<String> _getPattern(WidgetRef ref) async {
-    final flowLineStorage =
-        await ref.read(secureStorageProvider).read('flowLine');
-    String pattern = "";
-    if (flowLineStorage != null) {
-      final List<dynamic> flowline = json.decode(flowLineStorage);
-      pattern = flowline.map((e) => e['label']).join(',');
-    }
-    return pattern;
-  }
 
   Future<void> _onFailerConnect() async {
     final connectionNotifier =

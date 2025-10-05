@@ -47,38 +47,38 @@ class DefyxNavBar extends ConsumerWidget {
                 ),
                 _DefyxNavItem(
                   screen: AppScreen.settings,
-                  icon: "info",
+                  icon: "settings",
                   current: currentScreen,
-                  onTap: () => _showShareDialog(context, ref),
+                  onTap: () => _navigateToSettings(context),
                 ),
               ],
             ),
           ),
-          // Positioned(
-          //   right: 24.w,
-          //   child: GestureDetector(
-          //     onTap: () => _showShareDialog(context, ref),
-          //     child: Container(
-          //       width: 60.w,
-          //       height: 60.w,
-          //       decoration: const BoxDecoration(
-          //         color: Colors.black,
-          //         shape: BoxShape.circle,
-          //       ),
-          //       child: Center(
-          //         child: SvgPicture.asset(
-          //           'assets/icons/info.svg',
-          //           width: 25.w,
-          //           height: 25.w,
-          //           colorFilter: const ColorFilter.mode(
-          //             Colors.white,
-          //             BlendMode.srcIn,
-          //           ),
-          //         ),
-          //       ),
-          //     ),
-          //   ),
-          // ),
+          Positioned(
+            right: 24.w,
+            child: GestureDetector(
+              onTap: () => _showShareDialog(context, ref),
+              child: Container(
+                width: 60.w,
+                height: 60.w,
+                decoration: const BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/icons/info.svg',
+                    width: 25.w,
+                    height: 25.w,
+                    colorFilter: const ColorFilter.mode(
+                      Colors.white,
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     ));

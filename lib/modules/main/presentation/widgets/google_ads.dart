@@ -82,6 +82,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
   }
 
   void setAdLoaded(bool isLoaded) {
+    debugPrint('Ad loaded: $isLoaded');
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
@@ -168,6 +169,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     // Reset state when widget is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isDisposed) {
+        debugPrint('Resetting Google ads state...');
         ref.read(googleAdsProvider.notifier).resetState();
         _initializeAds();
       }
@@ -176,8 +178,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
   void _initializeAds() async {
     if (_isDisposed || _hasInitialized) return;
-
+    
     _hasInitialized = true;
+    _isDisposed = true;
 
     try {
       final shouldShowGoogle = await _shouldShowGoogleAds(ref);
@@ -187,14 +190,16 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
 
       if (shouldShowGoogle) {
+        debugPrint("Loading Google ads...");
         _loadGoogleAd();
-      } else {
-        debugPrint('Loading custom ads...');
-        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
-        if (!_isDisposed) {
-          ref.read(customAdDataProvider.notifier).state = customAdData;
-          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
-        }
+        return;
+      }
+
+      debugPrint('Loading custom ads...');
+      final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+      if (!_isDisposed) {
+        ref.read(customAdDataProvider.notifier).state = customAdData;
+        ref.read(googleAdsProvider.notifier).setAdLoaded(true);
       }
     } catch (e) {
       debugPrint('Error initializing ads: $e');
@@ -319,7 +324,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
       }
     });
-
+    debugPrint('Google ads state: $adsState');
     return SizedBox(
       height: 280.h,
       width: 336.w,
