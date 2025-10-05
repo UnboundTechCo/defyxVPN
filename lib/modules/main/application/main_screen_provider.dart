@@ -60,6 +60,7 @@ class MainScreenLogic {
 
   Future<void> checkAndReconnect() async {
     final connectionState = ref.read(connectionStateProvider);
+    print("Connection status: ${connectionState.status}");
     if (connectionState.status == ConnectionStatus.connected) {
       // await connectOrDisconnect();
     }

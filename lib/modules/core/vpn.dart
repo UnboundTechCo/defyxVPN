@@ -91,6 +91,10 @@ class VPN {
       _setConnectionTotalSteps(int.parse(configIndex));
     }
 
+    if (msg.contains("VPN Service Destroyed")) {
+      _onTunnelClosed();
+    }
+
     log.addLog(msg);
   }
 
@@ -131,7 +135,6 @@ class VPN {
     await _methodChannel.invokeMethod(
         "startVPN", {"flowLine": flowLineStorage, "pattern": pattern});
   }
-
 
   Future<void> _onFailerConnect() async {
     final connectionNotifier =
@@ -183,6 +186,13 @@ class VPN {
     if (Platform.isIOS) {
       await _methodChannel.invokeMethod('disconnect');
     }
+    connectionNotifier?.setDisconnected();
+  }
+
+  Future<void> _onTunnelClosed() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    await _methodChannel.invokeMethod('stopVPN');
     connectionNotifier?.setDisconnected();
   }
 
@@ -258,6 +268,18 @@ class VPN {
         return;
       default:
         break;
+    }
+  }
+
+  Future<void> getVPNStatus() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final isTunnelRunning =
+        await _methodChannel.invokeMethod('isTunnelRunning');
+    if (isTunnelRunning) {
+      connectionNotifier?.setConnected();
+    } else {
+      connectionNotifier?.setDisconnected();
     }
   }
 }
