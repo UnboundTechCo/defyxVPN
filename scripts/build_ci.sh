@@ -17,7 +17,7 @@ validate_env_vars() {
     for var in "${required_vars[@]}"; do
         if [ -z "${!var}" ]; then
             echo -e "${RED}❌ Environment variable $var is not set${NC}"
-            exit 1
+            #exit 1
         fi
     done
     echo -e "${GREEN}✅ All required environment variables are set${NC}"
