@@ -211,9 +211,39 @@ read -p "Enter your choice (1-5): " choice
 
 # Get current version and handle version increment
 current_version=$(get_current_version)
+
+# Update ad value in AndroidManifest.xml and Info.plist from DEFYX_AD_ID
+update_ad_id() {
+    local env_file="$PROJECT_ROOT/.env"
+    if [ ! -f "$env_file" ]; then
+        echo -e "${YELLOW}⚠️  .env file not found. Skipping ad id update.${NC}"
+        return
+    fi
+    local android_ad_id=$(grep '^ANDROID_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
+    local ios_ad_id=$(grep '^IOS_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
+    local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
+    local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
+    # AndroidManifest.xml
+    if [ -n "$android_ad_id" ]; then
+        sed -i '' "s|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"[^"]*\"/>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$android_ad_id\"/>|" "$android_manifest"
+        echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
+    else
+        echo -e "${YELLOW}⚠️  ANDROID_AD_UNIT_ID not set in .env. Skipping AndroidManifest.xml update.${NC}"
+    fi
+    # Info.plist
+    if [ -n "$ios_ad_id" ]; then
+        sed -i '' "s|<key>GADApplicationIdentifier</key>\n[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key>\n    <string>$ios_ad_id</string>|" "$ios_info_plist"
+        echo -e "${GREEN}✅ Updated iOS ad id in Info.plist${NC}"
+    else
+        echo -e "${YELLOW}⚠️  IOS_AD_UNIT_ID not set in .env. Skipping Info.plist update.${NC}"
+    fi
+}
+
 if ! select_version_increment "$current_version"; then
     exit 1
 fi
+
+update_ad_id
 
 case $choice in
     1)
