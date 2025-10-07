@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'speed_test_metric_item.dart';
 
 class SpeedTestMetricsDisplay extends StatelessWidget {
   final double downloadSpeed;
@@ -25,105 +26,59 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        Column(
-          children: [
-            if (showDownload)
-              _MetricItem(
-                label: 'DOWNLOAD',
-                value: downloadSpeed.toStringAsFixed(1),
-                unit: 'Mbps',
-              ),
-            if (showUpload)
-              _MetricItem(
-                label: 'UPLOAD',
-                value: uploadSpeed.toStringAsFixed(1),
-                unit: 'Mbps',
-              ),
-            if (ping > 0)
-              _MetricItem(
-                label: 'PING',
-                value: ping.toString(),
-                unit: 'ms',
-              ),
-          ],
-        ),
-        Column(
-          children: [
-            if (latency > 0)
-              _MetricItem(
-                label: 'LATENCY',
-                value: latency.toString(),
-                unit: 'ms',
-              ),
-            if (jitter > 0)
-              _MetricItem(
-                label: 'JITTER',
-                value: jitter.toString(),
-                unit: 'ms',
-              ),
-            if (packetLoss > 0)
-              _MetricItem(
-                label: 'P.LOSS',
-                value: packetLoss.toStringAsFixed(1),
-                unit: '%',
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _MetricItem extends StatelessWidget {
-  final String label;
-  final String value;
-  final String unit;
-
-  const _MetricItem({
-    required this.label,
-    required this.value,
-    required this.unit,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 8.h),
-      child: Column(
+      padding: EdgeInsets.symmetric(horizontal: 40.w),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10.sp,
-              fontFamily: 'Lato',
-              color: Colors.grey.shade500,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 4.h),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.start,
+            spacing: 10.h,
             children: [
-              Text(
-                value,
-                style: TextStyle(
-                  fontSize: 16.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              if (showDownload)
+                MetricItemCompact(
+                  label: 'DOWNLOAD',
+                  value: downloadSpeed,
                 ),
+              MetricItemCompact(
+                label: 'PING',
+                value: ping,
+                unit: 'ms',
               ),
-              SizedBox(width: 4.w),
-              Text(
-                unit,
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.grey.shade400,
+            ],
+          ),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 10.h,
+            children: [
+              if (showUpload)
+                MetricItemCompact(
+                  label: 'UPLOAD',
+                  value: uploadSpeed,
                 ),
+              Column(
+                spacing: 5.h,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  MetricItemHorizontal(
+                    label: 'LATENCY',
+                    value: latency,
+                    unit: 'ms',
+                  ),
+                  MetricItemHorizontal(
+                    label: 'P.LOSS',
+                    value: packetLoss,
+                    unit: '%',
+                  ),
+                  MetricItemHorizontal(
+                    label: 'JITTER',
+                    value: jitter,
+                    unit: 'ms',
+                  ),
+                ],
               ),
             ],
           ),
