@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 
 import '../widgets/speed_test_header.dart';
 import '../../application/speed_test_provider.dart';
@@ -97,31 +99,22 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   @override
   Widget build(BuildContext context) {
     final speedTestState = ref.watch(speedTestProvider);
+    final connectionState = ref.watch(connectionStateProvider);
 
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF18181E), Color(0xFF1C443B), Color(0xFF1F5F4D)],
-            stops: [0.2, 0.7, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              SizedBox(height: 45.h),
-              SpeedTestHeader(step: speedTestState.step),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 100),
-                  child: _buildContent(speedTestState),
-                ),
+    return MainScreenBackground(
+      connectionStatus: connectionState.status,
+      child: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: 45.h),
+            SpeedTestHeader(step: speedTestState.step),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 100),
+                child: _buildContent(speedTestState),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -160,7 +153,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       if (!_hasCountdownStarted) {
         _hasCountdownStarted = true;
         _adsCountdown = 10;
-        _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        _adsCountdownTimer =
+            Timer.periodic(const Duration(seconds: 1), (timer) {
           if (mounted) {
             setState(() {
               if (_adsCountdown > 0) {
