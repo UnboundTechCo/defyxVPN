@@ -228,8 +228,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       if (!_hasCountdownStarted) {
         _hasCountdownStarted = true;
         _adsCountdown = 10;
-        _adsCountdownTimer =
-            Timer.periodic(const Duration(seconds: 1), (timer) {
+        _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
           if (mounted) {
             setState(() {
               if (_adsCountdown > 0) {
@@ -319,9 +318,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           progress: combinedProgress,
           color: Colors.green,
           showButton: false,
-          centerValue: state.currentSpeed > 0
-              ? state.currentSpeed
-              : state.result.downloadSpeed,
+          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
           centerUnit: 'Mbps',
           subtitle: 'DOWNLOAD',
           result: state.result,
@@ -343,9 +340,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           progress: combinedProgress,
           color: Colors.blue,
           showButton: false,
-          centerValue: state.currentSpeed > 0
-              ? state.currentSpeed
-              : state.result.uploadSpeed,
+          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
           centerUnit: 'Mbps',
           subtitle: 'UPLOAD',
           result: state.result,
@@ -403,9 +398,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
             SizedBox(height: 30.h),
             _buildProgressIndicator(
               progress: 1.0,
-              color: previousStep == SpeedTestStep.toast
-                  ? Colors.orange
-                  : Colors.green,
+              color: previousStep == SpeedTestStep.toast ? Colors.orange : Colors.green,
               showButton: true,
               result: state.result,
               previousStep: previousStep,
@@ -458,9 +451,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                                   _adsCountdownTimer?.cancel();
                                   _adsCountdownTimer = null;
                                   _hasCountdownStarted = false;
-                                  ref
-                                      .read(speedTestProvider.notifier)
-                                      .completeTest();
+                                  ref.read(speedTestProvider.notifier).completeTest();
                                 }
                               : null,
                           child: Container(
@@ -468,16 +459,13 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                             height: 20.w,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: _adsCountdown <= 0
-                                  ? Colors.grey.shade700
-                                  : Colors.grey.shade800,
+                              color:
+                                  _adsCountdown <= 0 ? Colors.grey.shade700 : Colors.grey.shade800,
                             ),
                             child: Icon(
                               Icons.close_rounded,
                               size: 14.sp,
-                              color: _adsCountdown <= 0
-                                  ? Colors.white
-                                  : Colors.grey.shade600,
+                              color: _adsCountdown <= 0 ? Colors.white : Colors.grey.shade600,
                             ),
                           ),
                         ),
@@ -636,12 +624,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                 spacing: 5.h,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildMetricItemHorizontal('LATENCY', result.latency,
-                      unit: 'ms'),
-                  _buildMetricItemHorizontal('P.LOSS', result.packetLoss,
-                      unit: '%'),
-                  _buildMetricItemHorizontal('JITTER', result.jitter,
-                      unit: 'ms'),
+                  _buildMetricItemHorizontal('LATENCY', result.latency, unit: 'ms'),
+                  _buildMetricItemHorizontal('P.LOSS', result.packetLoss, unit: '%'),
+                  _buildMetricItemHorizontal('JITTER', result.jitter, unit: 'ms'),
                 ],
               ),
             ],
@@ -651,8 +636,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildMetricItemCompact(String label, num value,
-      {String unit = 'Mbps'}) {
+  Widget _buildMetricItemCompact(String label, num value, {String unit = 'Mbps'}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -689,8 +673,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildMetricItemHorizontal(String label, num value,
-      {String unit = 'Mbps'}) {
+  Widget _buildMetricItemHorizontal(String label, num value, {String unit = 'Mbps'}) {
     // For packet loss, 0.0 is a valid value (good connection)
     // For other metrics, 0 means no data yet
     final bool hasValue = (label == 'P.LOSS') ? true : value > 0;
@@ -789,8 +772,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               ? Icons.play_arrow_rounded
               : state.step == SpeedTestStep.toast
                   ? Icons.refresh_rounded
-                  : (state.step == SpeedTestStep.ads &&
-                          previousStep == SpeedTestStep.toast)
+                  : (state.step == SpeedTestStep.ads && previousStep == SpeedTestStep.toast)
                       ? Icons.refresh_rounded
                       : Icons.check_rounded,
           color: isEnabled ? const Color(0xFF0D1B1A) : Colors.grey.shade500,

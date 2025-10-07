@@ -47,8 +47,7 @@ class SpeedTestState {
   }
 }
 
-final speedTestProvider =
-    StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
+final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
   final httpClient = ref.read(httpClientProvider);
   return SpeedTestNotifier(httpClient);
 });
@@ -91,8 +90,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final List<int> _latencies = [];
 
   // Progress tracking
-  static const int _totalMeasurements =
-      11; // Total measurements in our optimized sequence
+  static const int _totalMeasurements = 11; // Total measurements in our optimized sequence
 
   SpeedTestNotifier(this._httpClient) : super(const SpeedTestState()) {
     // Get the underlying Dio instance from HttpClient
@@ -322,8 +320,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
         // If we have too many consecutive failures, throw to stop the test
         if (consecutiveFailures >= maxConsecutiveFailures) {
-          throw Exception(
-              'Network connection failed. Please check your internet connection.');
+          throw Exception('Network connection failed. Please check your internet connection.');
         }
       }
 
@@ -332,13 +329,11 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     // If we have no successful measurements at all, throw error
     if (_latencies.isEmpty) {
-      throw Exception(
-          'Failed to measure latency. Please check your internet connection.');
+      throw Exception('Failed to measure latency. Please check your internet connection.');
     }
   }
 
-  Future<void> _runDownloadMeasurement(
-      Map<String, dynamic> config, double progress) async {
+  Future<void> _runDownloadMeasurement(Map<String, dynamic> config, double progress) async {
     final bytes = config['bytes'] as int;
     final count = config['count'] as int;
     final sizeLabel = _formatBytes(bytes);
@@ -367,8 +362,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
           // Calculate current metrics using 90th percentile (consistent with final results)
           final percentileSpeed = _calculatePercentile(_downloadSpeeds, 0.9);
-          final avgSpeed =
-              _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
+          final avgSpeed = _downloadSpeeds.reduce((a, b) => a + b) / _downloadSpeeds.length;
           final avgLatency = _latencies.isNotEmpty
               ? (_latencies.reduce((a, b) => a + b) / _latencies.length).round()
               : 0;
@@ -411,8 +405,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     }
   }
 
-  Future<void> _runUploadMeasurement(
-      Map<String, dynamic> config, double progress) async {
+  Future<void> _runUploadMeasurement(Map<String, dynamic> config, double progress) async {
     final bytes = config['bytes'] as int;
     final count = config['count'] as int;
     final sizeLabel = _formatBytes(bytes);
@@ -441,8 +434,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
           // Calculate current metrics using 90th percentile (consistent with final results)
           final percentileSpeed = _calculatePercentile(_uploadSpeeds, 0.9);
-          final avgSpeed =
-              _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
+          final avgSpeed = _uploadSpeeds.reduce((a, b) => a + b) / _uploadSpeeds.length;
 
           // Calculate jitter from latency measurements
           int jitter = 0;
@@ -461,8 +453,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
                 .where((m) => m['type'] == 'latency')
                 .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
             packetLoss =
-                ((expectedPackets - _latencies.length) / expectedPackets * 100)
-                    .clamp(0.0, 100.0);
+                ((expectedPackets - _latencies.length) / expectedPackets * 100).clamp(0.0, 100.0);
           }
 
           // Update state with current speed and all metrics immediately
@@ -514,8 +505,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           // Update UI every 100ms to show real-time progress
           if (!_isTestCanceled &&
               elapsed > 0.05 &&
-              (lastUpdateTime == null ||
-                  now.difference(lastUpdateTime!).inMilliseconds > 100)) {
+              (lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds > 100)) {
             final currentSpeedBps = (received * 8) / elapsed;
             final currentSpeedMbps = currentSpeedBps / 1000000;
 
@@ -574,8 +564,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           final chunk = List<int>.generate(size, (_) => random.nextInt(256));
           streamController.add(chunk);
           sentBytes += size;
-          await Future.delayed(
-              const Duration(microseconds: 1)); // Allow event loop to process
+          await Future.delayed(const Duration(microseconds: 1)); // Allow event loop to process
         }
         await streamController.close();
       });
@@ -592,8 +581,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           // Update UI every 100ms to show real-time progress
           if (!_isTestCanceled &&
               elapsed > 0.05 &&
-              (lastUpdateTime == null ||
-                  now.difference(lastUpdateTime!).inMilliseconds > 100)) {
+              (lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds > 100)) {
             final currentSpeedBps = (sent * 8) / elapsed;
             final currentSpeedMbps = currentSpeedBps / 1000000;
 
@@ -643,13 +631,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     final finalUploadSpeed = _calculatePercentile(_uploadSpeeds, 0.9);
 
     // PING: Minimum latency (best case RTT)
-    final ping =
-        _latencies.isNotEmpty ? _latencies.reduce((a, b) => a < b ? a : b) : 0;
+    final ping = _latencies.isNotEmpty ? _latencies.reduce((a, b) => a < b ? a : b) : 0;
 
     // LATENCY: Median latency (50th percentile - typical latency)
-    final latency =
-        _calculatePercentile(_latencies.map((e) => e.toDouble()).toList(), 0.5)
-            .round();
+    final latency = _calculatePercentile(_latencies.map((e) => e.toDouble()).toList(), 0.5).round();
 
     // Calculate jitter and packet loss
     int jitter = 0;
@@ -670,8 +655,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
           .where((m) => m['type'] == 'latency')
           .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
       packetLoss =
-          ((expectedPackets - _latencies.length) / expectedPackets * 100)
-              .clamp(0.0, 100.0);
+          ((expectedPackets - _latencies.length) / expectedPackets * 100).clamp(0.0, 100.0);
     }
 
     state = state.copyWith(
