@@ -5,12 +5,14 @@ class SemicircularProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double strokeWidth;
+  final Animation<double>? animation;
 
   SemicircularProgressPainter({
     required this.progress,
     required this.color,
     this.strokeWidth = 12.0,
-  });
+    this.animation,
+  }) : super(repaint: animation);
 
   @override
   void paint(Canvas canvas, Size size) {
