@@ -1,7 +1,13 @@
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/semicircular_progress.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_header.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_download/speed_test_download_state.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_loading/speed_test_loading_state.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -106,7 +112,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
           child: Column(
             children: [
               SizedBox(height: 45.h),
-              _buildHeader(speedTestState.step),
+              SpeedTestHeader(step: speedTestState.step),
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.only(bottom: 100),
@@ -120,87 +126,14 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     );
   }
 
-  Widget _buildHeader(SpeedTestStep step) {
-    String upperText;
-    String bottomText;
-
-    switch (step) {
-      case SpeedTestStep.loading:
-      case SpeedTestStep.download:
-      case SpeedTestStep.upload:
-        upperText = 'is';
-        bottomText = 'testing speed ...';
-        break;
-      case SpeedTestStep.ready:
-      case SpeedTestStep.toast:
-      case SpeedTestStep.ads:
-        upperText = 'is ready';
-        bottomText = 'to speed test';
-        break;
-    }
-
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'D',
-                style: TextStyle(
-                  fontSize: 35.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFFFC927),
-                ),
-              ),
-              Text(
-                'efyx ',
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFFFFC927),
-                ),
-              ),
-              Text(
-                upperText,
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            bottomText,
-            style: TextStyle(
-              fontSize: 32.sp,
-              fontFamily: 'Lato',
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildContent(SpeedTestState state) {
-    // Update previous step for next build
     if (_previousStep != state.step) {
-      // Capture the step before transitioning to ads
       if (state.step == SpeedTestStep.ads && _previousStep != null) {
         _stepBeforeAds = _previousStep;
       }
       _previousStep = state.step;
     }
 
-    // Start timer when entering toast state
     if (state.step == SpeedTestStep.toast && _toastTimer == null) {
       _toastTimer = Timer(const Duration(seconds: 10), () {
         if (mounted) {
@@ -218,12 +151,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
         }
       });
     } else if (state.step != SpeedTestStep.toast && _toastTimer != null) {
-      // Cancel timer if we leave toast state
       _toastTimer?.cancel();
       _toastTimer = null;
     }
 
-    // Start countdown when entering ads state (only once)
     if (state.step == SpeedTestStep.ads) {
       if (!_hasCountdownStarted) {
         _hasCountdownStarted = true;
@@ -234,7 +165,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               if (_adsCountdown > 0) {
                 _adsCountdown--;
               }
-              // Stop the timer when countdown reaches 0
               if (_adsCountdown <= 0) {
                 timer.cancel();
                 _adsCountdownTimer = null;
@@ -246,7 +176,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
         });
       }
     } else if (state.step == SpeedTestStep.ready) {
-      // Reset countdown flag when returning to ready state
       _hasCountdownStarted = false;
       _adsCountdownTimer?.cancel();
       _adsCountdownTimer = null;
@@ -255,530 +184,35 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
     switch (state.step) {
       case SpeedTestStep.ready:
-        return _buildReadyState();
+        return SpeedTestReadyState(scaleAnimation: _scaleAnimation);
       case SpeedTestStep.loading:
-        return _buildLoadingState();
+        return const SpeedTestLoadingState();
       case SpeedTestStep.download:
-        return _buildDownloadState(state);
+        return SpeedTestDownloadState(state: state);
       case SpeedTestStep.upload:
-        return _buildUploadState(state);
+        return SpeedTestUploadState(state: state);
       case SpeedTestStep.toast:
-        return _buildToastState(state);
+        return SpeedTestToastState(
+          state: state,
+          onRetry: () {
+            _toastTimer?.cancel();
+            _toastTimer = null;
+            ref.read(speedTestProvider.notifier).retryConnection();
+          },
+        );
       case SpeedTestStep.ads:
-        return _buildAdsState(state, previousStep: _stepBeforeAds);
+        return SpeedTestAdsState(
+          state: state,
+          previousStep: _stepBeforeAds,
+          countdown: _adsCountdown,
+          googleAds: _googleAds,
+          onClose: () {
+            _adsCountdownTimer?.cancel();
+            _adsCountdownTimer = null;
+            _hasCountdownStarted = false;
+            ref.read(speedTestProvider.notifier).completeTest();
+          },
+        );
     }
-  }
-
-  Widget _buildReadyState() {
-    final state = ref.watch(speedTestProvider);
-    return ScaleTransition(
-      scale: _scaleAnimation,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          SizedBox(height: 30.h),
-          _buildProgressIndicator(
-            progress: 0.0,
-            color: Colors.green,
-            showButton: true,
-            result: state.result,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    final state = ref.watch(speedTestProvider);
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        SizedBox(height: 30.h),
-        _buildProgressIndicator(
-          progress: 0.0,
-          color: Colors.blue,
-          showButton: false,
-          showLoadingIndicator: true,
-          result: state.result,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDownloadState(SpeedTestState state) {
-    // Calculate progress based on speed (0-100 Mbps range, normalized)
-    final speedProgress = (state.currentSpeed / 100).clamp(0.0, 1.0);
-    final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        SizedBox(height: 30.h),
-        _buildProgressIndicator(
-          progress: combinedProgress,
-          color: Colors.green,
-          showButton: false,
-          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
-          centerUnit: 'Mbps',
-          subtitle: 'DOWNLOAD',
-          result: state.result,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildUploadState(SpeedTestState state) {
-    // Calculate progress based on speed (0-50 Mbps range for upload, normalized)
-    final speedProgress = (state.currentSpeed / 50).clamp(0.0, 1.0);
-    final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        SizedBox(height: 30.h),
-        _buildProgressIndicator(
-          progress: combinedProgress,
-          color: Colors.blue,
-          showButton: false,
-          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
-          centerUnit: 'Mbps',
-          subtitle: 'UPLOAD',
-          result: state.result,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildToastState(SpeedTestState state) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        SizedBox(height: 30.h),
-        _buildProgressIndicator(
-          progress: 1.0,
-          color: Colors.orange,
-          showButton: true,
-          showRetryButton: true,
-          result: state.result,
-        ),
-        SizedBox(height: 40.h),
-        Container(
-          margin: EdgeInsets.symmetric(horizontal: 20.w),
-          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
-          decoration: BoxDecoration(
-            color: const Color(0xFF1A1A1A),
-            borderRadius: BorderRadius.circular(10.r),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                state.errorMessage ?? 'Connection unstable. Please try again.',
-                style: TextStyle(
-                  fontSize: 12.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.white,
-                  height: 1.4,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildAdsState(SpeedTestState state, {SpeedTestStep? previousStep}) {
-    return Stack(
-      children: [
-        // Main content with progress indicator
-        Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            SizedBox(height: 30.h),
-            _buildProgressIndicator(
-              progress: 1.0,
-              color: previousStep == SpeedTestStep.toast ? Colors.orange : Colors.green,
-              showButton: true,
-              result: state.result,
-              previousStep: previousStep,
-            ),
-          ],
-        ),
-        // Ad overlay positioned near bottom
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            margin: EdgeInsets.symmetric(horizontal: 20.w),
-            padding: EdgeInsets.all(12.w),
-            decoration: BoxDecoration(
-              color: const Color(0xFF1A1A1A),
-              borderRadius: BorderRadius.circular(10.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'ADVERTISEMENT',
-                      style: TextStyle(
-                        fontSize: 10.sp,
-                        fontFamily: 'Lato',
-                        color: Colors.grey.shade500,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    Row(
-                      spacing: 8.w,
-                      children: [
-                        Text(
-                          'Closing in ${_adsCountdown}s',
-                          style: TextStyle(
-                            fontSize: 10.sp,
-                            fontFamily: 'Lato',
-                            color: Colors.grey.shade500,
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        GestureDetector(
-                          onTap: _adsCountdown <= 0
-                              ? () {
-                                  _adsCountdownTimer?.cancel();
-                                  _adsCountdownTimer = null;
-                                  _hasCountdownStarted = false;
-                                  ref.read(speedTestProvider.notifier).completeTest();
-                                }
-                              : null,
-                          child: Container(
-                            width: 20.w,
-                            height: 20.w,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color:
-                                  _adsCountdown <= 0 ? Colors.grey.shade700 : Colors.grey.shade800,
-                            ),
-                            child: Icon(
-                              Icons.close_rounded,
-                              size: 14.sp,
-                              color: _adsCountdown <= 0 ? Colors.white : Colors.grey.shade600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: 8.h),
-                _googleAds,
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildProgressIndicator({
-    required double progress,
-    required Color color,
-    required bool showButton,
-    bool showLoadingIndicator = false,
-    bool showRetryButton = false,
-    double? centerValue,
-    String? centerUnit,
-    String? subtitle,
-    SpeedTestResult? result,
-    SpeedTestStep? previousStep,
-  }) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 280.w,
-          height: 140.h,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              CustomPaint(
-                size: Size(280.w, 140.h),
-                painter: SemicircularProgressPainter(
-                  progress: progress,
-                  color: color,
-                  strokeWidth: 2.w,
-                ),
-              ),
-              if (showLoadingIndicator)
-                Positioned(
-                  bottom: 30.h,
-                  child: SizedBox(
-                    width: 30.w,
-                    height: 30.h,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3.w,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
-                    ),
-                  ),
-                ),
-              if (centerValue != null)
-                Positioned(
-                  bottom: 0.h,
-                  child: Column(
-                    children: [
-                      if (subtitle != null) ...[
-                        SizedBox(height: 4.h),
-                        Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontFamily: 'Lato',
-                            color: color,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        spacing: 4.w,
-                        children: [
-                          Text(
-                            centerValue.toStringAsFixed(1),
-                            style: TextStyle(
-                              fontSize: 50.sp,
-                              fontFamily: 'Lato',
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                              height: 1.0,
-                            ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.only(bottom: 6.h),
-                            child: Text(
-                              centerUnit ?? '',
-                              style: TextStyle(
-                                fontSize: 14.sp,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w400,
-                                color: Colors.grey.shade400,
-                                height: 1.0,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              if (showButton)
-                Positioned(
-                  bottom: 30.h,
-                  child: _buildStartButton(
-                    showRetryButton: showRetryButton,
-                    previousStep: previousStep,
-                  ),
-                ),
-            ],
-          ),
-        ),
-        CustomPaint(
-          size: Size(250.w, 0.h),
-          painter: SemicircularDividerPainter(strokeWidth: 2.w),
-        ),
-        if (result != null) ...[
-          SizedBox(height: 75.h),
-          _buildMetricsUnderProgress(result),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildMetricsUnderProgress(SpeedTestResult result) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // First row: DOWNLOAD and UPLOAD
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            spacing: 10.h,
-            children: [
-              _buildMetricItemCompact('DOWNLOAD', result.downloadSpeed),
-              _buildMetricItemCompact('PING', result.ping, unit: 'ms'),
-            ],
-          ),
-          // Second row: PING on left, LATENCY/JITTER/P.LOSS on right
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 10.h,
-            children: [
-              _buildMetricItemCompact('UPLOAD', result.uploadSpeed),
-              Column(
-                spacing: 5.h,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildMetricItemHorizontal('LATENCY', result.latency, unit: 'ms'),
-                  _buildMetricItemHorizontal('P.LOSS', result.packetLoss, unit: '%'),
-                  _buildMetricItemHorizontal('JITTER', result.jitter, unit: 'ms'),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetricItemCompact(String label, num value, {String unit = 'Mbps'}) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      spacing: 6.h,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 11.sp,
-            fontFamily: 'Lato',
-            color: Colors.grey.shade500,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        value > 0
-            ? Text(
-                '${value.toStringAsFixed(1)} $unit',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              )
-            : Container(
-                width: 75.w,
-                height: 10.h,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF307065),
-                  borderRadius: BorderRadius.circular(15.r),
-                ),
-              ),
-      ],
-    );
-  }
-
-  Widget _buildMetricItemHorizontal(String label, num value, {String unit = 'Mbps'}) {
-    // For packet loss, 0.0 is a valid value (good connection)
-    // For other metrics, 0 means no data yet
-    final bool hasValue = (label == 'P.LOSS') ? true : value > 0;
-
-    return SizedBox(
-      width: 115.w,
-      height: 20.h,
-      child: Stack(
-        // spacing: 8.w,
-        alignment: Alignment.centerLeft,
-        children: [
-          Positioned(
-            top: 5.h,
-            left: 0,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 11.sp,
-                fontFamily: 'Lato',
-                color: Colors.grey.shade500,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          hasValue
-              ? Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: Text(
-                    '${value.toStringAsFixed(1)} $unit',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontFamily: 'Lato',
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-              : Positioned(
-                  bottom: 2.5.h,
-                  right: 0,
-                  child: Container(
-                    width: 60.w,
-                    height: 7.5.h,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF307065),
-                      borderRadius: BorderRadius.circular(15.r),
-                    ),
-                  ),
-                ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStartButton({
-    bool showRetryButton = false,
-    SpeedTestStep? previousStep,
-  }) {
-    final state = ref.watch(speedTestProvider);
-
-    // Disable button when in ads state
-    final bool isEnabled = state.step != SpeedTestStep.ads;
-
-    return GestureDetector(
-      onTap: isEnabled
-          ? () {
-              if (state.step == SpeedTestStep.ready) {
-                // Start new test
-                ref.read(speedTestProvider.notifier).startTest();
-              } else if (state.step == SpeedTestStep.toast) {
-                // Cancel the auto-transition timer and retry
-                _toastTimer?.cancel();
-                _toastTimer = null;
-                // Always retry on toast state (whether error or unstable)
-                ref.read(speedTestProvider.notifier).retryConnection();
-              }
-            }
-          : null,
-      child: Container(
-        width: 60.w,
-        height: 60.w,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isEnabled ? Colors.white : Colors.grey.shade700,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 10.r,
-              offset: Offset(0, 5.h),
-            ),
-          ],
-        ),
-        child: Icon(
-          state.step == SpeedTestStep.ready
-              ? Icons.play_arrow_rounded
-              : state.step == SpeedTestStep.toast
-                  ? Icons.refresh_rounded
-                  : (state.step == SpeedTestStep.ads && previousStep == SpeedTestStep.toast)
-                      ? Icons.refresh_rounded
-                      : Icons.check_rounded,
-          color: isEnabled ? const Color(0xFF0D1B1A) : Colors.grey.shade500,
-          size: 36.sp,
-        ),
-      ),
-    );
   }
 }
