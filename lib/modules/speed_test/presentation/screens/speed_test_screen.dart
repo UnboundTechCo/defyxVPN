@@ -1,18 +1,19 @@
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_header.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_download/speed_test_download_state.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_loading/speed_test_loading_state.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
-import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
+import '../widgets/speed_test_header.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vibration/vibration.dart';
 import 'dart:async';
+
+import '../widgets/speed_test_state/speed_test_download/speed_test_download_state.dart';
+import '../widgets/speed_test_state/speed_test_loading/speed_test_loading_state.dart';
+import '../widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
+import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
+import '../widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
+import '../widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
 
 class SpeedTestScreen extends ConsumerStatefulWidget {
   const SpeedTestScreen({super.key});
