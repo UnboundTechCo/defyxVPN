@@ -29,12 +29,14 @@ class SpeedTestAdsState extends ConsumerWidget {
     return Stack(
       children: [
         Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          // mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(height: 30.h),
             SpeedTestProgressIndicator(
               progress: 1.0,
-              color: previousStep == SpeedTestStep.toast ? Colors.orange : Colors.green,
+              color: previousStep == SpeedTestStep.toast
+                  ? Colors.orange
+                  : Colors.green,
               showButton: true,
               result: state.result,
               button: SpeedTestStartButton(

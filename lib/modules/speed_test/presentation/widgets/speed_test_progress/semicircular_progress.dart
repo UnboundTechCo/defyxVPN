@@ -17,11 +17,9 @@ class SemicircularProgressPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height);
     final radius = size.width / 2 - strokeWidth / 2;
 
-    // Arc parameters: 65% of circle (234 degrees) centered on y-axis (1.5π)
-    const startAngle = math.pi * 0.85; // Start at ~153°
-    const sweepAngle = math.pi * 1.3; // Sweep 234° (65% of circle)
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
 
-    // Draw background track (light gray/white)
     final backgroundPaint = Paint()
       ..color = Colors.grey.shade300.withValues(alpha: 0.3)
       ..strokeWidth = strokeWidth
@@ -37,26 +35,37 @@ class SemicircularProgressPainter extends CustomPainter {
     );
 
     if (progress > 0) {
-      // Create gradient shader for progress arc
-      final gradient = _createGradient(color, center, radius);
+      final layers = 5;
+      final layerSpacing = 1.5;
+      final totalOffset = (layers - 1) * layerSpacing;
+      final middleLayerOffset = totalOffset / 2;
 
-      final progressPaint = Paint()
-        ..shader = gradient
-        ..strokeWidth = strokeWidth
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round;
+      for (int i = 0; i < layers; i++) {
+        final layerRadius = radius + middleLayerOffset - (i * layerSpacing);
+        final gradient = _createGradient(color, center, layerRadius);
 
-      // Draw progress arc
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle * progress,
-        false,
-        progressPaint,
+        final progressPaint = Paint()
+          ..shader = gradient
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: layerRadius),
+          startAngle,
+          sweepAngle * progress,
+          false,
+          progressPaint,
+        );
+      }
+
+      _drawProgressIndicator(
+        canvas,
+        center,
+        radius,
+        progress,
+        color,
       );
-
-      // Draw indicator dot at the end of progress
-      _drawProgressIndicator(canvas, center, radius, progress, color);
     }
   }
 

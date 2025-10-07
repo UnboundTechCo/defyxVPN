@@ -48,13 +48,13 @@ class SpeedTestProgressIndicator extends StatelessWidget {
               ),
               if (showLoadingIndicator)
                 Positioned(
-                  bottom: 30.h,
+                  bottom: 0.h,
                   child: SizedBox(
                     width: 30.w,
                     height: 30.h,
                     child: CircularProgressIndicator(
-                      strokeWidth: 3.w,
-                      valueColor: AlwaysStoppedAnimation<Color>(color),
+                      strokeWidth: 2.w,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                     ),
                   ),
                 ),
@@ -110,7 +110,7 @@ class SpeedTestProgressIndicator extends StatelessWidget {
                 ),
               if (showButton && button != null)
                 Positioned(
-                  bottom: 30.h,
+                  bottom: 0.h,
                   child: button!,
                 ),
             ],
