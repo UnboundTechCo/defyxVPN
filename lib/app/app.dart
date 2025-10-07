@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -31,12 +32,12 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeServices(WidgetRef ref) async {
     try {
-      final methodChannel = MethodChannel('com.defyx.vpn');
-      await methodChannel.invokeMethod('getVpnStatus');
+      final vpnBridge = VpnBridge();
+      await vpnBridge.getVpnStatus();
       if (!ref.context.mounted) return;
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.getVPNStatus();
-      await methodChannel.invokeMethod('setAsnName');
+      await vpnBridge.setAsnName();
       await ref.read(flowlineServiceProvider).saveFlowline();
     } on PlatformException catch (e, stack) {
       debugPrint('PlatformException: ${e.message}, details: ${e.details}');
