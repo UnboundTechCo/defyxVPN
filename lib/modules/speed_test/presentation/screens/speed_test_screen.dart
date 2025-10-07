@@ -1,13 +1,13 @@
-import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
-import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
-import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
-import '../widgets/speed_test_header.dart';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:vibration/vibration.dart';
-import 'dart:async';
+import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 
+import '../widgets/speed_test_header.dart';
+import '../../application/speed_test_provider.dart';
+import '../../models/speed_test_result.dart';
 import '../widgets/speed_test_state/speed_test_download/speed_test_download_state.dart';
 import '../widgets/speed_test_state/speed_test_loading/speed_test_loading_state.dart';
 import '../widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
