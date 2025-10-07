@@ -104,17 +104,26 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
     return MainScreenBackground(
       connectionStatus: connectionState.status,
       child: SafeArea(
-        child: Column(
-          children: [
-            SizedBox(height: 45.h),
-            SpeedTestHeader(step: speedTestState.step),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 100),
-                child: _buildContent(speedTestState),
+        bottom: false,
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 393.w),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 24.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 51.5.h),
+                  SpeedTestHeader(step: speedTestState.step),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 100),
+                      child: _buildContent(speedTestState),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -30,54 +30,51 @@ class SpeedTestHeader extends StatelessWidget {
         break;
     }
 
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'D',
-                style: TextStyle(
-                  fontSize: 35.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFFFFC927),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Row(
+          children: [
+            Text(
+              'D',
+              style: TextStyle(
+                fontSize: 35.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFFFFC927),
               ),
-              Text(
-                'efyx ',
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: const Color(0xFFFFC927),
-                ),
-              ),
-              Text(
-                upperText,
-                style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          Text(
-            bottomText,
-            style: TextStyle(
-              fontSize: 32.sp,
-              fontFamily: 'Lato',
-              fontWeight: FontWeight.w700,
-              color: Colors.white,
             ),
+            Text(
+              'efyx ',
+              style: TextStyle(
+                fontSize: 32.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w400,
+                color: const Color(0xFFFFC927),
+              ),
+            ),
+            Text(
+              upperText,
+              style: TextStyle(
+                fontSize: 32.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
+        Text(
+          bottomText,
+          style: TextStyle(
+            fontSize: 32.sp,
+            fontFamily: 'Lato',
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
