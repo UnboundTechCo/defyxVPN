@@ -27,7 +27,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 40.w),
+      padding: EdgeInsets.symmetric(horizontal: 20.w),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,9 +38,12 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
             spacing: 20.h,
             children: [
               if (showDownload)
-                MetricItemCompact(
-                  label: 'DOWNLOAD',
-                  value: downloadSpeed,
+                SizedBox(
+                  height: 55.h,
+                  child: MetricItemCompact(
+                    label: 'DOWNLOAD',
+                    value: downloadSpeed,
+                  ),
                 ),
               MetricItemCompact(
                 label: 'PING',
@@ -55,9 +58,12 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
             spacing: 10.h,
             children: [
               if (showUpload)
-                MetricItemCompact(
-                  label: 'UPLOAD',
-                  value: uploadSpeed,
+                SizedBox(
+                  height: 55.h,
+                  child: MetricItemCompact(
+                    label: 'UPLOAD',
+                    value: uploadSpeed,
+                  ),
                 ),
               Column(
                 spacing: 5.h,

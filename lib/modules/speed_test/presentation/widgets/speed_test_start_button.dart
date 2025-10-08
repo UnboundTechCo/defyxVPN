@@ -114,7 +114,8 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
                 child: Icon(
                   _getIcon(),
                   color: Colors.white,
-                  size: 24.sp,
+                  size:
+                      widget.currentStep == SpeedTestStep.ready ? 24.sp : 36.sp,
                 ),
               ),
             ),
