@@ -185,7 +185,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                       ),
                     if (widget.showButton && widget.button != null)
                       Positioned(
-                        top: 100.h,
+                        top: 75.h,
                         child: widget.button!,
                       ),
                   ],

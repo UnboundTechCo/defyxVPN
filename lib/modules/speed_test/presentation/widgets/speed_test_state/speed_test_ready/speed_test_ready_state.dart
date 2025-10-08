@@ -29,12 +29,25 @@ class SpeedTestReadyState extends ConsumerWidget {
             color: Colors.green,
             showButton: true,
             result: state.result,
-            button: SpeedTestStartButton(
-              currentStep: SpeedTestStep.ready,
-              isEnabled: true,
-              onTap: () {
-                ref.read(speedTestProvider.notifier).startTest();
-              },
+            button: Column(
+              spacing: 8.h,
+              children: [
+                Text(
+                  "TAP HERE",
+                  style: TextStyle(
+                    color: const Color(0xFFABABAB),
+                    fontSize: 12.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SpeedTestStartButton(
+                  currentStep: SpeedTestStep.ready,
+                  isEnabled: true,
+                  onTap: () {
+                    ref.read(speedTestProvider.notifier).startTest();
+                  },
+                ),
+              ],
             ),
           ),
         ],
