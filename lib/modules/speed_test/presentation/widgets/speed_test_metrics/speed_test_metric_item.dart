@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -31,7 +32,7 @@ class MetricItemCompact extends StatelessWidget {
         ),
         value > 0
             ? Text(
-                '${value.toStringAsFixed(1)} $unit',
+                '${numFormatNumber(value)} $unit',
                 style: TextStyle(
                   fontSize: 20.sp,
                   fontFamily: 'Lato',
@@ -92,7 +93,7 @@ class MetricItemHorizontal extends StatelessWidget {
                   bottom: 0,
                   right: 0,
                   child: Text(
-                    '${value.toStringAsFixed(1)} $unit',
+                    '${numFormatNumber(value)} $unit',
                     style: TextStyle(
                       fontSize: 13.sp,
                       fontFamily: 'Lato',

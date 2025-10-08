@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/speed_test_result.dart';
@@ -136,7 +137,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                             spacing: 4.w,
                             children: [
                               Text(
-                                widget.centerValue!.toStringAsFixed(1),
+                                doubleFormatNumber(widget.centerValue!),
                                 style: TextStyle(
                                   fontSize: 50.sp,
                                   fontFamily: 'Lato',
