@@ -118,6 +118,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                     Positioned(
                       bottom: 0.h,
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
                           if (widget.subtitle != null) ...[
                             SizedBox(height: 4.h),
@@ -131,15 +132,15 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                               ),
                             ),
                           ],
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Column(
+                            // mainAxisAlignment: MainAxisAlignment.center,
                             crossAxisAlignment: CrossAxisAlignment.end,
                             spacing: 4.w,
                             children: [
                               Text(
                                 doubleFormatNumber(widget.centerValue!),
                                 style: TextStyle(
-                                  fontSize: 50.sp,
+                                  fontSize: 90.sp,
                                   fontFamily: 'Lato',
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
