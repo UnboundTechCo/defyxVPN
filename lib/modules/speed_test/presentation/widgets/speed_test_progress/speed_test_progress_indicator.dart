@@ -84,113 +84,132 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     return AnimatedBuilder(
       animation: _progressAnimation,
       builder: (context, child) {
-        return Column(
-          children: [
-            SizedBox(
-              width: 280.w,
-              height: 140.h,
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  CustomPaint(
-                    size: Size(280.w, 140.h),
-                    painter: SemicircularProgressPainter(
-                      progress: _progressAnimation.value,
-                      color: widget.color,
-                      strokeWidth: 2.w,
-                      animation: _progressAnimation,
+        return SizedBox(
+          width: 350.w,
+          height: 380.h,
+          child: Stack(
+            alignment: Alignment.topCenter,
+            children: [
+              Positioned(
+                top: 0.h,
+                bottom: 100.h,
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    CustomPaint(
+                      size: Size(250.w, 140.h),
+                      painter: SemicircularDividerPainter(strokeWidth: 2.w),
                     ),
-                  ),
-                  if (widget.showLoadingIndicator)
-                    Positioned(
-                      bottom: 0.h,
-                      child: SizedBox(
-                        width: 30.w,
-                        height: 30.h,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2.w,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
+                    CustomPaint(
+                      size: Size(280.w, 140.h),
+                      painter: SemicircularProgressPainter(
+                        progress: _progressAnimation.value,
+                        color: widget.color,
+                        strokeWidth: 2.w,
+                        animation: _progressAnimation,
                       ),
                     ),
-                  if (widget.centerValue != null)
-                    Positioned(
-                      bottom: 0.h,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          if (widget.subtitle != null) ...[
-                            SizedBox(height: 4.h),
-                            Text(
-                              widget.subtitle!,
-                              style: TextStyle(
-                                fontSize: 12.sp,
-                                fontFamily: 'Lato',
-                                color: widget.color,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                          Column(
-                            // mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            spacing: 4.w,
-                            children: [
+                    if (widget.showLoadingIndicator)
+                      Positioned(
+                        top: 100.h,
+                        child: SizedBox(
+                          width: 30.w,
+                          height: 30.h,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.w,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                      ),
+                    if (widget.centerValue != null)
+                      Positioned(
+                        top: 50.h,
+                        child: Column(
+                          spacing: 4.h,
+                          children: [
+                            if (widget.subtitle != null) ...[
                               Text(
-                                doubleFormatNumber(widget.centerValue!),
+                                widget.subtitle!,
                                 style: TextStyle(
-                                  fontSize: 90.sp,
+                                  fontSize: 12.sp,
                                   fontFamily: 'Lato',
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  height: 1.0,
-                                ),
-                              ),
-                              Padding(
-                                padding: EdgeInsets.only(bottom: 6.h),
-                                child: Text(
-                                  widget.centerUnit ?? '',
-                                  style: TextStyle(
-                                    fontSize: 14.sp,
-                                    fontFamily: 'Lato',
-                                    fontWeight: FontWeight.w400,
-                                    color: Colors.grey.shade400,
-                                    height: 1.0,
-                                  ),
+                                  color: widget.color,
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
                             ],
-                          ),
-                        ],
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              spacing: 4.h,
+                              children: [
+                                SizedBox(
+                                  width: 150.w,
+                                  height: 90.h,
+                                  child: Center(
+                                    child: Text(
+                                      doubleFormatNumber(widget.centerValue!),
+                                      style: TextStyle(
+                                        fontSize: widget.centerValue! >= 1000
+                                            ? 25.sp
+                                            : widget.centerValue! >= 100
+                                                ? 50.sp
+                                                : widget.centerValue! >= 10
+                                                    ? 70.sp
+                                                    : 90.sp,
+                                        fontFamily: 'Lato',
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                        height: 1.0,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: EdgeInsets.only(bottom: 6.h),
+                                  child: Text(
+                                    widget.centerUnit ?? '',
+                                    style: TextStyle(
+                                      fontSize: 14.sp,
+                                      fontFamily: 'Lato',
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.grey.shade400,
+                                      height: 1.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  if (widget.showButton && widget.button != null)
-                    Positioned(
-                      bottom: 0.h,
-                      child: widget.button!,
-                    ),
-                ],
+                    if (widget.showButton && widget.button != null)
+                      Positioned(
+                        top: 100.h,
+                        child: widget.button!,
+                      ),
+                  ],
+                ),
               ),
-            ),
-            CustomPaint(
-              size: Size(250.w, 0.h),
-              painter: SemicircularDividerPainter(strokeWidth: 2.w),
-            ),
-            if (widget.result != null) ...[
-              SizedBox(height: 100.h),
-              SpeedTestMetricsDisplay(
-                downloadSpeed: widget.result!.downloadSpeed,
-                uploadSpeed: widget.result!.uploadSpeed,
-                ping: widget.result!.ping,
-                latency: widget.result!.latency,
-                packetLoss: widget.result!.packetLoss,
-                jitter: widget.result!.jitter,
-                showDownload: true,
-                showUpload: true,
-              ),
+              if (widget.result != null) ...[
+                Positioned(
+                  bottom: 0.h,
+                  left: 0.w,
+                  right: 0.w,
+                  child: SpeedTestMetricsDisplay(
+                    downloadSpeed: widget.result!.downloadSpeed,
+                    uploadSpeed: widget.result!.uploadSpeed,
+                    ping: widget.result!.ping,
+                    latency: widget.result!.latency,
+                    packetLoss: widget.result!.packetLoss,
+                    jitter: widget.result!.jitter,
+                    showDownload: true,
+                    showUpload: true,
+                  ),
+                ),
+              ],
             ],
-          ],
+          ),
         );
       },
     );
