@@ -177,7 +177,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
               painter: SemicircularDividerPainter(strokeWidth: 2.w),
             ),
             if (widget.result != null) ...[
-              SizedBox(height: 75.h),
+              SizedBox(height: 100.h),
               SpeedTestMetricsDisplay(
                 downloadSpeed: widget.result!.downloadSpeed,
                 uploadSpeed: widget.result!.uploadSpeed,

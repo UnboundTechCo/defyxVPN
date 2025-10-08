@@ -24,20 +24,35 @@ class MetricItemCompact extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontSize: 11.sp,
+            fontSize: 12.sp,
             fontFamily: 'Lato',
             color: Colors.grey.shade500,
             fontWeight: FontWeight.w600,
           ),
         ),
         value > 0
-            ? Text(
-                '${numFormatNumber(value)} $unit',
-                style: TextStyle(
-                  fontSize: 20.sp,
-                  fontFamily: 'Lato',
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+            ? RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: numFormatNumber(value),
+                      style: TextStyle(
+                        fontSize: 26.sp,
+                        fontFamily: 'Lato',
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    TextSpan(
+                      text: " $unit",
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontFamily: 'Lato',
+                        color: Colors.grey.shade500,
+                        // fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               )
             : Container(
@@ -81,7 +96,7 @@ class MetricItemHorizontal extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 11.sp,
+                fontSize: 12.sp,
                 fontFamily: 'Lato',
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.w600,
@@ -92,15 +107,40 @@ class MetricItemHorizontal extends StatelessWidget {
               ? Positioned(
                   bottom: 0,
                   right: 0,
-                  child: Text(
-                    '${numFormatNumber(value)} $unit',
-                    style: TextStyle(
-                      fontSize: 13.sp,
-                      fontFamily: 'Lato',
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: numFormatNumber(value),
+                          style: TextStyle(
+                            fontSize: 15.sp,
+                            fontFamily: 'Lato',
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(
+                          text: " $unit",
+                          style: TextStyle(
+                            fontSize: 13.sp,
+                            fontFamily: 'Lato',
+                            color: Colors.grey.shade500,
+                            // fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
+                  // Text(
+                  //   '${numFormatNumber(value)} $unit',
+                  //   style: TextStyle(
+                  //     fontSize: 13.sp,
+                  //     fontFamily: 'Lato',
+                  //     color: Colors.white,
+                  //     fontWeight: FontWeight.bold,
+                  //   ),
+                  // ),
                 )
               : Positioned(
                   bottom: 2.5.h,
