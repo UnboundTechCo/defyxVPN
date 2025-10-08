@@ -57,7 +57,7 @@ class MetricItemCompact extends StatelessWidget {
               )
             : Container(
                 width: 75.w,
-                height: 10.h,
+                height: 20.h,
                 decoration: BoxDecoration(
                   color: const Color(0xFF307065),
                   borderRadius: BorderRadius.circular(15.r),
@@ -131,23 +131,13 @@ class MetricItemHorizontal extends StatelessWidget {
                       ],
                     ),
                   ),
-
-                  // Text(
-                  //   '${numFormatNumber(value)} $unit',
-                  //   style: TextStyle(
-                  //     fontSize: 13.sp,
-                  //     fontFamily: 'Lato',
-                  //     color: Colors.white,
-                  //     fontWeight: FontWeight.bold,
-                  //   ),
-                  // ),
                 )
               : Positioned(
                   bottom: 2.5.h,
                   right: 0,
                   child: Container(
-                    width: 60.w,
-                    height: 7.5.h,
+                    width: 57.w,
+                    height: 11.h,
                     decoration: BoxDecoration(
                       color: const Color(0xFF307065),
                       borderRadius: BorderRadius.circular(15.r),
