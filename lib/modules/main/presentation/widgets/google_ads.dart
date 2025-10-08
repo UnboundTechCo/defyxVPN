@@ -178,9 +178,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
   void _initializeAds() async {
     if (_isDisposed || _hasInitialized) return;
-    
-    _hasInitialized = true;
-    _isDisposed = true;
 
     try {
       final shouldShowGoogle = await _shouldShowGoogleAds(ref);
@@ -190,12 +187,10 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
 
       if (shouldShowGoogle) {
-        debugPrint("Loading Google ads...");
         _loadGoogleAd();
         return;
       }
 
-      debugPrint('Loading custom ads...');
       final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
       if (!_isDisposed) {
         ref.read(customAdDataProvider.notifier).state = customAdData;
@@ -324,7 +319,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
       }
     });
-    debugPrint('Google ads state: $adsState');
     return SizedBox(
       height: 280.h,
       width: 336.w,
@@ -437,62 +431,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
           _buildLoadingWidget("Loading ads...")
         else
           _buildCustomAdWidget(customAdData),
-
-        // Add overlays only for custom ads
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 10.w,
-              vertical: 4.h,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(widget.cornerRadius),
-                bottomLeft: Radius.circular(3.r),
-              ),
-            ),
-            child: Text(
-              "ADVERTISEMENT",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-        ),
-
-        if (adsState.nativeAdIsLoaded && adsState.showCountdown)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 10.w,
-                vertical: 4.h,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(widget.cornerRadius),
-                  topRight: Radius.circular(3.r),
-                ),
-              ),
-              child: Text(
-                "Closing in ${adsState.countdown}s",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }
