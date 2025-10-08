@@ -69,10 +69,10 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
     if (widget.currentStep == SpeedTestStep.ready) {
       return Icons.near_me_outlined;
     } else if (widget.currentStep == SpeedTestStep.toast) {
-      return Icons.refresh_rounded;
+      return Icons.cached_rounded;
     } else if (widget.currentStep == SpeedTestStep.ads &&
         widget.previousStep == SpeedTestStep.toast) {
-      return Icons.refresh_rounded;
+      return Icons.cached_rounded;
     } else {
       return Icons.check_rounded;
     }
