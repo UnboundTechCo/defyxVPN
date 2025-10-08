@@ -1,9 +1,9 @@
-import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../models/speed_test_result.dart';
 import '../speed_test_metrics/speed_test_metrics.dart';
-import 'semicircular_progress.dart';
+import 'components/progress_arc_stack.dart';
+import 'components/speed_value_display.dart';
 
 class SpeedTestProgressIndicator extends StatefulWidget {
   final double progress;
@@ -45,6 +45,10 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   @override
   void initState() {
     super.initState();
+    _initializeAnimations();
+  }
+
+  void _initializeAnimations() {
     _animationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
@@ -58,7 +62,6 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     ));
     _animationController.forward();
 
-    // Grid animation controller - continuous animation
     _gridAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 3),
@@ -74,16 +77,20 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   void didUpdateWidget(SpeedTestProgressIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
-      _previousProgress = oldWidget.progress;
-      _progressAnimation = Tween<double>(
-        begin: _previousProgress,
-        end: widget.progress,
-      ).animate(CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ));
-      _animationController.forward(from: 0.0);
+      _updateProgressAnimation();
     }
+  }
+
+  void _updateProgressAnimation() {
+    _previousProgress = _progressAnimation.value;
+    _progressAnimation = Tween<double>(
+      begin: _previousProgress,
+      end: widget.progress,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    ));
+    _animationController.forward(from: 0.0);
   }
 
   @override
@@ -107,116 +114,18 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
               Positioned(
                 top: 0.h,
                 bottom: 100.h,
-                child: Stack(
-                  alignment: Alignment.topCenter,
-                  children: [
-                    CustomPaint(
-                      size: Size(250.w, 140.h),
-                      painter: SemicircularDividerPainter(strokeWidth: 2.w),
-                    ),
-                    CustomPaint(
-                      size: Size(280.w, 140.h),
-                      painter: SemicircularProgressPainter(
-                        progress: _progressAnimation.value,
-                        color: widget.color,
-                        strokeWidth: 2.w,
-                        animation: _progressAnimation,
-                      ),
-                    ),
-                    Positioned(
-                      top: 145.h,
-                      child: CustomPaint(
-                        size: Size(250.w, 60.h),
-                        painter: AnimatedGridPainter(
-                          animation: _gridAnimation,
-                          gridColor: widget.color,
-                          strokeWidth: 1.w,
-                        ),
-                      ),
-                    ),
-                    if (widget.showLoadingIndicator)
-                      Positioned(
-                        top: 100.h,
-                        child: SizedBox(
-                          width: 30.w,
-                          height: 30.h,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.w,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                      ),
-                    if (widget.centerValue != null)
-                      Positioned(
-                        top: 50.h,
-                        child: Column(
-                          spacing: 4.h,
-                          children: [
-                            if (widget.subtitle != null) ...[
-                              Text(
-                                widget.subtitle!,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  fontFamily: 'Lato',
-                                  color: widget.color,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              spacing: 4.h,
-                              children: [
-                                SizedBox(
-                                  width: 150.w,
-                                  height: 90.h,
-                                  child: Center(
-                                    child: Text(
-                                      doubleFormatNumber(widget.centerValue!),
-                                      style: TextStyle(
-                                        fontSize: widget.centerValue! >= 1000
-                                            ? 25.sp
-                                            : widget.centerValue! >= 100
-                                                ? 50.sp
-                                                : widget.centerValue! >= 10
-                                                    ? 70.sp
-                                                    : 90.sp,
-                                        fontFamily: 'Lato',
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                        height: 1.0,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Padding(
-                                  padding: EdgeInsets.only(bottom: 6.h),
-                                  child: Text(
-                                    widget.centerUnit ?? '',
-                                    style: TextStyle(
-                                      fontSize: 14.sp,
-                                      fontFamily: 'Lato',
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.grey.shade400,
-                                      height: 1.0,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    if (widget.showButton && widget.button != null)
-                      Positioned(
-                        top: 75.h,
-                        child: widget.button!,
-                      ),
-                  ],
+                child: ProgressArcStack(
+                  progress: _progressAnimation.value,
+                  color: widget.color,
+                  progressAnimation: _progressAnimation,
+                  gridAnimation: _gridAnimation,
+                  showLoadingIndicator: widget.showLoadingIndicator,
+                  showButton: widget.showButton,
+                  button: widget.button,
+                  centerContent: _buildCenterContent(),
                 ),
               ),
-              if (widget.result != null) ...[
+              if (widget.result != null)
                 Positioned(
                   bottom: 0.h,
                   left: 0.w,
@@ -232,11 +141,23 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                     showUpload: true,
                   ),
                 ),
-              ],
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget? _buildCenterContent() {
+    if (widget.centerValue == null || widget.centerUnit == null) {
+      return null;
+    }
+
+    return SpeedValueDisplay(
+      value: widget.centerValue!,
+      unit: widget.centerUnit!,
+      subtitle: widget.subtitle,
+      subtitleColor: widget.color,
     );
   }
 }

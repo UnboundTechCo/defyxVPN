@@ -39,7 +39,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
             children: [
               if (showDownload)
                 SizedBox(
-                  height: 55.h,
+                  height: 65.h,
                   child: MetricItemCompact(
                     label: 'DOWNLOAD',
                     value: downloadSpeed,
@@ -59,7 +59,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
             children: [
               if (showUpload)
                 SizedBox(
-                  height: 55.h,
+                  height: 65.h,
                   child: MetricItemCompact(
                     label: 'UPLOAD',
                     value: uploadSpeed,

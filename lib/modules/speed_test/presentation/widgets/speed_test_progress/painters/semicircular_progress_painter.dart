@@ -1,0 +1,150 @@
+import 'dart:math' as math;
+import 'package:flutter/material.dart';
+
+class SemicircularProgressPainter extends CustomPainter {
+  final double progress;
+  final Color color;
+  final double strokeWidth;
+  final Animation<double>? animation;
+
+  SemicircularProgressPainter({
+    required this.progress,
+    required this.color,
+    this.strokeWidth = 12.0,
+    this.animation,
+  }) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height);
+    final radius = size.width / 2 - strokeWidth / 2;
+
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
+
+    final backgroundPaint = Paint()
+      ..color = Colors.grey.shade300.withValues(alpha: 0.3)
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawArc(
+      Rect.fromCircle(center: center, radius: radius),
+      startAngle,
+      sweepAngle,
+      false,
+      backgroundPaint,
+    );
+
+    if (progress > 0) {
+      final layers = 5;
+      final layerSpacing = 1.5;
+      final totalOffset = (layers - 1) * layerSpacing;
+      final middleLayerOffset = totalOffset / 2;
+
+      for (int i = 0; i < layers; i++) {
+        final layerRadius = radius + middleLayerOffset - (i * layerSpacing);
+        final gradient = _createGradient(color, center, layerRadius);
+
+        final progressPaint = Paint()
+          ..shader = gradient
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: layerRadius),
+          startAngle,
+          sweepAngle * progress,
+          false,
+          progressPaint,
+        );
+      }
+
+      _drawProgressIndicator(
+        canvas,
+        center,
+        radius,
+        progress,
+        color,
+      );
+    }
+  }
+
+  Shader _createGradient(Color baseColor, Offset center, double radius) {
+    List<Color> gradientColors;
+
+    if (baseColor == Colors.green) {
+      gradientColors = [
+        const Color(0xFF66FF66),
+        const Color(0xFF00FF00),
+        const Color(0xFF00DD00),
+      ];
+    } else if (baseColor == Colors.blue) {
+      gradientColors = [
+        const Color(0xFF66B3FF),
+        const Color(0xFF0099FF),
+        const Color(0xFF0077DD),
+      ];
+    } else if (baseColor == Colors.orange) {
+      gradientColors = [
+        const Color(0xFFFFAA66),
+        const Color(0xFFFF8833),
+        const Color(0xFFFF6600),
+      ];
+    } else {
+      gradientColors = [
+        baseColor.withValues(alpha: 0.7),
+        baseColor,
+        baseColor.withValues(alpha: 0.9),
+      ];
+    }
+
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
+
+    return SweepGradient(
+      colors: gradientColors,
+      startAngle: startAngle,
+      endAngle: startAngle + (sweepAngle * progress),
+    ).createShader(Rect.fromCircle(center: center, radius: radius));
+  }
+
+  void _drawProgressIndicator(Canvas canvas, Offset center, double radius,
+      double progress, Color color) {
+    const startAngle = math.pi * 0.85;
+    const sweepAngle = math.pi * 1.3;
+    final angle = startAngle + (sweepAngle * progress);
+    final dotX = center.dx + radius * math.cos(angle);
+    final dotY = center.dy + radius * math.sin(angle);
+    final dotPosition = Offset(dotX, dotY);
+
+    final glowPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.4)
+      ..style = PaintingStyle.fill
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+
+    canvas.drawCircle(dotPosition, 6.0, glowPaint);
+
+    final dotPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(dotPosition, 5.0, dotPaint);
+
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.8)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(
+      Offset(dotPosition.dx - 1, dotPosition.dy - 1),
+      2.0,
+      highlightPaint,
+    );
+  }
+
+  @override
+  bool shouldRepaint(SemicircularProgressPainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
+  }
+}

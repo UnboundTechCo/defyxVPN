@@ -112,7 +112,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
               padding: EdgeInsets.symmetric(horizontal: 24.w),
               child: Column(
                 children: [
-                  SizedBox(height: 51.5.h),
+                  SizedBox(height: 50.h),
                   SpeedTestHeader(step: speedTestState.step),
                   Expanded(
                     child: Padding(
