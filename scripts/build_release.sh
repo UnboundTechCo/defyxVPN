@@ -175,33 +175,25 @@ select_version_increment() {
 
 # Update ad value in AndroidManifest.xml and Info.plist from DEFYX_AD_ID
 update_ad_id() {
-    local env_file="$PROJECT_ROOT/.env"
     local android_ad_id="$1"
     local ios_ad_id="$2"
     local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
     local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
 
-    # Backup original values
-    local orig_android_ad_id=$(grep -o '<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"' "$android_manifest" | sed 's/.*android:value="\([^"]*\)"/\1/')
-    local orig_ios_ad_id=$(grep -A1 '<key>GADApplicationIdentifier</key>' "$ios_info_plist" | tail -n1 | sed 's/[[:space:]]*<string>\(.*\)<\/string>/\1/')
-
     # AndroidManifest.xml
     if [ -n "$android_ad_id" ]; then
-        sed -i '' "s|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"[^"]*\"/>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$android_ad_id\"/>|" "$android_manifest"
+        sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'"$android_ad_id"'"/>|' "$android_manifest"
         echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
     else
         echo -e "${YELLOW}⚠️  ANDROID_AD_UNIT_ID not set. Skipping AndroidManifest.xml update.${NC}"
     fi
     # Info.plist
     if [ -n "$ios_ad_id" ]; then
-        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key>\n    <string>$ios_ad_id</string>|" "$ios_info_plist"
+        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_id</string>|" "$ios_info_plist"
         echo -e "${GREEN}✅ Updated iOS ad id in Info.plist${NC}"
     else
         echo -e "${YELLOW}⚠️  IOS_AD_UNIT_ID not set. Skipping Info.plist update.${NC}"
     fi
-
-    # Return original values as output (echo)
-    echo "$orig_android_ad_id|$orig_ios_ad_id"
 }
 
 # First question: Test or Production?
@@ -250,11 +242,10 @@ fi
 env_file="$PROJECT_ROOT/.env"
 android_ad_id=$(grep '^ANDROID_AD_UNIT_ID=' "$env_file" | cut -d'=' -f2-)
 ios_ad_id=$(grep '^IOS_AD_UNIT_ID=' "$env_file" | cut -d'=' -f2-)
+orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 
 # Update ad ids and store original values
-orig_ad_ids=$(update_ad_id "$android_ad_id" "$ios_ad_id")
-orig_android_ad_id="$(echo $orig_ad_ids | cut -d'|' -f1)"
-orig_ios_ad_id="$(echo $orig_ad_ids | cut -d'|' -f2)"
+update_ad_id "$android_ad_id" "$ios_ad_id"
 
 case $choice in
     1)
@@ -275,12 +266,12 @@ case $choice in
         ;;
     *)
         echo -e "${RED}❌ Invalid choice${NC}"
-    # Restore original ad ids before exit
-    update_ad_id "$orig_android_ad_id" "$orig_ios_ad_id"
+        # Restore original ad ids after build
+        update_ad_id "$orig_ad_id" "$orig_ad_id"
         exit 1
         ;;
 esac
 
 # Restore original ad ids after build
-update_ad_id "$orig_android_ad_id" "$orig_ios_ad_id"
+update_ad_id "$orig_ad_id" "$orig_ad_id"
 echo -e "${GREEN}✅ Build process completed!${NC}"
