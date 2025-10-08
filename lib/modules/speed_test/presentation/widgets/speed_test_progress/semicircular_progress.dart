@@ -189,3 +189,93 @@ class SemicircularDividerPainter extends CustomPainter {
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
+
+class AnimatedGridPainter extends CustomPainter {
+  final Animation<double> animation;
+  final Color gridColor;
+  final double strokeWidth;
+
+  AnimatedGridPainter({
+    required this.animation,
+    this.gridColor = Colors.grey,
+    this.strokeWidth = 1.0,
+  }) : super(repaint: animation);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Animation offset (0.0 to 1.0, repeating) - reversed for bottom to top
+    final offset = 1.0 - (animation.value % 1.0);
+
+    // Grid configuration
+    final horizontalSpacing = size.height / 8; // 8 horizontal lines
+    final centerX = size.width / 2;
+
+    // Perspective settings - top narrows to near 0
+    final bottomWidth = size.width; // Full width at bottom
+    final topWidth = size.width * 0.15; // 15% width at top (near 0)
+
+    // Draw horizontal lines with animation and perspective (moving from bottom to top)
+    for (int i = -2; i < 11; i++) {
+      final y = i * horizontalSpacing + (offset * horizontalSpacing);
+
+      if (y >= 0 && y <= size.height) {
+        // Calculate perspective ratio (0 at top, 1 at bottom)
+        final perspectiveRatio = 1.0 - (y / size.height);
+
+        // Calculate line width based on perspective
+        final lineWidth =
+            topWidth + (bottomWidth - topWidth) * (1.0 - perspectiveRatio);
+        final lineStartX = centerX - lineWidth / 2;
+        final lineEndX = centerX + lineWidth / 2;
+
+        // Create a fading effect - fade out at the top, brighter at bottom
+        final alpha = 0.05 + (1.0 - perspectiveRatio) * 0.25;
+
+        final fadePaint = Paint()
+          ..color = gridColor.withValues(alpha: alpha)
+          ..strokeWidth = strokeWidth
+          ..style = PaintingStyle.stroke;
+
+        canvas.drawLine(
+          Offset(lineStartX, y),
+          Offset(lineEndX, y),
+          fadePaint,
+        );
+      }
+    }
+
+    // Draw converging vertical grid lines (multiple lines with perspective)
+    final numVerticalLines = 10; // Number of vertical grid lines
+
+    for (int i = 0; i <= numVerticalLines; i++) {
+      // Position along the bottom edge (0.0 to 1.0)
+      final bottomRatio = i / numVerticalLines;
+
+      // Calculate start point at bottom (full width)
+      final bottomX = bottomRatio * size.width;
+
+      // Calculate end point at top (narrow width) with same ratio
+      final topX = centerX - topWidth / 2 + (bottomRatio * topWidth);
+
+      // Fade based on distance from center
+      final distanceFromCenter = (bottomRatio - 0.5).abs() / 0.5;
+      final alpha = 0.05 + (1.0 - distanceFromCenter) * 0.2;
+
+      final fadePaint = Paint()
+        ..color = gridColor.withValues(alpha: alpha)
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke;
+
+      canvas.drawLine(
+        Offset(bottomX, size.height),
+        Offset(topX, 0),
+        fadePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(AnimatedGridPainter oldDelegate) {
+    return oldDelegate.animation != animation;
+  }
+}

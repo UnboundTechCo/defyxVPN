@@ -35,9 +35,11 @@ class SpeedTestProgressIndicator extends StatefulWidget {
 }
 
 class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<double> _progressAnimation;
+  late AnimationController _gridAnimationController;
+  late Animation<double> _gridAnimation;
   double _previousProgress = 0.0;
 
   @override
@@ -55,6 +57,17 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       curve: Curves.easeInOut,
     ));
     _animationController.forward();
+
+    // Grid animation controller - continuous animation
+    _gridAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 3),
+    )..repeat();
+
+    _gridAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_gridAnimationController);
   }
 
   @override
@@ -76,6 +89,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   @override
   void dispose() {
     _animationController.dispose();
+    _gridAnimationController.dispose();
     super.dispose();
   }
 
@@ -107,6 +121,17 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                         color: widget.color,
                         strokeWidth: 2.w,
                         animation: _progressAnimation,
+                      ),
+                    ),
+                    Positioned(
+                      top: 145.h,
+                      child: CustomPaint(
+                        size: Size(250.w, 60.h),
+                        painter: AnimatedGridPainter(
+                          animation: _gridAnimation,
+                          gridColor: widget.color,
+                          strokeWidth: 1.w,
+                        ),
                       ),
                     ),
                     if (widget.showLoadingIndicator)
