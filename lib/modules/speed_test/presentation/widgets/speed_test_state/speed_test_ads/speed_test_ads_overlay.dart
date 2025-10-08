@@ -17,33 +17,33 @@ class SpeedTestAdsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 25.h,
+      bottom: 0.h,
       left: 0,
       right: 0,
       child: Container(
         margin: EdgeInsets.symmetric(horizontal: 20.w),
-        padding: EdgeInsets.all(12.w),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(10.r),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
+          alignment: Alignment.topRight,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'ADVERTISEMENT',
-                  style: TextStyle(
-                    fontSize: 10.sp,
-                    fontFamily: 'Lato',
-                    color: Colors.grey.shade500,
-                    fontWeight: FontWeight.w600,
-                    letterSpacing: 0.5,
+            googleAds,
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: Container(
+                height: 30.h,
+                padding: EdgeInsets.symmetric(horizontal: 8.w),
+                margin: EdgeInsets.only(bottom: 2.h, left: 2.w),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(10.r),
                   ),
                 ),
-                Row(
+                child: Row(
                   spacing: 8.w,
                   children: [
                     Text(
@@ -77,10 +77,8 @@ class SpeedTestAdsOverlay extends StatelessWidget {
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
-            SizedBox(height: 8.h),
-            googleAds,
           ],
         ),
       ),
