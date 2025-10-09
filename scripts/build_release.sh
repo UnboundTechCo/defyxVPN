@@ -196,6 +196,35 @@ update_ad_id() {
     fi
 }
 
+validate_ad_id() {
+    local android_ad_id="$1"
+    local ios_ad_id="$2"
+    local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
+    local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
+    local valid=true
+
+    # Check AndroidManifest.xml
+    if [ -n "$android_ad_id" ]; then
+        if ! grep -q "$android_ad_id" "$android_manifest"; then
+            echo -e "${YELLOW}⚠️  Android ad id $android_ad_id not found in AndroidManifest.xml!${NC}"
+            valid=false
+        fi
+    fi
+
+    # Check Info.plist
+    if [ -n "$ios_ad_id" ]; then
+        if ! grep -q "$ios_ad_id" "$ios_info_plist"; then
+            echo -e "${YELLOW}⚠️  iOS ad id $ios_ad_id not found in Info.plist!${NC}"
+            valid=false
+        fi
+    fi
+
+    if [ "$valid" = false ]; then
+        return 1
+    fi
+    return 0
+}
+
 # First question: Test or Production?
 echo -e "${BLUE}What kind of build do you want?${NC}"
 echo "1) Test"
@@ -246,6 +275,12 @@ orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 
 # Update ad ids and store original values
 update_ad_id "$android_ad_id" "$ios_ad_id"
+if ! validate_ad_id "$android_ad_id" "$ios_ad_id"; then
+    echo -e "${RED}❌ Ad ID validation failed. Build aborted.${NC}"
+    # Restore original ad ids before exit if needed
+    update_ad_id "$orig_ad_id" "$orig_ad_id"
+    exit 1
+fi
 
 case $choice in
     1)
