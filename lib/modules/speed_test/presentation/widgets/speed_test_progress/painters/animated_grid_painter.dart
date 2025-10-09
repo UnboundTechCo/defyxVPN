@@ -13,7 +13,8 @@ class AnimatedGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final offset = 1.0 - (animation.value % 1.0);
+    // final offset = 1.0 - (animation.value % 1.0); // From bottom to top
+    final offset = animation.value % 1.0; // From top to bottom
 
     final horizontalSpacing = size.height / 8;
     final centerX = size.width / 2;
