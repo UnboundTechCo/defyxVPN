@@ -92,6 +92,10 @@ class DefyxNavBar extends ConsumerWidget {
     context.go(DefyxVPNRoutes.main.route);
   }
 
+  void _navigateToSettings(BuildContext context) {
+    context.go(DefyxVPNRoutes.settings.route);
+  }
+
   AppScreen _getCurrentScreenFromLocation(String location) {
     switch (location) {
       case '/main':
