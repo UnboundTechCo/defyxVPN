@@ -48,7 +48,7 @@ abstract class SpeedTestApi {
   @GET('/__turn')
   Future<HttpResponse<dynamic>> getTurnCredentials();
 
-  /// Get Cloudflare trace information
+  /// Get Cloudflare trace information (mey be useful for diagnostics)
   @GET('/cdn-cgi/trace')
   Future<HttpResponse<String>> getTrace();
 }
