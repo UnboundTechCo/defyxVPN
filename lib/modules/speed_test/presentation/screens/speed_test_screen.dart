@@ -70,7 +70,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
   @override
   void deactivate() {
-    // Stop the speed test when the widget is deactivated (e.g., navigating away)
     Future.microtask(() {
       if (mounted) {
         ref.read(speedTestProvider.notifier).stopAndResetTest();
@@ -81,7 +80,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
   @override
   void dispose() {
-    // Ensure speed test is stopped and reset when leaving the screen (deferred)
     Future.microtask(() {
       try {
         ref.read(speedTestProvider.notifier).stopAndResetTest();
@@ -162,8 +160,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       if (!_hasCountdownStarted) {
         _hasCountdownStarted = true;
         _adsCountdown = 10;
-        _adsCountdownTimer =
-            Timer.periodic(const Duration(seconds: 1), (timer) {
+        _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
           if (mounted) {
             setState(() {
               if (_adsCountdown > 0) {
