@@ -24,10 +24,7 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
   ConsumerState<SpeedTestScreen> createState() => _SpeedTestScreenState();
 }
 
-class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _scaleAnimation;
+class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   late final GoogleAds _googleAds;
   Timer? _toastTimer;
   Timer? _adsCountdownTimer;
@@ -39,20 +36,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
   @override
   void initState() {
     super.initState();
-
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.elasticOut,
-      ),
-    );
-
-    _animationController.forward();
 
     _googleAds = GoogleAds(
       backgroundColor: const Color(0xFF1A1A1A),
@@ -88,7 +71,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
       }
     });
 
-    _animationController.dispose();
     _toastTimer?.cancel();
     _adsCountdownTimer?.cancel();
     super.dispose();
@@ -192,7 +174,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
 
     switch (state.step) {
       case SpeedTestStep.ready:
-        return SpeedTestReadyState(scaleAnimation: _scaleAnimation);
+        return const SpeedTestReadyState();
       case SpeedTestStep.loading:
         return const SpeedTestLoadingState();
       case SpeedTestStep.download:
