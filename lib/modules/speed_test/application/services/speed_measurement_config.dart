@@ -1,19 +1,16 @@
 class SpeedMeasurementConfig {
   static const List<Map<String, dynamic>> measurements = [
     {'type': 'latency', 'numPackets': 1},
-    {'type': 'latency', 'numPackets': 10},
-    {'type': 'download', 'bytes': 100000, 'count': 1},
-    {'type': 'download', 'bytes': 1000000, 'count': 3},
-    {'type': 'download', 'bytes': 5000000, 'count': 2},
-    {'type': 'download', 'bytes': 10000000, 'count': 2},
-    {'type': 'download', 'bytes': 25000000, 'count': 1},
-    {'type': 'upload', 'bytes': 100000, 'count': 2},
-    {'type': 'upload', 'bytes': 1000000, 'count': 2},
-    {'type': 'upload', 'bytes': 5000000, 'count': 2},
-    {'type': 'upload', 'bytes': 10000000, 'count': 1},
+    {'type': 'download', 'bytes': 100000, 'count': 1, 'bypassMinDuration': true},
+    {'type': 'latency', 'numPackets': 20},
+    {'type': 'download', 'bytes': 100000, 'count': 9},
+    {'type': 'download', 'bytes': 1000000, 'count': 8},
+    {'type': 'upload', 'bytes': 100000, 'count': 8},
+    {'type': 'upload', 'bytes': 1000000, 'count': 6},
+    {'type': 'download', 'bytes': 10000000, 'count': 6},
   ];
 
-  static const int totalMeasurements = 11;
+  static const int totalMeasurements = 8;
   static const int maxConsecutiveFailures = 3;
   static const int chunkSize = 65536;
   static const Duration measurementDelay = Duration(milliseconds: 50);
