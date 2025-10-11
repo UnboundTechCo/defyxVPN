@@ -189,7 +189,8 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                   centerContent: _buildCenterContent(),
                 ),
               ),
-              if (widget.result != null)
+              if (widget.result != null &&
+                  (widget.currentStep != SpeedTestStep.ready && widget.result!.ping > 0))
                 Positioned(
                   bottom: 0.h,
                   left: 0.w,
