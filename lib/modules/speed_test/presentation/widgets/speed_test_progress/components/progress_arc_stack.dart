@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../painters/animated_grid_painter.dart';
-import '../painters/semicircular_divider_painter.dart';
 import '../painters/semicircular_progress_painter.dart';
 
 class ProgressArcStack extends StatelessWidget {
-  final double progress;
+  final double uploadProgress;
+  final double downloadProgress;
   final Color color;
   final Animation<double> progressAnimation;
   final Animation<double> gridAnimation;
@@ -16,7 +16,8 @@ class ProgressArcStack extends StatelessWidget {
 
   const ProgressArcStack({
     super.key,
-    required this.progress,
+    required this.uploadProgress,
+    required this.downloadProgress,
     required this.color,
     required this.progressAnimation,
     required this.gridAnimation,
@@ -33,15 +34,22 @@ class ProgressArcStack extends StatelessWidget {
       children: [
         CustomPaint(
           size: Size(250.w, 140.h),
-          painter: SemicircularDividerPainter(strokeWidth: 2.w),
+          painter: SemicircularProgressPainter(
+            progress: uploadProgress,
+            color: color,
+            strokeWidth: 2.w,
+            animation: progressAnimation,
+            showStep: ProgressStep.upload,
+          ),
         ),
         CustomPaint(
           size: Size(280.w, 140.h),
           painter: SemicircularProgressPainter(
-            progress: progress,
+            progress: downloadProgress,
             color: color,
             strokeWidth: 2.w,
             animation: progressAnimation,
+            showStep: ProgressStep.download,
           ),
         ),
         Positioned(

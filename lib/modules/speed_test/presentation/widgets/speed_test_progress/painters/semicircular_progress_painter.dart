@@ -1,17 +1,21 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
+enum ProgressStep { upload, download }
+
 class SemicircularProgressPainter extends CustomPainter {
   final double progress;
   final Color color;
   final double strokeWidth;
   final Animation<double>? animation;
+  final ProgressStep showStep;
 
   SemicircularProgressPainter({
     required this.progress,
     required this.color,
     this.strokeWidth = 12.0,
     this.animation,
+    this.showStep = ProgressStep.upload,
   }) : super(repaint: animation);
 
   @override
@@ -110,8 +114,8 @@ class SemicircularProgressPainter extends CustomPainter {
     ).createShader(Rect.fromCircle(center: center, radius: radius));
   }
 
-  void _drawProgressIndicator(Canvas canvas, Offset center, double radius,
-      double progress, Color color) {
+  void _drawProgressIndicator(
+      Canvas canvas, Offset center, double radius, double progress, Color color) {
     const startAngle = math.pi * 0.85;
     const sweepAngle = math.pi * 1.3;
     final angle = startAngle + (sweepAngle * progress);
