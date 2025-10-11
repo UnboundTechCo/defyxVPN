@@ -43,6 +43,22 @@ class SemicircularProgressPainter extends CustomPainter {
     final animatedProgress = animation?.value ?? progress;
 
     if (animatedProgress > 0) {
+      // Draw shadow first
+      final shadowPaint = Paint()
+        ..color = const Color(0x6687BD23) // #87BD2366
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 17);
+
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle * animatedProgress,
+        false,
+        shadowPaint,
+      );
+
       final layers = 5;
       final layerSpacing = 1.5;
       final totalOffset = (layers - 1) * layerSpacing;
