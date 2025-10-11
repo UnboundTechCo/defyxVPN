@@ -15,6 +15,7 @@ class SpeedTestProgressIndicator extends StatefulWidget {
   final String? subtitle;
   final SpeedTestResult? result;
   final Widget? button;
+  final SpeedTestStep? currentStep;
 
   const SpeedTestProgressIndicator({
     super.key,
@@ -27,11 +28,11 @@ class SpeedTestProgressIndicator extends StatefulWidget {
     this.subtitle,
     this.result,
     this.button,
+    this.currentStep,
   });
 
   @override
-  State<SpeedTestProgressIndicator> createState() =>
-      _SpeedTestProgressIndicatorState();
+  State<SpeedTestProgressIndicator> createState() => _SpeedTestProgressIndicatorState();
 }
 
 class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
@@ -41,6 +42,8 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   late AnimationController _gridAnimationController;
   late Animation<double> _gridAnimation;
   double _previousProgress = 0.0;
+  double _uploadProgress = 0.0;
+  double _downloadProgress = 0.0;
 
   @override
   void initState() {
@@ -78,6 +81,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.progress != widget.progress) {
       _updateProgressAnimation();
+      _updateStepProgress();
     }
   }
 
@@ -91,6 +95,21 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       curve: Curves.easeInOut,
     ));
     _animationController.forward(from: 0.0);
+  }
+
+  void _updateStepProgress() {
+    setState(() {
+      if (widget.currentStep == SpeedTestStep.upload) {
+        _uploadProgress = widget.progress;
+        _downloadProgress = 0.0;
+      } else if (widget.currentStep == SpeedTestStep.download) {
+        _uploadProgress = 0.0;
+        _downloadProgress = widget.progress;
+      } else {
+        _uploadProgress = widget.progress;
+        _downloadProgress = widget.progress;
+      }
+    });
   }
 
   @override
@@ -115,7 +134,8 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                 top: 0.h,
                 bottom: 100.h,
                 child: ProgressArcStack(
-                  progress: _progressAnimation.value,
+                  uploadProgress: _uploadProgress,
+                  downloadProgress: _downloadProgress,
                   color: widget.color,
                   progressAnimation: _progressAnimation,
                   gridAnimation: _gridAnimation,
