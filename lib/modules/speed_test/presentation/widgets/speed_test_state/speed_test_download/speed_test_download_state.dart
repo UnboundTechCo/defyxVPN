@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
+import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -28,6 +29,7 @@ class SpeedTestDownloadState extends StatelessWidget {
           centerUnit: 'Mbps',
           subtitle: 'DOWNLOAD',
           result: state.result,
+          currentStep: SpeedTestStep.download,
         ),
       ],
     );
