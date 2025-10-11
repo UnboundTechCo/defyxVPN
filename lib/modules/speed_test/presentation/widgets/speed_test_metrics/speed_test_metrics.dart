@@ -26,70 +26,67 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(horizontal: 20.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.start,
-            spacing: 20.h,
-            children: [
-              if (showDownload)
-                SizedBox(
-                  height: 65.h,
-                  child: MetricItemCompact(
-                    label: 'DOWNLOAD',
-                    value: downloadSpeed,
-                  ),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.start,
+          spacing: 20.h,
+          children: [
+            if (showDownload)
+              SizedBox(
+                height: 65.h,
+                child: MetricItemCompact(
+                  label: 'DOWNLOAD',
+                  value: downloadSpeed,
                 ),
-              MetricItemCompact(
-                label: 'PING',
-                value: ping,
-                unit: 'ms',
               ),
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 10.h,
-            children: [
-              if (showUpload)
-                SizedBox(
-                  height: 65.h,
-                  child: MetricItemCompact(
-                    label: 'UPLOAD',
-                    value: uploadSpeed,
-                  ),
+            MetricItemCompact(
+              label: 'PING',
+              value: ping,
+              unit: 'ms',
+            ),
+          ],
+        ),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          spacing: 10.h,
+          children: [
+            if (showUpload)
+              SizedBox(
+                height: 65.h,
+                child: MetricItemCompact(
+                  label: 'UPLOAD',
+                  value: uploadSpeed,
                 ),
-              Column(
-                spacing: 5.h,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  MetricItemHorizontal(
-                    label: 'LATENCY',
-                    value: latency,
-                    unit: 'ms',
-                  ),
-                  MetricItemHorizontal(
-                    label: 'P.LOSS',
-                    value: packetLoss,
-                    unit: '%',
-                  ),
-                  MetricItemHorizontal(
-                    label: 'JITTER',
-                    value: jitter,
-                    unit: 'ms',
-                  ),
-                ],
               ),
-            ],
-          ),
-        ],
-      ),
+            Column(
+              spacing: 5.h,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                MetricItemHorizontal(
+                  label: 'LATENCY',
+                  value: latency,
+                  unit: 'ms',
+                ),
+                MetricItemHorizontal(
+                  label: 'P.LOSS',
+                  value: packetLoss,
+                  unit: '%',
+                ),
+                MetricItemHorizontal(
+                  label: 'JITTER',
+                  value: jitter,
+                  unit: 'ms',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

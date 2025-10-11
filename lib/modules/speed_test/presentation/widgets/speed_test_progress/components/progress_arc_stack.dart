@@ -55,12 +55,12 @@ class ProgressArcStack extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 155.h,
+          top: 180.h,
           child: CustomPaint(
-            size: Size(250.w, 60.h),
+            size: Size(350.w, 45.h),
             painter: AnimatedGridPainter(
               animation: gridAnimation,
-              gridColor: color,
+              // gridColor: color,
               strokeWidth: 1.w,
             ),
           ),

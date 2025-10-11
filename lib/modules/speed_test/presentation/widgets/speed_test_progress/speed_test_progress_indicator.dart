@@ -174,6 +174,8 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
               Positioned(
                 top: 0.h,
                 bottom: 100.h,
+                left: 0.w,
+                right: 0.w,
                 child: ProgressArcStack(
                   uploadProgress: _uploadProgress,
                   downloadProgress: _downloadProgress,
