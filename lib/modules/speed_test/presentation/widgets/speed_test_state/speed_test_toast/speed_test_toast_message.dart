@@ -12,25 +12,23 @@ class SpeedTestToastMessage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: EdgeInsets.symmetric(horizontal: 20.w),
+      width: double.infinity,
+      height: 80.h,
+      alignment: Alignment.center,
+      // margin: EdgeInsets.symmetric(horizontal: 20.w),
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(10.r),
+        color: Colors.black,
+        borderRadius: BorderRadius.circular(6.r),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 12.sp,
-              fontFamily: 'Lato',
-              color: Colors.white,
-              height: 1.4,
-            ),
-          ),
-        ],
+      child: Text(
+        message,
+        style: TextStyle(
+          fontSize: 16.sp,
+          fontFamily: 'Lato',
+          color: Colors.white,
+          height: 1.4,
+        ),
       ),
     );
   }

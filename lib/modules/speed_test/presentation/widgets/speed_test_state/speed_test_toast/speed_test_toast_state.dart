@@ -34,9 +34,12 @@ class SpeedTestToastState extends ConsumerWidget {
             onTap: onRetry,
           ),
         ),
-        SizedBox(height: 40.h),
-        SpeedTestToastMessage(
-          message: state.errorMessage ?? 'Connection unstable. Please try again.',
+        SizedBox(height: 55.h),
+        SizedBox(
+          child: SpeedTestToastMessage(
+            message:
+                state.errorMessage ?? 'Your connection was unstable, and the test was interrupted.',
+          ),
         ),
       ],
     );
