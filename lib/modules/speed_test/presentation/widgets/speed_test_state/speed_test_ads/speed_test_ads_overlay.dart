@@ -17,7 +17,7 @@ class SpeedTestAdsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 0.h,
+      bottom: 130.h,
       left: 0,
       right: 0,
       child: Container(
@@ -62,16 +62,12 @@ class SpeedTestAdsOverlay extends StatelessWidget {
                         height: 20.w,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: countdown <= 0
-                              ? Colors.grey.shade700
-                              : Colors.grey.shade800,
+                          color: countdown <= 0 ? Colors.grey.shade700 : Colors.grey.shade800,
                         ),
                         child: Icon(
                           Icons.close_rounded,
                           size: 14.sp,
-                          color: countdown <= 0
-                              ? Colors.white
-                              : Colors.grey.shade600,
+                          color: countdown <= 0 ? Colors.white : Colors.grey.shade600,
                         ),
                       ),
                     ),
