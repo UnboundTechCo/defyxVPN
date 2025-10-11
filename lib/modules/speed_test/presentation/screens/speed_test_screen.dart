@@ -122,6 +122,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen>
                     top: 130.h,
                     left: 0,
                     right: 0,
+                    bottom: 0,
                     child: _buildContent(speedTestState),
                   ),
                 ],
