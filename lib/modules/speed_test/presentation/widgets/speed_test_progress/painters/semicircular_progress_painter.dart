@@ -98,27 +98,35 @@ class SemicircularProgressPainter extends CustomPainter {
 
     if (baseColor == Colors.green) {
       gradientColors = [
-        const Color(0xFF66FF66),
-        const Color(0xFF00FF00),
-        const Color(0xFF00DD00),
+        const Color(0xFF76F959),
+        const Color(0xFF76F959),
+        const Color(0xFF76F959),
+        // const Color(0xFF00FF00),
+        // const Color(0xFF00DD00),
       ];
     } else if (baseColor == Colors.blue) {
       gradientColors = [
-        const Color(0xFF66B3FF),
-        const Color(0xFF0099FF),
-        const Color(0xFF0077DD),
+        const Color(0xFF72D9FF),
+        const Color(0xFF72D9FF),
+        const Color(0xFF72D9FF),
+        // const Color(0xFF0099FF),
+        // const Color(0xFF0077DD),
       ];
     } else if (baseColor == Colors.orange) {
       gradientColors = [
         const Color(0xFFFFAA66),
-        const Color(0xFFFF8833),
-        const Color(0xFFFF6600),
+        const Color(0xFFFFAA66),
+        const Color(0xFFFFAA66),
+        // const Color(0xFFFF8833),
+        // const Color(0xFFFF6600),
       ];
     } else {
       gradientColors = [
-        baseColor.withValues(alpha: 0.7),
+        // baseColor.withValues(alpha: 0.7),
         baseColor,
-        baseColor.withValues(alpha: 0.9),
+        baseColor,
+        baseColor,
+        // baseColor.withValues(alpha: 0.9),
       ];
     }
 
