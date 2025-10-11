@@ -23,7 +23,7 @@ class SpeedTestUploadState extends StatelessWidget {
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
           progress: combinedProgress,
-          color: Colors.blue,
+          color: const Color(0xFF72D9FF),
           showButton: false,
           centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
           centerUnit: 'Mbps',
