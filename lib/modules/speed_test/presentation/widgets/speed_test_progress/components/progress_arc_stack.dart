@@ -7,7 +7,8 @@ class ProgressArcStack extends StatelessWidget {
   final double uploadProgress;
   final double downloadProgress;
   final Color color;
-  final Animation<double> progressAnimation;
+  final Animation<double> uploadProgressAnimation;
+  final Animation<double> downloadProgressAnimation;
   final Animation<double> gridAnimation;
   final bool showLoadingIndicator;
   final Widget? centerContent;
@@ -19,7 +20,8 @@ class ProgressArcStack extends StatelessWidget {
     required this.uploadProgress,
     required this.downloadProgress,
     required this.color,
-    required this.progressAnimation,
+    required this.uploadProgressAnimation,
+    required this.downloadProgressAnimation,
     required this.gridAnimation,
     required this.showLoadingIndicator,
     this.centerContent,
@@ -38,7 +40,7 @@ class ProgressArcStack extends StatelessWidget {
             progress: uploadProgress,
             color: color,
             strokeWidth: 2.w,
-            animation: progressAnimation,
+            animation: uploadProgressAnimation,
             showStep: ProgressStep.upload,
           ),
         ),
@@ -48,7 +50,7 @@ class ProgressArcStack extends StatelessWidget {
             progress: downloadProgress,
             color: color,
             strokeWidth: 2.w,
-            animation: progressAnimation,
+            animation: downloadProgressAnimation,
             showStep: ProgressStep.download,
           ),
         ),

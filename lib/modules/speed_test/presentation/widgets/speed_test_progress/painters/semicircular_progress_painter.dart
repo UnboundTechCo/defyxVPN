@@ -40,7 +40,9 @@ class SemicircularProgressPainter extends CustomPainter {
       backgroundPaint,
     );
 
-    if (progress > 0) {
+    final animatedProgress = animation?.value ?? progress;
+
+    if (animatedProgress > 0) {
       final layers = 5;
       final layerSpacing = 1.5;
       final totalOffset = (layers - 1) * layerSpacing;
@@ -48,7 +50,7 @@ class SemicircularProgressPainter extends CustomPainter {
 
       for (int i = 0; i < layers; i++) {
         final layerRadius = radius + middleLayerOffset - (i * layerSpacing);
-        final gradient = _createGradient(color, center, layerRadius);
+        final gradient = _createGradient(color, center, layerRadius, animatedProgress);
 
         final progressPaint = Paint()
           ..shader = gradient
@@ -59,7 +61,7 @@ class SemicircularProgressPainter extends CustomPainter {
         canvas.drawArc(
           Rect.fromCircle(center: center, radius: layerRadius),
           startAngle,
-          sweepAngle * progress,
+          sweepAngle * animatedProgress,
           false,
           progressPaint,
         );
@@ -69,13 +71,13 @@ class SemicircularProgressPainter extends CustomPainter {
         canvas,
         center,
         radius,
-        progress,
+        animatedProgress,
         color,
       );
     }
   }
 
-  Shader _createGradient(Color baseColor, Offset center, double radius) {
+  Shader _createGradient(Color baseColor, Offset center, double radius, double progress) {
     List<Color> gradientColors;
 
     if (baseColor == Colors.green) {

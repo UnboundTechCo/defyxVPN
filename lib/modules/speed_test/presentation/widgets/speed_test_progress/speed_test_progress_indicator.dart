@@ -37,11 +37,12 @@ class SpeedTestProgressIndicator extends StatefulWidget {
 
 class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     with TickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _progressAnimation;
+  late AnimationController _uploadAnimationController;
+  late AnimationController _downloadAnimationController;
+  late Animation<double> _uploadProgressAnimation;
+  late Animation<double> _downloadProgressAnimation;
   late AnimationController _gridAnimationController;
   late Animation<double> _gridAnimation;
-  double _previousProgress = 0.0;
   double _uploadProgress = 0.0;
   double _downloadProgress = 0.0;
 
@@ -52,18 +53,29 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   }
 
   void _initializeAnimations() {
-    _animationController = AnimationController(
+    _uploadAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _progressAnimation = Tween<double>(
+    _uploadProgressAnimation = Tween<double>(
       begin: 0.0,
-      end: widget.progress,
+      end: 0.0,
     ).animate(CurvedAnimation(
-      parent: _animationController,
+      parent: _uploadAnimationController,
       curve: Curves.easeInOut,
     ));
-    _animationController.forward();
+
+    _downloadAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _downloadProgressAnimation = Tween<double>(
+      begin: 0.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _downloadAnimationController,
+      curve: Curves.easeInOut,
+    ));
 
     _gridAnimationController = AnimationController(
       vsync: this,
@@ -74,47 +86,76 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       begin: 0.0,
       end: 1.0,
     ).animate(_gridAnimationController);
+
+    _updateStepProgress();
   }
 
   @override
   void didUpdateWidget(SpeedTestProgressIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.progress != widget.progress) {
-      _updateProgressAnimation();
+    if (oldWidget.progress != widget.progress || oldWidget.currentStep != widget.currentStep) {
       _updateStepProgress();
     }
   }
 
-  void _updateProgressAnimation() {
-    _previousProgress = _progressAnimation.value;
-    _progressAnimation = Tween<double>(
-      begin: _previousProgress,
-      end: widget.progress,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
-    _animationController.forward(from: 0.0);
+  void _updateStepProgress() {
+    if (widget.currentStep == SpeedTestStep.upload) {
+      _uploadProgress = widget.progress;
+      _downloadProgress = 0.0;
+    } else if (widget.currentStep == SpeedTestStep.download) {
+      _uploadProgress = 0.0;
+      _downloadProgress = widget.progress;
+    } else {
+      _uploadProgress = widget.progress;
+      _downloadProgress = widget.progress;
+    }
+
+    _updateUploadAnimation();
+    _updateDownloadAnimation();
   }
 
-  void _updateStepProgress() {
-    setState(() {
-      if (widget.currentStep == SpeedTestStep.upload) {
-        _uploadProgress = widget.progress;
-        _downloadProgress = 0.0;
-      } else if (widget.currentStep == SpeedTestStep.download) {
-        _uploadProgress = 0.0;
-        _downloadProgress = widget.progress;
-      } else {
-        _uploadProgress = widget.progress;
-        _downloadProgress = widget.progress;
-      }
-    });
+  void _updateUploadAnimation() {
+    final currentValue = _uploadProgressAnimation.value;
+    final isDecreasing = _uploadProgress < currentValue;
+
+    final duration =
+        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 300);
+
+    _uploadAnimationController.duration = duration;
+
+    _uploadProgressAnimation = Tween<double>(
+      begin: currentValue,
+      end: _uploadProgress,
+    ).animate(CurvedAnimation(
+      parent: _uploadAnimationController,
+      curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
+    ));
+    _uploadAnimationController.forward(from: 0.0);
+  }
+
+  void _updateDownloadAnimation() {
+    final currentValue = _downloadProgressAnimation.value;
+    final isDecreasing = _downloadProgress < currentValue;
+
+    final duration =
+        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 300);
+
+    _downloadAnimationController.duration = duration;
+
+    _downloadProgressAnimation = Tween<double>(
+      begin: currentValue,
+      end: _downloadProgress,
+    ).animate(CurvedAnimation(
+      parent: _downloadAnimationController,
+      curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
+    ));
+    _downloadAnimationController.forward(from: 0.0);
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
+    _uploadAnimationController.dispose();
+    _downloadAnimationController.dispose();
     _gridAnimationController.dispose();
     super.dispose();
   }
@@ -122,7 +163,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: _progressAnimation,
+      animation: Listenable.merge([_uploadProgressAnimation, _downloadProgressAnimation]),
       builder: (context, child) {
         return SizedBox(
           width: 350.w,
@@ -137,7 +178,8 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                   uploadProgress: _uploadProgress,
                   downloadProgress: _downloadProgress,
                   color: widget.color,
-                  progressAnimation: _progressAnimation,
+                  uploadProgressAnimation: _uploadProgressAnimation,
+                  downloadProgressAnimation: _downloadProgressAnimation,
                   gridAnimation: _gridAnimation,
                   showLoadingIndicator: widget.showLoadingIndicator,
                   showButton: widget.showButton,
