@@ -49,8 +49,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   @override
   void didUpdateWidget(SpeedTestStartButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.currentStep == SpeedTestStep.ready &&
-        oldWidget.currentStep != SpeedTestStep.ready) {
+    if (widget.currentStep == SpeedTestStep.ready && oldWidget.currentStep != SpeedTestStep.ready) {
       _animationController.repeat(reverse: true);
     } else if (widget.currentStep != SpeedTestStep.ready &&
         oldWidget.currentStep == SpeedTestStep.ready) {
@@ -97,7 +96,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
                 animation: _animation,
                 builder: (context, child) {
                   return CustomPaint(
-                    size: Size(60.w, 60.w),
+                    size: Size(50.w, 50.w),
                     painter: RadialLinesPainter(
                       progress: _animation.value,
                       color: Colors.white,
@@ -106,16 +105,14 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
                 },
               ),
             Positioned(
-              right: 10.h,
-              bottom: 10.h,
+              right: 15.h,
+              bottom: 15.h,
               child: Transform.rotate(
-                angle:
-                    widget.currentStep == SpeedTestStep.ready ? 15 / 3.14 : 0,
+                angle: widget.currentStep == SpeedTestStep.ready ? 15 / 3.14 : 0,
                 child: Icon(
                   _getIcon(),
                   color: Colors.white,
-                  size:
-                      widget.currentStep == SpeedTestStep.ready ? 24.sp : 36.sp,
+                  size: widget.currentStep == SpeedTestStep.ready ? 20.sp : 36.sp,
                 ),
               ),
             ),
