@@ -175,21 +175,21 @@ select_version_increment() {
 
 # Update ad value in AndroidManifest.xml and Info.plist from DEFYX_AD_ID
 update_ad_id() {
-    local android_ad_id="$1"
-    local ios_ad_id="$2"
+    local android_ad_app_id="$1"
+    local ios_ad_app_id="$2"
     local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
     local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
 
     # AndroidManifest.xml
-    if [ -n "$android_ad_id" ]; then
-        sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'"$android_ad_id"'"/>|' "$android_manifest"
+    if [ -n "$android_ad_app_id" ]; then
+        sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'"$android_ad_app_id"'"/>|' "$android_manifest"
         echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
     else
         echo -e "${YELLOW}⚠️  ANDROID_AD_UNIT_ID not set. Skipping AndroidManifest.xml update.${NC}"
     fi
     # Info.plist
-    if [ -n "$ios_ad_id" ]; then
-        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_id</string>|" "$ios_info_plist"
+    if [ -n "$ios_ad_app_id" ]; then
+        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
         echo -e "${GREEN}✅ Updated iOS ad id in Info.plist${NC}"
     else
         echo -e "${YELLOW}⚠️  IOS_AD_UNIT_ID not set. Skipping Info.plist update.${NC}"
@@ -197,24 +197,24 @@ update_ad_id() {
 }
 
 validate_ad_id() {
-    local android_ad_id="$1"
-    local ios_ad_id="$2"
+    local android_ad_app_id="$1"
+    local ios_ad_app_id="$2"
     local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
     local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
     local valid=true
 
     # Check AndroidManifest.xml
-    if [ -n "$android_ad_id" ]; then
-        if ! grep -q "$android_ad_id" "$android_manifest"; then
-            echo -e "${YELLOW}⚠️  Android ad id $android_ad_id not found in AndroidManifest.xml!${NC}"
+    if [ -n "$android_ad_app_id" ]; then
+        if ! grep -q "$android_ad_app_id" "$android_manifest"; then
+            echo -e "${YELLOW}⚠️  Android ad id $android_ad_app_id not found in AndroidManifest.xml!${NC}"
             valid=false
         fi
     fi
 
     # Check Info.plist
-    if [ -n "$ios_ad_id" ]; then
-        if ! grep -q "$ios_ad_id" "$ios_info_plist"; then
-            echo -e "${YELLOW}⚠️  iOS ad id $ios_ad_id not found in Info.plist!${NC}"
+    if [ -n "$ios_ad_app_id" ]; then
+        if ! grep -q "$ios_ad_app_id" "$ios_info_plist"; then
+            echo -e "${YELLOW}⚠️  iOS ad id $ios_ad_app_id not found in Info.plist!${NC}"
             valid=false
         fi
     fi
@@ -269,13 +269,13 @@ if ! select_version_increment "$current_version"; then
 fi
 
 env_file="$PROJECT_ROOT/.env"
-android_ad_id=$(grep '^ANDROID_AD_UNIT_ID=' "$env_file" | cut -d'=' -f2-)
-ios_ad_id=$(grep '^IOS_AD_UNIT_ID=' "$env_file" | cut -d'=' -f2-)
+android_ad_app_id=$(grep '^ANDROID_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
+ios_ad_app_id=$(grep '^IOS_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
 orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 
 # Update ad ids and store original values
-update_ad_id "$android_ad_id" "$ios_ad_id"
-if ! validate_ad_id "$android_ad_id" "$ios_ad_id"; then
+update_ad_id "$android_ad_app_id" "$ios_ad_app_id"
+if ! validate_ad_id "$android_ad_app_id" "$ios_ad_app_id"; then
     echo -e "${RED}❌ Ad ID validation failed. Build aborted.${NC}"
     # Restore original ad ids before exit if needed
     update_ad_id "$orig_ad_id" "$orig_ad_id"
