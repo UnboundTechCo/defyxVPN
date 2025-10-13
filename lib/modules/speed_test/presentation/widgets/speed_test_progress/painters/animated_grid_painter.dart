@@ -22,14 +22,41 @@ class AnimatedGridPainter extends CustomPainter {
     final bottomWidth = size.width;
     final topWidth = size.width * 0.15;
 
+    final topShadowHeight = size.height * 0.3;
+    final topShadowTopWidth = topWidth;
+    final topShadowBottomWidth =
+        topWidth + (bottomWidth - topWidth) * (topShadowHeight / size.height);
+
+    final topShadowPath = Path()
+      ..moveTo(centerX - topShadowTopWidth / 2, 0)
+      ..lineTo(centerX + topShadowTopWidth / 2, 0)
+      ..lineTo(centerX + topShadowBottomWidth / 2, topShadowHeight)
+      ..lineTo(centerX - topShadowBottomWidth / 2, topShadowHeight)
+      ..close();
+
+    final topShadowRect = Rect.fromLTWH(0, 0, size.width, topShadowHeight);
+    final topGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.grey.withValues(alpha: 0.15),
+        Colors.grey.withValues(alpha: 0.0),
+      ],
+    );
+
+    final topShadowPaint = Paint()
+      ..shader = topGradient.createShader(topShadowRect)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(topShadowPath, topShadowPaint);
+
     for (int i = -2; i < 11; i++) {
       final y = i * horizontalSpacing + (offset * horizontalSpacing);
 
       if (y >= 0 && y <= size.height) {
         final perspectiveRatio = 1.0 - (y / size.height);
 
-        final lineWidth =
-            topWidth + (bottomWidth - topWidth) * (1.0 - perspectiveRatio);
+        final lineWidth = topWidth + (bottomWidth - topWidth) * (1.0 - perspectiveRatio);
         final lineStartX = centerX - lineWidth / 2;
         final lineEndX = centerX + lineWidth / 2;
 
@@ -71,6 +98,35 @@ class AnimatedGridPainter extends CustomPainter {
         fadePaint,
       );
     }
+
+    final bottomShadowHeight = size.height * 0.4;
+    final bottomShadowStartY = size.height - bottomShadowHeight;
+    final bottomShadowTopWidth =
+        topWidth + (bottomWidth - topWidth) * (bottomShadowStartY / size.height);
+    final bottomShadowBottomWidth = bottomWidth;
+
+    final bottomShadowPath = Path()
+      ..moveTo(centerX - bottomShadowTopWidth / 2, bottomShadowStartY)
+      ..lineTo(centerX + bottomShadowTopWidth / 2, bottomShadowStartY)
+      ..lineTo(centerX + bottomShadowBottomWidth / 2, size.height)
+      ..lineTo(centerX - bottomShadowBottomWidth / 2, size.height)
+      ..close();
+
+    final bottomShadowRect = Rect.fromLTWH(0, bottomShadowStartY, size.width, bottomShadowHeight);
+    final bottomGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        Colors.grey.withValues(alpha: 0.0),
+        Colors.grey.withValues(alpha: 0.15),
+      ],
+    );
+
+    final bottomShadowPaint = Paint()
+      ..shader = bottomGradient.createShader(bottomShadowRect)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(bottomShadowPath, bottomShadowPaint);
   }
 
   @override
