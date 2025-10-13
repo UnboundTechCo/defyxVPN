@@ -3,6 +3,7 @@ import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dar
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_start_button.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -24,6 +25,8 @@ class SpeedTestAdsState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final connectionState = ref.watch(connectionStateProvider);
+
     return Stack(
       children: [
         Column(
@@ -34,6 +37,7 @@ class SpeedTestAdsState extends ConsumerWidget {
               color: previousStep == SpeedTestStep.toast ? Colors.orange : Colors.green,
               showButton: true,
               result: state.result,
+              connectionStatus: connectionState.status,
               button: SpeedTestStartButton(
                 currentStep: SpeedTestStep.ads,
                 previousStep: previousStep,

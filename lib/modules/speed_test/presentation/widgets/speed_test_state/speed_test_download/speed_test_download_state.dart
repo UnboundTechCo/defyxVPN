@@ -1,10 +1,12 @@
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class SpeedTestDownloadState extends StatelessWidget {
+class SpeedTestDownloadState extends ConsumerWidget {
   final SpeedTestState state;
 
   const SpeedTestDownloadState({
@@ -13,9 +15,10 @@ class SpeedTestDownloadState extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final speedProgress = (state.currentSpeed / 100).clamp(0.0, 1.0);
     final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
+    final connectionState = ref.watch(connectionStateProvider);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -30,6 +33,7 @@ class SpeedTestDownloadState extends StatelessWidget {
           subtitle: 'DOWNLOAD',
           result: state.result,
           currentStep: SpeedTestStep.download,
+          connectionStatus: connectionState.status,
         ),
       ],
     );
