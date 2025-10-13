@@ -19,7 +19,6 @@ class SpeedTestAdsOverlay extends StatelessWidget {
       left: 0,
       right: 0,
       child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 20.w),
         decoration: BoxDecoration(
           color: const Color(0xFF1A1A1A),
           borderRadius: BorderRadius.circular(10.r),
