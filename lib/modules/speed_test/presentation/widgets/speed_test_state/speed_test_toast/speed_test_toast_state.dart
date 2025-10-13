@@ -5,7 +5,6 @@ import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_sta
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'speed_test_toast_message.dart';
 
 class SpeedTestToastState extends ConsumerWidget {
   final SpeedTestState state;
@@ -32,13 +31,6 @@ class SpeedTestToastState extends ConsumerWidget {
             currentStep: SpeedTestStep.toast,
             isEnabled: true,
             onTap: onRetry,
-          ),
-        ),
-        SizedBox(height: 55.h),
-        SizedBox(
-          child: SpeedTestToastMessage(
-            message:
-                state.errorMessage ?? 'Your connection was unstable, and the test was interrupted.',
           ),
         ),
       ],
