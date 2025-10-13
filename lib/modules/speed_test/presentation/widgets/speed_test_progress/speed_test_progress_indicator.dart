@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import '../../../models/speed_test_result.dart';
 import '../speed_test_metrics/speed_test_metrics.dart';
 import 'components/progress_arc_stack.dart';
@@ -16,6 +17,7 @@ class SpeedTestProgressIndicator extends StatefulWidget {
   final SpeedTestResult? result;
   final Widget? button;
   final SpeedTestStep? currentStep;
+  final ConnectionStatus connectionStatus;
 
   const SpeedTestProgressIndicator({
     super.key,
@@ -29,6 +31,7 @@ class SpeedTestProgressIndicator extends StatefulWidget {
     this.result,
     this.button,
     this.currentStep,
+    required this.connectionStatus,
   });
 
   @override
@@ -204,6 +207,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                     jitter: widget.result!.jitter,
                     showDownload: true,
                     showUpload: true,
+                    connectionStatus: widget.connectionStatus,
                   ),
                 ),
             ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'speed_test_metric_item.dart';
 
 class SpeedTestMetricsDisplay extends StatelessWidget {
@@ -11,6 +12,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
   final int jitter;
   final bool showDownload;
   final bool showUpload;
+  final ConnectionStatus connectionStatus;
 
   const SpeedTestMetricsDisplay({
     super.key,
@@ -22,6 +24,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
     required this.jitter,
     required this.showDownload,
     required this.showUpload,
+    required this.connectionStatus,
   });
 
   @override
@@ -41,12 +44,14 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
                 child: MetricItemCompact(
                   label: 'DOWNLOAD',
                   value: downloadSpeed,
+                  connectionStatus: connectionStatus,
                 ),
               ),
             MetricItemCompact(
               label: 'PING',
               value: ping,
               unit: 'ms',
+              connectionStatus: connectionStatus,
             ),
           ],
         ),
@@ -61,6 +66,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
                 child: MetricItemCompact(
                   label: 'UPLOAD',
                   value: uploadSpeed,
+                  connectionStatus: connectionStatus,
                 ),
               ),
             Column(
@@ -71,16 +77,19 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
                   label: 'LATENCY',
                   value: latency,
                   unit: 'ms',
+                  connectionStatus: connectionStatus,
                 ),
                 MetricItemHorizontal(
                   label: 'P.LOSS',
                   value: packetLoss,
                   unit: '%',
+                  connectionStatus: connectionStatus,
                 ),
                 MetricItemHorizontal(
                   label: 'JITTER',
                   value: jitter,
                   unit: 'ms',
+                  connectionStatus: connectionStatus,
                 ),
               ],
             ),

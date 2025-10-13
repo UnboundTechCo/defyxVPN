@@ -1,4 +1,6 @@
 import 'package:defyx_vpn/core/utils/format_number.dart';
+import 'package:defyx_vpn/core/theme/app_colors.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -6,13 +8,33 @@ class MetricItemCompact extends StatelessWidget {
   final String label;
   final num value;
   final String unit;
+  final ConnectionStatus connectionStatus;
 
   const MetricItemCompact({
     super.key,
     required this.label,
     required this.value,
     this.unit = 'Mbps',
+    required this.connectionStatus,
   });
+
+  Color _getColorByStatus(ConnectionStatus status) {
+    switch (status) {
+      case ConnectionStatus.connected:
+        return AppColors.bottomGradientConnected;
+      case ConnectionStatus.disconnected:
+        return AppColors.bottomGradient;
+      case ConnectionStatus.noInternet:
+        return AppColors.bottomGradientNoInternet;
+      case ConnectionStatus.error:
+        return AppColors.bottomGradientFailedToConnect;
+      case ConnectionStatus.loading:
+      case ConnectionStatus.analyzing:
+        return AppColors.bottomGradientConnecting;
+      default:
+        return AppColors.bottomGradient;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +71,6 @@ class MetricItemCompact extends StatelessWidget {
                         fontSize: 16.sp,
                         fontFamily: 'Lato',
                         color: Colors.grey.shade500,
-                        // fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -59,7 +80,7 @@ class MetricItemCompact extends StatelessWidget {
                 width: 75.w,
                 height: 20.h,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF307065),
+                  color: _getColorByStatus(connectionStatus),
                   borderRadius: BorderRadius.circular(15.r),
                 ),
               ),
@@ -72,13 +93,33 @@ class MetricItemHorizontal extends StatelessWidget {
   final String label;
   final num value;
   final String unit;
+  final ConnectionStatus connectionStatus;
 
   const MetricItemHorizontal({
     super.key,
     required this.label,
     required this.value,
     this.unit = 'Mbps',
+    required this.connectionStatus,
   });
+
+  Color _getColorByStatus(ConnectionStatus status) {
+    switch (status) {
+      case ConnectionStatus.connected:
+        return AppColors.bottomGradientConnected;
+      case ConnectionStatus.disconnected:
+        return AppColors.bottomGradient;
+      case ConnectionStatus.noInternet:
+        return AppColors.bottomGradientNoInternet;
+      case ConnectionStatus.error:
+        return AppColors.bottomGradientFailedToConnect;
+      case ConnectionStatus.loading:
+      case ConnectionStatus.analyzing:
+        return AppColors.bottomGradientConnecting;
+      default:
+        return AppColors.bottomGradient;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -125,7 +166,6 @@ class MetricItemHorizontal extends StatelessWidget {
                             fontSize: 13.sp,
                             fontFamily: 'Lato',
                             color: Colors.grey.shade500,
-                            // fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
@@ -139,7 +179,7 @@ class MetricItemHorizontal extends StatelessWidget {
                     width: 57.w,
                     height: 11.h,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF307065),
+                      color: _getColorByStatus(connectionStatus),
                       borderRadius: BorderRadius.circular(15.r),
                     ),
                   ),
