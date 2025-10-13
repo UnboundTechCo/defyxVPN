@@ -16,6 +16,7 @@ import '../widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart
 import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
 import '../widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
 import '../widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
+import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_message.dart';
 
 class SpeedTestScreen extends ConsumerStatefulWidget {
   const SpeedTestScreen({super.key});
@@ -27,7 +28,6 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   late final GoogleAds _googleAds;
   Timer? _toastTimer;
-  bool _hasCountdownStarted = false;
   SpeedTestStep? _previousStep;
   SpeedTestStep? _stepBeforeAds;
 
@@ -85,7 +85,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
           mounted) {
         Future(() {
           if (mounted) {
-            _hasCountdownStarted = false;
             ref.read(speedTestProvider.notifier).completeTest();
           }
         });
@@ -157,31 +156,31 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     }
 
     if (state.step == SpeedTestStep.ads) {
-      if (!_hasCountdownStarted) {
-        _hasCountdownStarted = true;
-
-        Future.microtask(() {
-          if (mounted) {
-            ref.read(googleAdsProvider.notifier).startCountdownTimer();
-          }
-        });
-      }
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(googleAdsProvider.notifier).startCountdownTimer();
+        }
+      });
     } else if (state.step == SpeedTestStep.ready) {
-      _hasCountdownStarted = false;
       _stepBeforeAds = null;
     }
 
+    final Widget mainContent;
     switch (state.step) {
       case SpeedTestStep.ready:
-        return const SpeedTestReadyState();
+        mainContent = const SpeedTestReadyState();
+        break;
       case SpeedTestStep.loading:
-        return const SpeedTestLoadingState();
+        mainContent = const SpeedTestLoadingState();
+        break;
       case SpeedTestStep.download:
-        return SpeedTestDownloadState(state: state);
+        mainContent = SpeedTestDownloadState(state: state);
+        break;
       case SpeedTestStep.upload:
-        return SpeedTestUploadState(state: state);
+        mainContent = SpeedTestUploadState(state: state);
+        break;
       case SpeedTestStep.toast:
-        return SpeedTestToastState(
+        mainContent = SpeedTestToastState(
           state: state,
           onRetry: () {
             _toastTimer?.cancel();
@@ -189,16 +188,38 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
             ref.read(speedTestProvider.notifier).retryConnection();
           },
         );
+        break;
       case SpeedTestStep.ads:
-        return SpeedTestAdsState(
+        mainContent = SpeedTestAdsState(
           state: state,
           previousStep: _stepBeforeAds,
           googleAds: _googleAds,
           onClose: () {
-            _hasCountdownStarted = false;
             ref.read(speedTestProvider.notifier).completeTest();
           },
         );
+        break;
     }
+
+    final shouldShowToast = state.errorMessage != null &&
+        (state.step == SpeedTestStep.ready || state.step == SpeedTestStep.toast);
+
+    if (!shouldShowToast) {
+      return mainContent;
+    }
+
+    return Stack(
+      children: [
+        mainContent,
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 130.h,
+          child: SpeedTestToastMessage(
+            message: state.errorMessage!,
+          ),
+        ),
+      ],
+    );
   }
 }

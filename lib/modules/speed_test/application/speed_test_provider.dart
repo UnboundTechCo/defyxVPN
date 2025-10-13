@@ -21,6 +21,7 @@ class SpeedTestState {
   final String? errorMessage;
   final String currentPhase;
   final double currentSpeed;
+  final bool hadError;
 
   const SpeedTestState({
     this.step = SpeedTestStep.ready,
@@ -30,6 +31,7 @@ class SpeedTestState {
     this.errorMessage,
     this.currentPhase = '',
     this.currentSpeed = 0.0,
+    this.hadError = false,
   });
 
   SpeedTestState copyWith({
@@ -38,17 +40,20 @@ class SpeedTestState {
     double? progress,
     bool? isConnectionStable,
     String? errorMessage,
+    bool clearErrorMessage = false,
     String? currentPhase,
     double? currentSpeed,
+    bool? hadError,
   }) {
     return SpeedTestState(
       step: step ?? this.step,
       result: result ?? this.result,
       progress: progress ?? this.progress,
       isConnectionStable: isConnectionStable ?? this.isConnectionStable,
-      errorMessage: errorMessage ?? this.errorMessage,
+      errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
       currentPhase: currentPhase ?? this.currentPhase,
       currentSpeed: currentSpeed ?? this.currentSpeed,
+      hadError: hadError ?? this.hadError,
     );
   }
 }
@@ -147,6 +152,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       currentSpeed: 0.0,
       errorMessage: null,
       isConnectionStable: true,
+      hadError: false,
     );
 
     _downloadSpeeds.clear();
@@ -171,6 +177,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         step: SpeedTestStep.toast,
         isConnectionStable: false,
         currentSpeed: 0.0,
+        hadError: true,
       );
     }
   }
@@ -341,9 +348,15 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       state = state.copyWith(
         step: SpeedTestStep.toast,
         isConnectionStable: false,
+        errorMessage: 'Your connection was unstable, and the test was interrupted.',
+        hadError: true,
       );
     } else {
-      state = state.copyWith(step: SpeedTestStep.ads);
+      state = state.copyWith(
+        step: SpeedTestStep.ads,
+        clearErrorMessage: true,
+        hadError: false,
+      );
     }
   }
 
@@ -361,10 +374,16 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   void moveToAds() {
-    state = state.copyWith(step: SpeedTestStep.ads);
+    state = state.copyWith(
+      step: SpeedTestStep.ads,
+    );
   }
 
   void completeTest() {
-    state = state.copyWith(step: SpeedTestStep.ready);
+    state = state.copyWith(
+      step: SpeedTestStep.ready,
+      errorMessage: state.hadError ? state.errorMessage : null,
+      hadError: false,
+    );
   }
 }
