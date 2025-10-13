@@ -27,8 +27,6 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   late final GoogleAds _googleAds;
   Timer? _toastTimer;
-  Timer? _adsCountdownTimer;
-  int _adsCountdown = 10;
   bool _hasCountdownStarted = false;
   SpeedTestStep? _previousStep;
   SpeedTestStep? _stepBeforeAds;
@@ -72,7 +70,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
 
     _toastTimer?.cancel();
-    _adsCountdownTimer?.cancel();
     super.dispose();
   }
 
@@ -80,6 +77,20 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   Widget build(BuildContext context) {
     final speedTestState = ref.watch(speedTestProvider);
     final connectionState = ref.watch(connectionStateProvider);
+
+    ref.listen(googleAdsProvider, (previous, next) {
+      if (speedTestState.step == SpeedTestStep.ads &&
+          !next.showCountdown &&
+          next.shouldDisposeAd &&
+          mounted) {
+        Future(() {
+          if (mounted) {
+            _hasCountdownStarted = false;
+            ref.read(speedTestProvider.notifier).completeTest();
+          }
+        });
+      }
+    });
 
     return MainScreenBackground(
       connectionStatus: connectionState.status,
@@ -148,27 +159,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     if (state.step == SpeedTestStep.ads) {
       if (!_hasCountdownStarted) {
         _hasCountdownStarted = true;
-        _adsCountdown = 10;
-        _adsCountdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+
+        Future.microtask(() {
           if (mounted) {
-            setState(() {
-              if (_adsCountdown > 0) {
-                _adsCountdown--;
-              }
-              if (_adsCountdown <= 0) {
-                timer.cancel();
-                _adsCountdownTimer = null;
-              }
-            });
-          } else {
-            timer.cancel();
+            ref.read(googleAdsProvider.notifier).startCountdownTimer();
           }
         });
       }
     } else if (state.step == SpeedTestStep.ready) {
       _hasCountdownStarted = false;
-      _adsCountdownTimer?.cancel();
-      _adsCountdownTimer = null;
       _stepBeforeAds = null;
     }
 
@@ -194,11 +193,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         return SpeedTestAdsState(
           state: state,
           previousStep: _stepBeforeAds,
-          countdown: _adsCountdown,
           googleAds: _googleAds,
           onClose: () {
-            _adsCountdownTimer?.cancel();
-            _adsCountdownTimer = null;
             _hasCountdownStarted = false;
             ref.read(speedTestProvider.notifier).completeTest();
           },

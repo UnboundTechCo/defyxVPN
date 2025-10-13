@@ -11,14 +11,12 @@ import 'speed_test_ads_overlay.dart';
 class SpeedTestAdsState extends ConsumerWidget {
   final SpeedTestState state;
   final SpeedTestStep? previousStep;
-  final int countdown;
   final VoidCallback onClose;
   final GoogleAds googleAds;
 
   const SpeedTestAdsState({
     super.key,
     required this.state,
-    required this.countdown,
     required this.onClose,
     required this.googleAds,
     this.previousStep,
@@ -46,7 +44,6 @@ class SpeedTestAdsState extends ConsumerWidget {
           ],
         ),
         SpeedTestAdsOverlay(
-          countdown: countdown,
           googleAds: googleAds,
           onClose: onClose,
         ),
