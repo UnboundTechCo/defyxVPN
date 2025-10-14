@@ -170,7 +170,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       builder: (context, child) {
         return SizedBox(
           width: 350.w,
-          height: 380.h,
+          height: 435.h,
           child: Stack(
             alignment: Alignment.topCenter,
             children: [
