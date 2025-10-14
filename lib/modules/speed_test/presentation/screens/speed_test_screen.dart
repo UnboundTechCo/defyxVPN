@@ -94,7 +94,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     return MainScreenBackground(
       connectionStatus: connectionState.status,
       child: SafeArea(
-        bottom: false,
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
@@ -214,7 +213,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         Positioned(
           left: 0,
           right: 0,
-          bottom: 130.h,
+          bottom: 100.h,
           child: SpeedTestToastMessage(
             message: state.errorMessage!,
           ),
