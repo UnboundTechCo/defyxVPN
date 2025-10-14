@@ -35,7 +35,7 @@ class ProgressArcStack extends StatelessWidget {
       alignment: Alignment.topCenter,
       children: [
         CustomPaint(
-          size: Size(250.w, 140.h),
+          size: Size(250.w, 190.h),
           painter: SemicircularProgressPainter(
             progress: uploadProgress,
             color: color,
@@ -45,7 +45,7 @@ class ProgressArcStack extends StatelessWidget {
           ),
         ),
         CustomPaint(
-          size: Size(280.w, 140.h),
+          size: Size(280.w, 190.h),
           painter: SemicircularProgressPainter(
             progress: downloadProgress,
             color: color,
@@ -55,7 +55,7 @@ class ProgressArcStack extends StatelessWidget {
           ),
         ),
         Positioned(
-          top: 180.h,
+          top: 235.h,
           child: CustomPaint(
             size: Size(350.w, 45.h),
             painter: AnimatedGridPainter(
@@ -67,7 +67,7 @@ class ProgressArcStack extends StatelessWidget {
         ),
         if (showLoadingIndicator)
           Positioned(
-            top: 100.h,
+            top: 150.h,
             child: SizedBox(
               width: 30.w,
               height: 30.h,
@@ -79,12 +79,12 @@ class ProgressArcStack extends StatelessWidget {
           ),
         if (centerContent != null)
           Positioned(
-            top: 50.h,
+            top: 100.h,
             child: centerContent!,
           ),
         if (showButton && button != null)
           Positioned(
-            top: 75.h,
+            top: 125.h,
             child: button!,
           ),
       ],
