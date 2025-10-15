@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
@@ -26,7 +27,7 @@ class SpeedTestDownloadState extends ConsumerWidget {
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
           progress: combinedProgress,
-          color: const Color(0xFF76F959),
+          color: AppColors.downloadColor,
           showButton: false,
           centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
           centerUnit: 'Mbps',

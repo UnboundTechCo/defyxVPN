@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
@@ -27,7 +28,7 @@ class SpeedTestToastState extends ConsumerWidget {
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
           progress: 1.0,
-          color: Colors.orange,
+          color: AppColors.warningColor,
           showButton: true,
           result: state.result,
           connectionStatus: connectionState.status,
