@@ -136,7 +136,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     if (state.step == SpeedTestStep.toast && _toastTimer == null) {
       _toastTimer = Timer(const Duration(seconds: 10), () {
         if (mounted) {
-          ref.read(speedTestProvider.notifier).moveToAds();
+          if (state.testCompleted) {
+            ref.read(speedTestProvider.notifier).moveToAds();
+          }
           _toastTimer = null;
         }
       });

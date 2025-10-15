@@ -22,6 +22,7 @@ class SpeedTestState {
   final String currentPhase;
   final double currentSpeed;
   final bool hadError;
+  final bool testCompleted;
 
   const SpeedTestState({
     this.step = SpeedTestStep.ready,
@@ -32,6 +33,7 @@ class SpeedTestState {
     this.currentPhase = '',
     this.currentSpeed = 0.0,
     this.hadError = false,
+    this.testCompleted = false,
   });
 
   SpeedTestState copyWith({
@@ -44,6 +46,7 @@ class SpeedTestState {
     String? currentPhase,
     double? currentSpeed,
     bool? hadError,
+    bool? testCompleted,
   }) {
     return SpeedTestState(
       step: step ?? this.step,
@@ -54,6 +57,7 @@ class SpeedTestState {
       currentPhase: currentPhase ?? this.currentPhase,
       currentSpeed: currentSpeed ?? this.currentSpeed,
       hadError: hadError ?? this.hadError,
+      testCompleted: testCompleted ?? this.testCompleted,
     );
   }
 }
@@ -333,6 +337,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       result: result,
       progress: 1.0,
       currentPhase: 'Test completed',
+      testCompleted: true,
     );
 
     _logger.logResults(
