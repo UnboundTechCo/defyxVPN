@@ -15,7 +15,7 @@ class SpeedTestAdsOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 130.h,
+      bottom: 100.h,
       left: 0,
       right: 0,
       child: Container(
