@@ -1,5 +1,15 @@
 # Defyx Changelog
 
+## v3.0.4 (Build 157)
+
+- Added a Preferences feature for managing cores
+- Fetches the latest API updates after each successful connection
+- Fixed an issue causing Warp & Outline cores to stop running
+- Resolved an issue where the app state could get lost
+- Fixed an issue with the display of the adBox
+- Improved core performance
+- Fixed some UI issues
+
 ## v2.7.65 (Build 132)
 
 - The API retrieval issue has been resolved
