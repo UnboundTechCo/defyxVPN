@@ -31,6 +31,7 @@ class SpeedTestToastState extends ConsumerWidget {
           showButton: true,
           result: state.result,
           connectionStatus: connectionState.status,
+          currentStep: SpeedTestStep.toast,
           button: SpeedTestStartButton(
             currentStep: SpeedTestStep.toast,
             isEnabled: true,

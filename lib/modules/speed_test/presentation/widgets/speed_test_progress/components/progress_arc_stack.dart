@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../painters/animated_grid_painter.dart';
@@ -14,6 +15,7 @@ class ProgressArcStack extends StatelessWidget {
   final Widget? centerContent;
   final Widget? button;
   final bool showButton;
+  final SpeedTestStep? currentStep;
 
   const ProgressArcStack({
     super.key,
@@ -24,6 +26,7 @@ class ProgressArcStack extends StatelessWidget {
     required this.downloadProgressAnimation,
     required this.gridAnimation,
     required this.showLoadingIndicator,
+    required this.currentStep,
     this.centerContent,
     this.button,
     required this.showButton,
@@ -84,7 +87,7 @@ class ProgressArcStack extends StatelessWidget {
           ),
         if (showButton && button != null)
           Positioned(
-            top: 125.h,
+            top: currentStep == null || currentStep == SpeedTestStep.ready ? 125.h : 150.h,
             child: button!,
           ),
       ],

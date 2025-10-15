@@ -189,6 +189,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                   showLoadingIndicator: widget.showLoadingIndicator,
                   showButton: widget.showButton,
                   button: widget.button,
+                  currentStep: widget.currentStep,
                   centerContent: _buildCenterContent(),
                 ),
               ),

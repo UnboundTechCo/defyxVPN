@@ -38,6 +38,7 @@ class SpeedTestAdsState extends ConsumerWidget {
               showButton: true,
               result: state.result,
               connectionStatus: connectionState.status,
+              currentStep: SpeedTestStep.ads,
               button: SpeedTestStartButton(
                 currentStep: SpeedTestStep.ads,
                 previousStep: previousStep,
