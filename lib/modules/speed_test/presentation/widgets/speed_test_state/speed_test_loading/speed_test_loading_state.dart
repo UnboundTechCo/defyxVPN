@@ -20,7 +20,7 @@ class SpeedTestLoadingState extends ConsumerWidget {
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
           progress: 0.0,
-          color: Colors.blue,
+          color: Colors.transparent,
           showButton: false,
           showLoadingIndicator: true,
           result: state.result,
