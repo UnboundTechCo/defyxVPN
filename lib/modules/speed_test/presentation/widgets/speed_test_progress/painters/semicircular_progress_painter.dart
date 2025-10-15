@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 enum ProgressStep { upload, download }
@@ -98,34 +99,34 @@ class SemicircularProgressPainter extends CustomPainter {
 
     if (baseColor == Colors.green) {
       gradientColors = [
-        const Color(0xFF76F959),
-        const Color(0xFF76F959),
-        const Color(0xFF76F959),
+        AppColors.downloadColor,
+        AppColors.downloadColor,
+        AppColors.downloadColor,
         // const Color(0xFF00FF00),
         // const Color(0xFF00DD00),
       ];
     } else if (baseColor == Colors.blue) {
       gradientColors = [
-        const Color(0xFF72D9FF),
-        const Color(0xFF72D9FF),
-        const Color(0xFF72D9FF),
+        AppColors.uploadColor,
+        AppColors.uploadColor,
+        AppColors.uploadColor,
         // const Color(0xFF0099FF),
         // const Color(0xFF0077DD),
       ];
     } else if (baseColor == Colors.orange) {
       gradientColors = [
-        const Color(0xFFFFAA66),
-        const Color(0xFFFFAA66),
-        const Color(0xFFFFAA66),
+        AppColors.warningColor,
+        AppColors.warningColor,
+        AppColors.warningColor,
         // const Color(0xFFFF8833),
         // const Color(0xFFFF6600),
       ];
     } else {
       gradientColors = [
+        baseColor,
+        baseColor,
+        baseColor,
         // baseColor.withValues(alpha: 0.7),
-        baseColor,
-        baseColor,
-        baseColor,
         // baseColor.withValues(alpha: 0.9),
       ];
     }
@@ -154,13 +155,13 @@ class SemicircularProgressPainter extends CustomPainter {
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
-    canvas.drawCircle(dotPosition, 6.0, glowPaint);
+    canvas.drawCircle(dotPosition, 3.0, glowPaint);
 
     final dotPaint = Paint()
-      ..color = Colors.white
+      ..color = color
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(dotPosition, 5.0, dotPaint);
+    canvas.drawCircle(dotPosition, 3.0, dotPaint);
 
     final highlightPaint = Paint()
       ..color = Colors.white.withValues(alpha: 0.8)
