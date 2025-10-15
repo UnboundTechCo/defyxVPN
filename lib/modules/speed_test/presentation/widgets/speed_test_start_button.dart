@@ -73,7 +73,8 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
         widget.previousStep == SpeedTestStep.toast) {
       return Icons.cached_rounded;
     } else {
-      return Icons.check_rounded;
+      return Icons.cached_rounded;
+      // return Icons.check_rounded;
     }
   }
 
