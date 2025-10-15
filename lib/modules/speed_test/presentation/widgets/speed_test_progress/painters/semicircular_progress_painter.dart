@@ -151,20 +151,20 @@ class SemicircularProgressPainter extends CustomPainter {
     final dotPosition = Offset(dotX, dotY);
 
     final glowPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.4)
+      ..color = color.withValues(alpha: 0.4)
       ..style = PaintingStyle.fill
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
 
-    canvas.drawCircle(dotPosition, 3.0, glowPaint);
+    canvas.drawCircle(dotPosition, 4.0, glowPaint);
 
     final dotPaint = Paint()
       ..color = color
       ..style = PaintingStyle.fill;
 
-    canvas.drawCircle(dotPosition, 3.0, dotPaint);
+    canvas.drawCircle(dotPosition, 4.0, dotPaint);
 
     final highlightPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.8)
+      ..color = color.withValues(alpha: 0.8)
       ..style = PaintingStyle.fill;
 
     canvas.drawCircle(
