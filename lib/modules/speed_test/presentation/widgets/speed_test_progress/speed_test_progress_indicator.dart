@@ -122,7 +122,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     final isDecreasing = _uploadProgress < currentValue;
 
     final duration =
-        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 300);
+        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
 
     _uploadAnimationController.duration = duration;
 
@@ -141,7 +141,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     final isDecreasing = _downloadProgress < currentValue;
 
     final duration =
-        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 300);
+        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
 
     _downloadAnimationController.duration = duration;
 
