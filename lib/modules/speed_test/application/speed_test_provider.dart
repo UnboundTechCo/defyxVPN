@@ -199,15 +199,35 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       final progress = (i + 1) / SpeedMeasurementConfig.totalMeasurements;
       final type = measurement['type'] as String;
 
+      bool needsPhaseChange = false;
+      SpeedTestStep? nextStep;
+
       if (type == 'latency' && currentPhase != 'loading') {
+        needsPhaseChange = true;
+        nextStep = SpeedTestStep.loading;
         currentPhase = 'loading';
-        state = state.copyWith(step: SpeedTestStep.loading);
       } else if (type == 'download' && currentPhase != 'download') {
+        needsPhaseChange = true;
+        nextStep = SpeedTestStep.download;
         currentPhase = 'download';
-        state = state.copyWith(step: SpeedTestStep.download);
       } else if (type == 'upload' && currentPhase != 'upload') {
+        needsPhaseChange = true;
+        nextStep = SpeedTestStep.upload;
         currentPhase = 'upload';
-        state = state.copyWith(step: SpeedTestStep.upload);
+      }
+
+      if (needsPhaseChange && i > 0 && state.progress > 0) {
+        state = state.copyWith(progress: 0.0);
+        await Future.delayed(const Duration(milliseconds: 1200));
+
+        if (_isTestCanceled) {
+          debugPrint('🛑 Measurement sequence canceled during transition');
+          return;
+        }
+      }
+
+      if (needsPhaseChange && nextStep != null) {
+        state = state.copyWith(step: nextStep);
       }
 
       debugPrint(
