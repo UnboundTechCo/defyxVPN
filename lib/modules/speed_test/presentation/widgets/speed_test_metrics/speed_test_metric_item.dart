@@ -3,6 +3,7 @@ import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shimmer/shimmer.dart';
 
 class MetricItemCompact extends StatelessWidget {
   final String label;
@@ -33,6 +34,24 @@ class MetricItemCompact extends StatelessWidget {
         return AppColors.bottomGradientConnecting;
       default:
         return AppColors.bottomGradient;
+    }
+  }
+
+  Color _getHighlightColorByStatus(ConnectionStatus status) {
+    switch (status) {
+      case ConnectionStatus.connected:
+        return AppColors.middleGradientConnected;
+      case ConnectionStatus.disconnected:
+        return AppColors.middleGradient;
+      case ConnectionStatus.noInternet:
+        return AppColors.middleGradientNoInternet;
+      case ConnectionStatus.error:
+        return AppColors.middleGradientFailedToConnect;
+      case ConnectionStatus.loading:
+      case ConnectionStatus.analyzing:
+        return AppColors.middleGradientConnecting;
+      default:
+        return AppColors.middleGradient;
     }
   }
 
@@ -76,12 +95,17 @@ class MetricItemCompact extends StatelessWidget {
                   ],
                 ),
               )
-            : Container(
-                width: 75.w,
-                height: 20.h,
-                decoration: BoxDecoration(
-                  color: _getColorByStatus(connectionStatus),
-                  borderRadius: BorderRadius.circular(15.r),
+            : Shimmer.fromColors(
+                baseColor: _getColorByStatus(connectionStatus),
+                highlightColor: _getHighlightColorByStatus(connectionStatus),
+                enabled: true,
+                child: Container(
+                  width: 75.w,
+                  height: 20.h,
+                  decoration: BoxDecoration(
+                    color: _getColorByStatus(connectionStatus),
+                    borderRadius: BorderRadius.circular(15.r),
+                  ),
                 ),
               ),
       ],
@@ -118,6 +142,24 @@ class MetricItemHorizontal extends StatelessWidget {
         return AppColors.bottomGradientConnecting;
       default:
         return AppColors.bottomGradient;
+    }
+  }
+
+  Color _getHighlightColorByStatus(ConnectionStatus status) {
+    switch (status) {
+      case ConnectionStatus.connected:
+        return AppColors.middleGradientConnected;
+      case ConnectionStatus.disconnected:
+        return AppColors.middleGradient;
+      case ConnectionStatus.noInternet:
+        return AppColors.middleGradientNoInternet;
+      case ConnectionStatus.error:
+        return AppColors.middleGradientFailedToConnect;
+      case ConnectionStatus.loading:
+      case ConnectionStatus.analyzing:
+        return AppColors.middleGradientConnecting;
+      default:
+        return AppColors.middleGradient;
     }
   }
 
@@ -175,12 +217,17 @@ class MetricItemHorizontal extends StatelessWidget {
               : Positioned(
                   bottom: 2.5.h,
                   right: 0,
-                  child: Container(
-                    width: 57.w,
-                    height: 11.h,
-                    decoration: BoxDecoration(
-                      color: _getColorByStatus(connectionStatus),
-                      borderRadius: BorderRadius.circular(15.r),
+                  child: Shimmer.fromColors(
+                    baseColor: _getColorByStatus(connectionStatus),
+                    highlightColor: _getHighlightColorByStatus(connectionStatus),
+                    enabled: true,
+                    child: Container(
+                      width: 57.w,
+                      height: 11.h,
+                      decoration: BoxDecoration(
+                        color: _getColorByStatus(connectionStatus),
+                        borderRadius: BorderRadius.circular(15.r),
+                      ),
                     ),
                   ),
                 ),
