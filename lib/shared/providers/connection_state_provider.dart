@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -46,9 +47,6 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   // Method channel for receiving events from iOS
   static const EventChannel _eventChannel = EventChannel(
     'com.defyx.vpn_events',
-  );
-  static const MethodChannel _methodChannel = MethodChannel(
-    'com.defyx.vpn',
   );
 
   StreamSubscription? _eventSubscription;
@@ -109,10 +107,9 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   // Check VPN status when app starts
   Future<void> _checkInitialVpnStatus() async {
     try {
+      final vpnBridge = VpnBridge();
       // Request current VPN status from iOS side
-      final String? currentStatus = await _methodChannel.invokeMethod(
-        'getVpnStatus',
-      );
+      final String? currentStatus = await vpnBridge.getVpnStatus();
       debugPrint('Initial VPN status: $currentStatus');
 
       // Update state based on the actual VPN status

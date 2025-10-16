@@ -160,7 +160,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       connectionStatus: connectionState.status,
       child: SafeArea(
         bottom: false,
-        child: Center(
+        child: Align(
+          alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 393.w),
             child: Stack(

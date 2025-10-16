@@ -6,7 +6,7 @@ class SettingsGroup {
   final List<SettingsItem> items;
   final bool isDraggable;
 
-  const SettingsGroup({
+  SettingsGroup({
     required this.id,
     required this.title,
     required this.items,

@@ -224,7 +224,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         case "GET_FLOW_LINE":
             do {
-                let flowLine = IosGetFlowLine()
+                let isTime = dict["isTime"] ?? "false"
+                let isTimeBool = Bool(isTime) ?? false
+                let flowLine = IosGetFlowLine(isTimeBool)
                 let response: String = flowLine
 
                 if let data = response.data(using: .utf8) {

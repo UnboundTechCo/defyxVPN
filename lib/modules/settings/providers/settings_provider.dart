@@ -1,21 +1,22 @@
 import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
 
 class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   final Ref<List<SettingsGroup>> ref;
+  ISecureStorage? _secureStorage;
+  final String _settingsKey = 'app_settings';
+
   SettingsNotifier(this.ref) : super([]) {
-    _loadSettings();
+    _secureStorage = ref.read(secureStorageProvider);
+    _updateSettingsBasedOnFlowLine();
   }
 
-  static const String _settingsKey = 'app_settings';
-
   Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final settingsJson = prefs.getString(_settingsKey);
+    final settingsJson = await _secureStorage?.read(_settingsKey);
 
     if (settingsJson != null) {
       try {
@@ -32,15 +33,13 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   }
 
   Future<void> _saveSettings() async {
-    final prefs = await SharedPreferences.getInstance();
     final jsonList = state.map((group) => group.toJson()).toList();
-    await prefs.setString(_settingsKey, jsonEncode(jsonList));
+    await _secureStorage?.write(_settingsKey, jsonEncode(jsonList));
   }
 
   Future<List<SettingsGroup>> _getDefaultSettings() async {
     List<dynamic> flowline = [];
-    final flowLineStorage =
-        await ref.read(secureStorageProvider).read('flowLine');
+    final flowLineStorage = await _secureStorage?.read('flowLine');
     if (flowLineStorage != null) {
       flowline = json.decode(flowLineStorage);
     }
@@ -190,16 +189,64 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     _saveSettings();
   }
 
-  List<String> getPattern() {
+  String getPattern() {
     final items = state[0].items.where((item) => item.isEnabled).toList();
     items.sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
-    return items.map((item) => item.id).toList();
+    return items.map((item) => item.id).toList().join(',');
   }
 
-  Future<void> clearSavedSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_settingsKey);
-    state = await _getDefaultSettings();
+  Future<void> _updateSettingsBasedOnFlowLine() async {
+    try {
+      List<dynamic> flowline = [];
+      final flowLineStorage = await _secureStorage?.read('flowLine');
+      if (flowLineStorage == null) {
+        state = await _getDefaultSettings();
+        return;
+      }
+
+      flowline = json.decode(flowLineStorage);
+      List<dynamic> jsonList = [];
+      final settingsJson = await _secureStorage?.read(_settingsKey);
+
+      if (settingsJson == null) {
+        state = await _getDefaultSettings();
+        return;
+      }
+
+     final List<dynamic> data = jsonDecode(settingsJson);
+      jsonList = data[0]["items"];
+      jsonList = jsonList.where((settingItem) {
+        if (flowline.any(
+            (flowlineItem) => flowlineItem['label'] == settingItem['id'])) {
+          return true;
+        }
+        return false;
+      }).toList();
+
+      final filteredFlowline =
+          flowline.where((test) => test['enabled'] == true).toList();
+
+      for (var item in filteredFlowline) {
+        if (jsonList
+            .every((settingItem) => settingItem['id'] != item['label'])) {
+          final newItem = SettingsItem(
+              id: item['label'],
+              title: item['label'],
+              isAccessible: true,
+              isEnabled: true,
+              sortOrder: jsonList.length);
+          jsonList.add(newItem.toJson());
+        }
+      }
+      data[0]["items"] = jsonList;
+
+      state = data
+          .map((json) => SettingsGroup.fromJson(json))
+          .toList();
+      _saveSettings();
+    } catch (e) {
+      state = await _getDefaultSettings();
+    }
   }
 }
 

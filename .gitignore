@@ -32,7 +32,9 @@ key.keystore
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+*build
+.env
+lib/shared/global_vars.dart
 
 # Symbolication related
 app.*.symbols
@@ -45,3 +47,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .build
+
+# envirnment
+.env

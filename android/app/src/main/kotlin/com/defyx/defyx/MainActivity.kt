@@ -42,7 +42,7 @@ class MainActivity : FlutterActivity() {
                                     events: EventChannel.EventSink?
                             ) {
                                 eventSink = events
-                                sendVpnStatusToFlutter("disconnected")
+                                // sendVpnStatusToFlutter("disconnected")
                             }
                             override fun onCancel(arguments: Any?) {
                                 eventSink = null
@@ -68,6 +68,7 @@ class MainActivity : FlutterActivity() {
                 "prepare" -> prepareVpn(result)
                 "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
+                "isTunnelRunning" -> isTunnelRunning(result)
                 "stopTun2Socks" -> stopTun2Socks(result)
                 "calculatePing" -> calculatePing(result)
                 "getFlag" -> getFlag(result)
@@ -76,7 +77,7 @@ class MainActivity : FlutterActivity() {
                 "grantVpnPermission" -> grantVpnPermission(result)
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
-                "getFlowLine" -> getFlowLine(result) 
+                "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -163,6 +164,12 @@ class MainActivity : FlutterActivity() {
             } catch (e: Exception) {
                 result.error("GET_STATUS_ERROR", "Failed to get VPN status", e.message)
             }
+    private fun isTunnelRunning(result: MethodChannel.Result) =
+            try {
+                result.success(DefyxVpnService.getInstance().isTunnelRunning())
+            } catch (e: Exception) {
+                result.error("GET_STATUS_ERROR", "Failed to get tunnel status", e.message)
+            }
 
     private fun sendVpnStatusToFlutter(status: String) {
         eventSink?.success(mapOf("status" to status))
@@ -203,9 +210,13 @@ class MainActivity : FlutterActivity() {
             try {
                 val flowLine = args?.get("flowLine") as? String
                 val pattern = args?.get("pattern") as? String
-                if (flowLine.isNullOrEmpty()||pattern.isNullOrEmpty()) {
+                if (flowLine.isNullOrEmpty() || pattern.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
-                        result.error("INVALID_ARGUMENT", "flowLine or pattern is missing or empty", null)
+                        result.error(
+                                "INVALID_ARGUMENT",
+                                "flowLine or pattern is missing or empty",
+                                null
+                        )
                     }
                     return@launch
                 }
@@ -277,15 +288,27 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
-    private fun getFlowLine(result: MethodChannel.Result) {
+    private fun getFlowLine(args: Map<String, Any>?, result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val flowLine = DefyxVpnService.getInstance().getFlowLine()
+                val isTest = args?.get("isTest") as? String
+                if (isTest.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error("INVALID_ARGUMENT", "isTest is missing or empty", null)
+                    }
+                    return@launch
+                }
+                val isTestBoolean = isTest.toBoolean()
+                val flowLine = DefyxVpnService.getInstance().getFlowLine(isTestBoolean)
                 result.success(flowLine)
             } catch (e: Exception) {
                 Log.e("Get Flow Line", "Get Flow Line failed: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    result.error("GET_FLOW_LINE_ERROR", "Failed to Get Flow Line", e.localizedMessage)
+                    result.error(
+                            "GET_FLOW_LINE_ERROR",
+                            "Failed to Get Flow Line",
+                            e.localizedMessage
+                    )
                 }
             }
         }
