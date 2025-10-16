@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
@@ -10,14 +11,14 @@ class NetworkStatus {
   NetworkStatus._internal();
 
   static final NetworkStatus _instance = NetworkStatus._internal();
-
+  final _vpnBridge = VpnBridge();
   factory NetworkStatus() {
     return _instance;
   }
   Future<String> getPing() async {
     final formatter = NumberFormat.decimalPattern();
 
-    final ping = await _platform.invokeMethod("calculatePing");
+    final ping =await _vpnBridge.getPing();
     if (Platform.isAndroid) {
       final changePing = ping == 0 ? 100 : ping;
       return formatter.format(changePing);

@@ -17,18 +17,19 @@ class SettingsScreen extends ConsumerWidget {
       connectionStatus: connectionState.status,
       child: SafeArea(
         bottom: false,
-        child: Padding(
-          padding: EdgeInsets.symmetric(horizontal: 24.w),
-          child: SingleChildScrollView(
-            padding: EdgeInsets.only(top: 45.h, bottom: 140.h),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 393.w),
+            child: Padding(padding: EdgeInsets.symmetric(horizontal: 24.w),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                SizedBox(height: 45.h),
                 _buildHeaderSection(),
                 SizedBox(height: 60.h),
                 _buildSettingsContent(ref),
               ],
-            ),
+            ),)
           ),
         ),
       ),
@@ -40,9 +41,6 @@ class SettingsScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
-          height: 13.h,
-        ),
         Row(
           children: [
             Text(
@@ -97,8 +95,7 @@ class SettingsScreen extends ConsumerWidget {
           .map((group) => SettingsGroupWidget(
                 key: ValueKey(group.id),
                 group: group,
-                showSeparators: group.id ==
-                    'connection_method',
+                showSeparators: group.id == 'connection_method',
                 onToggle: (groupId, itemId) {
                   settingsNotifier.toggleSetting(groupId, itemId);
                 },

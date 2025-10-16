@@ -41,7 +41,7 @@ class DefyxVpnService : VpnService() {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.d("VPN_SERVICE", "Destroyed")
+        log("VPN Service Destroyed")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -102,11 +102,11 @@ class DefyxVpnService : VpnService() {
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
-            Log.d(TAG, "Service started as foreground hiiiiiiii")
+            Log.d(TAG, "Service started as foreground")
             isServiceRunning = true
         } catch (e: Exception) {
             startForeground(NOTIFICATION_ID, notification)
-            Log.d(TAG, "Service started as foreground hiiiiiiii")
+            Log.d(TAG, "Service started as foreground")
             isServiceRunning = true
         }
     }
@@ -277,9 +277,9 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    fun getFlowLine(): String {
+    fun getFlowLine(isTest: Boolean): String {
         try {
-            return Android.getFlowLine()
+            return Android.getFlowLine(isTest)
         } catch (e: Exception) {
             log("Get Flow Line failed: ${e.message}")
             return ""
@@ -296,6 +296,9 @@ class DefyxVpnService : VpnService() {
 
     fun getVpnStatus(): String =
             if (isServiceRunning && vpnInterface != null) "connected" else "disconnected"
+    fun isTunnelRunning(): Boolean {
+        return tunnelFd > 0
+    }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
