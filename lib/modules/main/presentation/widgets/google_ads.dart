@@ -82,6 +82,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
   }
 
   void setAdLoaded(bool isLoaded) {
+    debugPrint('Ad loaded: $isLoaded');
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
@@ -168,6 +169,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     // Reset state when widget is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_isDisposed) {
+        debugPrint('Resetting Google ads state...');
         ref.read(googleAdsProvider.notifier).resetState();
         _initializeAds();
       }
@@ -176,8 +178,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
   void _initializeAds() async {
     if (_isDisposed || _hasInitialized) return;
-
-    _hasInitialized = true;
 
     try {
       final shouldShowGoogle = await _shouldShowGoogleAds(ref);
@@ -188,13 +188,13 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
       if (shouldShowGoogle) {
         _loadGoogleAd();
-      } else {
-        debugPrint('Loading custom ads...');
-        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
-        if (!_isDisposed) {
-          ref.read(customAdDataProvider.notifier).state = customAdData;
-          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
-        }
+        return;
+      }
+
+      final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+      if (!_isDisposed) {
+        ref.read(customAdDataProvider.notifier).state = customAdData;
+        ref.read(googleAdsProvider.notifier).setAdLoaded(true);
       }
     } catch (e) {
       debugPrint('Error initializing ads: $e');
@@ -319,7 +319,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
       }
     });
-
     return SizedBox(
       height: 280.h,
       width: 336.w,
@@ -432,62 +431,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
           _buildLoadingWidget("Loading ads...")
         else
           _buildCustomAdWidget(customAdData),
-
-        // Add overlays only for custom ads
-        Positioned(
-          top: 0,
-          right: 0,
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: 10.w,
-              vertical: 4.h,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(widget.cornerRadius),
-                bottomLeft: Radius.circular(3.r),
-              ),
-            ),
-            child: Text(
-              "ADVERTISEMENT",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-        ),
-
-        if (adsState.nativeAdIsLoaded && adsState.showCountdown)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 10.w,
-                vertical: 4.h,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(widget.cornerRadius),
-                  topRight: Radius.circular(3.r),
-                ),
-              ),
-              child: Text(
-                "Closing in ${adsState.countdown}s",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                ),
-              ),
-            ),
-          ),
       ],
     );
   }

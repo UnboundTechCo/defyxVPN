@@ -6,6 +6,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interfac
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -20,7 +21,8 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<String> getFlowline() async {
-    final flowLine = await _platformChannel.invokeMethod<String>('getFlowLine');
+    final flowLine = await _platformChannel.invokeMethod<String>(
+        'getFlowLine', {"isTest": dotenv.env['IS_TEST_MODE'] ?? 'false'});
     return flowLine ?? '';
   }
 

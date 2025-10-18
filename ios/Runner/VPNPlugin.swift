@@ -71,7 +71,7 @@ class VpnPlugin: VpnStatusDelegate {
         case "setTimezone":
             setTimezone(call.arguments as? [String: Any], result)
         case "getFlowLine":
-            getFlowLine(result)
+            getFlowLine(call.arguments as? [String: Any], result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -163,7 +163,6 @@ class VpnPlugin: VpnStatusDelegate {
         return "/dev/null"
     }
 
-
     // MARK: - Measure Ping
     private func measurePing(_ result: @escaping FlutterResult) {
         VpnService.shared.sendTunnelMessage(["command": "MEASURE_PING"]) { response in
@@ -238,8 +237,18 @@ class VpnPlugin: VpnStatusDelegate {
         }
     }
 
-    private func getFlowLine(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE"]) { response in
+    private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let isTest = args["isTest"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+        VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE","isTest":isTest]) { response in
             result(response)
         }
     }
