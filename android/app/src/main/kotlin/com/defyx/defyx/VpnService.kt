@@ -2,6 +2,7 @@ package de.unboundtech.defyxvpn
 
 import android.Android
 import android.app.*
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
@@ -24,6 +25,9 @@ class DefyxVpnService : VpnService() {
         private var listener: ((String) -> Unit)? = null
         private var tunnelFd = -1
         private var isServiceRunning = false
+        private val flags =
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE
+                else 0
 
         fun setVpnStatusListener(l: (String) -> Unit) {
             listener = l
@@ -45,7 +49,12 @@ class DefyxVpnService : VpnService() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        startAsForeground()
+        when (intent?.action) {
+            "ACTION_DISCONNECT_VPN" -> {
+                stopVpn()
+            }
+        }
+
         return START_STICKY
     }
 
@@ -68,16 +77,16 @@ class DefyxVpnService : VpnService() {
 
     private fun startAsForeground() {
         val intent =
-                Intent(this, MainActivity::class.java).apply {
-                    addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                Intent(this, MainActivity::class.java)
+                        .apply { putExtra("unique_id", System.currentTimeMillis()) }
+                        .setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
+
+        val disconnectIntent =
+                Intent(this, DefyxVpnService::class.java).apply {
+                    action = "ACTION_DISCONNECT_VPN"
                 }
-        val pendingIntent =
-                PendingIntent.getActivity(
-                        this,
-                        0,
-                        intent,
-                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-                )
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, flags)
+        val disconnectPendingIntent = PendingIntent.getService(this, 0, disconnectIntent, flags)
         val notification =
                 NotificationCompat.Builder(this, CHANNEL_ID)
                         .setContentTitle("DefyxVPN")
@@ -90,6 +99,11 @@ class DefyxVpnService : VpnService() {
                         .setPriority(NotificationCompat.PRIORITY_LOW)
                         .setForegroundServiceBehavior(
                                 NotificationCompat.FOREGROUND_SERVICE_IMMEDIATE
+                        )
+                        .addAction(
+                                android.R.drawable.ic_menu_close_clear_cancel,
+                                "Disconnect",
+                                disconnectPendingIntent
                         )
                         .build()
         try {
