@@ -22,6 +22,8 @@ class VpnBridge {
 
   Future<void> stopVPN() => _methodChannel.invokeMethod('stopVPN');
 
+  Future<void> stopTun2Socks() => _methodChannel.invokeMethod("stopTun2Socks");
+
   Future<bool?> connectVpn() => _methodChannel.invokeMethod<bool>('connect');
 
   Future<bool?> grantVpnPermission() =>

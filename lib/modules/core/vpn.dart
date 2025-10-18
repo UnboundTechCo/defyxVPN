@@ -191,6 +191,7 @@ class VPN {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
     await vpnBridge.stopVPN();
+    await vpnBridge.stopTun2Socks();
     connectionNotifier?.setDisconnected();
   }
 
