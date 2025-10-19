@@ -25,11 +25,11 @@ class SpeedTestResultState extends ConsumerWidget {
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
           progress: 1.0,
-          color: AppColors.downloadColor,
+          color: null,
           showButton: false,
           centerValue: state.result.downloadSpeed,
           centerUnit: 'Mbps',
-          subtitle: 'DOWNLOAD',
+          subtitle: 'RESULT',
           result: state.result,
           currentStep: SpeedTestStep.result,
           connectionStatus: connectionState.status,

@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -7,7 +8,7 @@ import '../painters/semicircular_progress_painter.dart';
 class ProgressArcStack extends StatelessWidget {
   final double uploadProgress;
   final double downloadProgress;
-  final Color color;
+  final Color? color;
   final Animation<double> uploadProgressAnimation;
   final Animation<double> downloadProgressAnimation;
   final Animation<double> gridAnimation;
@@ -41,7 +42,7 @@ class ProgressArcStack extends StatelessWidget {
           size: Size(250.w, 190.h),
           painter: SemicircularProgressPainter(
             progress: uploadProgress,
-            color: color,
+            color: color ?? AppColors.uploadColor,
             strokeWidth: 2.w,
             animation: uploadProgressAnimation,
             showStep: ProgressStep.upload,
@@ -51,7 +52,7 @@ class ProgressArcStack extends StatelessWidget {
           size: Size(280.w, 190.h),
           painter: SemicircularProgressPainter(
             progress: downloadProgress,
-            color: color,
+            color: color ?? AppColors.downloadColor,
             strokeWidth: 2.w,
             animation: downloadProgressAnimation,
             showStep: ProgressStep.download,

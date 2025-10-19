@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -8,7 +9,7 @@ import 'components/speed_value_display.dart';
 
 class SpeedTestProgressIndicator extends StatefulWidget {
   final double progress;
-  final Color color;
+  final Color? color;
   final bool showButton;
   final bool showLoadingIndicator;
   final double? centerValue;
@@ -22,8 +23,8 @@ class SpeedTestProgressIndicator extends StatefulWidget {
   const SpeedTestProgressIndicator({
     super.key,
     required this.progress,
-    required this.color,
     required this.showButton,
+    this.color,
     this.showLoadingIndicator = false,
     this.centerValue,
     this.centerUnit,
@@ -227,7 +228,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       value: widget.centerValue!,
       unit: widget.centerUnit!,
       subtitle: widget.subtitle,
-      subtitleColor: widget.color,
+      subtitleColor: widget.color ?? AppColors.downloadColor,
     );
   }
 }
