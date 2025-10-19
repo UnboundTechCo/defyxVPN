@@ -129,6 +129,22 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   Widget _buildContent(SpeedTestState state) {
+    _handleStepTransition(state);
+    _handleToastTimer(state);
+    _handleResultTimer(state);
+    _handleAdsStep(state);
+
+    final mainContent = _buildMainContent(state);
+    final shouldShowToast = _shouldShowToastOverlay(state);
+
+    if (!shouldShowToast) {
+      return mainContent;
+    }
+
+    return _buildContentWithToast(mainContent, state.errorMessage!);
+  }
+
+  void _handleStepTransition(SpeedTestState state) {
     if (_previousStep != state.step) {
       if (state.step == SpeedTestStep.ads && _previousStep != null) {
         _stepBeforeAds = _previousStep;
@@ -136,41 +152,70 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       _previousStep = state.step;
     }
 
+    if (state.step == SpeedTestStep.ready) {
+      _stepBeforeAds = null;
+    }
+  }
+
+  void _handleToastTimer(SpeedTestState state) {
     if (state.step == SpeedTestStep.toast && _toastTimer == null) {
-      _toastTimer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
-          if (state.testCompleted) {
-            ref.read(speedTestProvider.notifier).moveToAds();
-          }
-          _toastTimer = null;
-        }
-      });
-
-      Vibration.hasVibrator().then((hasVibrator) {
-        if (hasVibrator == true) {
-          Vibration.vibrate(
-            pattern: [0, 200, 100, 200],
-            intensities: [0, 128, 0, 255],
-          );
-        }
-      });
+      _startToastTimer(state);
+      _triggerVibration();
     } else if (state.step != SpeedTestStep.toast && _toastTimer != null) {
-      _toastTimer?.cancel();
-      _toastTimer = null;
+      _cancelToastTimer();
     }
+  }
 
-    if (state.step == SpeedTestStep.result && _resultTimer == null) {
-      _resultTimer = Timer(const Duration(seconds: 5), () {
-        if (mounted) {
+  void _startToastTimer(SpeedTestState state) {
+    _toastTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        if (state.testCompleted) {
           ref.read(speedTestProvider.notifier).moveToAds();
-          _resultTimer = null;
         }
-      });
-    } else if (state.step != SpeedTestStep.result && _resultTimer != null) {
-      _resultTimer?.cancel();
-      _resultTimer = null;
-    }
+        _toastTimer = null;
+      }
+    });
+  }
 
+  void _cancelToastTimer() {
+    _toastTimer?.cancel();
+    _toastTimer = null;
+  }
+
+  void _triggerVibration() {
+    Vibration.hasVibrator().then((hasVibrator) {
+      if (hasVibrator == true) {
+        Vibration.vibrate(
+          pattern: [0, 200, 100, 200],
+          intensities: [0, 128, 0, 255],
+        );
+      }
+    });
+  }
+
+  void _handleResultTimer(SpeedTestState state) {
+    if (state.step == SpeedTestStep.result && _resultTimer == null) {
+      _startResultTimer();
+    } else if (state.step != SpeedTestStep.result && _resultTimer != null) {
+      _cancelResultTimer();
+    }
+  }
+
+  void _startResultTimer() {
+    _resultTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        ref.read(speedTestProvider.notifier).moveToAds();
+        _resultTimer = null;
+      }
+    });
+  }
+
+  void _cancelResultTimer() {
+    _resultTimer?.cancel();
+    _resultTimer = null;
+  }
+
+  void _handleAdsStep(SpeedTestState state) {
     if (state.step == SpeedTestStep.ads) {
       Future.microtask(() {
         if (mounted) {
@@ -178,57 +223,54 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         }
       });
     }
+  }
 
-    if (state.step == SpeedTestStep.ready) {
-      _stepBeforeAds = null;
-    }
-
-    final Widget mainContent;
+  Widget _buildMainContent(SpeedTestState state) {
     switch (state.step) {
       case SpeedTestStep.ready:
-        mainContent = const SpeedTestReadyState();
-        break;
+        return const SpeedTestReadyState();
       case SpeedTestStep.loading:
-        mainContent = const SpeedTestLoadingState();
-        break;
+        return const SpeedTestLoadingState();
       case SpeedTestStep.download:
-        mainContent = SpeedTestDownloadState(state: state);
-        break;
+        return SpeedTestDownloadState(state: state);
       case SpeedTestStep.upload:
-        mainContent = SpeedTestUploadState(state: state);
-        break;
+        return SpeedTestUploadState(state: state);
       case SpeedTestStep.toast:
-        mainContent = SpeedTestToastState(
-          state: state,
-          onRetry: () {
-            _toastTimer?.cancel();
-            _toastTimer = null;
-            ref.read(speedTestProvider.notifier).retryConnection();
-          },
-        );
-        break;
+        return _buildToastState(state);
       case SpeedTestStep.result:
-        mainContent = SpeedTestResultState(state: state);
-        break;
+        return SpeedTestResultState(state: state);
       case SpeedTestStep.ads:
-        mainContent = SpeedTestAdsState(
-          state: state,
-          previousStep: _stepBeforeAds,
-          googleAds: _googleAds,
-          onClose: () {
-            ref.read(speedTestProvider.notifier).completeTest();
-          },
-        );
-        break;
+        return _buildAdsState(state);
     }
+  }
 
-    final shouldShowToast = state.errorMessage != null &&
+  Widget _buildToastState(SpeedTestState state) {
+    return SpeedTestToastState(
+      state: state,
+      onRetry: () {
+        _cancelToastTimer();
+        ref.read(speedTestProvider.notifier).retryConnection();
+      },
+    );
+  }
+
+  Widget _buildAdsState(SpeedTestState state) {
+    return SpeedTestAdsState(
+      state: state,
+      previousStep: _stepBeforeAds,
+      googleAds: _googleAds,
+      onClose: () {
+        ref.read(speedTestProvider.notifier).completeTest();
+      },
+    );
+  }
+
+  bool _shouldShowToastOverlay(SpeedTestState state) {
+    return state.errorMessage != null &&
         (state.step == SpeedTestStep.ready || state.step == SpeedTestStep.toast);
+  }
 
-    if (!shouldShowToast) {
-      return mainContent;
-    }
-
+  Widget _buildContentWithToast(Widget mainContent, String errorMessage) {
     return Stack(
       children: [
         mainContent,
@@ -237,7 +279,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
           right: 0,
           bottom: 100.h,
           child: SpeedTestToastMessage(
-            message: state.errorMessage!,
+            message: errorMessage,
           ),
         ),
       ],
