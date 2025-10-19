@@ -279,7 +279,7 @@ class DefyxVpnService : VpnService() {
 
     fun getFlowLine(isTest: Boolean): String {
         try {
-            return Android.getFlowLine()
+            return Android.getFlowLine(false)
         } catch (e: Exception) {
             log("Get Flow Line failed: ${e.message}")
             return ""
