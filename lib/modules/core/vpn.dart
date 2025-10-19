@@ -10,16 +10,17 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 
 class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
+  final vibrationService = VibrationService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -43,6 +44,8 @@ class VPN {
     _initialized = true;
     _container = container;
 
+    vibrationService.init();
+
     log.logAppVersion();
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
@@ -64,8 +67,13 @@ class VPN {
 
     if (msg.startsWith("Data: Config index: ")) {
       final configIndex = msg.replaceAll("Data: Config index: ", "");
-      _setConnectionStep(int.parse(configIndex));
+      final step = int.parse(configIndex);
+      _setConnectionStep(step);
       loggerNotifier.setConnecting();
+      
+      if (step > 1) {
+        vibrationService.vibrateHeartbeat();
+      }
     }
 
     if (msg.startsWith("Data: VPN connected")) {
@@ -115,8 +123,11 @@ class VPN {
       loggerNotifier.setLoading();
     });
 
+    vibrationService.vibrateHeartbeat();
+
     if (!await _checkNetwork()) {
       connectionNotifier.setNoInternet();
+      vibrationService.vibrateError();
       return;
     }
 
@@ -140,6 +151,7 @@ class VPN {
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
+    vibrationService.vibrateError();
   }
 
   Future<void> _onSuccessConnect() async {
@@ -153,7 +165,7 @@ class VPN {
     await _createTunnel();
     connectionNotifier?.setConnected();
     await _refreshPing();
-    Vibration.vibrate(duration: 300);
+    vibrationService.vibrateSuccess();
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
