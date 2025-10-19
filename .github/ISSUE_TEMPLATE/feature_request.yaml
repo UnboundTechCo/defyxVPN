@@ -1,0 +1,16 @@
+name: Feature Request
+description: Request a new feature
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to describe a new feature you want to see in the project.
+        Please be as clear as possible, and provide examples if applicable.
+  - type: textarea
+    attributes:
+      label: Feature description
+      description: Provide a clear and concise description of the feature and the problem it solves.
+    validations:
+      required: true
