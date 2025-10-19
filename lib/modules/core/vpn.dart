@@ -80,6 +80,9 @@ class VPN {
     if (msg.startsWith("Data: VPN group failed")) {
       loggerNotifier.setSwitchingMethod();
     }
+    if (msg.startsWith("Data: VPN stopped")) {
+      _closeTunnel();
+    }
     if (msg.startsWith("Data: Config label: ")) {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
       groupNotifier.setGroupName(configLabel);
@@ -93,44 +96,48 @@ class VPN {
     if (msg.contains("VPN Service Destroyed")) {
       _onTunnelClosed();
     }
+    if (msg.contains("Start VPN Service")) {
+      _connect();
+    }
 
     log.addLog(msg);
   }
 
-  Future<void> _connect(WidgetRef ref) async {
-    final connectionNotifier = ref.read(connectionStateProvider.notifier);
-    final loggerNotifier = ref.read(loggerStateProvider.notifier);
-    final settings = ref.read(settingsProvider.notifier);
+  Future<void> _connect() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final loggerNotifier = _container?.read(loggerStateProvider.notifier);
+    final settings = _container?.read(settingsProvider.notifier);
 
     _setConnectionStep(1);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier.setLoading();
+      connectionNotifier?.setLoading();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier.setAnalyzing();
+      connectionNotifier?.setAnalyzing();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loggerNotifier.setLoading();
+      loggerNotifier?.setLoading();
     });
 
     if (!await _checkNetwork()) {
-      connectionNotifier.setNoInternet();
+      connectionNotifier?.setNoInternet();
       return;
     }
 
     final isAccepted = await _grantVpnPermission();
 
     if (!isAccepted!) {
-      connectionNotifier.setDisconnected();
+      connectionNotifier?.setDisconnected();
       return;
     }
 
     final flowLineStorage =
-        await ref.read(secureStorageProvider).read('flowLine') ?? "";
+        await _container?.read(secureStorageProvider).read('flowLine') ?? "";
 
-    final pattern = settings.getPattern();
+    final pattern = settings?.getPattern() ?? "";
     await vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
@@ -183,6 +190,8 @@ class VPN {
         _container?.read(connectionStateProvider.notifier);
     if (Platform.isIOS) {
       await vpnBridge.disconnectVpn();
+    } else if (Platform.isAndroid) {
+      await vpnBridge.stopTun2Socks();
     }
     connectionNotifier?.setDisconnected();
   }
@@ -263,7 +272,7 @@ class VPN {
       case ConnectionStatus.disconnected:
       case ConnectionStatus.error:
       case ConnectionStatus.noInternet:
-        await _connect(ref);
+        await _connect();
         return;
       default:
         break;
@@ -273,8 +282,7 @@ class VPN {
   Future<void> getVPNStatus() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning =
-        await vpnBridge.isTunnelRunning();
+    final isTunnelRunning = await vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
     } else {
