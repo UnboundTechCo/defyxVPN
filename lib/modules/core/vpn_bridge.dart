@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -23,6 +21,8 @@ class VpnBridge {
 
   Future<void> stopVPN() => _methodChannel.invokeMethod('stopVPN');
 
+  Future<void> stopTun2Socks() => _methodChannel.invokeMethod("stopTun2Socks");
+
   Future<bool?> connectVpn() => _methodChannel.invokeMethod<bool>('connect');
 
   Future<bool?> grantVpnPermission() =>
@@ -35,15 +35,11 @@ class VpnBridge {
       _methodChannel.invokeMethod("startTun2socks");
 
   Future<bool> isTunnelRunning() async {
-    switch (Platform.operatingSystem) {
-      case 'android':
-        return await _methodChannel.invokeMethod<bool>("isTunnelRunning") ??
-            false;
-      default:
-        return false;
-    }
+    return await _methodChannel.invokeMethod<bool>("isTunnelRunning") ?? false;
   }
 
+  Future<void> setConnectionMethod(String method) =>
+      _methodChannel.invokeMethod("setConnectionMethod", {"method": method});
   Future<String> getFlowLine() async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
     final flowLine = await _methodChannel
