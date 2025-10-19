@@ -1,0 +1,29 @@
+name: Bug Report
+description: Report a bug encountered while using DefyxVPN
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please make sure to provide a descriptive report. It saves time for both the developers and users who are looking for solutions. Providing as much information as possible, including screenshots and logs, is highly appreciated. This will help us to better understand the issue and respond more effectively.
+  - type: checkboxes
+    id: confirm-search
+    attributes:
+      label: Attention
+      description: Please search [existing issues](https://github.com/UnboundTechCo/defyxVPN/issues) before reporting.
+      options:
+        - label: I searched and no similar issues were found
+          required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What Happened?
+      description: |
+        Please provide as much information as possible. Failing to do so may result in your issue or bug not being addressed in a timely manner.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy the log and send it to us.
+      render: shell
