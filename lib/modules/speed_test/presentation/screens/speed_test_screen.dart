@@ -15,6 +15,7 @@ import '../widgets/speed_test_state/speed_test_loading/speed_test_loading_state.
 import '../widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
 import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
 import '../widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
+import '../widgets/speed_test_state/speed_test_result/speed_test_result_state.dart';
 import '../widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
 import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_message.dart';
 
@@ -28,6 +29,7 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   late final GoogleAds _googleAds;
   Timer? _toastTimer;
+  Timer? _resultTimer;
   SpeedTestStep? _previousStep;
   SpeedTestStep? _stepBeforeAds;
 
@@ -70,6 +72,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
 
     _toastTimer?.cancel();
+    _resultTimer?.cancel();
     super.dispose();
   }
 
@@ -156,13 +159,27 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       _toastTimer = null;
     }
 
+    if (state.step == SpeedTestStep.result && _resultTimer == null) {
+      _resultTimer = Timer(const Duration(seconds: 5), () {
+        if (mounted) {
+          ref.read(speedTestProvider.notifier).moveToAds();
+          _resultTimer = null;
+        }
+      });
+    } else if (state.step != SpeedTestStep.result && _resultTimer != null) {
+      _resultTimer?.cancel();
+      _resultTimer = null;
+    }
+
     if (state.step == SpeedTestStep.ads) {
       Future.microtask(() {
         if (mounted) {
           ref.read(googleAdsProvider.notifier).startCountdownTimer();
         }
       });
-    } else if (state.step == SpeedTestStep.ready) {
+    }
+
+    if (state.step == SpeedTestStep.ready) {
       _stepBeforeAds = null;
     }
 
@@ -189,6 +206,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
             ref.read(speedTestProvider.notifier).retryConnection();
           },
         );
+        break;
+      case SpeedTestStep.result:
+        mainContent = SpeedTestResultState(state: state);
         break;
       case SpeedTestStep.ads:
         mainContent = SpeedTestAdsState(

@@ -378,7 +378,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       );
     } else {
       state = state.copyWith(
-        step: SpeedTestStep.ads,
+        step: SpeedTestStep.result,
         clearErrorMessage: true,
         hadError: false,
       );

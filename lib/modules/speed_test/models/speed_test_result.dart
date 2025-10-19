@@ -40,5 +40,6 @@ enum SpeedTestStep {
   download,
   upload,
   toast,
+  result,
   ads,
 }
