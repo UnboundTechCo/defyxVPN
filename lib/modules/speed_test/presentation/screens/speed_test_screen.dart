@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 import '../widgets/speed_test_header.dart';
 import '../../application/speed_test_provider.dart';
@@ -28,6 +28,7 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   late final GoogleAds _googleAds;
+  late final VibrationService _vibrationService;
   Timer? _toastTimer;
   Timer? _resultTimer;
   SpeedTestStep? _previousStep;
@@ -44,6 +45,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       backgroundColor: const Color(0xFF1A1A1A),
       cornerRadius: 10.0.r,
     );
+
+    _vibrationService = VibrationService();
+    _vibrationService.init();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.microtask(() {
@@ -226,14 +230,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   void _triggerVibration() {
-    Vibration.hasVibrator().then((hasVibrator) {
-      if (hasVibrator == true) {
-        Vibration.vibrate(
-          pattern: [0, 200, 100, 200],
-          intensities: [0, 128, 0, 255],
-        );
-      }
-    });
+    _vibrationService.vibrateError();
   }
 
   void _handleResultTimer(SpeedTestState state) {
