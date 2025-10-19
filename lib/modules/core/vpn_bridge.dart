@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class VpnBridge {
   VpnBridge._internal();
@@ -41,5 +42,17 @@ class VpnBridge {
       default:
         return false;
     }
+  }
+
+  Future<String> getFlowLine() async {
+    final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
+    final flowLine = await _methodChannel
+        .invokeMethod<String>('getFlowLine', {"isTest": isTestMode});
+    return flowLine ?? '';
+  }
+
+  Future<String> getFlag() async {
+    final flag = await _methodChannel.invokeMethod<String>('getFlag');
+    return flag ?? '';
   }
 }
