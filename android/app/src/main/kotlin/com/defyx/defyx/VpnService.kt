@@ -25,6 +25,7 @@ class DefyxVpnService : VpnService() {
         private var tunnelFd = -1
         private var isServiceRunning = false
         private var isVpnConnected = false
+        private var connectionMethod: String? = ""
 
         fun setVpnStatusListener(l: (String) -> Unit) {
             listener = l
@@ -196,7 +197,7 @@ class DefyxVpnService : VpnService() {
                             vpnInterface = null
                             try {
                                 Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
-                                updateNotification("DefyxVPN", "Connected to DefyxVPN")
+                                updateNotification("DefyxVPN", "Connected by " + connectionMethod)
                                 notifyVpnStatus("connected")
                             } catch (e: Exception) {
                                 Log.e(TAG, "T2S failed: ${e.message}", e)
@@ -357,5 +358,8 @@ class DefyxVpnService : VpnService() {
         applicationContext.getSharedPreferences("defyx_vpn_prefs", Context.MODE_PRIVATE).edit {
             putBoolean("vpn_running", isRunning)
         }
+    }
+    fun setConnectionMethod(method: String) {
+        connectionMethod = method
     }
 }

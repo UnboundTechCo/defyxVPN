@@ -92,6 +92,7 @@ class MainActivity : FlutterActivity() {
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
+                "setConnectionMethod" -> setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -323,6 +324,26 @@ class MainActivity : FlutterActivity() {
                             "Failed to Get Flow Line",
                             e.localizedMessage
                     )
+                }
+            }
+        }
+    }
+    private fun setConnectionMethod(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val method = args?.get("method") as? String
+                if (method.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error("INVALID_ARGUMENT", "method is missing or empty", null)
+                    }
+                    return@launch
+                }
+                DefyxVpnService.getInstance().setConnectionMethod(method)
+                result.success(true)
+            } catch (e: Exception) {
+                Log.e("Set Connection Method", "Set Connection Method failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("PING_ERROR", "Failed to Set Connection Method", e.localizedMessage)
                 }
             }
         }

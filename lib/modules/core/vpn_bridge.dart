@@ -36,12 +36,9 @@ class VpnBridge {
       _methodChannel.invokeMethod("startTun2socks");
 
   Future<bool> isTunnelRunning() async {
-    switch (Platform.operatingSystem) {
-      case 'android':
-        return await _methodChannel.invokeMethod<bool>("isTunnelRunning") ??
-            false;
-      default:
-        return false;
-    }
+    return await _methodChannel.invokeMethod<bool>("isTunnelRunning") ?? false;
   }
+
+  Future<void> setConnectionMethod(String method) =>
+      _methodChannel.invokeMethod("setConnectionMethod", {"method": method});
 }

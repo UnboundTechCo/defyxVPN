@@ -93,6 +93,7 @@ class VPN {
     }
     if (msg.startsWith("Data: Config label: ")) {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
+      vpnBridge.setConnectionMethod(configLabel);
       groupNotifier.setGroupName(configLabel);
     }
 
