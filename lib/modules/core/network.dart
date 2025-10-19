@@ -2,14 +2,10 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 class NetworkStatus {
-  final MethodChannel _platform = const MethodChannel('com.defyx.vpn');
-
   NetworkStatus._internal();
-
   static final NetworkStatus _instance = NetworkStatus._internal();
   final _vpnBridge = VpnBridge();
   factory NetworkStatus() {
@@ -18,7 +14,7 @@ class NetworkStatus {
   Future<String> getPing() async {
     final formatter = NumberFormat.decimalPattern();
 
-    final ping =await _vpnBridge.getPing();
+    final ping = await _vpnBridge.getPing();
     if (Platform.isAndroid) {
       final changePing = ping == 0 ? 100 : ping;
       return formatter.format(changePing);
@@ -62,9 +58,9 @@ class NetworkStatus {
       'tr'
     ];
     try {
-      final flag = await _platform.invokeMethod<String>('getFlag');
+      final flag = await _vpnBridge.getFlag();
 
-      if (flag != null && allowedCountries.contains(flag.toLowerCase())) {
+      if (allowedCountries.contains(flag.toLowerCase())) {
         return flag.toLowerCase();
       }
       return 'xx';
