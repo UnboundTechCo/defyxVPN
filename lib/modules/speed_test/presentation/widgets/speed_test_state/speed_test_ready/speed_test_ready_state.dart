@@ -8,14 +8,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SpeedTestReadyState extends ConsumerWidget {
+  final VoidCallback onButtonClicked;
+
   const SpeedTestReadyState({
     super.key,
+    required this.onButtonClicked,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(speedTestProvider);
     final connectionState = ref.watch(connectionStateProvider);
+
+    void handleStartTest() {
+      final status = connectionState.status;
+
+      onButtonClicked();
+
+      if (status == ConnectionStatus.disconnected || status == ConnectionStatus.connected) {
+        ref.read(speedTestProvider.notifier).startTest();
+      } else {
+        debugPrint(
+            'Button clicked but connection status is $status. Will start when connection is valid.');
+      }
+    }
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
@@ -28,9 +44,7 @@ class SpeedTestReadyState extends ConsumerWidget {
           result: state.result,
           connectionStatus: connectionState.status,
           button: InkWell(
-            onTap: () {
-              ref.read(speedTestProvider.notifier).startTest();
-            },
+            onTap: handleStartTest,
             child: Column(
               spacing: 8.h,
               children: [
@@ -45,9 +59,7 @@ class SpeedTestReadyState extends ConsumerWidget {
                 SpeedTestStartButton(
                   currentStep: SpeedTestStep.ready,
                   isEnabled: true,
-                  onTap: () {
-                    ref.read(speedTestProvider.notifier).startTest();
-                  },
+                  onTap: handleStartTest,
                 ),
               ],
             ),
