@@ -1,3 +1,13 @@
+enum SpeedTestStep {
+  ready,
+  loading,
+  download,
+  upload,
+  toast,
+  result,
+  ads,
+}
+
 class SpeedTestResult {
   final double downloadSpeed;
   final double uploadSpeed;
@@ -32,14 +42,4 @@ class SpeedTestResult {
       jitter: jitter ?? this.jitter,
     );
   }
-}
-
-enum SpeedTestStep {
-  ready,
-  loading,
-  download,
-  upload,
-  toast,
-  result,
-  ads,
 }
