@@ -11,15 +11,16 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 
 class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
+  final vibrationService = VibrationService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -43,6 +44,8 @@ class VPN {
     _initialized = true;
     _container = container;
 
+    vibrationService.init();
+
     log.logAppVersion();
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
@@ -64,8 +67,13 @@ class VPN {
 
     if (msg.startsWith("Data: Config index: ")) {
       final configIndex = msg.replaceAll("Data: Config index: ", "");
-      _setConnectionStep(int.parse(configIndex));
+      final step = int.parse(configIndex);
+      _setConnectionStep(step);
       loggerNotifier.setConnecting();
+
+      if (step > 1) {
+        vibrationService.vibrateHeartbeat();
+      }
     }
 
     if (msg.startsWith("Data: VPN connected")) {
@@ -115,8 +123,11 @@ class VPN {
       loggerNotifier.setLoading();
     });
 
+    vibrationService.vibrateHeartbeat();
+
     if (!await _checkNetwork()) {
       connectionNotifier.setNoInternet();
+      vibrationService.vibrateError();
       return;
     }
 
@@ -127,24 +138,22 @@ class VPN {
       return;
     }
 
-    final flowLineStorage =
-        await ref.read(secureStorageProvider).read('flowLine') ?? "";
+    final flowLineStorage = await ref.read(secureStorageProvider).read('flowLine') ?? "";
 
     final pattern = settings.getPattern();
     await vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
+    vibrationService.vibrateError();
     await vpnBridge.disconnectVpn();
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
@@ -153,7 +162,7 @@ class VPN {
     await _createTunnel();
     connectionNotifier?.setConnected();
     await _refreshPing();
-    Vibration.vibrate(duration: 300);
+    vibrationService.vibrateSuccess();
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
@@ -179,8 +188,7 @@ class VPN {
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     if (Platform.isIOS) {
       await vpnBridge.disconnectVpn();
     }
@@ -188,8 +196,7 @@ class VPN {
   }
 
   Future<void> _onTunnelClosed() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     await vpnBridge.stopVPN();
     connectionNotifier?.setDisconnected();
   }
@@ -264,10 +271,8 @@ class VPN {
   }
 
   Future<void> getVPNStatus() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning =
-        await vpnBridge.isTunnelRunning();
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final isTunnelRunning = await vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
     } else {
