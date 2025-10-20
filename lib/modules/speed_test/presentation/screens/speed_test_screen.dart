@@ -53,6 +53,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       Future.microtask(() {
         if (mounted) {
           ref.read(speedTestProvider.notifier).stopAndResetTest();
+
+          final currentConnectionState = ref.read(conn.connectionStateProvider);
+          _previousConnectionStatus = currentConnectionState.status;
+          debugPrint('Initial connection status: $_previousConnectionStatus');
         }
       });
     });
@@ -266,9 +270,17 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
-    if (state.step == SpeedTestStep.ready && !_isConnectionValid(connectionStatus)) {
-      _isWaitingForConnection = true;
-      return const SpeedTestLoadingState();
+    if (state.step == SpeedTestStep.ready) {
+      if (!_isConnectionValid(connectionStatus)) {
+        _isWaitingForConnection = true;
+        debugPrint('Connection not valid, showing loading state. Status: $connectionStatus');
+        return const SpeedTestLoadingState();
+      } else {
+        if (_isWaitingForConnection) {
+          _isWaitingForConnection = false;
+          debugPrint('Connection is now valid. Status: $connectionStatus');
+        }
+      }
     }
 
     switch (state.step) {
