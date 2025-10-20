@@ -1,4 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -21,8 +23,21 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   void _navigateToMain() async {
     final vpnData = await ref.read(vpnDataProvider.future);
+    final vpnBridge = VpnBridge();
+    final vpnIsPrepared = await vpnBridge.isVPNPrepared();
+    if (vpnData.isVPNEnabled && mounted) {
+      return context.go('/main');
+    }
 
-    if (!vpnData.isVPNEnabled) {
+    if (ref.context.mounted && mounted && vpnIsPrepared) {
+      final vpn = VPN(ProviderScope.containerOf(ref.context));
+      await vpn.initVPN();
+      if (mounted) {
+        return context.go('/main');
+      }
+    }
+
+    if (!vpnIsPrepared) {
       await Future.delayed(const Duration(seconds: 3));
     }
     if (mounted) context.go('/main');

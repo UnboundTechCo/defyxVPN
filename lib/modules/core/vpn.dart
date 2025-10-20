@@ -164,7 +164,7 @@ class VPN {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
-    final vpnData =await _container?.read(vpnDataProvider.future);
+    final vpnData = await _container?.read(vpnDataProvider.future);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
     }
@@ -192,7 +192,7 @@ class VPN {
 
   Future<void> _disconnect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
-    final vpnData =await _container?.read(vpnDataProvider.future);
+    final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier.setDisconnecting();
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
@@ -307,5 +307,10 @@ class VPN {
     } else {
       connectionNotifier?.setDisconnected();
     }
+  }
+
+  Future<void> initVPN() async {
+    await _vpnBridge.setAsnName();
+    await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 }

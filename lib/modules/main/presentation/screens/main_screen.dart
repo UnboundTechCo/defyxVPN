@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/update_dialog_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/scroll_manager.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/secret_tap_handler.dart';
@@ -127,11 +129,20 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     PrivacyNoticeDialog.show(
       context,
       () async {
-        await _logic.markPrivacyNoticeShown();
+        if (ref.context.mounted) {
+          final vpnBridge = VpnBridge();
+          final result = await vpnBridge.prepareVpn();
+          if (result && ref.context.mounted) {
+            final vpn = VPN(ProviderScope.containerOf(ref.context));
+            await vpn.initVPN();
+            await _logic.markPrivacyNoticeShown();
+            return true;
+          }
+        }
+        return false;
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
