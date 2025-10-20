@@ -1,5 +1,5 @@
-import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,8 +20,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   void _navigateToMain() async {
-    await Future.delayed(const Duration(seconds: 3));
-    if (mounted) context.go(DefyxVPNRoutes.main.route);
+    final vpnBridge = VpnBridge();
+    final isTunnelRunning = await vpnBridge.isTunnelRunning();
+    if (!isTunnelRunning) {
+      await Future.delayed(const Duration(seconds: 3));
+    }
+    if (mounted) context.go('/main');
   }
 
   @override
