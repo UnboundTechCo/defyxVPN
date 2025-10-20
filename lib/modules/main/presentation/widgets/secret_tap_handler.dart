@@ -14,9 +14,9 @@ class SecretTapHandler {
     }
     _lastTapTime = now;
     _secretTapCounter++;
-    
+
     if (_secretTapCounter >= 7) {
-      vibrationService.vibrateShort();
+      vibrationService.vibrateHeartbeat();
       _secretTapCounter = 0;
       showDialog(
         context: context,
