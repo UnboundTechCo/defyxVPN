@@ -5,9 +5,24 @@ import 'package:go_router/go_router.dart';
 import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
+import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
 import '../../modules/main/presentation/widgets/defyx_navbar.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
+
+enum DefyxVPNRoutes {
+  splash("/splash"),
+  main("/main"),
+  settings("/settings"),
+  speedTest("/speedTest"),
+  ;
+
+  final String route;
+  const DefyxVPNRoutes(this.route);
+
+  @override
+  String toString() => name;
+}
 
 Widget _buildSlideTransition(
   BuildContext context,
@@ -94,10 +109,10 @@ CustomTransitionPage<void> _createPageAnimation(
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: DefyxVPNRoutes.splash.route,
     routes: [
       GoRoute(
-        path: '/splash',
+        path: DefyxVPNRoutes.splash.route,
         builder: (context, state) => const SplashScreen(),
       ),
       ShellRoute(
@@ -119,7 +134,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
         routes: [
           GoRoute(
-            path: '/main',
+            path: DefyxVPNRoutes.main.route,
             pageBuilder: (context, state) => _createPageAnimation(
               const MainScreen(),
               state.pageKey,
@@ -127,11 +142,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             ),
           ),
           GoRoute(
-            path: '/settings',
+            path: DefyxVPNRoutes.settings.route,
             pageBuilder: (context, state) => _createPageAnimation(
               const SettingsScreen(),
               state.pageKey,
               SlideDirection.rightToLeft,
+            ),
+          ),
+          GoRoute(
+            path: DefyxVPNRoutes.speedTest.route,
+            pageBuilder: (context, state) => _createPageAnimation(
+              const SpeedTestScreen(),
+              state.pageKey,
+              SlideDirection.leftToRight,
             ),
           ),
         ],
