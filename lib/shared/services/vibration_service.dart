@@ -19,7 +19,7 @@ class VibrationService {
 
   Future<void> vibrateHeartbeat() async {
     if (!_hasVibrator) return;
-    
+
     try {
       await Vibration.vibrate(duration: 50);
       await Future.delayed(const Duration(milliseconds: 100));
@@ -31,9 +31,9 @@ class VibrationService {
 
   Future<void> vibrateSuccess() async {
     if (!_hasVibrator) return;
-    
+
     try {
-      await Vibration.vibrate(duration: 500);
+      await Vibration.vibrate(duration: 200);
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }
@@ -41,9 +41,9 @@ class VibrationService {
 
   Future<void> vibrateError() async {
     if (!_hasVibrator) return;
-    
+
     try {
-      await Vibration.vibrate(duration: 200);
+      await Vibration.vibrate(duration: 300);
     } catch (e) {
       debugPrint('Error in error vibration: $e');
     }
@@ -51,7 +51,7 @@ class VibrationService {
 
   Future<void> vibrateShort() async {
     if (!_hasVibrator) return;
-    
+
     try {
       await Vibration.vibrate(duration: 100);
     } catch (e) {
@@ -67,4 +67,3 @@ class VibrationService {
     }
   }
 }
-
