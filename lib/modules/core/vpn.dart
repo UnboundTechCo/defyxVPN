@@ -204,23 +204,24 @@ class VPN {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
     final vpnData = await _container?.read(vpnDataProvider.future);
+    connectionNotifier?.setDisconnecting();
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     } else if (Platform.isAndroid) {
       await _vpnBridge.stopTun2Socks();
     }
-    vpnData?.disableVPN();
+    await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
   }
 
   Future<void> _onTunnelClosed() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
+    connectionNotifier?.setDisconnecting();
     final vpnData = await _container?.read(vpnDataProvider.future);
     await _vpnBridge.stopVPN();
-    await _vpnBridge.stopTun2Socks();
+    await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
-    vpnData?.disableVPN();
   }
 
   Future<bool?> _grantVpnPermission() async {

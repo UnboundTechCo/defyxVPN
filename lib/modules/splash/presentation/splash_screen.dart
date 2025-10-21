@@ -26,14 +26,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final vpnBridge = VpnBridge();
     final vpnIsPrepared = await vpnBridge.isVPNPrepared();
     if (vpnData.isVPNEnabled && mounted) {
-      return context.go('/main');
+      context.go('/main');
+      return;
     }
 
-    if (ref.context.mounted && mounted && vpnIsPrepared) {
+    if (ref.context.mounted && vpnIsPrepared) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.initVPN();
       if (mounted) {
-        return context.go('/main');
+        context.go('/main');
+        return;
       }
     }
 

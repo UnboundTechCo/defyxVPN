@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -16,6 +18,13 @@ class PrivacyNoticeDialog extends StatelessWidget {
     final ratio = screenWidth / baseScreenWidth;
     final containerWidth = (300.0 * ratio).clamp(240.0, 390.0).toDouble();
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
+    String message =
+        'This app does not collect any user data or send any information to its servers.\n'
+        'Only some non-personal information (such as the name of your internet provider) '
+        'is stored locally on your device solely to improve connection performance in future attempts.';
+    if (Platform.isIOS) {
+      message += '\nBy continuing, you agree to install the VPN profile.';
+    }
 
     return Dialog(
       shape: RoundedRectangleBorder(
@@ -43,11 +52,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              'This app does not collect any user data or send any information to its servers.\n'
-              'Only some non-personal information (such as the name of your internet provider) '
-              'is stored locally on your device solely to improve connection performance in future attempts.\n'
-              'No personal data is collected, stored, or shared.\n'
-              'By continuing, you agree to install the VPN profile.',
+              message,
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
