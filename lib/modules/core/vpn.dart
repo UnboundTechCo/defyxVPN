@@ -207,8 +207,6 @@ class VPN {
     connectionNotifier?.setDisconnecting();
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
-    } else if (Platform.isAndroid) {
-      await _vpnBridge.stopTun2Socks();
     }
     await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
