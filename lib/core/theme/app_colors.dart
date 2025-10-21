@@ -28,4 +28,9 @@ class AppColors {
   static const Color topGradientConnecting = Color(0xFF18181E);
   static const Color middleGradientConnecting = Color(0xFF4161A6);
   static const Color bottomGradientConnecting = Color(0xFF23499C);
+
+  // Download, Upload and Warning Colors
+  static const Color warningColor = Color(0xFFFFAA66);
+  static const Color downloadColor = Color(0xFF76F959);
+  static const Color uploadColor = Color(0xFF72D9FF);
 }
