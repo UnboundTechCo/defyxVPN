@@ -14,12 +14,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
+  final vibrationService = VibrationService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -43,6 +44,7 @@ class VPN {
     _initialized = true;
     _container = container;
 
+    vibrationService.init();
     log.logAppVersion();
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
@@ -153,7 +155,7 @@ class VPN {
     await _createTunnel();
     connectionNotifier?.setConnected();
     await _refreshPing();
-    Vibration.vibrate(duration: 300);
+    vibrationService.vibrateSuccess();
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 

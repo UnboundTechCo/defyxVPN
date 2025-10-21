@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class SecretTapHandler {
   int _secretTapCounter = 0;
   DateTime? _lastTapTime;
+  final vibrationService = VibrationService();
 
   void handleSecretTap(BuildContext context) {
     final now = DateTime.now();
@@ -15,7 +16,7 @@ class SecretTapHandler {
     _secretTapCounter++;
     
     if (_secretTapCounter >= 7) {
-      Vibration.vibrate(duration: 100);
+      vibrationService.vibrateShort();
       _secretTapCounter = 0;
       showDialog(
         context: context,
