@@ -12,6 +12,18 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 - Relatively smart, requiring no manual configuration
 - Ability to test internet speed and quality
 
+## Download it
+
+<a href="https://apps.apple.com/us/app/defyx/id6746811872?platform=iphone" target="_blank">
+    <img height="60" src=".github/images/download/apple-store.png" alt="download" />
+</a>
+<a href="https://play.google.com/store/apps/details?id=de.unboundtech.defyxvpn" target="_blank">
+    <img height="60" src=".github/images/download/google-play.png" alt="download" />
+</a>
+<a href="https://github.com/UnboundTechCo/defyxVPN/releases">
+    <img height="60" src=".github/images/download/github.png" alt="download" />
+</a>
+
 ## Installation
 
 ### Prerequisites
