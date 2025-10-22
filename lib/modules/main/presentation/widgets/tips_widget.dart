@@ -127,9 +127,10 @@ class TipsSlider extends ConsumerWidget {
       ),
       height: dynamicHeight,
       decoration: BoxDecoration(
-        color: const Color.fromARGB(255, 0, 0, 0).withOpacity(0.56),
+        color: const Color.fromARGB(255, 0, 0, 0).withValues(alpha: 0.56),
         borderRadius: BorderRadius.circular(16.r),
-        border: Border.all(color: Colors.white.withOpacity(0.33), width: 1),
+        border:
+            Border.all(color: Colors.white.withValues(alpha: 0.33), width: 1),
       ),
       child: Stack(
         children: [
@@ -224,7 +225,7 @@ class TipsSlider extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: index == currentPage
                         ? Colors.white
-                        : Colors.white.withOpacity(0.3),
+                        : Colors.white.withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(3.r),
                   ),
                 ),

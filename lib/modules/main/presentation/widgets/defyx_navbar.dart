@@ -1,6 +1,6 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/main/application/defyx_navbar_prodiver.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/speed_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -85,15 +85,15 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _handleSpeedTest(BuildContext context, WidgetRef ref) {
-    showWebViewBottomSheet(context, 'https://speed.cloudflare.com/');
+    context.go(DefyxVPNRoutes.speedTest.route);
   }
 
   void _navigateToHome(BuildContext context) {
-    context.go('/main');
+    context.go(DefyxVPNRoutes.main.route);
   }
 
   void _navigateToSettings(BuildContext context) {
-    context.go('/settings');
+    context.go(DefyxVPNRoutes.settings.route);
   }
 
   AppScreen _getCurrentScreenFromLocation(String location) {
@@ -102,6 +102,8 @@ class DefyxNavBar extends ConsumerWidget {
         return AppScreen.home;
       case '/settings':
         return AppScreen.settings;
+      case '/speedTest':
+        return AppScreen.speedTest;
       default:
         return AppScreen.home;
     }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
@@ -11,7 +12,6 @@ import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -70,7 +70,7 @@ class VPN {
       final step = int.parse(configIndex);
       _setConnectionStep(step);
       loggerNotifier.setConnecting();
-      
+
       if (step > 1) {
         vibrationService.vibrateHeartbeat();
       }
@@ -154,8 +154,7 @@ class VPN {
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
@@ -163,8 +162,7 @@ class VPN {
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
@@ -199,12 +197,9 @@ class VPN {
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
-    } else if (Platform.isAndroid) {
-      await _vpnBridge.stopTun2Socks();
     }
     connectionNotifier?.setDisconnected();
   }
@@ -242,16 +237,10 @@ class VPN {
 
   Future<bool> _checkNetwork() async {
     try {
-      final dio = Dio();
-      await dio.get(
-        'https://www.google.com/generate_204',
-        options: Options(
-          responseType: ResponseType.bytes,
-          sendTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
-        ),
-      );
-      return true;
+      final httpClient = _container?.read(httpClientProvider);
+      if (httpClient == null) return false;
+
+      return await httpClient.checkConnectivity();
     } catch (e) {
       debugPrint('Error checking network: $e');
       return false;
