@@ -42,7 +42,7 @@ bool LoadCoreDll(const std::wstring& dllPath) {
   }
 
   HMODULE dll = nullptr;
-  if (!dllPath.empty()) dll = ::LoadLibraryW(path.c_str());
+  if (!path.empty()) dll = ::LoadLibraryW(path.c_str());
 
   if (!dll) {
     wchar_t exePath[MAX_PATH];
