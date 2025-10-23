@@ -106,9 +106,9 @@ class DefyxWindowsPlugin {
       SendStatus("connected");
       result->Success(flutter::EncodableValue(true));
     } else if (method == "disconnect") {
-      defyx_core::StopVPN();
-      SendStatus("disconnected");
-      result->Success(flutter::EncodableValue(true));
+      bool ok = defyx_core::StopVPN();
+      SendStatus(ok ? "disconnected" : "disconnect_failed");
+      result->Success(flutter::EncodableValue(ok));
     } else if (method == "prepare") {
       result->Success(flutter::EncodableValue(true));
     } else if (method == "startTun2socks") {
