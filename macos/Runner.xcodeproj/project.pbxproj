@@ -29,14 +29,14 @@
 		33CC11132044BFA00003C045 /* MainFlutterWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CC11122044BFA00003C045 /* MainFlutterWindow.swift */; };
 		37B9DF208766FD7CAFBBE8F1 /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FA502AF28DAFB529CFC2038F /* Pods_Runner.framework */; };
 		563181D4042B279C8B5B34D5 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 95B72415C5702F648F54E4D0 /* Pods_RunnerTests.framework */; };
+		F118A0892EAA553B00250D69 /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F16AC71E2EA983D00026FB64 /* NetworkExtension.framework */; };
+		F118A08C2EAA553C00250D69 /* MacDXcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F16AC7302EA984240026FB64 /* MacDXcore.xcframework */; };
 		F13C98B52EAA12110050B18B /* Tun2SocksKit in Frameworks */ = {isa = PBXBuildFile; productRef = F13C98B42EAA12110050B18B /* Tun2SocksKit */; };
 		F13C98B72EAA12140050B18B /* Tun2SocksKitC in Frameworks */ = {isa = PBXBuildFile; productRef = F13C98B62EAA12140050B18B /* Tun2SocksKitC */; };
 		F13C993D2EAA1A170050B18B /* libresolv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F13C993B2EAA19F70050B18B /* libresolv.tbd */; };
 		F13C993E2EAA1A1C0050B18B /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = F13C993C2EAA19FD0050B18B /* libresolv.9.tbd */; };
 		F13C994E2EAA1BC50050B18B /* VPNPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13C994D2EAA1BC20050B18B /* VPNPlugin.swift */; };
 		F13C99512EAA1BF40050B18B /* vpn_service.swift in Sources */ = {isa = PBXBuildFile; fileRef = F13C99502EAA1BF20050B18B /* vpn_service.swift */; };
-		F13C99602EAA1C430050B18B /* MacDXcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F16AC7302EA984240026FB64 /* MacDXcore.xcframework */; };
-		F13C99962EAA1DAA0050B18B /* NetworkExtension.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F16AC71E2EA983D00026FB64 /* NetworkExtension.framework */; };
 		F16AC7292EA983D00026FB64 /* de.unboundtech.defyxvpn.PacketTunnel.systemextension in Embed System Extensions */ = {isa = PBXBuildFile; fileRef = F16AC71D2EA983D00026FB64 /* de.unboundtech.defyxvpn.PacketTunnel.systemextension */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -170,8 +170,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				F13C99602EAA1C430050B18B /* MacDXcore.xcframework in Frameworks */,
-				F13C99962EAA1DAA0050B18B /* NetworkExtension.framework in Frameworks */,
+				F118A08C2EAA553C00250D69 /* MacDXcore.xcframework in Frameworks */,
+				F118A0892EAA553B00250D69 /* NetworkExtension.framework in Frameworks */,
 				F13C98B72EAA12140050B18B /* Tun2SocksKitC in Frameworks */,
 				F13C993D2EAA1A170050B18B /* libresolv.tbd in Frameworks */,
 				F13C993E2EAA1A1C0050B18B /* libresolv.9.tbd in Frameworks */,
@@ -700,11 +700,21 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = RTUZ6NNG47;
+				DEVELOPMENT_TEAM = RTUZ6NNG47;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -836,11 +846,21 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/DebugProfile.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = RTUZ6NNG47;
+				DEVELOPMENT_TEAM = RTUZ6NNG47;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_INCOMING_NETWORK_CONNECTIONS = NO;
+				ENABLE_OUTGOING_NETWORK_CONNECTIONS = YES;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_BLUETOOTH = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PRINTING = NO;
+				ENABLE_RESOURCE_ACCESS_USB = NO;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -860,11 +880,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = Runner/Release.entitlements;
-				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
-				"DEVELOPMENT_TEAM[sdk=macosx*]" = RTUZ6NNG47;
+				DEVELOPMENT_TEAM = RTUZ6NNG47;
 				INFOPLIST_FILE = Runner/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

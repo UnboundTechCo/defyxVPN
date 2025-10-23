@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +40,9 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      await MobileAds.instance.initialize();
+      if (!Platform.isMacOS) {
+        await MobileAds.instance.initialize();
+      }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
     }

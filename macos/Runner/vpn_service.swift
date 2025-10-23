@@ -23,14 +23,20 @@ class VpnService {
         Task {
             do {
                 let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+                print("✅ VPN Manager loaded")
                 if managers.isEmpty {
+                    print("⚠️ No existing VPN manager found")
                     vpnManager = NETunnelProviderManager()
+                    print("✅ VPN Manager created:")
                     try configureVPNManager(vpnManager!)
+                    print("✅ VPN Manager configured")
                     try await vpnManager?.saveToPreferences()
+                    print("✅ VPN Manager saved")
                 } else {
                     vpnManager = managers.first
                     print("✅ VPN Manager found: \(vpnManager?.localizedDescription ?? "Unknown")")
                 }
+                print("✅ VPN Manager prepared")
                 
                 try await vpnManager?.loadFromPreferences()
                 observeVPNStatus(vpnManager!)

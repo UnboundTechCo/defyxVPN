@@ -76,6 +76,10 @@ class VpnPlugin: VpnStatusDelegate {
             print("setConnectionMethod")
         case "isTunnelRunning":
             isTunnelRunning(result)
+        case "prepareVPN":
+            prepareVPN(result)
+        case "isVPNPrepared":
+            isVPNPrepared(result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -91,6 +95,18 @@ class VpnPlugin: VpnStatusDelegate {
                         result(true)
                     }
                 }
+            case .failure(let error):
+                print("❌ VPN Prepare failed: \(error)")
+                result(false)
+            }
+        }
+    }
+
+    private func prepareVPN(_ result: @escaping FlutterResult) {
+        VpnService.shared.prepareVPN { prepareResult in
+            switch prepareResult {
+            case .success:
+                result(true)
             case .failure(let error):
                 print("❌ VPN Prepare failed: \(error)")
                 result(false)
@@ -277,6 +293,14 @@ class VpnPlugin: VpnStatusDelegate {
             } else {
                 result(false)
             }
+        }
+    }
+
+    private func isVPNPrepared(_ result: @escaping FlutterResult) {
+        if VpnService.shared.manager == nil {
+            result(false)
+        } else {
+            result(true)
         }
     }
 
