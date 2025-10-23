@@ -44,9 +44,8 @@ class LogsNotifier extends StateNotifier<LogsState> {
         List<String> newLogEntries = newLogs.split('\n');
 
         // Filter out empty lines and already shown logs
-        List<String> filteredNewLogs = newLogEntries
-            .where((log) => log.isNotEmpty && !_existingLogs.contains(log))
-            .toList();
+        List<String> filteredNewLogs =
+            newLogEntries.where((log) => log.isNotEmpty && !_existingLogs.contains(log)).toList();
 
         if (filteredNewLogs.isNotEmpty) {
           // Add new logs to the existing logs set to avoid duplicates
@@ -130,14 +129,13 @@ final logsProvider = StateNotifierProvider<LogsNotifier, LogsState>((ref) {
 class ShakeLogDetector extends ConsumerStatefulWidget {
   final Widget child;
 
-  const ShakeLogDetector({Key? key, required this.child}) : super(key: key);
+  const ShakeLogDetector({super.key, required this.child});
 
   @override
   ConsumerState<ShakeLogDetector> createState() => _ShakeLogDetectorState();
 }
 
 class _ShakeLogDetectorState extends ConsumerState<ShakeLogDetector> {
-
   @override
   void initState() {
     super.initState();
@@ -155,7 +153,7 @@ class _ShakeLogDetectorState extends ConsumerState<ShakeLogDetector> {
 }
 
 class LogPopupContent extends ConsumerWidget {
-  const LogPopupContent({Key? key}) : super(key: key);
+  const LogPopupContent({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -222,8 +220,7 @@ class LogPopupContent extends ConsumerWidget {
                   const SizedBox(width: 6),
                   IconButton(
                     icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: () =>
-                        ref.read(logsProvider.notifier).fetchLogs(),
+                    onPressed: () => ref.read(logsProvider.notifier).fetchLogs(),
                   ),
                 ],
               ),
@@ -284,7 +281,7 @@ class LogPopupContent extends ConsumerWidget {
                               ),
                             ),
                           );
-                        }).toList(),
+                        }),
                         // Add extra space at the bottom for better visibility of last log
                         const SizedBox(height: 16),
                       ],
@@ -377,7 +374,7 @@ class LogPopupContent extends ConsumerWidget {
 
 // For backward compatibility if someone uses the LogScreen directly
 class LogScreen extends ConsumerStatefulWidget {
-  const LogScreen({Key? key}) : super(key: key);
+  const LogScreen({super.key});
 
   @override
   ConsumerState<LogScreen> createState() => _LogScreenState();
@@ -400,8 +397,7 @@ class _LogScreenState extends ConsumerState<LogScreen> {
         List<String> logEntries = allLogs.split('\n');
 
         // Filter out empty entries
-        List<String> filteredLogs =
-            logEntries.where((log) => log.isNotEmpty).toList();
+        List<String> filteredLogs = logEntries.where((log) => log.isNotEmpty).toList();
 
         if (filteredLogs.isNotEmpty) {
           // Reset existing logs set to avoid duplicates with a fresh start

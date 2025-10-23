@@ -11,8 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 const int _countdownDuration = 60;
 
 Future<bool> _shouldShowGoogleAds(WidgetRef ref) async {
-  final shouldUseInternalAds =
-      await AdvertiseDirector.shouldUseInternalAds(ref);
+  final shouldUseInternalAds = await AdvertiseDirector.shouldUseInternalAds(ref);
   return !shouldUseInternalAds;
 }
 
@@ -57,10 +56,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       return;
     }
 
-    if (!state.showCountdown && state.nativeAdIsLoaded) {
-      return;
-    }
-
     _countdownTimer?.cancel();
     state = state.copyWith(
       countdown: _countdownDuration,
@@ -87,9 +82,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
     );
-    if (isLoaded &&
-        state.showCountdown &&
-        state.countdown == _countdownDuration) {
+    if (isLoaded && state.showCountdown && state.countdown == _countdownDuration) {
       startCountdownTimer();
     }
   }
@@ -116,8 +109,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
   }
 }
 
-final googleAdsProvider =
-    StateNotifierProvider<GoogleAdsNotifier, GoogleAdsState>((ref) {
+final googleAdsProvider = StateNotifierProvider<GoogleAdsNotifier, GoogleAdsState>((ref) {
   return GoogleAdsNotifier();
 });
 
@@ -366,7 +358,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
               ),
             ),
           ),
-          if (adsState.nativeAdIsLoaded && adsState.showCountdown)
+          if (adsState.showCountdown)
             Positioned(
               bottom: 0,
               left: 0,
@@ -398,8 +390,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     );
   }
 
-  Widget _buildAdContent(GoogleAdsState adsState, bool? shouldShowGoogle,
-      Map<String, String>? customAdData) {
+  Widget _buildAdContent(
+      GoogleAdsState adsState, bool? shouldShowGoogle, Map<String, String>? customAdData) {
     if (shouldShowGoogle == null) {
       return _buildLoadingWidget("Initializing ads...");
     }
@@ -416,15 +408,13 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     } else if (_isLoading) {
       return _buildLoadingWidget("Loading Google ads...");
     } else if (adsState.adLoadFailed) {
-      return _buildErrorWidget(
-          "Failed to load Google ads", "Tap to retry", _retryLoadAd);
+      return _buildErrorWidget("Failed to load Google ads", "Tap to retry", _retryLoadAd);
     } else {
       return _buildErrorWidget("Tap to load ads", "", _retryLoadAd);
     }
   }
 
-  Widget _buildCustomAdContent(
-      Map<String, String>? customAdData, GoogleAdsState adsState) {
+  Widget _buildCustomAdContent(Map<String, String>? customAdData, GoogleAdsState adsState) {
     return Stack(
       children: [
         if (customAdData == null)
@@ -457,8 +447,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
               child: CircularProgressIndicator(
                 color: Colors.green,
                 value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
+                    ? loadingProgress.cumulativeBytesLoaded / loadingProgress.expectedTotalBytes!
                     : null,
               ),
             );
@@ -537,8 +526,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     );
   }
 
-  Widget _buildErrorWidget(
-      String primaryMessage, String secondaryMessage, VoidCallback onTap) {
+  Widget _buildErrorWidget(String primaryMessage, String secondaryMessage, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Center(
@@ -546,9 +534,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              primaryMessage.contains("Failed")
-                  ? Icons.error_outline
-                  : Icons.refresh,
+              primaryMessage.contains("Failed") ? Icons.error_outline : Icons.refresh,
               color: primaryMessage.contains("Failed")
                   ? Colors.orange.withValues(alpha: 0.8)
                   : Colors.white.withValues(alpha: 0.6),
