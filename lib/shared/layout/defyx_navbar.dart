@@ -310,8 +310,8 @@ class _QuickMenuDialogState extends State<_QuickMenuDialog> {
                           style: TextStyle(
                             fontFamily: 'Lato',
                             fontSize: 17.sp,
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w400,
+                            color: const Color(0xff747474),
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                         Text(
@@ -319,7 +319,7 @@ class _QuickMenuDialogState extends State<_QuickMenuDialog> {
                           style: TextStyle(
                             fontFamily: 'Lato',
                             fontSize: 14.sp,
-                            color: Colors.grey,
+                            color: const Color(0xff141414),
                             fontWeight: FontWeight.w400,
                           ),
                         ),
@@ -490,13 +490,13 @@ class _SocialIconButton extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(50.r),
       child: SizedBox(
-        width: 35.w,
-        height: 35.w,
+        width: 32.w,
+        height: 32.w,
         child: Center(
           child: SvgPicture.asset(
             iconPath,
-            width: iconPath == AppIcons.telegramPath ? 15.w : 20.w,
-            height: iconPath == AppIcons.telegramPath ? 15.w : 20.w,
+            width: iconPath == AppIcons.telegramPath ? 18.w : 24.w,
+            height: iconPath == AppIcons.telegramPath ? 18.w : 24.w,
             colorFilter: const ColorFilter.mode(
               Colors.black,
               BlendMode.srcIn,
