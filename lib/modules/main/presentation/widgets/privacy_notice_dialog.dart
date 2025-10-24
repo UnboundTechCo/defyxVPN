@@ -30,9 +30,10 @@ class PrivacyNoticeDialog extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.r),
       ),
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
-        width: containerWidth,
         padding: EdgeInsets.all(20.w),
+        width: 343.w,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
