@@ -1,6 +1,6 @@
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
-import 'package:defyx_vpn/modules/main/application/defyx_navbar_prodiver.dart';
+import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -159,7 +159,10 @@ class _DefyxNavItem extends StatelessWidget {
             'assets/icons/$icon.svg',
             width: isSelected ? iconSize + selectedIncrease : iconSize,
             height: isSelected ? iconSize + selectedIncrease : iconSize,
-            color: isSelected ? Colors.white : Colors.grey,
+            colorFilter: ColorFilter.mode(
+              isSelected ? Colors.white : Colors.grey,
+              BlendMode.srcIn,
+            ),
           ),
         ),
       ),
@@ -201,16 +204,6 @@ class _DefyxShareDialog extends StatelessWidget {
                 color: Colors.grey,
               ),
             ),
-            /*SizedBox(height: 15.h),
-            Text(
-              'LEARN MORE',
-              style: TextStyle(
-                fontSize: 12.sp,
-                fontFamily: 'Lato',
-                color: Colors.green,
-                fontWeight: FontWeight.bold,
-              ),
-            ),*/
             SizedBox(height: 15.h),
             _DefyxLinkItem(
               title: 'Privacy policy',
@@ -223,12 +216,6 @@ class _DefyxShareDialog extends StatelessWidget {
               url: 'https://defyxvpn.com/terms-and-conditions',
               fontSize: 14.sp,
             ),
-            /*SizedBox(height: 10.h),
-            _DefyxLinkItem(
-              title: 'Download from GitHub',
-              url: 'https://github.com/UnboundTechCo/defyxVPN',
-              fontSize: 14.sp,
-            ),*/
             SizedBox(height: 10.h),
             _DefyxInputLink(fontSize: 14.sp),
             SizedBox(height: 10.h),
