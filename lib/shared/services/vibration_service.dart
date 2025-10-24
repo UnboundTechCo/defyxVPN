@@ -69,7 +69,7 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 100);
+      await Vibration.vibrate(duration: 50);
     } catch (e) {
       debugPrint('Error in short vibration: $e');
     }
