@@ -45,7 +45,6 @@ class _CopyableLinkState extends State<CopyableLink> {
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.black,
-                fontFamily: 'Lato',
               ),
             ),
             _copied

@@ -22,7 +22,6 @@ class IntroductionDialog extends StatelessWidget {
             Text(
               'Introduction',
               style: TextStyle(
-                fontFamily: 'Lato',
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
@@ -32,7 +31,6 @@ class IntroductionDialog extends StatelessWidget {
             Text(
               'The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.',
               style: TextStyle(
-                fontFamily: 'Lato',
                 fontSize: 15.sp,
                 color: Colors.grey,
               ),
@@ -41,7 +39,6 @@ class IntroductionDialog extends StatelessWidget {
             Text(
               'LEARN MORE',
               style: TextStyle(
-                fontFamily: 'Lato',
                 fontSize: 13.sp,
                 fontWeight: FontWeight.bold,
                 color: Colors.green,
@@ -88,7 +85,6 @@ class IntroductionDialog extends StatelessWidget {
                     'Got it',
                     style: TextStyle(
                       fontSize: 14.sp,
-                      fontFamily: 'Lato',
                       fontWeight: FontWeight.bold,
                       color: Colors.grey[700],
                     ),

@@ -42,7 +42,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
           ),
         ),
         Positioned(
-          bottom: 130.h,
+          bottom: 115.h,
           right: 24.w,
           child: Material(
             color: Colors.transparent,
@@ -142,7 +142,6 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                         Text(
                           '© DEFYX',
                           style: TextStyle(
-                            fontFamily: 'Lato',
                             fontSize: 17.sp,
                             color: const Color(0xff747474),
                             fontWeight: FontWeight.w500,
@@ -151,7 +150,6 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                         Text(
                           _version,
                           style: TextStyle(
-                            fontFamily: 'Lato',
                             fontSize: 14.sp,
                             color: const Color(0xff141414),
                             fontWeight: FontWeight.w400,

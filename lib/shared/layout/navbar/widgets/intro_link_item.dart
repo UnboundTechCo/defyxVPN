@@ -36,7 +36,6 @@ class IntroLinkItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14.sp,
                 color: Colors.black,
-                fontFamily: 'Lato',
               ),
             ),
             Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),

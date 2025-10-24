@@ -25,7 +25,6 @@ class QuickMenuItem extends StatelessWidget {
               style: TextStyle(
                 fontSize: 17.sp,
                 color: Colors.black,
-                fontFamily: 'Lato',
                 fontWeight: FontWeight.w500,
               ),
             ),
