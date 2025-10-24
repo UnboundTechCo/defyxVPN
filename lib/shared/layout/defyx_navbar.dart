@@ -2,12 +2,14 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:go_router/go_router.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class DefyxNavBar extends ConsumerWidget {
   const DefyxNavBar({super.key});
@@ -114,7 +116,8 @@ class DefyxNavBar extends ConsumerWidget {
     showDialog(
       context: context,
       barrierDismissible: true,
-      builder: (ctx) => const _DefyxShareDialog(),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
+      builder: (ctx) => const _QuickMenuDialog(),
     ).then((_) {
       ref.read(currentScreenProvider.notifier).state = AppScreen.home;
     });
@@ -170,8 +173,171 @@ class _DefyxNavItem extends StatelessWidget {
   }
 }
 
-class _DefyxShareDialog extends StatelessWidget {
-  const _DefyxShareDialog();
+class _QuickMenuDialog extends StatefulWidget {
+  const _QuickMenuDialog();
+
+  @override
+  State<_QuickMenuDialog> createState() => _QuickMenuDialogState();
+}
+
+class _QuickMenuDialogState extends State<_QuickMenuDialog> {
+  String _version = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadVersion();
+  }
+
+  Future<void> _loadVersion() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    setState(() {
+      _version = '${packageInfo.version}+${packageInfo.buildNumber}';
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            child: Container(color: Colors.transparent),
+          ),
+        ),
+        Positioned(
+          bottom: 105.h,
+          right: 24.w,
+          child: Material(
+            color: Colors.transparent,
+            child: Container(
+              width: 230.w,
+              decoration: BoxDecoration(
+                // color: Colors.white.withAlpha(242),
+                color: const Color(0xFFd1d1d1),
+                borderRadius: BorderRadius.circular(15.r),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _QuickMenuItem(
+                    title: 'Introduction',
+                    onTap: () {
+                      Navigator.of(context).pop();
+                      showCupertinoDialog(
+                        context: context,
+                        barrierDismissible: true,
+                        builder: (ctx) => const _IntroductionDialog(),
+                      );
+                    },
+                  ),
+                  Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                  _QuickMenuItem(
+                    title: 'Privacy policy',
+                    onTap: () async {
+                      final uri = Uri.parse('https://defyxvpn.com/privacy-policy');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                  Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                  _QuickMenuItem(
+                    title: 'Terms & condition',
+                    onTap: () async {
+                      final uri = Uri.parse('https://defyxvpn.com/terms-and-conditions');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                  Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _SocialIconButton(
+                          iconPath: AppIcons.telegramPath,
+                          url: 'https://t.me/defyxvpn',
+                        ),
+                        _SocialIconButton(
+                          iconPath: AppIcons.instagramPath,
+                          url: 'https://instagram.com/defyxvpn',
+                        ),
+                        _SocialIconButton(
+                          iconPath: AppIcons.xPath,
+                          url: 'https://x.com/defyxvpn',
+                        ),
+                        _SocialIconButton(
+                          iconPath: AppIcons.facebookPath,
+                          url: 'https://fb.com/defyxvpn',
+                        ),
+                        _SocialIconButton(
+                          iconPath: AppIcons.linkedinPath,
+                          url: 'https://linkedin.com/company/defyxvpn',
+                        ),
+                      ],
+                    ),
+                  ),
+                  Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                  _QuickMenuItem(
+                    title: 'Our website',
+                    onTap: () async {
+                      final uri = Uri.parse('https://defyxvpn.com/contact');
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                  ),
+                  Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '© DEFYX',
+                          style: TextStyle(
+                            fontFamily: 'Lato',
+                            fontSize: 17.sp,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                        Text(
+                          _version,
+                          style: TextStyle(
+                            fontFamily: 'Lato',
+                            fontSize: 14.sp,
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w400,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _IntroductionDialog extends StatelessWidget {
+  const _IntroductionDialog();
 
   @override
   Widget build(BuildContext context) {
@@ -204,25 +370,33 @@ class _DefyxShareDialog extends StatelessWidget {
                 color: Colors.grey,
               ),
             ),
+            SizedBox(height: 10.h),
+            Text(
+              'LEARN MORE',
+              style: TextStyle(
+                fontFamily: 'Lato',
+                fontSize: 13.sp,
+                fontWeight: FontWeight.bold,
+                color: Colors.green,
+              ),
+            ),
             SizedBox(height: 15.h),
-            _DefyxLinkItem(
-              title: 'Privacy policy',
-              url: 'https://defyxvpn.com/privacy-policy',
-              fontSize: 14.sp,
+            _IntroLinkItem(
+              title: 'Source code',
+              url: 'https://github.com/UnboundTechCo/defyxVPN',
             ),
             SizedBox(height: 10.h),
-            _DefyxLinkItem(
-              title: 'Terms & conditions',
-              url: 'https://defyxvpn.com/terms-and-conditions',
-              fontSize: 14.sp,
+            _IntroLinkItem(
+              title: 'Open source licenses',
+              url:
+                  'https://github.com/UnboundTechCo/DXcore?tab=readme-ov-file#third-party-licenses',
             ),
             SizedBox(height: 10.h),
-            _DefyxInputLink(fontSize: 14.sp),
+            _CopyableLink(text: 'unboundtech.de/defyx'),
             SizedBox(height: 10.h),
-            _DefyxLinkItem(
-              title: 'Telegram Channel',
-              url: 'https://t.me/DefyxVPN',
-              fontSize: 14.sp,
+            _IntroLinkItem(
+              title: 'Beta Community',
+              url: 'https://t.me/+KuigyCHadIpiNDhi',
             ),
             SizedBox(height: 20.h),
             SizedBox(
@@ -262,15 +436,47 @@ class _DefyxShareDialog extends StatelessWidget {
   }
 }
 
-class _DefyxLinkItem extends StatelessWidget {
+class _QuickMenuItem extends StatelessWidget {
   final String title;
-  final String url;
-  final double fontSize;
+  final VoidCallback onTap;
 
-  const _DefyxLinkItem({
+  const _QuickMenuItem({
     required this.title,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 17.sp,
+                color: Colors.black,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SocialIconButton extends StatelessWidget {
+  final String iconPath;
+  final String url;
+
+  const _SocialIconButton({
+    required this.iconPath,
     required this.url,
-    required this.fontSize,
   });
 
   @override
@@ -279,7 +485,45 @@ class _DefyxLinkItem extends StatelessWidget {
       onTap: () async {
         final uri = Uri.parse(url);
         if (await canLaunchUrl(uri)) {
-          await launchUrl(uri);
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      borderRadius: BorderRadius.circular(50.r),
+      child: SizedBox(
+        width: 35.w,
+        height: 35.w,
+        child: Center(
+          child: SvgPicture.asset(
+            iconPath,
+            width: iconPath == AppIcons.telegramPath ? 15.w : 20.w,
+            height: iconPath == AppIcons.telegramPath ? 15.w : 20.w,
+            colorFilter: const ColorFilter.mode(
+              Colors.black,
+              BlendMode.srcIn,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _IntroLinkItem extends StatelessWidget {
+  final String title;
+  final String url;
+
+  const _IntroLinkItem({
+    required this.title,
+    required this.url,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () async {
+        final uri = Uri.parse(url);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
       },
       borderRadius: BorderRadius.circular(8.r),
@@ -292,8 +536,15 @@ class _DefyxLinkItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: TextStyle(fontSize: 14.sp, color: Colors.black)),
-            AppIcons.chevronLeft(width: 24.w, height: 24.h),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.black,
+                fontFamily: 'Lato',
+              ),
+            ),
+            Icon(Icons.chevron_right, size: 20.w, color: Colors.grey),
           ],
         ),
       ),
@@ -301,15 +552,15 @@ class _DefyxLinkItem extends StatelessWidget {
   }
 }
 
-class _DefyxInputLink extends StatefulWidget {
-  final double fontSize;
-  const _DefyxInputLink({required this.fontSize});
+class _CopyableLink extends StatefulWidget {
+  final String text;
+  const _CopyableLink({required this.text});
 
   @override
-  State<_DefyxInputLink> createState() => _DefyxInputLinkState();
+  State<_CopyableLink> createState() => _CopyableLinkState();
 }
 
-class _DefyxInputLinkState extends State<_DefyxInputLink> {
+class _CopyableLinkState extends State<_CopyableLink> {
   bool _copied = false;
 
   @override
@@ -318,7 +569,7 @@ class _DefyxInputLinkState extends State<_DefyxInputLink> {
       borderRadius: BorderRadius.circular(8.r),
       onTap: () async {
         await Clipboard.setData(
-          const ClipboardData(text: 'https://defyxvpn.com'),
+          ClipboardData(text: widget.text),
         );
         setState(() => _copied = true);
         Future.delayed(
@@ -336,12 +587,16 @@ class _DefyxInputLinkState extends State<_DefyxInputLink> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'defyxvpn.com',
-              style: TextStyle(fontSize: 14.sp, color: Colors.black),
+              widget.text,
+              style: TextStyle(
+                fontSize: 14.sp,
+                color: Colors.black,
+                fontFamily: 'Lato',
+              ),
             ),
             _copied
                 ? Icon(Icons.check_circle, size: 15.w, color: Colors.green)
-                : AppIcons.copy(width: 15.w, height: 15.h),
+                : Icon(Icons.content_copy, size: 15.w, color: Colors.grey),
           ],
         ),
       ),
