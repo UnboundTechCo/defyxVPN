@@ -20,6 +20,7 @@ class AppIcons {
   static const String shieldAnimePath = 'assets/icons/Shield.svg';
   static const String infoPath = 'assets/icons/info.svg';
   static const String checkCirclePath = 'assets/icons/check-circle.svg';
+
   static const String telegramPath = 'assets/icons/telegram.svg';
   static const String instagramPath = 'assets/icons/instagram.svg';
   static const String xPath = 'assets/icons/x.svg';
