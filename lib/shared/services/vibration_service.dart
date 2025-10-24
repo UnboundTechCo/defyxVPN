@@ -1,24 +1,36 @@
 import 'package:flutter/widgets.dart';
 import 'package:vibration/vibration.dart';
+import 'package:battery_plus/battery_plus.dart';
 
 class VibrationService {
   VibrationService._internal();
   static final VibrationService _instance = VibrationService._internal();
   factory VibrationService() => _instance;
 
+  final Battery _battery = Battery();
   bool _hasVibrator = true;
+  int _batteryLevel = 100;
 
   Future<void> init() async {
     try {
       _hasVibrator = await Vibration.hasVibrator() ?? false;
+      _batteryLevel = await _battery.batteryLevel;
+
+      _battery.onBatteryStateChanged.listen((BatteryState state) async {
+        _batteryLevel = await _battery.batteryLevel;
+      });
     } catch (e) {
       debugPrint('Error checking vibrator: $e');
       _hasVibrator = false;
     }
   }
 
+  bool get _canVibrate {
+    return _hasVibrator && _batteryLevel > 20;
+  }
+
   Future<void> vibrateHeartbeat() async {
-    if (!_hasVibrator) return;
+    if (!_canVibrate) return;
 
     try {
       await Vibration.vibrate(duration: 50);
@@ -30,7 +42,7 @@ class VibrationService {
   }
 
   Future<void> vibrateSuccess() async {
-    if (!_hasVibrator) return;
+    if (!_canVibrate) return;
 
     try {
       await Vibration.vibrate(duration: 200);
@@ -40,7 +52,7 @@ class VibrationService {
   }
 
   Future<void> vibrateError() async {
-    if (!_hasVibrator) return;
+    if (!_canVibrate) return;
 
     try {
       await Vibration.vibrate(duration: 300);
@@ -50,7 +62,7 @@ class VibrationService {
   }
 
   Future<void> vibrateShort() async {
-    if (!_hasVibrator) return;
+    if (!_canVibrate) return;
 
     try {
       await Vibration.vibrate(duration: 100);
