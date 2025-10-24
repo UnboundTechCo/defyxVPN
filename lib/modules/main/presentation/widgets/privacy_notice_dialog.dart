@@ -23,7 +23,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
         'Only some non-personal information (such as the name of your internet provider) '
         'is stored locally on your device solely to improve connection performance in future attempts.';
     if (Platform.isIOS) {
-      message += '\nBy continuing, you agree to install the VPN profile.';
+      message += '\nBy continuing,\nyou agree to install the VPN profile.';
     }
 
     return Dialog(
