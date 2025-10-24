@@ -6,7 +6,7 @@ import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
-import '../../shared/layout/defyx_navbar.dart';
+import '../../shared/layout/navbar/defyx_navbar.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
 
