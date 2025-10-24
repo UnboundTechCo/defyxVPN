@@ -110,11 +110,31 @@ class DefyxNavBar extends ConsumerWidget {
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
     ref.read(currentScreenProvider.notifier).state = AppScreen.share;
-    showDialog(
+    showGeneralDialog(
       context: context,
       barrierDismissible: true,
+      barrierLabel: 'Quick Menu',
       barrierColor: Colors.black.withValues(alpha: 0.5),
-      builder: (ctx) => const QuickMenuDialog(),
+      transitionDuration: const Duration(milliseconds: 250),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        return const QuickMenuDialog();
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+
+        return FadeTransition(
+          opacity: curvedAnimation,
+          child: ScaleTransition(
+            scale: Tween<double>(begin: 0.8, end: 1.0).animate(curvedAnimation),
+            alignment: Alignment.bottomRight,
+            child: child,
+          ),
+        );
+      },
     ).then((_) {
       ref.read(currentScreenProvider.notifier).state = AppScreen.home;
     });
