@@ -33,9 +33,13 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 50);
-      await Future.delayed(const Duration(milliseconds: 100));
-      await Vibration.vibrate(duration: 50);
+      final hasAmplitudeControl =
+          await Vibration.hasAmplitudeControl() ?? false;
+      if (hasAmplitudeControl) {
+        await Vibration.vibrate(duration: 25, amplitude: 40);
+      } else {
+        await Vibration.vibrate(duration: 25);
+      }
     } catch (e) {
       debugPrint('Error in heartbeat vibration: $e');
     }
@@ -45,7 +49,7 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 200);
+      await Vibration.vibrate(duration: 100);
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }
@@ -55,7 +59,7 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 300);
+      await Vibration.vibrate(duration: 200);
     } catch (e) {
       debugPrint('Error in error vibration: $e');
     }
