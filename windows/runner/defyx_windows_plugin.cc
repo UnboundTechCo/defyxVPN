@@ -14,7 +14,42 @@ namespace {
 using flutter::EncodableMap;
 using flutter::EncodableValue;
 
-class DefyxWindowsPlugin {
+// Forward declaration
+class DefyxWindowsPlugin;
+
+// Custom stream handler for status events
+class StatusStreamHandler : public flutter::StreamHandler<flutter::EncodableValue> {
+ public:
+  explicit StatusStreamHandler(DefyxWindowsPlugin* plugin) : plugin_(plugin) {}
+
+  std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnListenInternal(
+      const flutter::EncodableValue* arguments,
+      std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override;
+
+  std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnCancelInternal(
+      const flutter::EncodableValue* arguments) override;
+
+ private:
+  DefyxWindowsPlugin* plugin_;
+};
+
+// Custom stream handler for progress events
+class ProgressStreamHandler : public flutter::StreamHandler<flutter::EncodableValue> {
+ public:
+  explicit ProgressStreamHandler(DefyxWindowsPlugin* plugin) : plugin_(plugin) {}
+
+  std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnListenInternal(
+      const flutter::EncodableValue* arguments,
+      std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override;
+
+  std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> OnCancelInternal(
+      const flutter::EncodableValue* arguments) override;
+
+ private:
+  DefyxWindowsPlugin* plugin_;
+};
+
+class DefyxWindowsPlugin : public flutter::Plugin {
  public:
   static void RegisterWithRegistrar(flutter::PluginRegistrarWindows* registrar) {
     auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
@@ -37,35 +72,11 @@ class DefyxWindowsPlugin {
           plugin_pointer->HandleMethodCall(call, std::move(result));
         });
 
+    auto status_handler = std::make_unique<StatusStreamHandler>(plugin.get());
+    status_channel->SetStreamHandler(std::move(status_handler));
 
-    status_channel->SetStreamHandler(std::make_unique<flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
-        [plugin_pointer = plugin.get()](const flutter::EncodableValue* arguments,
-                                       std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events)
-            -> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-          plugin_pointer->SetStatusSink(std::move(events));
-
-          plugin_pointer->SendStatus("disconnected");
-          return nullptr;
-        },
-        [plugin_pointer = plugin.get()](const flutter::EncodableValue* arguments)
-            -> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-          plugin_pointer->ClearStatusSink();
-          return nullptr;
-        }));
-
-
-    progress_channel->SetStreamHandler(std::make_unique<flutter::StreamHandlerFunctions<flutter::EncodableValue>>(
-        [plugin_pointer = plugin.get()](const flutter::EncodableValue* arguments,
-                                       std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events)
-            -> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-          plugin_pointer->SetProgressSink(std::move(events));
-          return nullptr;
-        },
-        [plugin_pointer = plugin.get()](const flutter::EncodableValue* arguments)
-            -> std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> {
-          plugin_pointer->ClearProgressSink();
-          return nullptr;
-        }));
+    auto progress_handler = std::make_unique<ProgressStreamHandler>(plugin.get());
+    progress_channel->SetStreamHandler(std::move(progress_handler));
 
     registrar->AddPlugin(std::move(plugin));
     // Note: channels will be destroyed with registrar and plugin
@@ -195,10 +206,39 @@ class DefyxWindowsPlugin {
   std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink_;
 };
 
+// Stream handler implementations
+std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> 
+StatusStreamHandler::OnListenInternal(
+    const flutter::EncodableValue* arguments,
+    std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) {
+  plugin_->SetStatusSink(std::move(events));
+  plugin_->SendStatus("disconnected");
+  return nullptr;
+}
+
+std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> 
+StatusStreamHandler::OnCancelInternal(const flutter::EncodableValue* arguments) {
+  plugin_->ClearStatusSink();
+  return nullptr;
+}
+
+std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> 
+ProgressStreamHandler::OnListenInternal(
+    const flutter::EncodableValue* arguments,
+    std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) {
+  plugin_->SetProgressSink(std::move(events));
+  return nullptr;
+}
+
+std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> 
+ProgressStreamHandler::OnCancelInternal(const flutter::EncodableValue* arguments) {
+  plugin_->ClearProgressSink();
+  return nullptr;
+}
+
 }  // namespace
 
 
-void RegisterDefyxWindowsPlugin(flutter::PluginRegistry* registry) {
-  auto registrar = registry->GetRegistrarForPlugin("DefyxWindowsPlugin");
+void RegisterDefyxWindowsPlugin(flutter::PluginRegistrarWindows* registrar) {
   DefyxWindowsPlugin::RegisterWithRegistrar(registrar);
 }

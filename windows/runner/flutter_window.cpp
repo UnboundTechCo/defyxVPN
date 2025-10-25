@@ -3,6 +3,11 @@
 #include <optional>
 
 #include "flutter/generated_plugin_registrant.h"
+#include <flutter/plugin_registrar_windows.h>
+
+// Forward declaration for our custom plugin C API entrypoint (defined in
+// defyx_windows_plugin.cc).
+void RegisterDefyxWindowsPlugin(flutter::PluginRegistrarWindows* registrar);
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -25,6 +30,20 @@ bool FlutterWindow::OnCreate() {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
+
+  // Register custom DefyX VPN plugin using the PluginRegistrarManager to
+  // obtain a flutter::PluginRegistrarWindows from the engine's C API
+  // registrar handle.
+  {
+    auto registrar_ref =
+        flutter_controller_->engine()->GetRegistrarForPlugin("DefyxWindowsPlugin");
+    auto windows_registrar = flutter::PluginRegistrarManager::GetInstance()
+                                 ->GetRegistrar<flutter::PluginRegistrarWindows>(
+                                     registrar_ref);
+    // Call the plugin's registration function.
+    RegisterDefyxWindowsPlugin(windows_registrar);
+  }
+
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
   flutter_controller_->engine()->SetNextFrameCallback([&]() {
