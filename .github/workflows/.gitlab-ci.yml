@@ -1,0 +1,275 @@
+name: Android & iOS Build with Store Uploads
+
+on:
+  workflow_dispatch:
+    inputs:
+      send_telegram:
+        description: "Send APK to Telegram?"
+        required: true
+        default: "false"
+      upload_to_play_store:
+        description: "Upload AAB to Google Play Store?"
+        required: false
+        default: "false"
+        type: boolean
+      play_track:
+        description: "Google Play track (internal, alpha, beta, production)"
+        required: false
+        default: "internal"
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+      upload_to_app_store:
+        description: "Upload IPA to App Store/TestFlight?"
+        required: false
+        default: "false"
+        type: boolean
+      app_store_destination:
+        description: "App Store destination (testflight, production)"
+        required: false
+        default: "testflight"
+        type: choice
+        options:
+          - testflight
+          - production
+      download_android_framework:
+        description: "Download DXcore-android.zip?"
+        required: false
+        default: "false"
+        type: boolean
+      download_ios_framework:
+        description: "Download IosDXcore.xcframework.zip?"
+        required: false
+        default: "false"
+        type: boolean
+
+jobs:
+  build-android:
+    if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.5"
+          channel: "stable"
+          architecture: "x64"
+          cache: false
+
+      - name: Verify Flutter version
+        run: |
+          flutter --version
+          dart --version
+          flutter doctor --verbose
+
+      - name: Clear Pub cache
+        run: flutter pub cache clean
+
+      - name: Download Android Framework
+        if: ${{ github.event.inputs.download_android_framework == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+        run: |
+          mkdir -p android/app/libs
+          curl -L -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3.raw" \
+               "https://api.github.com/repos/UnboundTech/DXcoreFrameworks/contents/DXcore-android.zip?ref=main" \
+               -o android/app/libs/DXcore-android.zip
+          cd android/app/libs
+          unzip DXcore-android.zip
+          rm DXcore-android.zip
+          ls -la
+
+      - name: Create .env file
+        env:
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
+        run: |
+          if [ -z "$ENV_FILE_CONTENT" ]; then
+            touch .env
+          else
+            echo "$ENV_FILE_CONTENT" > .env
+          fi
+
+
+      - name: Create key.properties for Android signing
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}
+keyPassword=${{ secrets.KEY_PASSWORD }}
+keyAlias=${{ secrets.KEY_ALIAS }}
+storeFile=keystore.jks" > android/key.properties
+
+      - name: Decode and save Android keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+
+      - name: Make build_ci.sh executable and run build
+        env:
+          UPLOAD_TO_PLAY_STORE: ${{ github.event.inputs.upload_to_play_store }}
+          UPLOAD_TO_APP_STORE: "false"
+          ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
+          IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
+          APP_STORE_LINK: ${{ secrets.APP_STORE_LINK }}
+          TEST_FLIGHT_LINK: ${{ secrets.TEST_FLIGHT_LINK }}
+          GITHUB_LINK: ${{ secrets.GITHUB_LINK }}
+          GOOGLE_PLAY_LINK: ${{ secrets.GOOGLE_PLAY_LINK }}
+          IS_TEST_MODE: ${{ secrets.IS_TEST_MODE }}
+        run: |
+          chmod +x scripts/build_ci.sh
+          ./scripts/build_ci.sh
+
+      - name: Upload AAB to Google Play Store
+        if: ${{ github.event.inputs.upload_to_play_store == 'true' }}
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: de.unboundtech.defyxvpn
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: ${{ github.event.inputs.play_track }}
+          status: draft
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DXcore-android
+          path: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+
+  build-ios:
+    if: ${{ github.event.inputs.upload_to_app_store == 'true' }}
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.27.0"
+          channel: "stable"
+          architecture: "x64"
+          cache: false
+
+      - name: Verify Flutter version
+        run: |
+          flutter --version
+          dart --version
+          flutter doctor --verbose
+
+      - name: Clear Pub cache
+        run: flutter pub cache clean
+
+      - name: Download iOS Framework
+        if: ${{ github.event.inputs.download_ios_framework == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+        run: |
+          mkdir -p ios/Frameworks
+          curl -L -H "Authorization: token $GITHUB_TOKEN" \
+               -H "Accept: application/vnd.github.v3.raw" \
+               -o ios/IosDXcore.xcframework.zip \
+               "https://api.github.com/repos/UnboundTech/DXcoreFrameworks/contents/IosDXcore.xcframework.zip?ref=main"
+          cd ios
+          unzip IosDXcore.xcframework.zip
+          rm IosDXcore.xcframework.zip
+          ls -la Frameworks/
+
+      - name: Create .env file
+        env:
+          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
+        run: |
+          if [ -z "$ENV_FILE_CONTENT" ]; then
+            touch .env
+          else
+            echo "$ENV_FILE_CONTENT" > .env
+          fi
+
+      - name: Update Dart SDK constraint and dependencies
+        run: |
+          sed -i '' 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true
+          sed -i '' '/^dependency_overrides:/d' pubspec.yaml || true
+          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
+          sed -i '' '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
+
+      - name: Debug pubspec.yaml
+        run: cat pubspec.yaml
+
+      - name: Import iOS code signing certificates
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+
+      - name: Install iOS provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+        run: |
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 -d > Runner.mobileprovision
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp Runner.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Make build_ci.sh executable and run build
+        env:
+          UPLOAD_TO_PLAY_STORE: "false"
+          UPLOAD_TO_APP_STORE: ${{ github.event.inputs.upload_to_app_store }}
+          ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
+          IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
+          APP_STORE_LINK: ${{ secrets.APP_STORE_LINK }}
+          TEST_FLIGHT_LINK: ${{ secrets.TEST_FLIGHT_LINK }}
+          GITHUB_LINK: ${{ secrets.GITHUB_LINK }}
+          GOOGLE_PLAY_LINK: ${{ secrets.GOOGLE_PLAY_LINK }}
+          IS_TEST_MODE: ${{ secrets.IS_TEST_MODE }}
+        run: |
+          chmod +x scripts/build_ci.sh
+          ./scripts/build_ci.sh
+
+      - name: Upload IPA to App Store/TestFlight
+        uses: apple-actions/upload-app-store@v1
+        with:
+          app-store-connect-api-key: ${{ secrets.APP_STORE_KEY_P8 }}
+          app-store-connect-key-id: ${{ secrets.APP_STORE_KEY_ID }}
+          app-store-connect-issuer-id: ${{ secrets.APP_STORE_ISSUER_ID }}
+          ipa-path: build/ios/ipa/Runner.ipa
+          destination: ${{ github.event.inputs.app_store_destination }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DXcore-ios
+          path: build/ios/ipa/Runner.ipa
+
+  release-to-telegram:
+    runs-on: ubuntu-latest
+    needs: build-android
+    if: ${{ github.event.inputs.send_telegram == 'true' }}
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: DXcore-android
+          path: release/
+
+      - name: Send to Telegram
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          APP_VERSION: ${{ env.APP_VERSION }}
+        run: |
+          curl -F chat_id="$TELEGRAM_CHAT_ID" \
+               -F document=@release/app-release.apk \
+               -F caption="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+               "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
