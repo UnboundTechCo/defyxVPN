@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
 

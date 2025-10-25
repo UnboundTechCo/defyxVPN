@@ -1,5 +1,5 @@
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,18 +19,19 @@ class SettingsScreen extends ConsumerWidget {
         bottom: false,
         child: Center(
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 393.w),
-            child: Padding(padding: EdgeInsets.symmetric(horizontal: 24.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(height: 45.h),
-                _buildHeaderSection(),
-                SizedBox(height: 60.h),
-                _buildSettingsContent(ref),
-              ],
-            ),)
-          ),
+              constraints: BoxConstraints(maxWidth: 393.w),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.w),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    SizedBox(height: 45.h),
+                    _buildHeaderSection(),
+                    SizedBox(height: 60.h),
+                    _buildSettingsContent(ref),
+                  ],
+                ),
+              )),
         ),
       ),
     );
@@ -101,8 +102,7 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 onReorder: group.id == 'connection_method'
                     ? (oldIndex, newIndex) {
-                        settingsNotifier.reorderConnectionMethodItems(
-                            oldIndex, newIndex);
+                        settingsNotifier.reorderConnectionMethodItems(oldIndex, newIndex);
                       }
                     : null,
                 onReset: group.id == 'connection_method'

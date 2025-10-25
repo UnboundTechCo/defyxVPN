@@ -21,6 +21,12 @@ class AppIcons {
   static const String infoPath = 'assets/icons/info.svg';
   static const String checkCirclePath = 'assets/icons/check-circle.svg';
 
+  static const String telegramPath = 'assets/icons/telegram.svg';
+  static const String instagramPath = 'assets/icons/instagram.svg';
+  static const String xPath = 'assets/icons/x.svg';
+  static const String facebookPath = 'assets/icons/facebook.svg';
+  static const String linkedinPath = 'assets/icons/linkedin.svg';
+
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
   }
@@ -83,6 +89,26 @@ class AppIcons {
 
   static SvgPicture checkCircle({double? width, double? height}) {
     return SvgPicture.asset(checkCirclePath, width: width, height: height);
+  }
+
+  static SvgPicture telegram({double? width, double? height}) {
+    return SvgPicture.asset(telegramPath, width: width, height: height);
+  }
+
+  static SvgPicture instagram({double? width, double? height}) {
+    return SvgPicture.asset(instagramPath, width: width, height: height);
+  }
+
+  static SvgPicture x({double? width, double? height}) {
+    return SvgPicture.asset(xPath, width: width, height: height);
+  }
+
+  static SvgPicture facebook({double? width, double? height}) {
+    return SvgPicture.asset(facebookPath, width: width, height: height);
+  }
+
+  static SvgPicture linkedin({double? width, double? height}) {
+    return SvgPicture.asset(linkedinPath, width: width, height: height);
   }
 
   static Widget shieldAnime({
