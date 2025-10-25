@@ -36,9 +36,9 @@ class VibrationService {
       final hasAmplitudeControl =
           await Vibration.hasAmplitudeControl() ?? false;
       if (hasAmplitudeControl) {
-        await Vibration.vibrate(duration: 35, amplitude: 40);
+        await Vibration.vibrate(duration: 25, amplitude: 40);
       } else {
-        await Vibration.vibrate(duration: 35);
+        await Vibration.vibrate(duration: 25);
       }
     } catch (e) {
       debugPrint('Error in heartbeat vibration: $e');
@@ -49,7 +49,7 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 75);
+      await Vibration.vibrate(duration: 100);
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }

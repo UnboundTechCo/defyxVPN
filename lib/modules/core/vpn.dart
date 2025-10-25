@@ -128,7 +128,7 @@ class VPN {
       loggerNotifier?.setLoading();
     });
 
-    vibrationService.vibrateShort();
+    vibrationService.vibrateHeartbeat();
 
     if (!await _checkNetwork()) {
       connectionNotifier?.setNoInternet();
