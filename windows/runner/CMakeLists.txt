@@ -45,7 +45,7 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
 
-# Copy DXcore.dll to output directory for debug. shoulf be deleted after our tests are done 
+# Copy DXcore.dll to output directory for debug. should be deleted after our tests are done 
 set(DXCORE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/DXcore.dll")
 if(EXISTS "${DXCORE_DLL}")
   add_custom_command(
