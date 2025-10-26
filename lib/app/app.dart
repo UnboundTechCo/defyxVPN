@@ -62,7 +62,7 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      // Only initialize on supported platforms (Android/iOS) TODO:  this part added for test only . when we added appropiate windows and/or linux support for add this part should be change
+      // Only initialize on supported platforms (Android/iOS) TODO:  this part added for test only. When we add appropriate Windows and/or Linux support for ads, this part should be changed
       if (Platform.isAndroid || Platform.isIOS) {
         await MobileAds.instance.initialize();
       } else {
