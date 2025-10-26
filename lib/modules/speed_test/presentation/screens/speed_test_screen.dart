@@ -308,9 +308,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       case SpeedTestStep.loading:
         return const SpeedTestLoadingState();
       case SpeedTestStep.download:
-        return SpeedTestDownloadState(state: state);
+        return SpeedTestDownloadState(
+          state: state,
+          onStop: () {
+            ref.read(speedTestProvider.notifier).stopAndResetTest();
+          },
+        );
       case SpeedTestStep.upload:
-        return SpeedTestUploadState(state: state);
+        return SpeedTestUploadState(
+            state: state,
+            onStop: () {
+              ref.read(speedTestProvider.notifier).stopAndResetTest();
+            });
       case SpeedTestStep.toast:
         return _buildToastState(state);
       case SpeedTestStep.result:
