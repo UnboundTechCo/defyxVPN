@@ -1,3 +1,4 @@
+import 'dart:io' show Platform;
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
@@ -61,7 +62,12 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      await MobileAds.instance.initialize();
+      // Only initialize on supported platforms (Android/iOS) TODO:  this part added for test only . when we added appropiate windows and/or linux support for add this part should be change
+      if (Platform.isAndroid || Platform.isIOS) {
+        await MobileAds.instance.initialize();
+      } else {
+        debugPrint('Skipping AdMob initialization on this platform');
+      }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
     }

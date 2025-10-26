@@ -21,9 +21,26 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<String> getFlowline() async {
+    // Ask the native side first i think it may be usefullf for static  config  loading . so i kept it :)
     final flowLine = await _platformChannel.invokeMethod<String>(
         'getFlowLine', {"isTest": dotenv.env['IS_TEST_MODE'] ?? 'false'});
-    return flowLine ?? '';
+
+    // If native returned nothing, fall back to bundled config
+    if (flowLine == null || flowLine.isEmpty) {
+      // Fallback: load default flowline from assets
+      return await rootBundle.loadString('assets/settings/config.json');
+    }
+
+    // Validate JSON; if invalid, also fall back to assets
+    try {
+      json.decode(flowLine);
+      return flowLine;
+    } on FormatException {
+      // Fallback: load default flowline from assets
+      final assetConfig =
+          await rootBundle.loadString('assets/settings/config.json');
+      return assetConfig;
+    }
   }
 
   @override
@@ -31,24 +48,43 @@ class FlowlineService implements IFlowlineService {
     final flowLine = await getFlowline();
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
-
+      // Optional sections: handle gracefully if missing in fallback configs
       final appBuildType = GlobalVars.appBuildType;
-      final version = decoded['version'][appBuildType];
+      if (decoded is Map<String, dynamic>) {
+        // Advertise
+        if (decoded.containsKey('advertise')) {
+          final advertiseStorageMap = {
+            'api_advertise': decoded['advertise'],
+          };
+          await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+        }
 
-      final advertiseStorageMap = {
-        'api_advertise': decoded['advertise'],
-      };
-      await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+        // Version parameters
+        if (decoded['version'] != null &&
+            decoded['forceUpdate'] != null &&
+            decoded['changeLog'] != null) {
+          final version = decoded['version'][appBuildType];
+          if (version != null) {
+            final versionStorageMap = {
+              'api_app_version': version,
+              'forceUpdate': decoded['forceUpdate'][version],
+              'changeLog': decoded['changeLog'][version],
+            };
+            await _secureStorage.writeMap(
+                apiVersionParametersKey, versionStorageMap);
+          }
+        }
 
-      final versionStorageMap = {
-        'api_app_version': version,
-        'forceUpdate': decoded['forceUpdate'][version],
-        'changeLog': decoded['changeLog'][version],
-      };
-
-      await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
-
-      await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
+        // Flowline list (required for operation)
+        if (decoded['flowLine'] != null) {
+          await _secureStorage.write(
+              flowLineKey, json.encode(decoded['flowLine']));
+        } else {
+          throw Exception('Invalid config: missing flowLine');
+        }
+      } else {
+        throw Exception('Invalid config format');
+      }
     } else {
       throw Exception('Flowline is empty, cannot save');
     }

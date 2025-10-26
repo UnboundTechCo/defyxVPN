@@ -111,6 +111,7 @@ class DefyxWindowsPlugin : public flutter::Plugin {
   void HandleMethodCall(const flutter::MethodCall<flutter::EncodableValue>& call,
                         std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result) {
     const std::string method = call.method_name();
+    defyx_core::LogMessage(std::string("WindowsPlugin Method: ") + method);
     if (method == "connect") {
       // On Windows, just return true and send status
       SendStatus("connecting");
@@ -166,9 +167,11 @@ class DefyxWindowsPlugin : public flutter::Plugin {
       bool loaded = defyx_core::LoadCoreDll(wpath);
       result->Success(flutter::EncodableValue(loaded));
     } else if (method == "unloadCore") {
+      defyx_core::LogMessage("Unload core requested");
       defyx_core::UnloadCoreDll();
       result->Success(flutter::EncodableValue(true));
     } else if (method == "stopVPN") {
+      defyx_core::LogMessage("StopVPN requested via method channel");
       bool ok = defyx_core::StopVPN();
       SendStatus("disconnected");
       result->Success(flutter::EncodableValue(ok));
@@ -194,6 +197,7 @@ class DefyxWindowsPlugin : public flutter::Plugin {
       }
       result->Error("INVALID_ARGUMENT", "timezone missing or invalid");
     } else if (method == "getFlowLine") {
+      defyx_core::LogMessage("getFlowLine requested via method channel");
       result->Success(flutter::EncodableValue(defyx_core::GetFlowLine()));
     } else {
       result->NotImplemented();
@@ -212,6 +216,7 @@ StatusStreamHandler::OnListenInternal(
     const flutter::EncodableValue* arguments,
     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) {
   plugin_->SetStatusSink(std::move(events));
+  defyx_core::LogMessage("Status event stream: OnListen");
   plugin_->SendStatus("disconnected");
   return nullptr;
 }
@@ -227,12 +232,24 @@ ProgressStreamHandler::OnListenInternal(
     const flutter::EncodableValue* arguments,
     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) {
   plugin_->SetProgressSink(std::move(events));
+  defyx_core::LogMessage("Progress event stream: OnListen");
+  
+  // Forward DLL progress messages to Flutter stream
+  defyx_core::RegisterProgressHandler([this](std::string msg) {
+    plugin_->SendProgress(msg);
+  });
+  
+  // Enable verbose logging when progress stream is active. debug only
+  defyx_core::EnableVerboseLogs(true);
+  
   return nullptr;
 }
 
 std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>> 
 ProgressStreamHandler::OnCancelInternal(const flutter::EncodableValue* arguments) {
   plugin_->ClearProgressSink();
+  defyx_core::RegisterProgressHandler(nullptr);
+  defyx_core::EnableVerboseLogs(false);
   return nullptr;
 }
 
