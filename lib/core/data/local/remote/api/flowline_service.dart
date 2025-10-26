@@ -3,10 +3,10 @@ import 'package:defyx_vpn/core/data/local/remote/api/flowline_service_interface.
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -15,16 +15,12 @@ final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
 
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
-  final _platformChannel = const MethodChannel('com.defyx.vpn');
+  final _vpnBridge = VpnBridge();
 
   FlowlineService(this._secureStorage);
 
   @override
-  Future<String> getFlowline() async {
-    final flowLine = await _platformChannel.invokeMethod<String>(
-        'getFlowLine', {"isTest": dotenv.env['IS_TEST_MODE'] ?? 'false'});
-    return flowLine ?? '';
-  }
+  Future<String> getFlowline() => _vpnBridge.getFlowLine();
 
   @override
   Future<void> saveFlowline() async {
@@ -49,6 +45,9 @@ class FlowlineService implements IFlowlineService {
       await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
 
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
+      final ref = ProviderContainer();
+      final settings = ref.read(settingsProvider.notifier);
+      await settings.updateSettingsBasedOnFlowLine();
     } else {
       throw Exception('Flowline is empty, cannot save');
     }
