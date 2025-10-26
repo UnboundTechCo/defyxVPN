@@ -110,7 +110,7 @@ bool LoadCoreDll(const std::wstring& dllPath) {
   }
 
   HMODULE dll = nullptr;
-  // 1) Prefer loading from the exe directory to avoid picking up the system dxcore.dll . the same as above . suck it nerds. i know the tricks :)
+  // 1) Prefer loading from the exe directory to avoid picking up the system dxcore.dll. This helps prevent DLL hijacking attacks and ensures the intended DLL is loaded.
   if (!exeDir.empty()) {
     std::wstring full = exeDir + L"DXcore.dll";
     dll = ::LoadLibraryW(full.c_str());
