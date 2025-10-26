@@ -145,7 +145,9 @@ bool LoadCoreDll(const std::wstring& dllPath) {
     }
   }
 
-  // 3) As a last resort, try default search path (not preferred due to name collision). if we reached here. i give up . the old pus shouldnt delete the dll from main and you own the system  
+  // 3) As a last resort, attempt to load DXcore.dll using the default search path.
+  //    This is not preferred due to potential name collisions with system-wide DLLs.
+  //    This fallback is used only if loading from the executable directory and the provided path both fail.
   if (!dll) {
     dll = ::LoadLibraryW(L"DXcore.dll");
     if (!dll) {
