@@ -21,7 +21,7 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<String> getFlowline() async {
-    // Ask the native side first i think it may be usefullf for static  config  loading . so i kept it :)
+    // Ask the native side first i think it may be useful for static config loading, so I kept it :)
     final flowLine = await _platformChannel.invokeMethod<String>(
         'getFlowLine', {"isTest": dotenv.env['IS_TEST_MODE'] ?? 'false'});
 
