@@ -52,7 +52,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.microtask(() {
         if (mounted) {
+          /*
+          // If needed, reset any ongoing speed test
           ref.read(speedTestProvider.notifier).stopAndResetTest();
+          */
+
+          if (ref.read(speedTestProvider).step == SpeedTestStep.ads ||
+              ref.read(speedTestProvider).step == SpeedTestStep.toast) {
+            ref.read(speedTestProvider.notifier).completeTest();
+          }
 
           final currentConnectionState = ref.read(conn.connectionStateProvider);
           _previousConnectionStatus = currentConnectionState.status;
@@ -62,6 +70,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
   }
 
+  /*
+  // If needed, stop and reset the speed test
   @override
   void deactivate() {
     Future.microtask(() {
@@ -71,9 +81,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
     super.deactivate();
   }
+  */
 
   @override
   void dispose() {
+    /*
+    // If needed, stop and reset the speed test
     Future.microtask(() {
       try {
         ref.read(speedTestProvider.notifier).stopAndResetTest();
@@ -81,6 +94,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         debugPrint('Speed test provider already disposed: $e');
       }
     });
+    */
 
     _toastTimer?.cancel();
     _resultTimer?.cancel();
