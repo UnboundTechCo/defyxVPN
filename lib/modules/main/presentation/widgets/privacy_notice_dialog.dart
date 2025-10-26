@@ -50,7 +50,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
-                color: Colors.black.withOpacity(0.5),
+                color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),
             ),
@@ -73,7 +73,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
                 'Got it',
                 style: TextStyle(
                   fontFamily: 'Lato',
-                  color: const Color(0xFFF4B4B4B),
+                  color: const Color(0xFF4B4B4B),
                   fontSize: fontSize,
                   fontWeight: FontWeight.w500,
                 ),

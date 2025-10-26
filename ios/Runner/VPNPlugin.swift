@@ -72,6 +72,10 @@ class VpnPlugin: VpnStatusDelegate {
             setTimezone(call.arguments as? [String: Any], result)
         case "getFlowLine":
             getFlowLine(call.arguments as? [String: Any], result)
+        case "setConnectionMethod":
+            print("setConnectionMethod")
+        case "isTunnelRunning":
+            isTunnelRunning(result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -248,8 +252,31 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
 
-        VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE","isTest":isTest]) { response in
+        VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
+            response in
             result(response)
+        }
+    }
+    private func isTunnelRunning(_ result: @escaping FlutterResult) {
+        if VpnService.shared.manager == nil {
+            result(false)
+        } else {
+            if let status = VpnService.shared.manager?.connection.status {
+                var statusBool = false
+
+                switch status {
+                case .connected: statusBool = true
+                case .connecting: statusBool = true
+                case .disconnected: statusBool = false
+                case .disconnecting: statusBool = true
+                case .invalid: statusBool = false  
+                case .reasserting: statusBool = true
+                @unknown default: statusBool = false 
+                }
+                result(statusBool)
+            } else {
+                result(false)
+            }
         }
     }
 

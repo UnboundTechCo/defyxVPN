@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class PingPlaceholder extends StatelessWidget {
   final double width;
 
-  const PingPlaceholder({Key? key, required this.width}) : super(key: key);
+  const PingPlaceholder({super.key, required this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class PingPlaceholder extends StatelessWidget {
 class FlagPlaceholder extends StatelessWidget {
   final double width;
 
-  const FlagPlaceholder({Key? key, required this.width}) : super(key: key);
+  const FlagPlaceholder({super.key, required this.width});
 
   @override
   Widget build(BuildContext context) {
@@ -55,7 +55,7 @@ class FlagPlaceholder extends StatelessWidget {
 class StepsPlaceholder extends StatelessWidget {
   final double width;
 
-  const StepsPlaceholder({Key? key, required this.width}) : super(key: key);
+  const StepsPlaceholder({super.key, required this.width});
 
   @override
   Widget build(BuildContext context) {
