@@ -165,22 +165,6 @@ bool LoadCoreDll(const std::wstring& dllPath) {
     }
   }
 
-  if (!dll) {
-    dll = ::LoadLibraryW(L"DXcore.dll");
-    if (!dll) {
-      DWORD err = GetLastError();
-      defyx_core::LogMessage("Final LoadLibrary('DXcore.dll') failed err=" + std::to_string(err));
-      return false;
-    } else {
-        wchar_t dllFullPath[MAX_PATH];
-        DWORD pathLen = GetModuleFileNameW(dll, dllFullPath, MAX_PATH);
-        if (pathLen > 0) {
-          defyx_core::LogMessage("Loaded DXcore.dll from default search path -> ACTUAL: " + WideToUtf8(std::wstring(dllFullPath, pathLen)));
-        } else {
-          defyx_core::LogMessage("Loaded DXcore.dll from default search path (couldn't get full path)");
-        }
-    }
-  }
 
   g_dx_dll = dll;
 
