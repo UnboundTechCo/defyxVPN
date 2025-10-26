@@ -100,7 +100,7 @@ bool LoadCoreDll(const std::wstring& dllPath) {
 
   std::wstring path = dllPath;
 
-  // Determine exe directory for safe DLL loading (avoid C:\\Windows\\System32 name collision with dxcore.dll so bitches like wont be able to hijak defyx service )
+  // Determine exe directory for safe DLL loading (avoid C:\\Windows\\System32 name collision with dxcore.dll so bitches like wont be able to hijack defyx service )
   wchar_t exePath[MAX_PATH];
   std::wstring exeDir;
   if (GetModuleFileNameW(NULL, exePath, MAX_PATH) > 0) {
