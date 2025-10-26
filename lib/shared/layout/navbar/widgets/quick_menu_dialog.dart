@@ -42,7 +42,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
           ),
         ),
         Positioned(
-          bottom: 115.h,
+          bottom: 130.h,
           right: 24.w,
           child: Material(
             color: Colors.transparent,
