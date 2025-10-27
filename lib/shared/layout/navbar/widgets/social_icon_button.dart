@@ -19,9 +19,10 @@ class SocialIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      hoverColor: Colors.transparent,
-      splashColor: Colors.transparent,
-      highlightColor: Colors.transparent,
+      hoverColor: const Color(0xffDFDFDF),
+      splashColor: const Color(0xffDFDFDF),
+      highlightColor: const Color(0xffDFDFDF),
+      borderRadius: BorderRadius.circular(50.r),
       onTap: () async {
         if (!enable) return;
         final uri = Uri.parse(url);
@@ -29,10 +30,9 @@ class SocialIconButton extends StatelessWidget {
           await launchUrl(uri, mode: LaunchMode.externalApplication);
         }
       },
-      borderRadius: BorderRadius.circular(50.r),
       child: SizedBox(
-        width: 32.w,
-        height: 32.w,
+        width: 35.w,
+        height: 35.w,
         child: Center(
           child: SvgPicture.asset(
             iconPath,
