@@ -6,6 +6,7 @@ import '../../models/settings_group.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 
 class SettingsGroupWidget extends StatefulWidget {
   final SettingsGroup group;
@@ -32,13 +33,14 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
+  final _animationService = AnimationService();
   int? _draggingIndex;
 
   @override
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 500)),
       vsync: this,
     );
     _rotationAnimation = Tween<double>(
@@ -57,9 +59,11 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   }
 
   void _handleReset() {
-    _rotationController.forward().then((_) {
-      _rotationController.reset();
-    });
+    if (_animationService.shouldAnimate()) {
+      _rotationController.forward().then((_) {
+        _rotationController.reset();
+      });
+    }
     HapticFeedback.mediumImpact();
     widget.onReset?.call();
   }

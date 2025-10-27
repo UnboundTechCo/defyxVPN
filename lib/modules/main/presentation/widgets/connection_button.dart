@@ -9,6 +9,7 @@ import 'package:path_drawing/path_drawing.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 
 class ConnectionButton extends StatefulWidget {
   final VoidCallback onTap;
@@ -27,6 +28,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
   late Animation<double> _scaleAnimation;
   late Animation<double> _shieldRotationAnimation;
 
+  final _animationService = AnimationService();
+
   Timer? _timer;
   int _seconds = 0;
   String _formattedTime = "00:00:00";
@@ -35,7 +38,6 @@ class _ConnectionButtonState extends State<ConnectionButton>
   static const String _lastSecondsCountKey = 'last_seconds_count';
   static const String _isConnectedKey = 'is_connected';
 
-  // Responsive dimensions
   late double _buttonSize;
   late double _iconSize;
   late double _animationSize;
@@ -60,8 +62,12 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 2000)),
+    );
+
+    if (_animationService.shouldAnimate()) {
+      _animationController.repeat(reverse: true);
+    }
 
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
@@ -73,7 +79,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
     _shieldLoadingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
     );
 
     _shieldRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -233,12 +239,10 @@ class _ConnectionButtonState extends State<ConnectionButton>
         _shieldLoadingController.stop();
         break;
       case vpn.ConnectionStatus.analyzing:
-        // Start shield loading animation
-        _shieldLoadingController.repeat();
+        _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       case vpn.ConnectionStatus.disconnecting:
-        // Start shield loading animation
-        _shieldLoadingController.repeat();
+        _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       default:
         if (_timer != null) _stopTimer();

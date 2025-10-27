@@ -4,8 +4,10 @@ import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame/input.dart';
 import 'package:flutter/material.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 
 class DinoGame extends FlameGame with TapDetector, HasCollisionDetection {
+  final _animationService = AnimationService();
   late SpriteComponent dino;
   late SpriteComponent ground;
   late double gravity;
@@ -205,7 +207,7 @@ class DinoGame extends FlameGame with TapDetector, HasCollisionDetection {
     }
     ground.x = -groundOffset;
 
-    if (!isJumping) {
+    if (!isJumping && _animationService.shouldAnimate()) {
       animationTimer += dt;
       if (animationTimer >= animationInterval) {
         animationTimer = 0;

@@ -6,6 +6,7 @@ import '../../../models/speed_test_result.dart';
 import '../speed_test_metrics/speed_test_metrics.dart';
 import 'components/progress_arc_stack.dart';
 import 'components/speed_value_display.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 
 class SpeedTestProgressIndicator extends StatefulWidget {
   final double progress;
@@ -47,6 +48,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   late Animation<double> _downloadProgressAnimation;
   late AnimationController _gridAnimationController;
   late Animation<double> _gridAnimation;
+  final _animationService = AnimationService();
   double _uploadProgress = 0.0;
   double _downloadProgress = 0.0;
 
@@ -59,7 +61,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
   void _initializeAnimations() {
     _uploadAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
     );
     _uploadProgressAnimation = Tween<double>(
       begin: 0.0,
@@ -71,7 +73,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
 
     _downloadAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
     );
     _downloadProgressAnimation = Tween<double>(
       begin: 0.0,
@@ -83,8 +85,10 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
 
     _gridAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
+      duration: _animationService.adjustDuration(const Duration(seconds: 3)),
+    );
+
+    _animationService.conditionalRepeat(_gridAnimationController);
 
     _gridAnimation = Tween<double>(
       begin: 0.0,
@@ -125,7 +129,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     final duration =
         isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
 
-    _uploadAnimationController.duration = duration;
+    _uploadAnimationController.duration = _animationService.adjustDuration(duration);
 
     _uploadProgressAnimation = Tween<double>(
       begin: currentValue,
@@ -134,7 +138,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       parent: _uploadAnimationController,
       curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
     ));
-    _uploadAnimationController.forward(from: 0.0);
+    _animationService.conditionalForward(_uploadAnimationController, from: 0.0);
   }
 
   void _updateDownloadAnimation() {
@@ -144,7 +148,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     final duration =
         isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
 
-    _downloadAnimationController.duration = duration;
+    _downloadAnimationController.duration = _animationService.adjustDuration(duration);
 
     _downloadProgressAnimation = Tween<double>(
       begin: currentValue,
@@ -153,7 +157,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       parent: _downloadAnimationController,
       curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
     ));
-    _downloadAnimationController.forward(from: 0.0);
+    _animationService.conditionalForward(_downloadAnimationController, from: 0.0);
   }
 
   @override
