@@ -86,8 +86,8 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                     },
                   ),
                   Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8.h),
+                  SizedBox(
+                    height: 44,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
@@ -125,8 +125,9 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                     },
                   ),
                   Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+                  Container(
+                    height: 44,
+                    padding: EdgeInsets.symmetric(horizontal: 16.w),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

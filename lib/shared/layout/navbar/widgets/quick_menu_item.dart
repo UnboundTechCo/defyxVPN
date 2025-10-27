@@ -29,7 +29,8 @@ class QuickMenuItem extends StatelessWidget {
         bottomRight: Radius.circular(bottomBorderRadius! ? 15.r : 0),
       ),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
+        height: 44,
+        padding: EdgeInsets.symmetric(horizontal: 16.w),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
