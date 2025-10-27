@@ -56,7 +56,7 @@ class IntroductionDialog extends StatelessWidget {
                   'https://github.com/UnboundTechCo/DXcore?tab=readme-ov-file#third-party-licenses',
             ),
             SizedBox(height: 10.h),
-            CopyableLink(text: 'unboundtech.de/defyx'),
+            CopyableLink(text: 'defyxvpn.com'),
             SizedBox(height: 10.h),
             IntroLinkItem(
               title: 'Beta Community',
@@ -65,6 +65,7 @@ class IntroductionDialog extends StatelessWidget {
             SizedBox(height: 20.h),
             SizedBox(
               width: double.infinity,
+              height: 46.h,
               child: ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
@@ -76,18 +77,12 @@ class IntroductionDialog extends StatelessWidget {
                   ),
                   elevation: 0,
                 ),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 16.h,
-                    horizontal: 15.w,
-                  ),
-                  child: Text(
-                    'Got it',
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey[700],
-                    ),
+                child: Text(
+                  'Got it',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.grey[700],
                   ),
                 ),
               ),

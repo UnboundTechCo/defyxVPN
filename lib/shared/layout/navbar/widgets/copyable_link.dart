@@ -48,8 +48,8 @@ class _CopyableLinkState extends State<CopyableLink> {
               ),
             ),
             _copied
-                ? Icon(Icons.check_circle, size: 15.w, color: Colors.green)
-                : Icon(Icons.content_copy, size: 15.w, color: Colors.grey),
+                ? Icon(Icons.check_circle, size: 20.w, color: Colors.green)
+                : Icon(Icons.content_copy, size: 20.w, color: Colors.grey),
           ],
         ),
       ),
