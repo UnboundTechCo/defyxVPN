@@ -1,4 +1,3 @@
-import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,9 +22,9 @@ class SocialIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      hoverColor: const Color(0xffDFDFDF),
-      splashColor: const Color(0xffDFDFDF),
-      highlightColor: const Color(0xffDFDFDF),
+      hoverColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
+      splashColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
+      highlightColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
       borderRadius: BorderRadius.circular(50.r),
       onTap: () async {
         if (!enable) return;
