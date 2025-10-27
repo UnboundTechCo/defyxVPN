@@ -8,12 +8,16 @@ class SocialIconButton extends StatelessWidget {
   final String iconPath;
   final String url;
   final bool enable;
+  final double? iconWidth;
+  final double? iconHeight;
 
   const SocialIconButton({
     super.key,
     required this.iconPath,
     required this.url,
     this.enable = true,
+    this.iconWidth,
+    this.iconHeight,
   });
 
   @override
@@ -36,8 +40,8 @@ class SocialIconButton extends StatelessWidget {
         child: Center(
           child: SvgPicture.asset(
             iconPath,
-            width: iconPath == AppIcons.telegramPath ? 18.w : 24.w,
-            height: iconPath == AppIcons.telegramPath ? 18.w : 24.w,
+            width: iconWidth ?? 22.w,
+            height: iconHeight ?? 22.w,
             colorFilter: ColorFilter.mode(
               enable ? Colors.black : const Color(0xffAEAEAE),
               BlendMode.srcIn,
