@@ -45,7 +45,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
           bottom: 130.h,
           right: 24.w,
           child: Material(
-            borderRadius: BorderRadius.circular(15.r),
+            borderRadius: BorderRadius.circular(12.r),
             color: const Color(0xFFd1d1d1),
             child: SizedBox(
               width: 230.w,
@@ -106,10 +106,12 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                         SocialIconButton(
                           iconPath: AppIcons.facebookPath,
                           url: 'https://fb.com/defyxvpn',
+                          enable: false,
                         ),
                         SocialIconButton(
                           iconPath: AppIcons.linkedinPath,
                           url: 'https://linkedin.com/company/defyxvpn',
+                          enable: false,
                         ),
                       ],
                     ),

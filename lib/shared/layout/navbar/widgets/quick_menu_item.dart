@@ -23,10 +23,10 @@ class QuickMenuItem extends StatelessWidget {
       splashColor: const Color(0xffDFDFDF),
       highlightColor: const Color(0xffDFDFDF),
       borderRadius: BorderRadius.only(
-        topLeft: Radius.circular(topBorderRadius! ? 15.r : 0),
-        topRight: Radius.circular(topBorderRadius! ? 15.r : 0),
-        bottomLeft: Radius.circular(bottomBorderRadius! ? 15.r : 0),
-        bottomRight: Radius.circular(bottomBorderRadius! ? 15.r : 0),
+        topLeft: Radius.circular(topBorderRadius! ? 12.r : 0),
+        topRight: Radius.circular(topBorderRadius! ? 12.r : 0),
+        bottomLeft: Radius.circular(bottomBorderRadius! ? 12.r : 0),
+        bottomRight: Radius.circular(bottomBorderRadius! ? 12.r : 0),
       ),
       child: Container(
         height: 44,
