@@ -45,25 +45,16 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
           bottom: 130.h,
           right: 24.w,
           child: Material(
-            color: Colors.transparent,
-            child: Container(
+            borderRadius: BorderRadius.circular(15.r),
+            color: const Color(0xFFd1d1d1),
+            child: SizedBox(
               width: 230.w,
-              decoration: BoxDecoration(
-                color: const Color(0xFFd1d1d1),
-                borderRadius: BorderRadius.circular(15.r),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.2),
-                    blurRadius: 20,
-                    offset: const Offset(0, 10),
-                  ),
-                ],
-              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   QuickMenuItem(
+                    topBorderRadius: true,
                     title: 'Introduction',
                     onTap: () {
                       Navigator.of(context).pop();

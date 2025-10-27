@@ -4,17 +4,30 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class QuickMenuItem extends StatelessWidget {
   final String title;
   final VoidCallback onTap;
+  final bool? topBorderRadius;
+  final bool? bottomBorderRadius;
 
   const QuickMenuItem({
     super.key,
     required this.title,
     required this.onTap,
+    this.topBorderRadius = false,
+    this.bottomBorderRadius = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
+      hoverColor: const Color(0xffDFDFDF),
+      splashColor: const Color(0xffDFDFDF),
+      highlightColor: const Color(0xffDFDFDF),
+      borderRadius: BorderRadius.only(
+        topLeft: Radius.circular(topBorderRadius! ? 15.r : 0),
+        topRight: Radius.circular(topBorderRadius! ? 15.r : 0),
+        bottomLeft: Radius.circular(bottomBorderRadius! ? 15.r : 0),
+        bottomRight: Radius.circular(bottomBorderRadius! ? 15.r : 0),
+      ),
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 16.w),
         child: Row(
