@@ -32,6 +32,7 @@ class _CopyableLinkState extends State<CopyableLink> {
         );
       },
       child: Container(
+        height: 56.h,
         padding: EdgeInsets.symmetric(vertical: 19.h, horizontal: 15.w),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
@@ -48,8 +49,8 @@ class _CopyableLinkState extends State<CopyableLink> {
               ),
             ),
             _copied
-                ? Icon(Icons.check_circle, size: 20.w, color: Colors.green)
-                : Icon(Icons.content_copy, size: 20.w, color: Colors.grey),
+                ? Icon(Icons.check_circle, size: 15.w, color: Colors.green)
+                : Icon(Icons.content_copy, size: 15.w, color: Colors.grey),
           ],
         ),
       ),

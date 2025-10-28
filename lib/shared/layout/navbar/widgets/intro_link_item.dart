@@ -23,6 +23,7 @@ class IntroLinkItem extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(8.r),
       child: Container(
+        height: 56.h,
         padding: EdgeInsets.symmetric(vertical: 14.h, horizontal: 15.w),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
