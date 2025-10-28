@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
@@ -128,6 +129,8 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     }).toList();
 
     if (tempState[0].items.every((item) => !item.isEnabled)) {
+      // Show toast message when trying to disable all cores
+      ToastUtil.showToast('At least one core must remain enabled');
       return;
     }
 
