@@ -110,6 +110,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       _handleConnectionStateChange(previous, next);
     });
 
+    ref.listen<SpeedTestState>(speedTestProvider, (previous, next) {
+      if (previous?.step != next.step) {
+        _handleStepChange(previous, next);
+      }
+    });
+
     ref.listen(googleAdsProvider, (previous, next) {
       if (speedTestState.step == SpeedTestStep.ads &&
           !next.showCountdown &&
@@ -188,17 +194,53 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     }
   }
 
+  void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
+    // Handle step transition tracking
+    if (_previousStep != next.step) {
+      if (next.step == SpeedTestStep.ads && _previousStep != null) {
+        _stepBeforeAds = _previousStep;
+      }
+      _previousStep = next.step;
+    }
+
+    if (next.step == SpeedTestStep.ready) {
+      _stepBeforeAds = null;
+    }
+
+    // Handle toast timer
+    if (next.step == SpeedTestStep.toast && _toastTimer == null) {
+      _startToastTimer(next);
+      _triggerVibration();
+    } else if (next.step != SpeedTestStep.toast && _toastTimer != null) {
+      _cancelToastTimer();
+    }
+
+    // Handle result timer
+    if (next.step == SpeedTestStep.result && _resultTimer == null) {
+      _startResultTimer();
+    } else if (next.step != SpeedTestStep.result && _resultTimer != null) {
+      _cancelResultTimer();
+    }
+
+    // Handle ads step
+    // TODO: After fixing ads issue, enable this code to start countdown timer when entering ads step
+    /*
+    if (next.step == SpeedTestStep.ads) {
+      Future.microtask(() {
+        if (mounted) {
+          ref.read(googleAdsProvider.notifier).startCountdownTimer();
+        }
+      });
+    }
+    */
+  }
+
   bool _isConnectionValid(conn.ConnectionStatus status) {
     return status == conn.ConnectionStatus.disconnected ||
         status == conn.ConnectionStatus.connected;
   }
 
   Widget _buildContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
-    _handleStepTransition(state);
-    _handleToastTimer(state);
-    _handleResultTimer(state);
-    _handleAdsStep(state);
-
     final mainContent = _buildMainContent(state, connectionStatus);
     final shouldShowToast = _shouldShowToastOverlay(state);
 
@@ -209,29 +251,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     return _buildContentWithToast(mainContent, state.errorMessage!);
   }
 
-  void _handleStepTransition(SpeedTestState state) {
-    if (_previousStep != state.step) {
-      if (state.step == SpeedTestStep.ads && _previousStep != null) {
-        _stepBeforeAds = _previousStep;
-      }
-      _previousStep = state.step;
-    }
-
-    if (state.step == SpeedTestStep.ready) {
-      _stepBeforeAds = null;
-    }
-  }
-
-  void _handleToastTimer(SpeedTestState state) {
-    if (state.step == SpeedTestStep.toast && _toastTimer == null) {
-      _startToastTimer(state);
-      _triggerVibration();
-    } else if (state.step != SpeedTestStep.toast && _toastTimer != null) {
-      _cancelToastTimer();
-    }
-  }
-
   void _startToastTimer(SpeedTestState state) {
+    ref.read(speedTestProvider.notifier).completeTest();
+    // TODO: After fixing toast issue, enable this code to moveToAds
+    /*
     _toastTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         if (state.testCompleted) {
@@ -240,6 +263,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         _toastTimer = null;
       }
     });
+    */
   }
 
   void _cancelToastTimer() {
@@ -251,36 +275,22 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     _vibrationService.vibrateError();
   }
 
-  void _handleResultTimer(SpeedTestState state) {
-    if (state.step == SpeedTestStep.result && _resultTimer == null) {
-      _startResultTimer();
-    } else if (state.step != SpeedTestStep.result && _resultTimer != null) {
-      _cancelResultTimer();
-    }
-  }
-
   void _startResultTimer() {
+    ref.read(speedTestProvider.notifier).completeTest();
+    // TODO: After fixing ads issue, enable this code to moveToAds
+    /*
     _resultTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) {
         ref.read(speedTestProvider.notifier).moveToAds();
         _resultTimer = null;
       }
     });
+    */
   }
 
   void _cancelResultTimer() {
     _resultTimer?.cancel();
     _resultTimer = null;
-  }
-
-  void _handleAdsStep(SpeedTestState state) {
-    if (state.step == SpeedTestStep.ads) {
-      Future.microtask(() {
-        if (mounted) {
-          ref.read(googleAdsProvider.notifier).startCountdownTimer();
-        }
-      });
-    }
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {

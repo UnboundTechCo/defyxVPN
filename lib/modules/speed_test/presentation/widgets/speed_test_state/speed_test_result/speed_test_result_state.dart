@@ -23,7 +23,7 @@ class SpeedTestResultState extends ConsumerWidget {
       children: [
         SizedBox(height: 30.h),
         SpeedTestProgressIndicator(
-          progress: 1.0,
+          progress: 0.0,
           color: null,
           showButton: false,
           centerValue: state.result.downloadSpeed,
