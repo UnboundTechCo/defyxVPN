@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/social_icon_button.dart';
@@ -71,11 +72,16 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
                         title: 'Privacy policy',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/privacy-policy');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/privacy-policy',
+                                title: 'Privacy Policy',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
