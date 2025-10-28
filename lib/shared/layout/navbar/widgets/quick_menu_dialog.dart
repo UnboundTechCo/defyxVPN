@@ -7,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class QuickMenuDialog extends StatefulWidget {
   const QuickMenuDialog({super.key});
@@ -87,11 +86,16 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
                         title: 'Terms & condition',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/terms-and-conditions');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/terms-and-conditions',
+                                title: 'Terms & Condition',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
@@ -134,11 +138,16 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
                         title: 'Our website',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/contact');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/contact',
+                                title: 'Our Website',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
