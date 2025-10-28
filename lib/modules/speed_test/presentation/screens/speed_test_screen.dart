@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
@@ -52,7 +52,15 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.microtask(() {
         if (mounted) {
+          /*
+          // If needed, reset any ongoing speed test
           ref.read(speedTestProvider.notifier).stopAndResetTest();
+          */
+
+          if (ref.read(speedTestProvider).step == SpeedTestStep.ads ||
+              ref.read(speedTestProvider).step == SpeedTestStep.toast) {
+            ref.read(speedTestProvider.notifier).completeTest();
+          }
 
           final currentConnectionState = ref.read(conn.connectionStateProvider);
           _previousConnectionStatus = currentConnectionState.status;
@@ -62,6 +70,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
   }
 
+  /*
+  // If needed, stop and reset the speed test
   @override
   void deactivate() {
     Future.microtask(() {
@@ -71,9 +81,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     });
     super.deactivate();
   }
+  */
 
   @override
   void dispose() {
+    /*
+    // If needed, stop and reset the speed test
     Future.microtask(() {
       try {
         ref.read(speedTestProvider.notifier).stopAndResetTest();
@@ -81,6 +94,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         debugPrint('Speed test provider already disposed: $e');
       }
     });
+    */
 
     _toastTimer?.cancel();
     _resultTimer?.cancel();
@@ -294,9 +308,18 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       case SpeedTestStep.loading:
         return const SpeedTestLoadingState();
       case SpeedTestStep.download:
-        return SpeedTestDownloadState(state: state);
+        return SpeedTestDownloadState(
+          state: state,
+          onStop: () {
+            ref.read(speedTestProvider.notifier).stopAndResetTest();
+          },
+        );
       case SpeedTestStep.upload:
-        return SpeedTestUploadState(state: state);
+        return SpeedTestUploadState(
+            state: state,
+            onStop: () {
+              ref.read(speedTestProvider.notifier).stopAndResetTest();
+            });
       case SpeedTestStep.toast:
         return _buildToastState(state);
       case SpeedTestStep.result:

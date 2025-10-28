@@ -70,10 +70,6 @@ class VPN {
       final step = int.parse(configIndex);
       _setConnectionStep(step);
       loggerNotifier.setConnecting();
-
-      if (step > 1) {
-        vibrationService.vibrateHeartbeat();
-      }
     }
 
     if (msg.startsWith("Data: VPN connected")) {
@@ -95,6 +91,7 @@ class VPN {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
       _vpnBridge.setConnectionMethod(configLabel);
       groupNotifier.setGroupName(configLabel);
+      vibrationService.vibrateHeartbeat();
     }
 
     if (msg.startsWith("Data: Config Numbers: ")) {
@@ -131,7 +128,7 @@ class VPN {
       loggerNotifier?.setLoading();
     });
 
-    vibrationService.vibrateHeartbeat();
+    vibrationService.vibrateShort();
 
     if (!await _checkNetwork()) {
       connectionNotifier?.setNoInternet();
@@ -149,7 +146,7 @@ class VPN {
     final flowLineStorage =
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
 
-    final pattern = settings?.getPattern()??"";
+    final pattern = settings?.getPattern() ?? "";
     await _vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
