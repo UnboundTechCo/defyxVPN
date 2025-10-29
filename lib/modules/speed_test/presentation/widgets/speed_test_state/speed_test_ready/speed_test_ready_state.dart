@@ -8,11 +8,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SpeedTestReadyState extends ConsumerWidget {
-  final VoidCallback onButtonClicked;
+  final VoidCallback speedtestIsRunning;
+  final VoidCallback onRetry;
 
   const SpeedTestReadyState({
     super.key,
-    required this.onButtonClicked,
+    required this.speedtestIsRunning,
+    required this.onRetry,
   });
 
   @override
@@ -23,7 +25,7 @@ class SpeedTestReadyState extends ConsumerWidget {
     void handleStartTest() {
       final status = connectionState.status;
 
-      onButtonClicked();
+      speedtestIsRunning();
 
       if (status == ConnectionStatus.disconnected || status == ConnectionStatus.connected) {
         ref.read(speedTestProvider.notifier).startTest();
@@ -43,27 +45,33 @@ class SpeedTestReadyState extends ConsumerWidget {
           showButton: true,
           result: state.result,
           connectionStatus: connectionState.status,
-          button: InkWell(
-            onTap: handleStartTest,
-            child: Column(
-              spacing: 8.h,
-              children: [
-                Text(
-                  "TAP HERE",
-                  style: TextStyle(
-                    color: const Color(0xFFABABAB),
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w600,
+          button: state.testCompleted
+              ? SpeedTestStartButton(
+                  currentStep: SpeedTestStep.toast,
+                  isEnabled: true,
+                  onTap: onRetry,
+                )
+              : InkWell(
+                  onTap: handleStartTest,
+                  child: Column(
+                    spacing: 8.h,
+                    children: [
+                      Text(
+                        "TAP HERE",
+                        style: TextStyle(
+                          color: const Color(0xFFABABAB),
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      SpeedTestStartButton(
+                        currentStep: SpeedTestStep.ready,
+                        isEnabled: true,
+                        onTap: handleStartTest,
+                      ),
+                    ],
                   ),
                 ),
-                SpeedTestStartButton(
-                  currentStep: SpeedTestStep.ready,
-                  isEnabled: true,
-                  onTap: handleStartTest,
-                ),
-              ],
-            ),
-          ),
         ),
       ],
     );

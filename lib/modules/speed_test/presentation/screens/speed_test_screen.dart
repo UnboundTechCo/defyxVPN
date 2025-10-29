@@ -310,7 +310,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     switch (state.step) {
       case SpeedTestStep.ready:
         return SpeedTestReadyState(
-          onButtonClicked: () {
+          onRetry: () {
+            ref.read(speedTestProvider.notifier).startTest();
+          },
+          speedtestIsRunning: () {
             _isButtonClicked = true;
             debugPrint('Speed test button clicked');
           },
@@ -333,7 +336,12 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       case SpeedTestStep.toast:
         return _buildToastState(state);
       case SpeedTestStep.result:
-        return SpeedTestResultState(state: state);
+        return SpeedTestResultState(
+          state: state,
+          onRetry: () {
+            ref.read(speedTestProvider.notifier).startTest();
+          },
+        );
       case SpeedTestStep.ads:
         return _buildAdsState(state);
     }
