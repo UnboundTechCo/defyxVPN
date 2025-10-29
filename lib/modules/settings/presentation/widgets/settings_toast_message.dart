@@ -16,11 +16,11 @@ class SettingsToastMessage extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 14.h),
       decoration: BoxDecoration(
         color: Colors.black,
-        borderRadius: BorderRadius.circular(8.r),
+        borderRadius: BorderRadius.circular(6.r),
       ),
       child: Text(
         message,
-        textAlign: TextAlign.center,
+        textAlign: TextAlign.left,
         style: TextStyle(
           fontSize: 14.sp,
           fontWeight: FontWeight.w500,
