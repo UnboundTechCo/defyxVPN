@@ -57,7 +57,7 @@ increment_build_number() {
 validate_version() {
     local version=$1
     if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+\+[0-9]+$ ]]; then
-        echo -e "${RED}❌ Invalid version format. Please use format: X.Y.Z+B (e.g., 2.6.8+61)${NC}"
+        echo -e "${RED}[ERROR] Invalid version format. Please use format: X.Y.Z+B (e.g., 2.6.8+61)${NC}"
         return 1
     fi
     return 0
@@ -69,27 +69,27 @@ update_version() {
         return 1
     fi
     
-    sed -i "" "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
-    echo -e "${GREEN}✅ Version updated to: $version${NC}"
+    sed -i '' "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+    echo -e "${GREEN}[OK] Version updated to: $version${NC}"
 }
 
 echo "Using config file: $GLOBAL_VARS_FILE"
 
 update_build_type() {
     local build_type=$1
-    sed -i "" "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
-    echo -e "${GREEN}✅ Build type updated to: $build_type${NC}"
+    sed -i '' "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
+    echo -e "${GREEN}[OK] Build type updated to: $build_type${NC}"
 }
 
 update_test_mode() {
     local is_test=$1
-    sed -i "" "s/IS_TEST_MODE=.*/IS_TEST_MODE=${is_test}/" "$ENV_FILE"
-    echo -e "${GREEN}✅ Test mode updated to: $is_test${NC}"
+    sed -i '' "s/IS_TEST_MODE=.*/IS_TEST_MODE=${is_test}/" "$ENV_FILE"
+    echo -e "${GREEN}[OK] Test mode updated to: $is_test${NC}"
 }
 
 build_ios() {
     local build_type=$1
-    echo -e "${BLUE}📱 Building iOS for $build_type...${NC}"
+    echo -e "${BLUE}[iOS] Building iOS for $build_type...${NC}"
     update_build_type "$build_type"
     
     flutter clean
@@ -100,14 +100,14 @@ build_ios() {
     elif [ "$build_type" == "appStore" ]; then
         flutter build ipa --release
     else
-        echo -e "${RED}❌ Invalid iOS build type${NC}"
+        echo -e "${RED}[ERROR] Invalid iOS build type${NC}"
         exit 1
     fi
 }
 
 build_android() {
     local build_type=$1
-    echo -e "${BLUE}🤖 Building Android for $build_type...${NC}"
+    echo -e "${BLUE}[Android] Building Android for $build_type...${NC}"
     update_build_type "$build_type"
     
     flutter clean
@@ -118,7 +118,7 @@ build_android() {
     elif [ "$build_type" == "github" ]; then
         flutter build apk --release
     else
-        echo -e "${RED}❌ Invalid Android build type${NC}"
+        echo -e "${RED}[ERROR] Invalid Android build type${NC}"
         exit 1
     fi
 }
@@ -150,7 +150,7 @@ select_version_increment() {
             suggested_version=$current_version
             ;;
         *)
-            echo -e "${RED}❌ Invalid choice${NC}"
+            echo -e "${RED}[ERROR] Invalid choice${NC}"
             return 1
             ;;
     esac
@@ -182,17 +182,19 @@ update_ad_id() {
 
     # AndroidManifest.xml
     if [ -n "$android_ad_app_id" ]; then
-        sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'"$android_ad_app_id"'"/>|' "$android_manifest"
-        echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
+        # Using perl to avoid shell interpretation issues with XML angle brackets
+        perl -i -pe "s|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"[^\"]*\"/>|<meta-data android:name=\"com.google.android.gms.ads.APPLICATION_ID\" android:value=\"$android_ad_app_id\"/>|" "$android_manifest"
+        echo -e "${GREEN}[OK] Updated Android ad id in AndroidManifest.xml${NC}"
     else
-        echo -e "${YELLOW}⚠️  ANDROID_AD_UNIT_ID not set. Skipping AndroidManifest.xml update.${NC}"
+        echo -e "${YELLOW}[WARN]  ANDROID_AD_UNIT_ID not set. Skipping AndroidManifest.xml update.${NC}"
     fi
     # Info.plist
     if [ -n "$ios_ad_app_id" ]; then
-        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
-        echo -e "${GREEN}✅ Updated iOS ad id in Info.plist${NC}"
+        # Using perl to avoid shell interpretation issues with XML angle brackets  
+        perl -i -pe "s|<key>GADApplicationIdentifier</key>\\s*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
+        echo -e "${GREEN}[OK] Updated iOS ad id in Info.plist${NC}"
     else
-        echo -e "${YELLOW}⚠️  IOS_AD_UNIT_ID not set. Skipping Info.plist update.${NC}"
+        echo -e "${YELLOW}[WARN]  IOS_AD_UNIT_ID not set. Skipping Info.plist update.${NC}"
     fi
 }
 
@@ -206,7 +208,7 @@ validate_ad_id() {
     # Check AndroidManifest.xml
     if [ -n "$android_ad_app_id" ]; then
         if ! grep -q "$android_ad_app_id" "$android_manifest"; then
-            echo -e "${YELLOW}⚠️  Android ad id $android_ad_app_id not found in AndroidManifest.xml!${NC}"
+            echo -e "${YELLOW}[WARN]  Android ad id $android_ad_app_id not found in AndroidManifest.xml!${NC}"
             valid=false
         fi
     fi
@@ -214,7 +216,7 @@ validate_ad_id() {
     # Check Info.plist
     if [ -n "$ios_ad_app_id" ]; then
         if ! grep -q "$ios_ad_app_id" "$ios_info_plist"; then
-            echo -e "${YELLOW}⚠️  iOS ad id $ios_ad_app_id not found in Info.plist!${NC}"
+            echo -e "${YELLOW}[WARN]  iOS ad id $ios_ad_app_id not found in Info.plist!${NC}"
             valid=false
         fi
     fi
@@ -223,6 +225,63 @@ validate_ad_id() {
         return 1
     fi
     return 0
+}
+
+# === Firebase Credentials Injection ===
+ANDROID_GOOGLE_SERVICES_JSON="$PROJECT_ROOT/android/app/google-services.json"
+IOS_GOOGLESERVICE_INFO_PLIST="$PROJECT_ROOT/ios/Runner/GoogleService-Info.plist"
+BACKUP_ANDROID_GOOGLE_SERVICES_JSON="$ANDROID_GOOGLE_SERVICES_JSON.bak"
+BACKUP_IOS_GOOGLESERVICE_INFO_PLIST="$IOS_GOOGLESERVICE_INFO_PLIST.bak"
+
+inject_firebase_android() {
+    cp "$ANDROID_GOOGLE_SERVICES_JSON" "$BACKUP_ANDROID_GOOGLE_SERVICES_JSON"
+    # Example: Replace placeholders in google-services.json with values from .env
+    # Add your keys to .env as FIREBASE_ANDROID_API_KEY, etc.
+    local api_key=$(grep '^FIREBASE_ANDROID_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
+    local app_id=$(grep '^FIREBASE_ANDROID_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    local project_number=$(grep '^FIREBASE_ANDROID_PROJECT_NUMBER=' "$ENV_FILE" | cut -d'=' -f2-)
+    if [ -n "$app_id" ]; then
+        sed -i '' "s/\"mobilesdk_app_id\": \"[^\"]*\"/\"mobilesdk_app_id\": \"$app_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+    fi
+    if [ -n "$project_number" ]; then
+        sed -i '' "s/\"project_number\": \"[^\"]*\"/\"project_number\": \"$project_number\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+    fi
+    if [ -n "$api_key" ]; then
+        sed -i '' "s/\"current_key\": \"[^\"]*\"/\"current_key\": \"$api_key\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+    fi
+    echo -e "${GREEN}[OK] Injected Firebase Android credentials${NC}"
+}
+
+restore_firebase_android() {
+    if [ -f "$BACKUP_ANDROID_GOOGLE_SERVICES_JSON" ]; then
+        mv "$BACKUP_ANDROID_GOOGLE_SERVICES_JSON" "$ANDROID_GOOGLE_SERVICES_JSON"
+        echo -e "${GREEN}[OK] Restored original google-services.json${NC}"
+    fi
+}
+
+inject_firebase_ios() {
+    cp "$IOS_GOOGLESERVICE_INFO_PLIST" "$BACKUP_IOS_GOOGLESERVICE_INFO_PLIST"
+    # Example: Replace placeholders in GoogleService-Info.plist with values from .env
+    local ios_api_key=$(grep '^FIREBASE_IOS_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
+    local ios_app_id=$(grep '^FIREBASE_IOS_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    local ios_sender_id=$(grep '^FIREBASE_IOS_SENDER_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    if [ -n "$ios_api_key" ]; then
+        sed -i '' "s|<key>API_KEY</key>\n\s*<string>[^<]*</string>|<key>API_KEY</key>\n    <string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+    fi
+    if [ -n "$ios_app_id" ]; then
+        sed -i '' "s|<key>GOOGLE_APP_ID</key>\n\s*<string>[^<]*</string>|<key>GOOGLE_APP_ID</key>\n    <string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+    fi
+    if [ -n "$ios_sender_id" ]; then
+        sed -i '' "s|<key>GCM_SENDER_ID</key>\n\s*<string>[^<]*</string>|<key>GCM_SENDER_ID</key>\n    <string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+    fi
+    echo -e "${GREEN}✅ Injected Firebase iOS credentials${NC}"
+}
+
+restore_firebase_ios() {
+    if [ -f "$BACKUP_IOS_GOOGLESERVICE_INFO_PLIST" ]; then
+        mv "$BACKUP_IOS_GOOGLESERVICE_INFO_PLIST" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        echo -e "${GREEN}[OK] Restored original GoogleService-Info.plist${NC}"
+    fi
 }
 
 # First question: Test or Production?
@@ -236,15 +295,15 @@ case $build_env_choice in
     1)
         BUILD_ENV="test"
         IS_TEST_MODE="true"
-        echo -e "${GREEN}✅ Test build selected${NC}"
+        echo -e "${GREEN}[OK] Test build selected${NC}"
         ;;
     2)
         BUILD_ENV="production"
         IS_TEST_MODE="false"
-        echo -e "${GREEN}✅ Production build selected${NC}"
+        echo -e "${GREEN}[OK] Production build selected${NC}"
         ;;
     *)
-        echo -e "${RED}❌ Invalid choice${NC}"
+        echo -e "${RED}[ERROR] Invalid choice${NC}"
         exit 1
         ;;
 esac
@@ -273,12 +332,18 @@ android_ad_app_id=$(grep '^ANDROID_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
 ios_ad_app_id=$(grep '^IOS_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
 orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 
+# Inject Firebase credentials before build
+inject_firebase_android
+inject_firebase_ios
+
 # Update ad ids and store original values
 update_ad_id "$android_ad_app_id" "$ios_ad_app_id"
 if ! validate_ad_id "$android_ad_app_id" "$ios_ad_app_id"; then
-    echo -e "${RED}❌ Ad ID validation failed. Build aborted.${NC}"
+    echo -e "${RED}[ERROR] Ad ID validation failed. Build aborted.${NC}"
     # Restore original ad ids before exit if needed
     update_ad_id "$orig_ad_id" "$orig_ad_id"
+    restore_firebase_android
+    restore_firebase_ios
     exit 1
 fi
 
@@ -296,17 +361,21 @@ case $choice in
         build_android "github"
         ;;
     5)
-        echo -e "${BLUE}👋 Goodbye!${NC}"
+        echo -e "${BLUE}[Bye] Goodbye!${NC}"
         exit 0
         ;;
     *)
-        echo -e "${RED}❌ Invalid choice${NC}"
+        echo -e "${RED}[ERROR] Invalid choice${NC}"
         # Restore original ad ids after build
         update_ad_id "$orig_ad_id" "$orig_ad_id"
+        restore_firebase_android
+        restore_firebase_ios
         exit 1
         ;;
 esac
 
 # Restore original ad ids after build
 update_ad_id "$orig_ad_id" "$orig_ad_id"
-echo -e "${GREEN}✅ Build process completed!${NC}"
+restore_firebase_android
+restore_firebase_ios
+echo -e "${GREEN}[OK] Build process completed!${NC}"
