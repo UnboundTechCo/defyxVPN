@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
-import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 import '../widgets/speed_test_header.dart';
 import '../../application/speed_test_provider.dart';
@@ -24,7 +23,6 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   // TODO: After fixing ads issue, enable this code to manage ads during speed test
   // late final GoogleAds _googleAds;
-  late final VibrationService _vibrationService;
 
   @override
   void initState() {
@@ -35,9 +33,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     //   backgroundColor: const Color(0xFF1A1A1A),
     //   cornerRadius: 10.0.r,
     // );
-
-    _vibrationService = VibrationService();
-    _vibrationService.init();
 
     // Initialization complete - all state management is handled by providers
   }
@@ -75,11 +70,13 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     final speedTestState = ref.watch(speedTestProvider);
     final connectionState = ref.watch(conn.connectionStateProvider);
 
+    /*
     ref.listen<SpeedTestState>(speedTestProvider, (previous, next) {
       if (previous?.step != next.step) {
         _handleStepChange(previous, next);
       }
     });
+    */
 
     // TODO: After fixing ads issue, enable this code to complete test after ads
     /*
@@ -130,15 +127,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     );
   }
 
-  void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
-    // Handle toast timer
-    if (next.hadError) {
-      _triggerVibration();
-    }
-
+// TODO: After fixing ads issue, enable this code to start countdown timer when entering ads step
+/*
+  // void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
     // Handle ads step
-    // TODO: After fixing ads issue, enable this code to start countdown timer when entering ads step
-    /*
     if (next.step == SpeedTestStep.ads) {
       Future.microtask(() {
         if (mounted) {
@@ -146,8 +138,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         }
       });
     }
-    */
   }
+*/
 
   bool _isConnectionValid(conn.ConnectionStatus status) {
     return status == conn.ConnectionStatus.disconnected ||
@@ -163,10 +155,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     }
 
     return _buildContentWithToast(mainContent, state.errorMessage!);
-  }
-
-  void _triggerVibration() {
-    _vibrationService.vibrateError();
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
