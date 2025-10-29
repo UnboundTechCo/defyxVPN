@@ -12,6 +12,7 @@ import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
+import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,7 @@ class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
   final vibrationService = VibrationService();
+  final analyticsService = FirebaseAnalyticsService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -38,6 +40,7 @@ class VPN {
   bool _initialized = false;
   ProviderContainer? _container;
   StreamSubscription<String>? _vpnSub;
+  DateTime? _connectionStartTime;
 
   void _init(ProviderContainer container) {
     if (_initialized) return;
@@ -70,6 +73,10 @@ class VPN {
       final step = int.parse(configIndex);
       _setConnectionStep(step);
       loggerNotifier.setConnecting();
+
+      if (step > 1) {
+        vibrationService.vibrateHeartbeat();
+      }
     }
 
     if (msg.startsWith("Data: VPN connected")) {
@@ -91,7 +98,6 @@ class VPN {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
       _vpnBridge.setConnectionMethod(configLabel);
       groupNotifier.setGroupName(configLabel);
-      vibrationService.vibrateHeartbeat();
     }
 
     if (msg.startsWith("Data: Config Numbers: ")) {
@@ -128,7 +134,7 @@ class VPN {
       loggerNotifier?.setLoading();
     });
 
-    vibrationService.vibrateShort();
+    vibrationService.vibrateHeartbeat();
 
     if (!await _checkNetwork()) {
       connectionNotifier?.setNoInternet();
@@ -146,7 +152,11 @@ class VPN {
     final flowLineStorage =
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
 
-    final pattern = settings?.getPattern() ?? "";
+    final pattern = settings?.getPattern()??"";
+    
+    _connectionStartTime = DateTime.now();
+    analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
+    
     await _vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
@@ -169,6 +179,19 @@ class VPN {
     connectionNotifier?.setConnected();
     await _refreshPing();
     vibrationService.vibrateSuccess();
+    
+    final settings = _container?.read(settingsProvider.notifier);
+    final groupState = _container?.read(groupStateProvider);
+    final pattern = settings?.getPattern() ?? "auto";
+    
+    int connectionDuration = 0;
+    if (_connectionStartTime != null) {
+      connectionDuration = DateTime.now().difference(_connectionStartTime!).inSeconds;
+      _connectionStartTime = null;
+    }
+    
+    analyticsService.logVpnConnected(pattern, groupState?.groupName, connectionDuration);
+    
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
@@ -191,6 +214,7 @@ class VPN {
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
     connectionNotifier.setDisconnected();
+    analyticsService.logVpnDisconnected();
   }
 
   Future<void> _closeTunnel() async {
@@ -199,6 +223,7 @@ class VPN {
       await _vpnBridge.disconnectVpn();
     }
     connectionNotifier?.setDisconnected();
+    analyticsService.logVpnDisconnected();
   }
 
 
