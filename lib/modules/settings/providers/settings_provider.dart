@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
+import '../presentation/widgets/settings_toast_message.dart';
 
 class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   final Ref<List<SettingsGroup>> ref;
@@ -114,7 +116,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     ];
   }
 
-  void toggleSetting(String groupId, String itemId) {
+  void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
     final tempState = state.map((group) {
       if (group.id == groupId) {
         final updatedItems = group.items.map((item) {
@@ -130,7 +132,12 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
 
     if (tempState[0].items.every((item) => !item.isEnabled)) {
       // Show toast message when trying to disable all cores
-      ToastUtil.showToast('At least one core must remain enabled');
+      if (context != null) {
+        // Use the new settings toast UI
+        SettingsToastMessage.show(context, 'At least one core must remain enabled');
+      } else {
+        ToastUtil.showToast('At least one core must remain enabled');
+      }
       return;
     }
 
