@@ -178,7 +178,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       debugPrint('❌ Speed test error: $e');
       state = state.copyWith(
         errorMessage: 'Speed test failed. Please try again.',
-        step: SpeedTestStep.toast,
+        step: SpeedTestStep.ready,
         isConnectionStable: false,
         currentSpeed: 0.0,
         hadError: true,
@@ -371,14 +371,14 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     if (!isStable) {
       state = state.copyWith(
-        step: SpeedTestStep.toast,
+        step: SpeedTestStep.ready,
         isConnectionStable: false,
         errorMessage: 'Your connection was unstable, and the test was interrupted.',
         hadError: true,
       );
     } else {
       state = state.copyWith(
-        step: SpeedTestStep.result,
+        step: SpeedTestStep.ready,
         clearErrorMessage: true,
         hadError: false,
       );
@@ -399,9 +399,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   void moveToAds() {
-    state = state.copyWith(
-      step: SpeedTestStep.ads,
-    );
+    // state = state.copyWith(
+    //   step: SpeedTestStep.ads,
+    // );
   }
 
   void completeTest() {

@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
@@ -13,11 +12,8 @@ import '../../models/speed_test_result.dart';
 import '../widgets/speed_test_state/speed_test_download/speed_test_download_state.dart';
 import '../widgets/speed_test_state/speed_test_loading/speed_test_loading_state.dart';
 import '../widgets/speed_test_state/speed_test_ready/speed_test_ready_state.dart';
-import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_state.dart';
 import '../widgets/speed_test_state/speed_test_upload/speed_test_upload_state.dart';
-import '../widgets/speed_test_state/speed_test_result/speed_test_result_state.dart';
-import '../widgets/speed_test_state/speed_test_ads/speed_test_ads_state.dart';
-import '../widgets/speed_test_state/speed_test_toast/speed_test_toast_message.dart';
+import '../widgets/speed_test_toast_message.dart';
 
 class SpeedTestScreen extends ConsumerStatefulWidget {
   const SpeedTestScreen({super.key});
@@ -27,12 +23,9 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 }
 
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
-  late final GoogleAds _googleAds;
+  // TODO: After fixing ads issue, enable this code to manage ads during speed test
+  // late final GoogleAds _googleAds;
   late final VibrationService _vibrationService;
-  Timer? _toastTimer;
-  Timer? _resultTimer;
-  SpeedTestStep? _previousStep;
-  SpeedTestStep? _stepBeforeAds;
   bool _isWaitingForConnection = false;
   bool _isButtonClicked = false;
   conn.ConnectionStatus? _previousConnectionStatus;
@@ -41,10 +34,11 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   void initState() {
     super.initState();
 
-    _googleAds = GoogleAds(
-      backgroundColor: const Color(0xFF1A1A1A),
-      cornerRadius: 10.0.r,
-    );
+    // TODO: After fixing ads issue, enable this code to initialize Google Ads
+    // _googleAds = GoogleAds(
+    //   backgroundColor: const Color(0xFF1A1A1A),
+    //   cornerRadius: 10.0.r,
+    // );
 
     _vibrationService = VibrationService();
     _vibrationService.init();
@@ -56,11 +50,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
           // If needed, reset any ongoing speed test
           ref.read(speedTestProvider.notifier).stopAndResetTest();
           */
-
-          if (ref.read(speedTestProvider).step == SpeedTestStep.ads ||
-              ref.read(speedTestProvider).step == SpeedTestStep.toast) {
-            ref.read(speedTestProvider.notifier).completeTest();
-          }
 
           final currentConnectionState = ref.read(conn.connectionStateProvider);
           _previousConnectionStatus = currentConnectionState.status;
@@ -83,9 +72,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
   */
 
+  /*
   @override
   void dispose() {
-    /*
     // If needed, stop and reset the speed test
     Future.microtask(() {
       try {
@@ -94,12 +83,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         debugPrint('Speed test provider already disposed: $e');
       }
     });
-    */
-
-    _toastTimer?.cancel();
-    _resultTimer?.cancel();
     super.dispose();
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -116,9 +102,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       }
     });
 
+    // TODO: After fixing ads issue, enable this code to complete test after ads
+    /*
     ref.listen(googleAdsProvider, (previous, next) {
-      if (speedTestState.step == SpeedTestStep.ads &&
-          !next.showCountdown &&
+      if (!next.showCountdown &&
           next.shouldDisposeAd &&
           mounted) {
         Future(() {
@@ -128,6 +115,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         });
       }
     });
+    */
 
     return MainScreenBackground(
       connectionStatus: connectionState.status,
@@ -195,31 +183,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
-    // Handle step transition tracking
-    if (_previousStep != next.step) {
-      if (next.step == SpeedTestStep.ads && _previousStep != null) {
-        _stepBeforeAds = _previousStep;
-      }
-      _previousStep = next.step;
-    }
-
-    if (next.step == SpeedTestStep.ready) {
-      _stepBeforeAds = null;
-    }
-
     // Handle toast timer
-    if (next.step == SpeedTestStep.toast && _toastTimer == null) {
-      _startToastTimer(next);
+    if (next.hadError) {
       _triggerVibration();
-    } else if (next.step != SpeedTestStep.toast && _toastTimer != null) {
-      _cancelToastTimer();
-    }
-
-    // Handle result timer
-    if (next.step == SpeedTestStep.result && _resultTimer == null) {
-      _startResultTimer();
-    } else if (next.step != SpeedTestStep.result && _resultTimer != null) {
-      _cancelResultTimer();
     }
 
     // Handle ads step
@@ -251,46 +217,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     return _buildContentWithToast(mainContent, state.errorMessage!);
   }
 
-  void _startToastTimer(SpeedTestState state) {
-    ref.read(speedTestProvider.notifier).completeTest();
-    // TODO: After fixing toast issue, enable this code to moveToAds
-    /*
-    _toastTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        if (state.testCompleted) {
-          ref.read(speedTestProvider.notifier).moveToAds();
-        }
-        _toastTimer = null;
-      }
-    });
-    */
-  }
-
-  void _cancelToastTimer() {
-    _toastTimer?.cancel();
-    _toastTimer = null;
-  }
-
   void _triggerVibration() {
     _vibrationService.vibrateError();
-  }
-
-  void _startResultTimer() {
-    ref.read(speedTestProvider.notifier).completeTest();
-    // TODO: After fixing ads issue, enable this code to moveToAds
-    /*
-    _resultTimer = Timer(const Duration(seconds: 5), () {
-      if (mounted) {
-        ref.read(speedTestProvider.notifier).moveToAds();
-        _resultTimer = null;
-      }
-    });
-    */
-  }
-
-  void _cancelResultTimer() {
-    _resultTimer?.cancel();
-    _resultTimer = null;
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
@@ -333,44 +261,11 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
             onStop: () {
               ref.read(speedTestProvider.notifier).stopAndResetTest();
             });
-      case SpeedTestStep.toast:
-        return _buildToastState(state);
-      case SpeedTestStep.result:
-        return SpeedTestResultState(
-          state: state,
-          onRetry: () {
-            ref.read(speedTestProvider.notifier).startTest();
-          },
-        );
-      case SpeedTestStep.ads:
-        return _buildAdsState(state);
     }
   }
 
-  Widget _buildToastState(SpeedTestState state) {
-    return SpeedTestToastState(
-      state: state,
-      onRetry: () {
-        _cancelToastTimer();
-        ref.read(speedTestProvider.notifier).retryConnection();
-      },
-    );
-  }
-
-  Widget _buildAdsState(SpeedTestState state) {
-    return SpeedTestAdsState(
-      state: state,
-      previousStep: _stepBeforeAds,
-      googleAds: _googleAds,
-      onClose: () {
-        ref.read(speedTestProvider.notifier).completeTest();
-      },
-    );
-  }
-
   bool _shouldShowToastOverlay(SpeedTestState state) {
-    return state.errorMessage != null &&
-        (state.step == SpeedTestStep.ready || state.step == SpeedTestStep.toast);
+    return state.errorMessage != null && (state.step == SpeedTestStep.ready);
   }
 
   Widget _buildContentWithToast(Widget mainContent, String errorMessage) {
@@ -385,6 +280,16 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
             message: errorMessage,
           ),
         ),
+        // TODO: After fixing ads issue, enable this code to show ads overlay
+        /*
+        Positioned(
+          left: 0,
+          right: 0,
+          bottom: 100.h,
+          child: SpeedTestAdsOverlay(
+              googleAds: _googleAds,
+        ),
+        */
       ],
     );
   }

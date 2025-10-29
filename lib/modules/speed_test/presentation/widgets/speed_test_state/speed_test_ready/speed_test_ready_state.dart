@@ -47,9 +47,10 @@ class SpeedTestReadyState extends ConsumerWidget {
           connectionStatus: connectionState.status,
           button: state.testCompleted
               ? SpeedTestStartButton(
-                  currentStep: SpeedTestStep.toast,
+                  currentStep: SpeedTestStep.ready,
                   isEnabled: true,
                   onTap: onRetry,
+                  previousStep: SpeedTestStep.download,
                 )
               : InkWell(
                   onTap: handleStartTest,

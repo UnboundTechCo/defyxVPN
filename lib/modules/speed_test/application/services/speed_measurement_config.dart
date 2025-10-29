@@ -3,11 +3,11 @@ class SpeedMeasurementConfig {
     {'type': 'latency', 'numPackets': 1},
     {'type': 'download', 'bytes': 100000, 'count': 1, 'bypassMinDuration': true},
     {'type': 'latency', 'numPackets': 20},
-    {'type': 'download', 'bytes': 100000, 'count': 9},
-    {'type': 'download', 'bytes': 1000000, 'count': 8},
+    // {'type': 'download', 'bytes': 100000, 'count': 9},
+    // {'type': 'download', 'bytes': 1000000, 'count': 8},
     {'type': 'upload', 'bytes': 100000, 'count': 8},
-    {'type': 'upload', 'bytes': 1000000, 'count': 6},
-    {'type': 'download', 'bytes': 10000000, 'count': 6},
+    // {'type': 'upload', 'bytes': 1000000, 'count': 6},
+    // {'type': 'download', 'bytes': 10000000, 'count': 6},
   ];
 
   static const int totalMeasurements = 8;
