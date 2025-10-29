@@ -8,12 +8,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SpeedTestReadyState extends ConsumerWidget {
-  final VoidCallback speedtestIsRunning;
   final VoidCallback onRetry;
 
   const SpeedTestReadyState({
     super.key,
-    required this.speedtestIsRunning,
     required this.onRetry,
   });
 
@@ -24,8 +22,6 @@ class SpeedTestReadyState extends ConsumerWidget {
 
     void handleStartTest() {
       final status = connectionState.status;
-
-      speedtestIsRunning();
 
       if (status == ConnectionStatus.disconnected || status == ConnectionStatus.connected) {
         ref.read(speedTestProvider.notifier).startTest();

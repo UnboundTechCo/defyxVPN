@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -26,9 +25,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   // TODO: After fixing ads issue, enable this code to manage ads during speed test
   // late final GoogleAds _googleAds;
   late final VibrationService _vibrationService;
-  bool _isWaitingForConnection = false;
-  bool _isButtonClicked = false;
-  conn.ConnectionStatus? _previousConnectionStatus;
 
   @override
   void initState() {
@@ -43,20 +39,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     _vibrationService = VibrationService();
     _vibrationService.init();
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Future.microtask(() {
-        if (mounted) {
-          /*
-          // If needed, reset any ongoing speed test
-          ref.read(speedTestProvider.notifier).stopAndResetTest();
-          */
-
-          final currentConnectionState = ref.read(conn.connectionStateProvider);
-          _previousConnectionStatus = currentConnectionState.status;
-          debugPrint('Initial connection status: $_previousConnectionStatus');
-        }
-      });
-    });
+    // Initialization complete - all state management is handled by providers
   }
 
   /*
@@ -91,10 +74,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   Widget build(BuildContext context) {
     final speedTestState = ref.watch(speedTestProvider);
     final connectionState = ref.watch(conn.connectionStateProvider);
-
-    ref.listen<conn.ConnectionState>(conn.connectionStateProvider, (previous, next) {
-      _handleConnectionStateChange(previous, next);
-    });
 
     ref.listen<SpeedTestState>(speedTestProvider, (previous, next) {
       if (previous?.step != next.step) {
@@ -151,37 +130,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     );
   }
 
-  void _handleConnectionStateChange(conn.ConnectionState? previous, conn.ConnectionState next) {
-    final currentStatus = next.status;
-
-    if (_previousConnectionStatus != currentStatus) {
-      debugPrint('Connection status changed from $_previousConnectionStatus to $currentStatus');
-      _previousConnectionStatus = currentStatus;
-
-      if (_isWaitingForConnection && _isButtonClicked && _isConnectionValid(currentStatus)) {
-        _isWaitingForConnection = false;
-
-        final speedTestState = ref.read(speedTestProvider);
-        if (speedTestState.step == SpeedTestStep.ready && mounted) {
-          Future.microtask(() {
-            if (mounted) {
-              debugPrint(
-                  'Starting speed test after connection became valid and button was clicked');
-              ref.read(speedTestProvider.notifier).startTest();
-              _isButtonClicked = false;
-            }
-          });
-        }
-      } else if (!_isConnectionValid(currentStatus)) {
-        final speedTestState = ref.read(speedTestProvider);
-        if (speedTestState.step == SpeedTestStep.ready) {
-          _isWaitingForConnection = true;
-          debugPrint('Waiting for valid connection status...');
-        }
-      }
-    }
-  }
-
   void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
     // Handle toast timer
     if (next.hadError) {
@@ -222,17 +170,9 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
-    if (state.step == SpeedTestStep.ready) {
-      if (!_isConnectionValid(connectionStatus)) {
-        _isWaitingForConnection = true;
-        debugPrint('Connection not valid, showing loading state. Status: $connectionStatus');
-        return const SpeedTestLoadingState();
-      } else {
-        if (_isWaitingForConnection) {
-          _isWaitingForConnection = false;
-          debugPrint('Connection is now valid. Status: $connectionStatus');
-        }
-      }
+    if (state.step == SpeedTestStep.ready && !_isConnectionValid(connectionStatus)) {
+      debugPrint('Connection not valid, showing loading state. Status: $connectionStatus');
+      return const SpeedTestLoadingState();
     }
 
     switch (state.step) {
@@ -240,10 +180,6 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         return SpeedTestReadyState(
           onRetry: () {
             ref.read(speedTestProvider.notifier).startTest();
-          },
-          speedtestIsRunning: () {
-            _isButtonClicked = true;
-            debugPrint('Speed test button clicked');
           },
         );
       case SpeedTestStep.loading:
