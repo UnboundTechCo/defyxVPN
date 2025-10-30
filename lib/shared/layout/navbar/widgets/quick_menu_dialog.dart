@@ -70,7 +70,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Privacy policy',
+                        title: 'Privacy Policy',
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
@@ -85,14 +85,14 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Terms & condition',
+                        title: 'Terms & Conditions',
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => const CustomWebViewScreen(
                                 url: 'https://defyxvpn.com/terms-and-conditions',
-                                title: 'Terms & Condition',
+                                title: 'Terms & Conditions',
                               ),
                             ),
                           );
@@ -137,7 +137,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Our website',
+                        title: 'Our Website',
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
