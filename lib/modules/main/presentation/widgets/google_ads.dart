@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/core/utils/screen_security.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,7 @@ class GoogleAdsState {
   final bool showCountdown;
   final bool shouldDisposeAd;
   final bool adLoadFailed;
+  final bool screenSecurityEnabled; // New field to track screen security state
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
@@ -28,6 +30,7 @@ class GoogleAdsState {
     this.showCountdown = true,
     this.shouldDisposeAd = false,
     this.adLoadFailed = false,
+    this.screenSecurityEnabled = false,
   });
 
   GoogleAdsState copyWith({
@@ -36,6 +39,7 @@ class GoogleAdsState {
     bool? showCountdown,
     bool? shouldDisposeAd,
     bool? adLoadFailed,
+    bool? screenSecurityEnabled,
   }) {
     return GoogleAdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
@@ -43,6 +47,7 @@ class GoogleAdsState {
       showCountdown: showCountdown ?? this.showCountdown,
       shouldDisposeAd: shouldDisposeAd ?? this.shouldDisposeAd,
       adLoadFailed: adLoadFailed ?? this.adLoadFailed,
+      screenSecurityEnabled: screenSecurityEnabled ?? this.screenSecurityEnabled,
     );
   }
 }
@@ -71,6 +76,8 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
           shouldDisposeAd: true,
           nativeAdIsLoaded: false,
         );
+        // Disable screen security when ads are no longer shown
+        disableScreenSecurity();
         timer.cancel();
       }
     });
@@ -84,6 +91,8 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
     );
     if (isLoaded && state.showCountdown && state.countdown == _countdownDuration) {
       startCountdownTimer();
+      // Enable screen security when ads are loaded and visible
+      enableScreenSecurity();
     }
   }
 
@@ -92,19 +101,43 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       adLoadFailed: true,
       nativeAdIsLoaded: false,
     );
+    // Disable screen security when ads fail to load
+    disableScreenSecurity();
   }
 
   void acknowledgeDisposal() {
     state = state.copyWith(shouldDisposeAd: false);
+    // Disable screen security when ads are disposed
+    disableScreenSecurity();
   }
 
   void resetState() {
     state = const GoogleAdsState();
+    // Disable screen security when state is reset
+    disableScreenSecurity();
+  }
+
+  // Enable screen security to prevent screenshots/recording of ads
+  Future<void> enableScreenSecurity() async {
+    if (!state.screenSecurityEnabled) {
+      await ScreenSecurity.enableScreenSecurity();
+      state = state.copyWith(screenSecurityEnabled: true);
+    }
+  }
+
+  // Disable screen security
+  Future<void> disableScreenSecurity() async {
+    if (state.screenSecurityEnabled) {
+      await ScreenSecurity.disableScreenSecurity();
+      state = state.copyWith(screenSecurityEnabled: false);
+    }
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    // Disable screen security when widget is disposed
+    disableScreenSecurity();
     super.dispose();
   }
 }
@@ -299,6 +332,25 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final adsState = ref.watch(googleAdsProvider);
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
+
+    // Enable screen security when ads are visible
+    // This ensures screen security is enabled even before ads are fully loaded
+    if ((adsState.showCountdown && (adsState.nativeAdIsLoaded || _isLoading || adsState.adLoadFailed)) || 
+        (adsState.showCountdown && customAdData != null)) {
+      // Enable screen security in a post-frame callback to ensure widget is built
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!adsState.screenSecurityEnabled) {
+          ref.read(googleAdsProvider.notifier).enableScreenSecurity();
+        }
+      });
+    } else {
+      // Disable screen security when ads are not visible
+      if (adsState.screenSecurityEnabled) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(googleAdsProvider.notifier).disableScreenSecurity();
+        });
+      }
+    }
 
     // Listen for disposal requests
     ref.listen(googleAdsProvider, (previous, next) {
