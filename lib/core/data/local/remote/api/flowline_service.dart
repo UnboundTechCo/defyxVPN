@@ -27,22 +27,32 @@ class FlowlineService implements IFlowlineService {
     final flowLine = await getFlowline();
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
-
+      // Optional sections: handle gracefully if missing in fallback configs
       final appBuildType = GlobalVars.appBuildType;
-      final version = decoded['version'][appBuildType];
+      if (decoded is Map<String, dynamic>) {
+        // Advertise
+        if (decoded.containsKey('advertise')) {
+          final advertiseStorageMap = {
+            'api_advertise': decoded['advertise'],
+          };
+          await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+        }
 
-      final advertiseStorageMap = {
-        'api_advertise': decoded['advertise'],
-      };
-      await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
-
-      final versionStorageMap = {
-        'api_app_version': version,
-        'forceUpdate': decoded['forceUpdate'][version],
-        'changeLog': decoded['changeLog'][version],
-      };
-
-      await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
+        // Version parameters
+        if (decoded['version'] != null &&
+            decoded['forceUpdate'] != null &&
+            decoded['changeLog'] != null) {
+          final version = decoded['version'][appBuildType];
+          if (version != null) {
+            final versionStorageMap = {
+              'api_app_version': version,
+              'forceUpdate': decoded['forceUpdate'][version],
+              'changeLog': decoded['changeLog'][version],
+            };
+            await _secureStorage.writeMap(
+                apiVersionParametersKey, versionStorageMap);
+          }
+        }
 
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
       final ref = ProviderContainer();

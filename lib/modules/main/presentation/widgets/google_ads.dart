@@ -134,14 +134,15 @@ class GoogleAds extends ConsumerStatefulWidget {
 }
 
 class AdHelper {
-  static String get adUnitId {
+  // Returns null on unsupported platforms (desktop/web), so callers can
+  // gracefully skip Google ads and fall back to custom ads.
+  static String? get adUnitId {
     if (Platform.isAndroid) {
-      return dotenv.env['ANDROID_AD_UNIT_ID'] ?? '';
+      return dotenv.env['ANDROID_AD_UNIT_ID'];
     } else if (Platform.isIOS) {
-      return dotenv.env['IOS_AD_UNIT_ID'] ?? '';
-    } else {
-      throw UnsupportedError('Unsupported platform');
+      return dotenv.env['IOS_AD_UNIT_ID'];
     }
+    return null;
   }
 }
 
@@ -151,7 +152,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   bool _isDisposed = false;
   bool _hasInitialized = false;
 
-  final _adUnitId = AdHelper.adUnitId;
+  final String? _adUnitId = AdHelper.adUnitId;
 
   @override
   void initState() {
@@ -179,6 +180,16 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
 
       if (shouldShowGoogle) {
+        // If we don't have an ad unit ID (e.g., desktop), fall back to custom ad path.
+        if (_adUnitId == null || _adUnitId.isEmpty) {
+          final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+          if (!_isDisposed) {
+            ref.read(customAdDataProvider.notifier).state = customAdData;
+            ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+            ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          }
+          return;
+        }
         _loadGoogleAd();
         return;
       }
@@ -208,6 +219,16 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     _nativeAd = null;
 
     try {
+      // Guard: If ad unit is unavailable on this platform, don't attempt to load.
+      if (_adUnitId == null || _adUnitId.isEmpty) {
+        if (!_isDisposed && mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+          ref.read(googleAdsProvider.notifier).setAdLoadFailed();
+        }
+        return;
+      }
       _nativeAd = NativeAd(
         adUnitId: _adUnitId,
         listener: NativeAdListener(

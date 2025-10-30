@@ -11,6 +11,8 @@ add_executable(${BINARY_NAME} WIN32
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
+  "defyx_windows_plugin.cc"
+  "defyx_core.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
@@ -32,9 +34,28 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 
 # Add dependency libraries and include directories. Add any application-specific
 # dependencies here.
-target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
+# Link the Flutter client wrapper libraries needed by the app and any
+# manual plugin registration using PluginRegistrar*. The flutter_wrapper_plugin
+# provides implementations for PluginRegistrar/PluginRegistrarManager that the
+# runner references when registering custom plugins.
+target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app flutter_wrapper_plugin)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Copy DXcore.dll to output directory for debug. should be deleted after our tests are done 
+set(DXCORE_DLL "${CMAKE_CURRENT_SOURCE_DIR}/DXcore.dll")
+if(EXISTS "${DXCORE_DLL}")
+  add_custom_command(
+    TARGET ${BINARY_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DXCORE_DLL}"
+      "$<TARGET_FILE_DIR:${BINARY_NAME}>/DXcore.dll"
+    COMMENT "Copying DXcore.dll to output directory"
+  )
+  message(STATUS "DXcore.dll will be copied from: ${DXCORE_DLL}")
+else()
+  message(WARNING "DXcore.dll not found at: ${DXCORE_DLL}")
+endif()

@@ -1,3 +1,9 @@
 {
-     "java.configuration.updateBuildConfiguration": "interactive"
+     "java.configuration.updateBuildConfiguration": "interactive",
+     "files.associations": {
+          "tuple": "cpp",
+          "functional": "cpp",
+          "chrono": "cpp"
+     },
+     "C_Cpp.default.compilerPath": "C:/msys64/ucrt64/bin/gcc.exe"
 }
