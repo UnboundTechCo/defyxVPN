@@ -266,15 +266,15 @@ inject_firebase_ios() {
     local ios_app_id=$(grep '^FIREBASE_IOS_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
     local ios_sender_id=$(grep '^FIREBASE_IOS_SENDER_ID=' "$ENV_FILE" | cut -d'=' -f2-)
     if [ -n "$ios_api_key" ]; then
-        sed -i '' "s|<key>API_KEY</key>\n\s*<string>[^<]*</string>|<key>API_KEY</key>\n    <string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        sed -i '' "s|<key>API_KEY</key><string>[^<]*</string>|<key>API_KEY</key><string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
     fi
     if [ -n "$ios_app_id" ]; then
-        sed -i '' "s|<key>GOOGLE_APP_ID</key>\n\s*<string>[^<]*</string>|<key>GOOGLE_APP_ID</key>\n    <string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        sed -i '' "s|<key>GOOGLE_APP_ID</key><string>[^<]*</string>|<key>GOOGLE_APP_ID</key><string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
     fi
     if [ -n "$ios_sender_id" ]; then
-        sed -i '' "s|<key>GCM_SENDER_ID</key>\n\s*<string>[^<]*</string>|<key>GCM_SENDER_ID</key>\n    <string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        sed -i '' "s|<key>GCM_SENDER_ID</key><string>[^<]*</string>|<key>GCM_SENDER_ID</key><string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
     fi
-    echo -e "${GREEN}✅ Injected Firebase iOS credentials${NC}"
+    echo -e "${GREEN}[OK] Injected Firebase iOS credentials${NC}"
 }
 
 restore_firebase_ios() {
