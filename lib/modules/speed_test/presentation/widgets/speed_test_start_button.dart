@@ -65,16 +65,10 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   }
 
   IconData _getIcon() {
-    if (widget.currentStep == SpeedTestStep.ready) {
+    if (widget.currentStep == SpeedTestStep.ready && widget.previousStep == null) {
       return Icons.near_me_outlined;
-    } else if (widget.currentStep == SpeedTestStep.toast) {
-      return Icons.cached_rounded;
-    } else if (widget.currentStep == SpeedTestStep.ads &&
-        widget.previousStep == SpeedTestStep.toast) {
-      return Icons.cached_rounded;
     } else {
       return Icons.cached_rounded;
-      // return Icons.check_rounded;
     }
   }
 
@@ -92,7 +86,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (widget.currentStep == SpeedTestStep.ready)
+            if (widget.currentStep == SpeedTestStep.ready && widget.previousStep == null)
               AnimatedBuilder(
                 animation: _animation,
                 builder: (context, child) {
@@ -107,13 +101,19 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
               ),
             Positioned(
               right: 15.h,
-              bottom: 15.h,
+              bottom: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                  ? 15.h
+                  : 0,
               child: Transform.rotate(
-                angle: widget.currentStep == SpeedTestStep.ready ? 15 / 3.14 : 0,
+                angle: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                    ? 15 / 3.14
+                    : 0,
                 child: Icon(
                   _getIcon(),
                   color: Colors.white,
-                  size: widget.currentStep == SpeedTestStep.ready ? 20.sp : 36.sp,
+                  size: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                      ? 20.sp
+                      : 36.sp,
                 ),
               ),
             ),

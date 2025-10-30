@@ -3,9 +3,6 @@ enum SpeedTestStep {
   loading,
   download,
   upload,
-  toast,
-  result,
-  ads,
 }
 
 class SpeedTestResult {

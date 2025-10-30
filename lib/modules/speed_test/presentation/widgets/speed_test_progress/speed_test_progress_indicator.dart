@@ -197,7 +197,7 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
               if (widget.result != null &&
                   (widget.currentStep != SpeedTestStep.ready && widget.result!.ping > 0))
                 Positioned(
-                  bottom: 0.h,
+                  bottom: 10.h,
                   left: 0.w,
                   right: 0.w,
                   child: SpeedTestMetricsDisplay(

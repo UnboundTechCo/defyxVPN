@@ -36,7 +36,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.start,
-          spacing: 10.h,
+          spacing: 5.h,
           children: [
             if (showDownload)
               SizedBox(
@@ -58,7 +58,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
         Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 10.h,
+          spacing: 5.h,
           children: [
             if (showUpload)
               SizedBox(

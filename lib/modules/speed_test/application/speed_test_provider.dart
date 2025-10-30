@@ -4,6 +4,8 @@ import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/core/network/http_client_interface.dart';
 import 'package:defyx_vpn/modules/speed_test/data/api/speed_test_api.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/cloudflare_logger_service.dart';
@@ -64,24 +66,27 @@ class SpeedTestState {
 
 final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
   final httpClient = ref.read(httpClientProvider);
-  return SpeedTestNotifier(httpClient);
+  return SpeedTestNotifier(httpClient, ref);
 });
 
 class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final IHttpClient _httpClient;
+  final Ref _ref;
   late final SpeedTestApi _api;
   late final CloudflareLoggerService _logger;
+  late final VibrationService _vibrationService;
 
   bool _isTestCanceled = false;
   Timer? _testTimer;
   final List<StreamSubscription> _activeSubscriptions = [];
+  ProviderSubscription<ConnectionState>? _connectionSubscription;
 
   String _measurementId = '';
   final List<double> _downloadSpeeds = [];
   final List<double> _uploadSpeeds = [];
   final List<int> _latencies = [];
 
-  SpeedTestNotifier(this._httpClient) : super(const SpeedTestState()) {
+  SpeedTestNotifier(this._httpClient, this._ref) : super(const SpeedTestState()) {
     final dio = (_httpClient as HttpClient).dio;
 
     dio.options.connectTimeout = SpeedMeasurementConfig.connectTimeout;
@@ -91,6 +96,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     _api = SpeedTestApi(dio);
     _logger = CloudflareLoggerService(_api);
+    _vibrationService = VibrationService();
+    _vibrationService.init();
   }
 
   String _generateMeasurementId() {
@@ -100,6 +107,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   @override
   void dispose() {
     _stopTestOnly();
+    _stopConnectionMonitoring();
     super.dispose();
   }
 
@@ -107,6 +115,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _isTestCanceled = true;
     _testTimer?.cancel();
     _testTimer = null;
+
+    _stopConnectionMonitoring();
 
     for (final subscription in _activeSubscriptions) {
       subscription.cancel();
@@ -163,27 +173,64 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _uploadSpeeds.clear();
     _latencies.clear();
 
+    _startConnectionMonitoring();
+
     try {
       await _runMeasurementSequence();
 
       if (_isTestCanceled) {
         debugPrint('🛑 Speed test was canceled');
+        _stopConnectionMonitoring();
         return;
       }
 
       _calculateFinalResults();
       _checkConnectionStability();
       debugPrint('🏁 Speed test completed successfully');
+      _stopConnectionMonitoring();
     } catch (e) {
       debugPrint('❌ Speed test error: $e');
+      _stopConnectionMonitoring();
+      _vibrationService.vibrateError();
       state = state.copyWith(
         errorMessage: 'Speed test failed. Please try again.',
-        step: SpeedTestStep.toast,
+        step: SpeedTestStep.ready,
         isConnectionStable: false,
         currentSpeed: 0.0,
         hadError: true,
       );
     }
+  }
+
+  void _startConnectionMonitoring() {
+    _connectionSubscription?.close();
+    _connectionSubscription = _ref.listen<ConnectionState>(
+      connectionStateProvider,
+      (previous, next) {
+        final status = next.status;
+        debugPrint('🔍 Connection status during test: $status');
+
+        if (!_isConnectionValid(status) && _isTestRunning()) {
+          debugPrint('🛑 Connection became invalid during speed test, stopping...');
+          stopAndResetTest();
+        }
+      },
+    );
+  }
+
+  void _stopConnectionMonitoring() {
+    _connectionSubscription?.close();
+    _connectionSubscription = null;
+  }
+
+  bool _isConnectionValid(ConnectionStatus status) {
+    return status == ConnectionStatus.disconnected || status == ConnectionStatus.connected;
+  }
+
+  bool _isTestRunning() {
+    return state.step == SpeedTestStep.loading ||
+        state.step == SpeedTestStep.download ||
+        state.step == SpeedTestStep.upload;
   }
 
   Future<void> _runMeasurementSequence() async {
@@ -370,15 +417,16 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     final isStable = ResultsCalculatorService.checkConnectionStability(state.result);
 
     if (!isStable) {
+      _vibrationService.vibrateError();
       state = state.copyWith(
-        step: SpeedTestStep.toast,
+        step: SpeedTestStep.ready,
         isConnectionStable: false,
         errorMessage: 'Your connection was unstable, and the test was interrupted.',
         hadError: true,
       );
     } else {
       state = state.copyWith(
-        step: SpeedTestStep.result,
+        step: SpeedTestStep.ready,
         clearErrorMessage: true,
         hadError: false,
       );
@@ -396,12 +444,6 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         startTest();
       }
     });
-  }
-
-  void moveToAds() {
-    state = state.copyWith(
-      step: SpeedTestStep.ads,
-    );
   }
 
   void completeTest() {

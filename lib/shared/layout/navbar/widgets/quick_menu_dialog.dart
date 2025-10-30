@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/social_icon_button.dart';
@@ -6,7 +7,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class QuickMenuDialog extends StatefulWidget {
   const QuickMenuDialog({super.key});
@@ -70,22 +70,32 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Privacy policy',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/privacy-policy');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        title: 'Privacy Policy',
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/privacy-policy',
+                                title: 'Privacy Policy',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Terms & condition',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/terms-and-conditions');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        title: 'Terms & Conditions',
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/terms-and-conditions',
+                                title: 'Terms & Conditions',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
@@ -127,12 +137,17 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Our website',
-                        onTap: () async {
-                          final uri = Uri.parse('https://defyxvpn.com/contact');
-                          if (await canLaunchUrl(uri)) {
-                            await launchUrl(uri, mode: LaunchMode.externalApplication);
-                          }
+                        title: 'Our Website',
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => const CustomWebViewScreen(
+                                url: 'https://defyxvpn.com/contact',
+                                title: 'Our Website',
+                              ),
+                            ),
+                          );
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
