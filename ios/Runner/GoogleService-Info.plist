@@ -8,10 +8,8 @@
 	<string>1</string>
 	<key>BUNDLE_ID</key>
 	<string>de.unboundtech.defyxvpn</string>
-	<key>PROJECT_ID</key>
-	<string>defyxvpn</string>
-	<key>STORAGE_BUCKET</key>
-	<string>defyxvpn.firebasestorage.app</string>
+	<key>PROJECT_ID</key><string>dummy</string>
+	<key>STORAGE_BUCKET</key><string>dummy.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>

@@ -1,8 +1,8 @@
 {
   "project_info": {
     "project_number": "000000000000",
-    "project_id": "defyxvpn",
-    "storage_bucket": "defyxvpn.firebasestorage.app"
+    "project_id": "dummy",
+    "storage_bucket": "dummy.firebasestorage.app"
   },
   "client": [
     {

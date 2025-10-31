@@ -239,9 +239,17 @@ inject_firebase_android() {
     # Add your keys to .env as FIREBASE_ANDROID_API_KEY, etc.
     local api_key=$(grep '^FIREBASE_ANDROID_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
     local app_id=$(grep '^FIREBASE_ANDROID_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
-    local project_number=$(grep '^FIREBASE_ANDROID_PROJECT_NUMBER=' "$ENV_FILE" | cut -d'=' -f2-)
+    local project_number=$(grep '^FIREBASE_PROJECT_NUMBER=' "$ENV_FILE" | cut -d'=' -f2-)
+    local project_id=$(grep '^FIREBASE_PROJECT_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    # Set storage_bucket from project_id
+    local storage_bucket="${project_id}.firebasestorage.app"
     if [ -n "$app_id" ]; then
         sed -i '' "s/\"mobilesdk_app_id\": \"[^\"]*\"/\"mobilesdk_app_id\": \"$app_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+    fi
+    if [ -n "$project_id" ]; then
+        sed -i '' "s/\"project_id\": \"[^\"]*\"/\"project_id\": \"$project_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        # Update storage_bucket
+        sed -i '' "s/\"storage_bucket\": \"[^\"]*\"/\"storage_bucket\": \"$storage_bucket\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
     fi
     if [ -n "$project_number" ]; then
         sed -i '' "s/\"project_number\": \"[^\"]*\"/\"project_number\": \"$project_number\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
@@ -264,7 +272,10 @@ inject_firebase_ios() {
     # Example: Replace placeholders in GoogleService-Info.plist with values from .env
     local ios_api_key=$(grep '^FIREBASE_IOS_API_KEY=' "$ENV_FILE" | cut -d'=' -f2-)
     local ios_app_id=$(grep '^FIREBASE_IOS_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
-    local ios_sender_id=$(grep '^FIREBASE_IOS_SENDER_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    local ios_sender_id=$(grep '^FIREBASE_PROJECT_NUMBER=' "$ENV_FILE" | cut -d'=' -f2-)
+    local project_id=$(grep '^FIREBASE_PROJECT_ID=' "$ENV_FILE" | cut -d'=' -f2-)
+    # Set storage_bucket from project_id
+    local storage_bucket="${project_id}.firebasestorage.app"
     if [ -n "$ios_api_key" ]; then
         sed -i '' "s|<key>API_KEY</key><string>[^<]*</string>|<key>API_KEY</key><string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
     fi
@@ -273,6 +284,11 @@ inject_firebase_ios() {
     fi
     if [ -n "$ios_sender_id" ]; then
         sed -i '' "s|<key>GCM_SENDER_ID</key><string>[^<]*</string>|<key>GCM_SENDER_ID</key><string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+    fi
+    if [ -n "$project_id" ]; then
+        sed -i '' "s|<key>PROJECT_ID</key><string>[^<]*</string>|<key>PROJECT_ID</key><string>$project_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        # Update STORAGE_BUCKET
+        sed -i '' "s|<key>STORAGE_BUCKET</key><string>[^<]*</string>|<key>STORAGE_BUCKET</key><string>$storage_bucket</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
     fi
     echo -e "${GREEN}[OK] Injected Firebase iOS credentials${NC}"
 }
