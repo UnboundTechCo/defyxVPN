@@ -5,6 +5,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
 
+// Add this import for screen security
+import 'package:defyx_vpn/core/utils/screen_security.dart';
+
 enum ConnectionStatus {
   disconnecting,
   disconnected,
@@ -151,6 +154,9 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   void setDisconnected() {
     state = state.copyWith(status: ConnectionStatus.disconnected);
     _saveState();
+    
+    // Force disable screen security when VPN disconnects
+    ScreenSecurity.disableScreenSecurity();
   }
 
   void setDisconnecting() {
