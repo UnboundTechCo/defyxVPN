@@ -1,4 +1,5 @@
 import Flutter
+import UIKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -32,10 +33,30 @@ import Flutter
       let progressHandler = ProgressStreamHandler()
       progressChannel.setStreamHandler(progressHandler)
 
+      let screenSecurityChannel = FlutterMethodChannel(
+        name: "com.defyx.screen_security",
+        binaryMessenger: controller.binaryMessenger)
+      screenSecurityChannel.setMethodCallHandler { [weak self] (call, result) in
+        self?.handleScreenSecurityMethodCall(call, result: result)
+      }
+
       getLogs(progressHandler)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
+
+  func handleScreenSecurityMethodCall(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    switch call.method {
+    case "enableScreenSecurity":
+      ScreenSecurity.enableScreenSecurity()
+      result(nil)
+    case "disableScreenSecurity":
+      ScreenSecurity.disableScreenSecurity()
+      result(nil)
+    default:
+      result(FlutterMethodNotImplemented)
+    }
   }
 
   func getLogs(_ progressHandler: ProgressStreamHandler) {
