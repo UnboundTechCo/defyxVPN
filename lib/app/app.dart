@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -59,7 +60,9 @@ class App extends ConsumerWidget {
       builder: (_, __) {
         return MaterialApp.router(
           title: 'Defyx',
-          theme: _buildAppTheme(),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.light,
           routerConfig: router,
           builder: _appBuilder,
           debugShowCheckedModeBanner: false,
@@ -78,16 +81,6 @@ class App extends ConsumerWidget {
     if (isLargeTablet) return const Size(1024, 768);
     if (isTablet) return const Size(768, 1024);
     return const Size(393, 852);
-  }
-
-  ThemeData _buildAppTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      fontFamily: 'Lato',
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w400),
-      ),
-    );
   }
 
   Widget _appBuilder(BuildContext context, Widget? child) {
