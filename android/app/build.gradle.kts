@@ -38,9 +38,9 @@ android {
         versionName = flutter.versionName
         
         // Add ABI filters for Samsung device compatibility
-        ndk {
-            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
-        }
+        // ndk {
+        //     abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        // }
     }
 
     signingConfigs {

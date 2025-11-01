@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
@@ -23,6 +24,7 @@ class SpeedTestStartButton extends StatefulWidget {
 
 class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
     with SingleTickerProviderStateMixin {
+  final AnimationService _animationService = AnimationService();
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -30,7 +32,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
       vsync: this,
     );
 
@@ -42,7 +44,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
     );
 
     if (widget.currentStep == SpeedTestStep.ready) {
-      _animationController.repeat(reverse: true);
+      _animationService.conditionalRepeat(_animationController, reverse: true);
     }
   }
 
@@ -50,7 +52,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   void didUpdateWidget(SpeedTestStartButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentStep == SpeedTestStep.ready && oldWidget.currentStep != SpeedTestStep.ready) {
-      _animationController.repeat(reverse: true);
+      _animationService.conditionalRepeat(_animationController, reverse: true);
     } else if (widget.currentStep != SpeedTestStep.ready &&
         oldWidget.currentStep == SpeedTestStep.ready) {
       _animationController.stop();

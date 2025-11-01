@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -21,6 +22,7 @@ class ConnectionButton extends StatefulWidget {
 
 class _ConnectionButtonState extends State<ConnectionButton>
     with TickerProviderStateMixin {
+  final AnimationService _animationService = AnimationService();
   late AnimationController _animationController;
   late AnimationController _shieldLoadingController;
   late Animation<double> _pulseAnimation;
@@ -60,8 +62,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    )..repeat(reverse: true);
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 2000)),
+    );
+    _animationService.conditionalRepeat(_animationController, reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
@@ -73,7 +76,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
     _shieldLoadingController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
     );
 
     _shieldRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -229,16 +232,13 @@ class _ConnectionButtonState extends State<ConnectionButton>
         _shieldLoadingController.stop();
         break;
       case vpn.ConnectionStatus.loading:
-        // Keep current timer state
         _shieldLoadingController.stop();
         break;
       case vpn.ConnectionStatus.analyzing:
-        // Start shield loading animation
-        _shieldLoadingController.repeat();
+        _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       case vpn.ConnectionStatus.disconnecting:
-        // Start shield loading animation
-        _shieldLoadingController.repeat();
+        _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       default:
         if (_timer != null) _stopTimer();
