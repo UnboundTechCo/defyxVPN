@@ -10,6 +10,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -33,6 +35,9 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeServices(WidgetRef ref) async {
     try {
+      await VibrationService().init();
+      await AnimationService().init();
+      
       final vpnBridge = VpnBridge();
       await vpnBridge.getVpnStatus();
       if (!ref.context.mounted) return;
