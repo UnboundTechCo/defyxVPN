@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
@@ -10,16 +11,16 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
-import 'package:dio/dio.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:vibration/vibration.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 
 class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
+  final vibrationService = VibrationService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -28,7 +29,7 @@ class VPN {
 
   VPN._internal();
 
-  final vpnBridge = VpnBridge();
+  final _vpnBridge = VpnBridge();
   final _eventChannel = EventChannel("com.defyx.progress_events");
 
   Stream<String> get vpnUpdates =>
@@ -43,11 +44,13 @@ class VPN {
     _initialized = true;
     _container = container;
 
+    vibrationService.init();
+
     log.logAppVersion();
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
     final offsetInHours = offset.inMinutes / 60.0;
-    vpnBridge.setTimezone(offsetInHours.toString());
+    _vpnBridge.setTimezone(offsetInHours.toString());
     vpnUpdates.listen((msg) {
       _handleVPNUpdates(msg);
     });
@@ -64,7 +67,8 @@ class VPN {
 
     if (msg.startsWith("Data: Config index: ")) {
       final configIndex = msg.replaceAll("Data: Config index: ", "");
-      _setConnectionStep(int.parse(configIndex));
+      final step = int.parse(configIndex);
+      _setConnectionStep(step);
       loggerNotifier.setConnecting();
     }
 
@@ -80,9 +84,14 @@ class VPN {
     if (msg.startsWith("Data: VPN group failed")) {
       loggerNotifier.setSwitchingMethod();
     }
+    if (msg.startsWith("Data: VPN stopped")) {
+      _closeTunnel();
+    }
     if (msg.startsWith("Data: Config label: ")) {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
+      _vpnBridge.setConnectionMethod(configLabel);
       groupNotifier.setGroupName(configLabel);
+      vibrationService.vibrateHeartbeat();
     }
 
     if (msg.startsWith("Data: Config Numbers: ")) {
@@ -93,58 +102,64 @@ class VPN {
     if (msg.contains("VPN Service Destroyed")) {
       _onTunnelClosed();
     }
+    if (msg.contains("Start VPN Service")) {
+      _connect();
+    }
 
     log.addLog(msg);
   }
 
-  Future<void> _connect(WidgetRef ref) async {
-    final connectionNotifier = ref.read(connectionStateProvider.notifier);
-    final loggerNotifier = ref.read(loggerStateProvider.notifier);
-    final settings = ref.read(settingsProvider.notifier);
+  Future<void> _connect() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final loggerNotifier = _container?.read(loggerStateProvider.notifier);
+    final settings = _container?.read(settingsProvider.notifier);
 
     _setConnectionStep(1);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier.setLoading();
+      connectionNotifier?.setLoading();
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier.setAnalyzing();
+      connectionNotifier?.setAnalyzing();
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loggerNotifier.setLoading();
+      loggerNotifier?.setLoading();
     });
+
+    vibrationService.vibrateShort();
 
     if (!await _checkNetwork()) {
-      connectionNotifier.setNoInternet();
+      connectionNotifier?.setNoInternet();
+      vibrationService.vibrateError();
       return;
     }
 
     final isAccepted = await _grantVpnPermission();
 
     if (!isAccepted!) {
-      connectionNotifier.setDisconnected();
+      connectionNotifier?.setDisconnected();
       return;
     }
 
     final flowLineStorage =
-        await ref.read(secureStorageProvider).read('flowLine') ?? "";
+        await _container?.read(secureStorageProvider).read('flowLine') ?? "";
 
-    final pattern = settings.getPattern();
-    await vpnBridge.startVPN(flowLineStorage, pattern);
+    final pattern = settings?.getPattern() ?? "";
+    await _vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
-    await vpnBridge.disconnectVpn();
+    await _vpnBridge.disconnectVpn();
+    vibrationService.vibrateError();
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
@@ -153,7 +168,7 @@ class VPN {
     await _createTunnel();
     connectionNotifier?.setConnected();
     await _refreshPing();
-    Vibration.vibrate(duration: 300);
+    vibrationService.vibrateSuccess();
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
@@ -165,7 +180,7 @@ class VPN {
   Future<void> _stopVPN(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
-    await vpnBridge.stopVPN();
+    await _vpnBridge.stopVPN();
     _clearData(ref);
     connectionNotifier.setDisconnected();
   }
@@ -173,33 +188,34 @@ class VPN {
   Future<void> _disconnect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
-    await vpnBridge.disconnectVpn();
+    await _vpnBridge.disconnectVpn();
     _clearData(ref);
     connectionNotifier.setDisconnected();
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     if (Platform.isIOS) {
-      await vpnBridge.disconnectVpn();
+      await _vpnBridge.disconnectVpn();
     }
     connectionNotifier?.setDisconnected();
   }
 
+
   Future<void> _onTunnelClosed() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    await vpnBridge.stopVPN();
+    await _vpnBridge.stopVPN();
+    await _vpnBridge.stopTun2Socks();
     connectionNotifier?.setDisconnected();
   }
 
   Future<bool?> _grantVpnPermission() async {
     switch (Platform.operatingSystem) {
       case 'android':
-        return await vpnBridge.grantVpnPermission();
+        return await _vpnBridge.grantVpnPermission();
       case "ios":
-        return await vpnBridge.connectVpn();
+        return await _vpnBridge.connectVpn();
       default:
         return false;
     }
@@ -208,26 +224,20 @@ class VPN {
   Future<void> _createTunnel() async {
     switch (Platform.operatingSystem) {
       case 'android':
-        await vpnBridge.connectVpn();
+        await _vpnBridge.connectVpn();
         break;
       case "ios":
-        await vpnBridge.startTun2socks();
+        await _vpnBridge.startTun2socks();
         break;
     }
   }
 
   Future<bool> _checkNetwork() async {
     try {
-      final dio = Dio();
-      await dio.get(
-        'https://www.google.com/generate_204',
-        options: Options(
-          responseType: ResponseType.bytes,
-          sendTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 20),
-        ),
-      );
-      return true;
+      final httpClient = _container?.read(httpClientProvider);
+      if (httpClient == null) return false;
+
+      return await httpClient.checkConnectivity();
     } catch (e) {
       debugPrint('Error checking network: $e');
       return false;
@@ -262,7 +272,7 @@ class VPN {
       case ConnectionStatus.disconnected:
       case ConnectionStatus.error:
       case ConnectionStatus.noInternet:
-        await _connect(ref);
+        await _connect();
         return;
       default:
         break;
@@ -273,7 +283,7 @@ class VPN {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
     final isTunnelRunning =
-        await vpnBridge.isTunnelRunning();
+        await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
     } else {

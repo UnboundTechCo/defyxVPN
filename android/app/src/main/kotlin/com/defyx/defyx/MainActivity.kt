@@ -1,12 +1,15 @@
 package de.unboundtech.defyxvpn
 
 import android.Android
+import android.Manifest
 import android.ProgressListener
 import android.app.Activity
 import android.content.Intent
 import android.net.VpnService
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
@@ -24,6 +27,7 @@ class MainActivity : FlutterActivity() {
     private val STATUS_CHANNEL = "com.defyx.vpn_events"
     private var eventSink: EventChannel.EventSink? = null
     private var pendingVpnResult: MethodChannel.Result? = null
+    private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -53,10 +57,20 @@ class MainActivity : FlutterActivity() {
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.defyx.progress_events")
                 .setStreamHandler(ProgressStreamHandler())
     }
+    private fun grantNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(Manifest.permission.POST_NOTIFICATIONS),
+                    NOTIFICATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val intent = Intent(this, DefyxVpnService::class.java)
+        grantNotificationPermission()
         startService(intent)
     }
 
@@ -78,6 +92,7 @@ class MainActivity : FlutterActivity() {
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
+                "setConnectionMethod" -> setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -309,6 +324,26 @@ class MainActivity : FlutterActivity() {
                             "Failed to Get Flow Line",
                             e.localizedMessage
                     )
+                }
+            }
+        }
+    }
+    private fun setConnectionMethod(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val method = args?.get("method") as? String
+                if (method.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error("INVALID_ARGUMENT", "method is missing or empty", null)
+                    }
+                    return@launch
+                }
+                DefyxVpnService.getInstance().setConnectionMethod(method)
+                result.success(true)
+            } catch (e: Exception) {
+                Log.e("Set Connection Method", "Set Connection Method failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("PING_ERROR", "Failed to Set Connection Method", e.localizedMessage)
                 }
             }
         }

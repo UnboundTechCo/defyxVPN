@@ -6,7 +6,7 @@ import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -107,8 +107,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final connectionState = ref.read(connectionStateProvider);
       _previousConnectionStatus = connectionState.status;
 
-      final newShadowState =
-          connectionState.status == ConnectionStatus.connected;
+      final newShadowState = connectionState.status == ConnectionStatus.connected;
       if (_showHeaderShadow != newShadowState) {
         setState(() {
           _showHeaderShadow = newShadowState;
@@ -131,7 +130,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       },
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -177,10 +175,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         Positioned(
                           top: 130.h,
                           child: ConnectionButton(
-                            onTap: connectionState.status ==
-                                        ConnectionStatus.loading ||
-                                    connectionState.status ==
-                                        ConnectionStatus.disconnecting
+                            onTap: connectionState.status == ConnectionStatus.loading ||
+                                    connectionState.status == ConnectionStatus.disconnecting
                                 ? () {}
                                 : _logic.connectOrDisconnect,
                           ),
@@ -194,19 +190,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               onPingRefresh: _logic.refreshPing,
                             ),
                             SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
+                              height: connectionState.status == ConnectionStatus.connected
                                   ? 40.h
                                   : 80.h,
                             ),
                             SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
+                              height: connectionState.status == ConnectionStatus.connected
                                   ? 0.24.sh
                                   : 0.28.sh,
                             ),
-                            _buildContentSection(
-                                connectionState.status, adsState),
+                            _buildContentSection(connectionState.status, adsState),
                             SizedBox(height: 0.15.sh),
                           ],
                         ),
@@ -229,8 +222,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
                             colors: [
-                              Colors.black.withOpacity(0.7),
-                              Colors.black.withOpacity(0.0),
+                              Colors.black.withValues(alpha: 0.7),
+                              Colors.black.withValues(alpha: 0.0),
                             ],
                             stops: const [0.0, 1.0],
                           ),
@@ -265,8 +258,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        final shouldShowAd =
-            status == ConnectionStatus.connected && adsState.showCountdown;
+        final shouldShowAd = status == ConnectionStatus.connected && adsState.showCountdown;
 
         return SizedBox(
           height: 280.h,

@@ -346,8 +346,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
                     color: Colors.transparent,
                     child: InkWell(
                       onTap: widget.onTap,
-                      splashColor: Colors.white.withOpacity(0.2),
-                      highlightColor: Colors.white.withOpacity(0.1),
+                      splashColor: Colors.white.withValues(alpha: 0.2),
+                      highlightColor: Colors.white.withValues(alpha: 0.1),
                       child: Container(
                         width: _buttonSize,
                         height: _buttonSize,
@@ -522,9 +522,9 @@ class ShieldLoadingPainter extends CustomPainter {
       colors: [
         Colors.transparent,
         Colors.transparent,
-        Colors.white.withOpacity(0.8),
+        Colors.white.withValues(alpha: 0.8),
         Colors.white,
-        Colors.white.withOpacity(0.8),
+        Colors.white.withValues(alpha: 0.8),
         Colors.transparent,
         Colors.transparent,
       ],

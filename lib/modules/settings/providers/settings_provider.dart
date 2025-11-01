@@ -213,7 +213,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
         return;
       }
 
-     final List<dynamic> data = jsonDecode(settingsJson);
+      final List<dynamic> data = jsonDecode(settingsJson);
       jsonList = data[0]["items"];
       jsonList = jsonList.where((settingItem) {
         if (flowline.any(
@@ -240,13 +240,15 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
       }
       data[0]["items"] = jsonList;
 
-      state = data
-          .map((json) => SettingsGroup.fromJson(json))
-          .toList();
+      state = data.map((json) => SettingsGroup.fromJson(json)).toList();
       _saveSettings();
     } catch (e) {
       state = await _getDefaultSettings();
     }
+  }
+
+  Future<void> updateSettingsBasedOnFlowLine() async {
+    _updateSettingsBasedOnFlowLine();
   }
 }
 
