@@ -96,7 +96,8 @@ class DownloadMeasurementService {
               (lastUpdateTime == null || now.difference(lastUpdateTime!).inMilliseconds > 100)) {
             final currentSpeedBps = (received * 8) / elapsed;
             final currentSpeedMbps = currentSpeedBps / 1000000;
-            onSpeedUpdate(currentSpeedMbps);
+            final roundedSpeed = SpeedMeasurementConfig.roundSpeed(currentSpeedMbps);
+            onSpeedUpdate(roundedSpeed);
             lastUpdateTime = now;
           }
         },
