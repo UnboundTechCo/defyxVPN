@@ -1,4 +1,6 @@
 PODS:
+  - battery_plus (1.0.0):
+    - Flutter
   - device_info_plus (0.0.1):
     - Flutter
   - Flutter (1.0.0)
@@ -34,6 +36,7 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
   - Flutter (from `Flutter`)
   - flutter_secure_storage (from `.symlinks/plugins/flutter_secure_storage/ios`)
@@ -55,6 +58,8 @@ SPEC REPOS:
     - GoogleUserMessagingPlatform
 
 EXTERNAL SOURCES:
+  battery_plus:
+    :path: ".symlinks/plugins/battery_plus/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
   Flutter:
@@ -83,6 +88,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 
 SPEC CHECKSUMS:
+  battery_plus: b42253f6d2dde71712f8c36fef456d99121c5977
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   flutter_secure_storage: 1ed9476fba7e7a782b22888f956cce43e2c62f13
@@ -92,12 +98,12 @@ SPEC CHECKSUMS:
   google_mobile_ads: 535223588a6791b7a3cc3513a1bc7b89d12f3e62
   GoogleUserMessagingPlatform: f8d0cdad3ca835406755d0a69aa634f00e76d576
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
-  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   sensors_plus: 6a11ed0c2e1d0bd0b20b4029d3bad27d96e0c65b
-  shared_preferences_foundation: 9e1978ff2562383bd5676f64ec4e9aa8fa06a6f7
-  url_launcher_ios: 694010445543906933d732453a59da0a173ae33d
+  shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
+  url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   vibration: 69774ad57825b11c951ee4c46155f455d7a592ce
-  webview_flutter_wkwebview: 1821ceac936eba6f7984d89a9f3bcb4dea99ebb2
+  webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
 PODFILE CHECKSUM: 4d58577ccbfce16136516f00e34396d0d7432493
 
