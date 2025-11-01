@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app."
 publish_to: 'none'
-version: 3.2.7+164
+version: 3.2.25+185
 
 environment:
   sdk: ^3.5.3

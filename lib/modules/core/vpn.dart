@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 
 class VPN {
   static final VPN _instance = VPN._internal();
@@ -108,9 +109,6 @@ class VPN {
     if (msg.contains("VPN Service Destroyed")) {
       _onTunnelClosed();
     }
-    if (msg.contains("Start VPN Service")) {
-      _connect();
-    }
 
     log.addLog(msg);
   }
@@ -171,12 +169,14 @@ class VPN {
   Future<void> _onSuccessConnect() async {
     final connectionNotifier = _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
+    final vpnData = await _container?.read(vpnDataProvider.future);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
     }
 
     await _createTunnel();
     connectionNotifier?.setConnected();
+    vpnData?.enableVPN();
     await _refreshPing();
     vibrationService.vibrateSuccess();
     
@@ -210,28 +210,35 @@ class VPN {
 
   Future<void> _disconnect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
+    final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier.setDisconnecting();
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
+    vpnData?.disableVPN();
     connectionNotifier.setDisconnected();
     analyticsService.logVpnDisconnected();
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final vpnData = await _container?.read(vpnDataProvider.future);
+    connectionNotifier?.setDisconnecting();
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
+    await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
     analyticsService.logVpnDisconnected();
   }
 
-
   Future<void> _onTunnelClosed() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
+    connectionNotifier?.setDisconnecting();
+    final vpnData = await _container?.read(vpnDataProvider.future);
     await _vpnBridge.stopVPN();
-    await _vpnBridge.stopTun2Socks();
+    await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
   }
 
@@ -307,12 +314,16 @@ class VPN {
   Future<void> getVPNStatus() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning =
-        await _vpnBridge.isTunnelRunning();
+    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
     } else {
       connectionNotifier?.setDisconnected();
     }
+  }
+
+  Future<void> initVPN() async {
+    await _vpnBridge.setAsnName();
+    await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 }
