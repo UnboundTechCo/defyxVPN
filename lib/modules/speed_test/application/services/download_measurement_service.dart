@@ -7,7 +7,8 @@ class DownloadMeasurementService {
   final String measurementId;
   final Function(bool) isCanceledCheck;
   final Function(double speed) onSpeedUpdate;
-  final Function(double percentileSpeed, double avgSpeed, int avgLatency, int jitter)
+  final Function(
+          double percentileSpeed, double avgSpeed, int currentPing, int avgLatency, int jitter)
       onMetricsUpdate;
 
   final List<double> downloadSpeeds = [];
@@ -42,6 +43,7 @@ class DownloadMeasurementService {
 
           final percentileSpeed = _calculatePercentile(downloadSpeeds, 0.9);
           final avgSpeed = downloadSpeeds.reduce((a, b) => a + b) / downloadSpeeds.length;
+          final currentPing = latencies.isNotEmpty ? latencies.last : 0;
           final avgLatency = latencies.isNotEmpty
               ? (latencies.reduce((a, b) => a + b) / latencies.length).round()
               : 0;
@@ -55,7 +57,7 @@ class DownloadMeasurementService {
             jitter = (jitterSum / (latencies.length - 1)).round();
           }
 
-          onMetricsUpdate(percentileSpeed, avgSpeed, avgLatency, jitter);
+          onMetricsUpdate(percentileSpeed, avgSpeed, currentPing, avgLatency, jitter);
 
           debugPrint(
               '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
