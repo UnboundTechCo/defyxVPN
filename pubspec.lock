@@ -640,6 +640,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.0"
+  no_screenshot:
+    dependency: "direct main"
+    description:
+      name: no_screenshot
+      sha256: ec3d86d7ee89a09c3a3939c1003012536ba4b3fcb4f8cbd23d87ada595c99258
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.3.1"
   ordered_set:
     dependency: transitive
     description:

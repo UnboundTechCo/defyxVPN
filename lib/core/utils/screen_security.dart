@@ -1,30 +1,34 @@
-import 'dart:io';
-import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
+import 'package:no_screenshot/no_screenshot.dart';
 
 class ScreenSecurity {
-  static const MethodChannel _channel =
-      MethodChannel('com.defyx.screen_security');
+  static final NoScreenshot _noScreenshot = NoScreenshot.instance;
 
   /// Enable screen security to prevent screenshots and screen recordings
   /// This will hide the ad content from screenshots/recording similar to Telegram
   static Future<void> enableScreenSecurity() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      try {
-        await _channel.invokeMethod('enableScreenSecurity');
-      } on PlatformException catch (e) {
-        print('Error enabling screen security: ${e.message}');
-      }
+    try {
+      await _noScreenshot.screenshotOff();
+    } catch (e) {
+      debugPrint('Error enabling screen security: $e');
     }
   }
 
   /// Disable screen security
   static Future<void> disableScreenSecurity() async {
-    if (Platform.isAndroid || Platform.isIOS) {
-      try {
-        await _channel.invokeMethod('disableScreenSecurity');
-      } on PlatformException catch (e) {
-        print('Error disabling screen security: ${e.message}');
-      }
+    try {
+      await _noScreenshot.screenshotOn();
+    } catch (e) {
+      debugPrint('Error disabling screen security: $e');
+    }
+  }
+
+  /// Toggle screen security
+  static Future<void> toggleScreenSecurity() async {
+    try {
+      await _noScreenshot.toggleScreenshot();
+    } catch (e) {
+      debugPrint('Error toggling screen security: $e');
     }
   }
 }

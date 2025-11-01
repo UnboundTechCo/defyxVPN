@@ -46,6 +46,7 @@ dependencies:
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
+  no_screenshot: ^0.3.1
 
 dev_dependencies:
   flutter_test:
