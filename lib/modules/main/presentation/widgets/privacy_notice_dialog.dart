@@ -86,10 +86,10 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ElevatedButton(
               onPressed: () async {
                 if (_isLoading) return;
-                _isLoading = true;
+                setState(() => _isLoading = true);
 
                 final accepted = await widget.onAccept();
-                _isLoading = false;
+                setState(() => _isLoading = false);
                 if (accepted && context.mounted) {
                   Navigator.of(context).pop();
                 }
