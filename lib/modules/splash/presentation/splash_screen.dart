@@ -24,11 +24,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   void _navigateToMain() async {
     final vpnData = await ref.read(vpnDataProvider.future);
     final vpnBridge = VpnBridge();
-    final vpnIsPrepared = await vpnBridge.isVPNPrepared();
     if (vpnData.isVPNEnabled && mounted) {
       context.go('/main');
       return;
     }
+
+    final vpnIsPrepared = await vpnBridge.isVPNPrepared();
 
     if (ref.context.mounted && vpnIsPrepared) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
