@@ -1,11 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app."
 publish_to: 'none'
-documentation: "https://github.com/UnboundTechCo/defyxVPN/blob/main/README.md"
-repository: "https://github.com/UnboundTechCo/defyxVPN"
-issue_tracker: "https://github.com/UnboundTechCo/defyxVPN/issues"
-
-version: 3.2.7+164
+version: 3.2.25+185
 
 environment:
   sdk: ^3.5.3

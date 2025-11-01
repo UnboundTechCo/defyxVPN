@@ -51,4 +51,13 @@ class VpnBridge {
     final flag = await _methodChannel.invokeMethod<String>('getFlag');
     return flag ?? '';
   }
+
+  Future<bool> prepareVpn() async {
+    final result = await _methodChannel.invokeMethod('prepareVPN');
+    return result ?? false;
+  }
+
+  Future<bool> isVPNPrepared() async {
+    return await _methodChannel.invokeMethod<bool>('isVPNPrepared') ?? false;
+  }
 }
