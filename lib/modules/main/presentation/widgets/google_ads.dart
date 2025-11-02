@@ -140,7 +140,8 @@ class AdHelper {
     } else if (Platform.isIOS) {
       return dotenv.env['IOS_AD_UNIT_ID'] ?? '';
     } else {
-      throw UnsupportedError('Unsupported platform');
+      // On unsupported platforms (Windows, macOS, Linux), return empty to disable ads gracefully.
+      return '';
     }
   }
 }
@@ -172,6 +173,17 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     if (_isDisposed || _hasInitialized) return;
 
     try {
+      // Disable Google Ads on non-mobile platforms.
+      if (!(Platform.isAndroid || Platform.isIOS)) {
+        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+        if (!_isDisposed) {
+          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+        }
+        return;
+      }
+
       final shouldShowGoogle = await _shouldShowGoogleAds(ref);
 
       if (_isDisposed) return;
@@ -208,6 +220,17 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     _nativeAd = null;
 
     try {
+      if (_adUnitId.isEmpty) {
+        // No ad unit id available for this platform; fall back to custom ads.
+        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+        if (!_isDisposed) {
+          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+        }
+        return;
+      }
+
       _nativeAd = NativeAd(
         adUnitId: _adUnitId,
         listener: NativeAdListener(
