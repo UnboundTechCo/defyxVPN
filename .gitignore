@@ -50,3 +50,7 @@ app.*.map.json
 
 # envirnment
 .env
+
+# Firebase
+# android/app/google-services.json
+# ios/Runner/GoogleService-Info.plist
