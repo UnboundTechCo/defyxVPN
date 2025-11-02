@@ -22,6 +22,7 @@
 		A0CABC212DEF335D00154A44 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0CABC202DEF335D00154A44 /* AppDelegate.swift */; };
 		A0CABC262DEF33BC00154A44 /* Tun2SocksKit in Frameworks */ = {isa = PBXBuildFile; productRef = A0CABC252DEF33BC00154A44 /* Tun2SocksKit */; };
 		A0CABC282DEF33BC00154A44 /* Tun2SocksKitC in Frameworks */ = {isa = PBXBuildFile; productRef = A0CABC272DEF33BC00154A44 /* Tun2SocksKitC */; };
+		E640D9F7888558C3BD23A668 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AE9BD0D6942BB307941DBA0D /* GoogleService-Info.plist */; };
 		F1D23AC02E83A529002FF2F6 /* IosDXcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F1D23ABF2E83A528002FF2F6 /* IosDXcore.xcframework */; };
 		F1D584A52E7B5D3B00076143 /* VpnPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D584A42E7B5D3B00076143 /* VpnPlugin.swift */; };
 		FE197567FA0C370D7A74D3F4 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCDDE16F3C4844CAA5A11A52 /* Pods_RunnerTests.framework */; };
@@ -94,6 +95,7 @@
 		A0CABC1C2DEF334C00154A44 /* vpn_service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = vpn_service.swift; sourceTree = "<group>"; };
 		A0CABC202DEF335D00154A44 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A0FE506B2DEF106E0019DB1D /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
+		AE9BD0D6942BB307941DBA0D /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Runner/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		B5AFB6DC5EFD54F48A0655A6 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCDDE16F3C4844CAA5A11A52 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F126793C97B47EFB321481A7 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -215,6 +217,7 @@
 				0D62D67FB1A329CFE23A9207 /* Pods */,
 				1B666241F829C6C4259E4AF0 /* Frameworks */,
 				F1D23ABF2E83A528002FF2F6 /* IosDXcore.xcframework */,
+				AE9BD0D6942BB307941DBA0D /* GoogleService-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -380,6 +383,7 @@
 				3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */,
 				97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */,
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
+				E640D9F7888558C3BD23A668 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

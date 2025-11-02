@@ -66,6 +66,10 @@ execute_build() {
         exit 1
     fi
 
+    # Inject Firebase credentials before build
+    inject_firebase_android
+    inject_firebase_ios
+
     case $choice in
         1) build_ios "testFlight" ;;
         2) build_ios "appStore" ;;
@@ -81,5 +85,7 @@ execute_build() {
 
     # Restore IDs
     update_ad_id "$orig_ad_id" "$orig_ad_id"
+    restore_firebase_android
+    restore_firebase_ios
     echo -e "${GREEN}✅ Build process completed!${NC}"
 }
