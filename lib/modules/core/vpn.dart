@@ -216,6 +216,11 @@ class VPN {
         return await _vpnBridge.grantVpnPermission();
       case "ios":
         return await _vpnBridge.connectVpn();
+      case 'windows':
+      case 'linux':
+      case 'macos':
+        // Desktop platforms don't need VPN permission
+        return true;
       default:
         return false;
     }
@@ -228,6 +233,12 @@ class VPN {
         break;
       case "ios":
         await _vpnBridge.startTun2socks();
+        break;
+      case 'windows':
+      case 'linux':
+      case 'macos':
+        // Desktop platforms: tunnel is managed by DXcore native side
+        // No additional tunnel setup needed
         break;
     }
   }

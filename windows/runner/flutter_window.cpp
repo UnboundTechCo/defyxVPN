@@ -47,7 +47,14 @@ bool FlutterWindow::OnCreate() {
 
   // Make bridge global so handlers can access it.
   static DXCoreBridge g_dxcore;
-  g_dxcore.Load();
+  if (!g_dxcore.Load()) {
+    OutputDebugStringA("[DXcore] Failed to load DXcore.dll\n");
+  } else {
+    OutputDebugStringA("[DXcore] Successfully loaded DXcore.dll\n");
+  }
+
+  // Track simple status - must be declared before handlers
+  static std::string vpn_status = "disconnected";
 
   // Status events channel
   static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
@@ -79,8 +86,32 @@ bool FlutterWindow::OnCreate() {
                      std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override {
       progress_sink = std::move(events);
       g_dxcore.SetProgressCallback([](const std::string& msg) {
+        // Log all progress messages for debugging
+        std::string log_msg = "[DXcore Progress] " + msg + "\n";
+        OutputDebugStringA(log_msg.c_str());
+        
         if (progress_sink) {
           progress_sink->Success(flutter::EncodableValue(msg));
+        }
+        // Update VPN status based on progress messages
+        if (msg.find("Data: VPN connected") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN connected - updating status\n");
+          vpn_status = "connected";
+          if (status_sink) {
+            flutter::EncodableMap m;
+            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
+            status_sink->Success(flutter::EncodableValue(m));
+          }
+        } else if (msg.find("Data: VPN failed") != std::string::npos ||
+                   msg.find("Data: VPN stopped") != std::string::npos ||
+                   msg.find("Data: VPN cancelled") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN stopped/failed - updating status to disconnected\n");
+          vpn_status = "disconnected";
+          if (status_sink) {
+            flutter::EncodableMap m;
+            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
+            status_sink->Success(flutter::EncodableValue(m));
+          }
         }
       });
       return nullptr;
@@ -100,9 +131,6 @@ bool FlutterWindow::OnCreate() {
   auto method_channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
       messenger, "com.defyx.vpn",
       &flutter::StandardMethodCodec::GetInstance());
-
-  // Track simple status
-  static std::string vpn_status = "disconnected";
 
   auto send_status = [&]() {
     if (status_sink) {
@@ -233,9 +261,13 @@ bool FlutterWindow::OnCreate() {
             };
             auto cache_dir = WideToUtf8(cache_dir_w);
 
+            std::string log = "[DXcore] Starting VPN with cache_dir=" + cache_dir + 
+                             ", flow=" + flow + ", pattern=" + pattern + "\n";
+            OutputDebugStringA(log.c_str());
+            
             g_dxcore.StartVPN(cache_dir, flow, pattern);
-            vpn_status = "connected";
-            send_status();
+            // Don't set status to connected immediately - wait for DXcore progress callback
+            // vpn_status will be updated by progress handler when "Data: VPN connected" is received
             result->Success(flutter::EncodableValue(true));
           } else {
             result->Error("INVALID_ARGUMENT", "missing args");
