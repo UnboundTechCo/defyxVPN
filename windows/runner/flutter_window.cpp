@@ -3,6 +3,7 @@
 #include <optional>
 
 #include "dxcore_bridge.h"
+#include "proxy_config.h"
 #include "flutter/generated_plugin_registrant.h"
 #include <flutter/event_channel.h>
 #include <flutter/method_channel.h>
@@ -47,6 +48,7 @@ bool FlutterWindow::OnCreate() {
 
   // Make bridge global so handlers can access it.
   static DXCoreBridge g_dxcore;
+  static ProxyConfig g_proxy;
   if (!g_dxcore.Load()) {
     OutputDebugStringA("[DXcore] Failed to load DXcore.dll\n");
   } else {
@@ -95,8 +97,16 @@ bool FlutterWindow::OnCreate() {
         }
         // Update VPN status based on progress messages
         if (msg.find("Data: VPN connected") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN connected - updating status\n");
+          OutputDebugStringA("[DXcore] VPN connected - updating status and enabling proxy\n");
           vpn_status = "connected";
+          
+          // Enable system proxy for SOCKS5 on port 5000
+          if (g_proxy.EnableProxy("127.0.0.1:5000")) {
+            OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
+          } else {
+            OutputDebugStringA("[Proxy] Failed to enable system proxy\n");
+          }
+          
           if (status_sink) {
             flutter::EncodableMap m;
             m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
@@ -105,8 +115,16 @@ bool FlutterWindow::OnCreate() {
         } else if (msg.find("Data: VPN failed") != std::string::npos ||
                    msg.find("Data: VPN stopped") != std::string::npos ||
                    msg.find("Data: VPN cancelled") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN stopped/failed - updating status to disconnected\n");
+          OutputDebugStringA("[DXcore] VPN stopped/failed - updating status to disconnected and disabling proxy\n");
           vpn_status = "disconnected";
+          
+          // Disable system proxy
+          if (g_proxy.DisableProxy()) {
+            OutputDebugStringA("[Proxy] System proxy disabled\n");
+          } else {
+            OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
+          }
+          
           if (status_sink) {
             flutter::EncodableMap m;
             m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
@@ -276,6 +294,7 @@ bool FlutterWindow::OnCreate() {
         }
         if (method == "stopVPN") {
           g_dxcore.StopVPN();
+          g_proxy.DisableProxy();  // Ensure proxy is disabled
           vpn_status = "disconnected";
           send_status();
           result->Success(flutter::EncodableValue(true));
