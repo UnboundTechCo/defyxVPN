@@ -8,6 +8,8 @@ source "$SCRIPT_DIR/ios.sh"
 source "$SCRIPT_DIR/android.sh"
 source "$SCRIPT_DIR/ads.sh"
 source "$SCRIPT_DIR/menu.sh"
+source "$SCRIPT_DIR/firebase_ios.sh"
+source "$SCRIPT_DIR/firebase_android.sh"
 
 echo "Using config file: $GLOBAL_VARS_FILE"
 
