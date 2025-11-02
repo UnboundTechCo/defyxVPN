@@ -151,7 +151,8 @@ class VPN {
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
@@ -159,7 +160,8 @@ class VPN {
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     if (connectionState?.status != ConnectionStatus.analyzing) {
       return;
@@ -194,13 +196,13 @@ class VPN {
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
     connectionNotifier?.setDisconnected();
   }
-
 
   Future<void> _onTunnelClosed() async {
     final connectionNotifier =
@@ -293,8 +295,7 @@ class VPN {
   Future<void> getVPNStatus() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning =
-        await _vpnBridge.isTunnelRunning();
+    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
     } else {

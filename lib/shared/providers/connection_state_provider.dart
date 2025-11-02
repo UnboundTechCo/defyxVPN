@@ -38,8 +38,8 @@ class ConnectionState {
 
 final connectionStateProvider =
     StateNotifierProvider<ConnectionStateNotifier, ConnectionState>((ref) {
-      return ConnectionStateNotifier();
-    });
+  return ConnectionStateNotifier();
+});
 
 class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   static const String _connectionStatusKey = 'connection_status';
