@@ -47,6 +47,11 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+    router.routerDelegate.addListener(() {
+      final currentRoute = ref.read(currentRouteProvider);
+      print("ROUTER CHANGED $currentRoute");
+    });
+
     final designSize = _getDesignSize(context);
 
     return ScreenUtilInit(
