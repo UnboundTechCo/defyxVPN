@@ -56,7 +56,7 @@ class LatencyMeasurementService {
           jitter = (jitterSum / (latencies.length - 1)).round();
         }
 
-        onMetricsUpdate(avgLatency, avgLatency, jitter);
+        onMetricsUpdate(latency, avgLatency, jitter);
 
         debugPrint(
             '   📡 Latency ${i + 1}/$numPackets: ${latency}ms (Avg: ${avgLatency}ms, Jitter: ${jitter}ms)');
