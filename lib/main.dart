@@ -8,8 +8,9 @@ import 'app/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
+  await dotenv.load();
   await Firebase.initializeApp(
+    name: "defyx-vpn",
     options: DefaultFirebaseOptions.currentPlatform,
   );
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
