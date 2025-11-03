@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:intl/intl.dart';
@@ -15,10 +14,7 @@ class NetworkStatus {
     final formatter = NumberFormat.decimalPattern();
 
     final ping = await _vpnBridge.getPing();
-    if (Platform.isAndroid) {
-      final changePing = ping == 0 ? 100 : ping;
-      return formatter.format(changePing);
-    }
+
     final changePing = int.tryParse(ping) == 0 ? 100 : int.tryParse(ping);
     return formatter.format(changePing);
   }
