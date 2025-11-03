@@ -8,6 +8,13 @@
 
 class SystemTray {
  public:
+  enum class TrayIconStatus {
+    Disconnected,
+    Connected,
+    Connecting,
+    Error
+  };
+
   enum class TrayAction {
     ShowWindow,
     ToggleWindow,
@@ -25,12 +32,14 @@ class SystemTray {
   void Cleanup();
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam);
   void UpdateTooltip(const std::wstring& tooltip);
+  void UpdateIcon(TrayIconStatus status);
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
  private:
   void ShowContextMenu(HWND window);
   void ExecuteAction(TrayAction action);
+  HICON CreateIconWithBorder(TrayIconStatus status);
 
   HWND window_;
   HINSTANCE instance_;

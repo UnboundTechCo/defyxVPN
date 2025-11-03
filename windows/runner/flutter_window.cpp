@@ -17,6 +17,13 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 
 FlutterWindow::~FlutterWindow() {}
 
+static DXCoreBridge g_dxcore;
+static ProxyConfig g_proxy;
+static SystemTray* g_system_tray = nullptr;
+static std::string vpn_status = "disconnected";
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
+
 bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
     return false;
@@ -24,11 +31,8 @@ bool FlutterWindow::OnCreate() {
 
   RECT frame = GetClientArea();
 
-  // The size here must match the window dimensions to avoid unnecessary surface
-  // creation / destruction in the startup path.
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
       frame.right - frame.left, frame.bottom - frame.top, project_);
-  // Ensure that basic setup of the controller was successful.
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
     return false;
   }
@@ -39,28 +43,16 @@ bool FlutterWindow::OnCreate() {
     this->Show();
   });
 
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
 
-  // Set up method and event channels for Windows
   auto messenger = flutter_controller_->engine()->messenger();
 
-  // Make bridge global so handlers can access it.
-  static DXCoreBridge g_dxcore;
-  static ProxyConfig g_proxy;
   if (!g_dxcore.Load()) {
     OutputDebugStringA("[DXcore] Failed to load DXcore.dll\n");
   } else {
     OutputDebugStringA("[DXcore] Successfully loaded DXcore.dll\n");
   }
 
-  // Track simple status - must be declared before handlers
-  static std::string vpn_status = "disconnected";
-
-  // Status events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
   class StatusHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -80,8 +72,6 @@ bool FlutterWindow::OnCreate() {
       &flutter::StandardMethodCodec::GetInstance());
   status_channel->SetStreamHandler(std::make_unique<StatusHandler>());
 
-  // Progress events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
   class ProgressHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -100,8 +90,12 @@ bool FlutterWindow::OnCreate() {
         if (msg.find("Data: VPN connected") != std::string::npos) {
           OutputDebugStringA("[DXcore] VPN connected - updating status and enabling proxy\n");
           vpn_status = "connected";
-          
-          // Enable system proxy for SOCKS5 on port 5000
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connected);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Connected");
+          }
+
           if (g_proxy.EnableProxy("127.0.0.1:5000")) {
             OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
           } else {
@@ -113,13 +107,36 @@ bool FlutterWindow::OnCreate() {
             m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
             status_sink->Success(flutter::EncodableValue(m));
           }
-        } else if (msg.find("Data: VPN failed") != std::string::npos ||
-                   msg.find("Data: VPN stopped") != std::string::npos ||
-                   msg.find("Data: VPN cancelled") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN stopped/failed - updating status to disconnected and disabling proxy\n");
+        } else if (msg.find("Data: VPN failed") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN failed - updating status to error and disabling proxy\n");
           vpn_status = "disconnected";
-          
-          // Disable system proxy
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Error);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Error");
+          }
+
+          if (g_proxy.DisableProxy()) {
+            OutputDebugStringA("[Proxy] System proxy disabled\n");
+          } else {
+            OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
+          }
+
+          if (status_sink) {
+            flutter::EncodableMap m;
+            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
+            status_sink->Success(flutter::EncodableValue(m));
+          }
+        } else if (msg.find("Data: VPN stopped") != std::string::npos ||
+                   msg.find("Data: VPN cancelled") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN stopped - updating status to disconnected and disabling proxy\n");
+          vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+          }
+
           if (g_proxy.DisableProxy()) {
             OutputDebugStringA("[Proxy] System proxy disabled\n");
           } else {
@@ -183,6 +200,12 @@ bool FlutterWindow::OnCreate() {
           g_dxcore.StopVPN();
           g_dxcore.Stop();
           vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+          }
+
           send_status();
           result->Success(flutter::EncodableValue(true));
           return;
@@ -285,8 +308,13 @@ bool FlutterWindow::OnCreate() {
             OutputDebugStringA(log.c_str());
             
             g_dxcore.StartVPN(cache_dir, flow, pattern);
-            // Don't set status to connected immediately - wait for DXcore progress callback
-            // vpn_status will be updated by progress handler when "Data: VPN connected" is received
+
+            vpn_status = "connecting";
+            if (g_system_tray) {
+              g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+              g_system_tray->UpdateTooltip(L"DefyxVPN - Connecting...");
+            }
+
             result->Success(flutter::EncodableValue(true));
           } else {
             result->Error("INVALID_ARGUMENT", "missing args");
@@ -295,8 +323,14 @@ bool FlutterWindow::OnCreate() {
         }
         if (method == "stopVPN") {
           g_dxcore.StopVPN();
-          g_proxy.DisableProxy();  // Ensure proxy is disabled
+          g_proxy.DisableProxy();
           vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+          }
+
           send_status();
           result->Success(flutter::EncodableValue(true));
           return;
@@ -313,10 +347,14 @@ bool FlutterWindow::OnCreate() {
         HandleTrayAction(action);
       });
 
+  g_system_tray = system_tray_.get();
+
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  g_system_tray = nullptr;
+
   if (system_tray_) {
     system_tray_->Cleanup();
     system_tray_ = nullptr;
@@ -405,3 +443,5 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
   }
 }
+
+
