@@ -44,6 +44,7 @@ dependencies:
   firebase_core: ^4.2.0
   firebase_analytics: ^12.0.3
   battery_plus: ^7.0.0
+  no_screenshot: ^0.3.1
 
 dev_dependencies:
   flutter_test:
