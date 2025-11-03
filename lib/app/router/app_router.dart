@@ -167,4 +167,4 @@ final routeInformationProvider =
         (ref) => ref.watch(routerProvider).routeInformationProvider);
 
 final currentRouteProvider =
-    Provider((ref) => ref.watch(routeInformationProvider).value.uri);
+    Provider((ref) => ref.watch(routeInformationProvider).value.uri.toString());

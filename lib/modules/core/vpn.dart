@@ -150,16 +150,17 @@ class VPN {
     final flowLineStorage =
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
 
-    final pattern = settings?.getPattern()??"";
-    
+    final pattern = settings?.getPattern() ?? "";
+
     _connectionStartTime = DateTime.now();
     analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
-    
+
     await _vpnBridge.startVPN(flowLineStorage, pattern);
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
@@ -167,7 +168,8 @@ class VPN {
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     final vpnData = await _container?.read(vpnDataProvider.future);
     if (connectionState?.status != ConnectionStatus.analyzing) {
@@ -179,19 +181,21 @@ class VPN {
     vpnData?.enableVPN();
     await _refreshPing();
     vibrationService.vibrateSuccess();
-    
+
     final settings = _container?.read(settingsProvider.notifier);
     final groupState = _container?.read(groupStateProvider);
     final pattern = settings?.getPattern() ?? "auto";
-    
+
     int connectionDuration = 0;
     if (_connectionStartTime != null) {
-      connectionDuration = DateTime.now().difference(_connectionStartTime!).inSeconds;
+      connectionDuration =
+          DateTime.now().difference(_connectionStartTime!).inSeconds;
       _connectionStartTime = null;
     }
-    
-    analyticsService.logVpnConnected(pattern, groupState?.groupName, connectionDuration);
-    
+
+    analyticsService.logVpnConnected(
+        pattern, groupState?.groupName, connectionDuration);
+
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
@@ -325,5 +329,14 @@ class VPN {
   Future<void> initVPN() async {
     await _vpnBridge.setAsnName();
     await _container?.read(flowlineServiceProvider).saveFlowline();
+  }
+
+  void updatePing() {
+    final connectionState = _container?.read(connectionStateProvider);
+    if (connectionState?.status != ConnectionStatus.connected) {
+      return;
+    }
+
+    _container?.read(pingRefreshProvider.notifier).state = true;
   }
 }

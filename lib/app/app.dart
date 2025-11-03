@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,7 +42,9 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      await MobileAds.instance.initialize();
+      if (!Platform.isMacOS) {
+        await MobileAds.instance.initialize();
+      }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
     }
@@ -47,9 +52,11 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    router.routerDelegate.addListener(() {
+    router.routeInformationProvider.addListener(() {
       final currentRoute = ref.read(currentRouteProvider);
-      print("ROUTER CHANGED $currentRoute");
+      if (currentRoute == DefyxVPNRoutes.main.route) {
+        VPN(ProviderScope.containerOf(context)).updatePing();
+      }
     });
 
     final designSize = _getDesignSize(context);
