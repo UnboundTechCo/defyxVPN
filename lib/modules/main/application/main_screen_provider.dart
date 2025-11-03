@@ -11,22 +11,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:version/version.dart';
 
 final pingLoadingProvider = StateProvider<bool>((ref) => false);
-final pingRefreshProvider = StateProvider<bool>((ref) => false);
 final flagLoadingProvider = StateProvider<bool>((ref) => false);
 
-final pingProvider = FutureProvider<String>((ref) async {
-  final isLoading = ref.watch(pingLoadingProvider);
-  final isRefreshing = ref.watch(pingRefreshProvider);
-  final shouldUpdate = isLoading || isRefreshing;
-  final network = NetworkStatus();
-  if (shouldUpdate) {
-    final ping = await network.getPing();
-    if (isLoading) ref.read(pingLoadingProvider.notifier).state = false;
-    if (isRefreshing) ref.read(pingRefreshProvider.notifier).state = false;
-    return ping;
-  }
-  return await network.getPing();
-});
+final pingProvider = StateProvider<String>((ref) => '0');
 
 final flagProvider = FutureProvider<String>((ref) async {
   final isLoading = ref.watch(flagLoadingProvider);
@@ -47,8 +34,7 @@ class MainScreenLogic {
   MainScreenLogic(this.ref);
 
   Future<void> refreshPing() async {
-    ref.read(pingLoadingProvider.notifier).state = true;
-    ref.read(flagLoadingProvider.notifier).state = true;
+    await VPN(ProviderScope.containerOf(ref.context)).refreshPing();
   }
 
   Future<void> connectOrDisconnect() async {

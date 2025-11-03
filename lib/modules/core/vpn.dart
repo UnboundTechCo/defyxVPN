@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
@@ -49,7 +50,7 @@ class VPN {
     _container = container;
 
     vibrationService.init();
-
+    _loadChangeRootListener();
     log.logAppVersion();
     final now = DateTime.now();
     final offset = now.timeZoneOffset;
@@ -62,6 +63,16 @@ class VPN {
 
   void dispose() {
     _vpnSub?.cancel();
+  }
+
+  void _loadChangeRootListener() {
+    final router = _container?.read(routerProvider);
+    router?.routeInformationProvider.addListener(() {
+      final currentRoute = _container?.read(currentRouteProvider);
+      if (currentRoute == DefyxVPNRoutes.main.route) {
+        _updatePing();
+      }
+    });
   }
 
   void _handleVPNUpdates(String msg) {
@@ -179,7 +190,7 @@ class VPN {
     await _createTunnel();
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
-    await _refreshPing();
+    await refreshPing();
     vibrationService.vibrateSuccess();
 
     final settings = _container?.read(settingsProvider.notifier);
@@ -199,9 +210,11 @@ class VPN {
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
-  Future<void> _refreshPing() async {
+  Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
+    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
   Future<void> _stopVPN(WidgetRef ref) async {
@@ -331,12 +344,12 @@ class VPN {
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
 
-  void updatePing() {
+  Future<void> _updatePing() async {
     final connectionState = _container?.read(connectionStateProvider);
     if (connectionState?.status != ConnectionStatus.connected) {
       return;
     }
 
-    _container?.read(pingRefreshProvider.notifier).state = true;
+    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
   }
 }
