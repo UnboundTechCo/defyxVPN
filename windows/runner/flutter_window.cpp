@@ -364,6 +364,15 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       SetForegroundWindow(hwnd);
       break;
 
+    case SystemTray::TrayAction::ToggleWindow:
+      if (IsWindowVisible(hwnd)) {
+        ShowWindow(hwnd, SW_HIDE);
+      } else {
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+      }
+      break;
+
     case SystemTray::TrayAction::RestartProxy:
       if (flutter_controller_) {
         auto messenger = flutter_controller_->engine()->messenger();

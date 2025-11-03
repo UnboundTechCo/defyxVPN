@@ -52,12 +52,15 @@ bool SystemTray::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
   }
 
   switch (LOWORD(lparam)) {
+    case WM_LBUTTONUP:
+      ExecuteAction(TrayAction::ToggleWindow);
+      return true;
     case WM_RBUTTONUP:
     case WM_CONTEXTMENU:
       ShowContextMenu(window_);
       return true;
     case WM_LBUTTONDBLCLK:
-      ExecuteAction(TrayAction::ShowWindow);
+      ExecuteAction(TrayAction::ToggleWindow);
       return true;
   }
 
@@ -70,7 +73,7 @@ void SystemTray::ShowContextMenu(HWND window) {
     return;
   }
 
-  AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"Show Window");
+  AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"Show DefyxVPN");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
   AppendMenu(menu, MF_STRING, IDM_RESTART_PROXY, L"Restart Proxy");
   AppendMenu(menu, MF_STRING, IDM_RESTART_PROGRAM, L"Restart Program");

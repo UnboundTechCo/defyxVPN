@@ -10,6 +10,7 @@ class SystemTray {
  public:
   enum class TrayAction {
     ShowWindow,
+    ToggleWindow,
     RestartProxy,
     RestartProgram,
     Exit
