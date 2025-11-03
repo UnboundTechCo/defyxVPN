@@ -149,9 +149,9 @@ class PingIndicator extends ConsumerWidget {
               return Text(
                 '0 ms',
                 style: TextStyle(
-                  fontSize: 16.sp,
+                  fontSize: 18.sp,
                   fontFamily: 'Lato',
-                  fontWeight: FontWeight.w300,
+                  fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
               );
