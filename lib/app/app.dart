@@ -7,6 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -24,6 +29,27 @@ class App extends ConsumerWidget {
 
   Future<bool> _initializeApp(WidgetRef ref) async {
     return await AdvertiseDirector.shouldUseInternalAds(ref);
+  }
+
+  Future<void> _initializeServices(WidgetRef ref) async {
+    try {
+      await VibrationService().init();
+      await AnimationService().init();
+      
+      final vpnBridge = VpnBridge();
+      await vpnBridge.getVpnStatus();
+      if (!ref.context.mounted) return;
+      final vpn = VPN(ProviderScope.containerOf(ref.context));
+      await vpn.getVPNStatus();
+      await vpnBridge.setAsnName();
+      await ref.read(flowlineServiceProvider).saveFlowline();
+    } on PlatformException catch (e, stack) {
+      debugPrint('PlatformException: ${e.message}, details: ${e.details}');
+      debugPrintStack(stackTrace: stack);
+    } catch (e, stack) {
+      debugPrint('Unexpected error saving flowline: $e');
+      debugPrintStack(stackTrace: stack);
+    }
   }
 
   void _handleAdConfiguration(AsyncSnapshot<bool> snapshot) {
