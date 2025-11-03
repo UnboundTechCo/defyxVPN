@@ -7,6 +7,7 @@
 #include <memory>
 
 #include "win32_window.h"
+#include "system_tray.h"
 
 // A window that does nothing but host a Flutter view.
 class FlutterWindow : public Win32Window {
@@ -23,11 +24,11 @@ class FlutterWindow : public Win32Window {
                          LPARAM const lparam) noexcept override;
 
  private:
-  // The project to run.
-  flutter::DartProject project_;
+  void HandleTrayAction(SystemTray::TrayAction action);
 
-  // The Flutter instance hosted by this window.
+  flutter::DartProject project_;
   std::unique_ptr<flutter::FlutterViewController> flutter_controller_;
+  std::unique_ptr<SystemTray> system_tray_;
 };
 
 #endif  // RUNNER_FLUTTER_WINDOW_H_

@@ -4,6 +4,7 @@
 
 #include "dxcore_bridge.h"
 #include "proxy_config.h"
+#include "system_tray.h"
 #include "flutter/generated_plugin_registrant.h"
 #include <flutter/event_channel.h>
 #include <flutter/method_channel.h>
@@ -304,10 +305,23 @@ bool FlutterWindow::OnCreate() {
         result->NotImplemented();
       });
 
+  system_tray_ = std::make_unique<SystemTray>();
+  system_tray_->Initialize(
+      GetHandle(),
+      GetModuleHandle(nullptr),
+      [this](SystemTray::TrayAction action) {
+        HandleTrayAction(action);
+      });
+
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  if (system_tray_) {
+    system_tray_->Cleanup();
+    system_tray_ = nullptr;
+  }
+
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -319,7 +333,10 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  // Give Flutter, including plugins, an opportunity to handle window messages.
+  if (system_tray_ && system_tray_->HandleMessage(message, wparam, lparam)) {
+    return 0;
+  }
+
   if (flutter_controller_) {
     std::optional<LRESULT> result =
         flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam,
@@ -336,4 +353,46 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
+}
+
+void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
+  HWND hwnd = GetHandle();
+
+  switch (action) {
+    case SystemTray::TrayAction::ShowWindow:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      break;
+
+    case SystemTray::TrayAction::RestartProxy:
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("restartProxy", nullptr);
+      }
+      break;
+
+    case SystemTray::TrayAction::RestartProgram:
+      {
+        wchar_t exe_path[MAX_PATH];
+        GetModuleFileNameW(nullptr, exe_path, MAX_PATH);
+
+        STARTUPINFOW si = { sizeof(si) };
+        PROCESS_INFORMATION pi;
+
+        if (CreateProcessW(exe_path, nullptr, nullptr, nullptr, FALSE, 0,
+                          nullptr, nullptr, &si, &pi)) {
+          CloseHandle(pi.hProcess);
+          CloseHandle(pi.hThread);
+          PostQuitMessage(0);
+        }
+      }
+      break;
+
+    case SystemTray::TrayAction::Exit:
+      DestroyWindow(hwnd);
+      break;
+  }
 }
