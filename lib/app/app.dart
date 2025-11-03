@@ -1,9 +1,9 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
-import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -28,8 +28,6 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
-    await dotenv.load();
-    await _initializeServices(ref);
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
@@ -67,7 +65,9 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      await MobileAds.instance.initialize();
+      if (!Platform.isMacOS) {
+        await MobileAds.instance.initialize();
+      }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
     }
@@ -75,6 +75,7 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
     final designSize = _getDesignSize(context);
 
     return ScreenUtilInit(

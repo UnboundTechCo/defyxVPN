@@ -137,49 +137,50 @@ class PingIndicator extends ConsumerWidget {
         onTap: onRefresh,
         child: Consumer(
           builder: (context, ref, child) {
-            final pingAsync = ref.watch(pingProvider);
+            final ping = ref.watch(pingProvider);
+            final pingLoading = ref.watch(pingLoadingProvider);
 
-            return pingAsync.when(
-              data: (ping) {
-                return Row(
-                  children: [
-                    SizedBox(width: 10.w),
-                    Text(
-                      ping,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      ' ms',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => Shimmer.fromColors(
+            if (pingLoading) {
+              return Shimmer.fromColors(
                 baseColor: const Color(0xFF307065),
                 highlightColor: const Color(0xFF1B483F),
                 enabled: animationService.shouldAnimate(),
                 child: PingPlaceholder(width: 52.w),
-              ),
-              error: (_, __) => Text(
-                '-1 ms',
+              );
+            }
+            if (ping.isEmpty) {
+              return Text(
+                '0 ms',
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontFamily: 'Lato',
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
-              ),
+              );
+            }
+            return Row(
+              children: [
+                SizedBox(width: 10.w),
+                Text(
+                  ping,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  ' ms',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             );
           },
         ),
