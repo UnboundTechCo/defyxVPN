@@ -43,33 +43,19 @@ bool FlutterWindow::OnCreate() {
 
   bool shouldShowWindow = true;
 
-  int argc = __argc;
-  wchar_t** argv = __wargv;
-  bool isStartupLaunch = false;
+  HKEY hKeyMinimized;
+  const wchar_t* regPathMinimized = L"Software\\DefyxVPN";
+  const wchar_t* valueName = L"StartMinimized";
 
-  for (int i = 1; i < argc; i++) {
-    std::wstring arg(argv[i]);
-    if (arg == L"--startup") {
-      isStartupLaunch = true;
-      break;
-    }
-  }
-
-  if (isStartupLaunch) {
-    HKEY hKey;
-    const wchar_t* regPath = L"Software\\DefyxVPN";
-    const wchar_t* valueName = L"StartMinimized";
-
-    if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-      DWORD value = 0;
-      DWORD dataSize = sizeof(DWORD);
-      if (RegQueryValueExW(hKey, valueName, nullptr, nullptr, (BYTE*)&value, &dataSize) == ERROR_SUCCESS) {
-        if (value == 1) {
-          shouldShowWindow = false;
-        }
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, regPathMinimized, 0, KEY_QUERY_VALUE, &hKeyMinimized) == ERROR_SUCCESS) {
+    DWORD value = 0;
+    DWORD dataSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKeyMinimized, valueName, nullptr, nullptr, (BYTE*)&value, &dataSize) == ERROR_SUCCESS) {
+      if (value == 1) {
+        shouldShowWindow = false;
       }
-      RegCloseKey(hKey);
     }
+    RegCloseKey(hKeyMinimized);
   }
 
   flutter_controller_->engine()->SetNextFrameCallback([&, shouldShowWindow]() {
@@ -499,10 +485,6 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       }
       break;
 
-    case SystemTray::TrayAction::AutoConnect:
-        // TODO: Implement auto-connect functionality
-      break;
-
     case SystemTray::TrayAction::LaunchOnStartup:
       {
         HKEY hKey;
@@ -522,17 +504,6 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
             if (system_tray_) {
               system_tray_->SetLaunchOnStartup(false);
             }
-
-            HKEY prefKey;
-            const wchar_t* prefRegPath = L"Software\\DefyxVPN";
-            if (RegCreateKeyExW(HKEY_CURRENT_USER, prefRegPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &prefKey, nullptr) == ERROR_SUCCESS) {
-              DWORD value = 0;
-              RegSetValueExW(prefKey, L"StartMinimized", 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
-              RegCloseKey(prefKey);
-              if (system_tray_) {
-                system_tray_->SetStartMinimized(false);
-              }
-            }
           } else {
             std::wstring startupCommand = std::wstring(exePath) + L" --startup";
             RegSetValueExW(hKey, appName, 0, REG_SZ, (const BYTE*)startupCommand.c_str(), static_cast<DWORD>((startupCommand.length() + 1) * sizeof(wchar_t)));
@@ -543,6 +514,10 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
           RegCloseKey(hKey);
         }
       }
+      break;
+
+    case SystemTray::TrayAction::AutoConnect:
+        // TODO: Implement auto-connect functionality
       break;
 
     case SystemTray::TrayAction::StartMinimized:

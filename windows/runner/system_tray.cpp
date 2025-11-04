@@ -147,10 +147,6 @@ void SystemTray::ShowContextMenu(HWND window) {
   UINT launch_flags = MF_STRING | (launch_on_startup_ ? MF_CHECKED : MF_UNCHECKED);
   UINT auto_connect_flags = MF_STRING | (auto_connect_ ? MF_CHECKED : MF_UNCHECKED);
   UINT start_min_flags = MF_STRING | (start_minimized_ ? MF_CHECKED : MF_UNCHECKED);
-  if (!launch_on_startup_) {
-    auto_connect_flags |= MF_GRAYED;
-    start_min_flags |= MF_GRAYED;
-  }
   AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
   AppendMenu(menu, auto_connect_flags, IDM_AUTO_CONNECT, L"    Auto-connect");
   AppendMenu(menu, start_min_flags, IDM_START_MINIMIZED, L"    Start minimized");
@@ -197,27 +193,15 @@ void SystemTray::ShowContextMenu(HWND window) {
       break;
     case IDM_LAUNCH_ON_STARTUP:
       launch_on_startup_ = !launch_on_startup_;
-      if (!launch_on_startup_) {
-        if (start_minimized_) {
-          start_minimized_ = false;
-        }
-        if (auto_connect_) {
-          auto_connect_ = false;
-        }
-      }
       ExecuteAction(TrayAction::LaunchOnStartup);
       break;
     case IDM_AUTO_CONNECT:
-      if (launch_on_startup_) {
-        auto_connect_ = !auto_connect_;
-        ExecuteAction(TrayAction::AutoConnect);
-      }
+      auto_connect_ = !auto_connect_;
+      ExecuteAction(TrayAction::AutoConnect);
       break;
     case IDM_START_MINIMIZED:
-      if (launch_on_startup_) {
-        start_minimized_ = !start_minimized_;
-        ExecuteAction(TrayAction::StartMinimized);
-      }
+      start_minimized_ = !start_minimized_;
+      ExecuteAction(TrayAction::StartMinimized);
       break;
     case IDM_PROXY_SERVICE:
       if (!proxy_service_) {
