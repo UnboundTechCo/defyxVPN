@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
 
 class NativeMethodHandler {
   static const MethodChannel _channel = MethodChannel('com.defyx.vpn');
@@ -20,6 +21,9 @@ class NativeMethodHandler {
         break;
       case 'openSpeedTest':
         await _openSpeedTest();
+        break;
+      case 'openLogs':
+        await _openLogs();
         break;
       default:
         debugPrint('NativeMethodHandler: Unknown method ${call.method}');
@@ -52,5 +56,26 @@ class NativeMethodHandler {
     }
 
     context.go(DefyxVPNRoutes.speedTest.route);
+  }
+
+  static Future<void> _openLogs() async {
+    final context = rootNavigatorKey.currentContext;
+    if (context == null || !context.mounted) {
+      debugPrint('NativeMethodHandler: Context unavailable');
+      return;
+    }
+
+    context.go(DefyxVPNRoutes.main.route);
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    if (context.mounted) {
+      showDialog(
+        context: context,
+        builder: (ctx) => const Dialog(
+          backgroundColor: Colors.transparent,
+          child: LogPopupContent(),
+        ),
+      );
+    }
   }
 }

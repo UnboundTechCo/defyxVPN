@@ -357,6 +357,10 @@ bool FlutterWindow::OnCreate() {
           result->Success(flutter::EncodableValue(true));
           return;
         }
+        if (method == "openLogs") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
 
         result->NotImplemented();
       });
@@ -484,7 +488,15 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
 
     case SystemTray::TrayAction::OpenLogs:
-      // TODO: Implement logs functionality
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openLogs", nullptr);
+      }
       break;
 
     case SystemTray::TrayAction::Exit:
