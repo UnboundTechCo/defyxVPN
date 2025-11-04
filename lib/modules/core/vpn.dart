@@ -3,8 +3,8 @@ import 'dart:io';
 
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
-import 'package:defyx_vpn/core/network/http_client.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
+import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
@@ -145,7 +145,8 @@ class VPN {
 
     vibrationService.vibrateHeartbeat();
 
-    if (!await _checkNetwork()) {
+    final networkIsConnected = await NetworkStatus.checkConnectivity();
+    if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
       vibrationService.vibrateError();
       return;
@@ -281,17 +282,6 @@ class VPN {
     }
   }
 
-  Future<bool> _checkNetwork() async {
-    try {
-      final httpClient = _container?.read(httpClientProvider);
-      if (httpClient == null) return false;
-
-      return await httpClient.checkConnectivity();
-    } catch (e) {
-      debugPrint('Error checking network: $e');
-      return false;
-    }
-  }
 
   void _setConnectionStep(int step) {
     _container?.read(flowLineStepProvider.notifier).setStep(step);

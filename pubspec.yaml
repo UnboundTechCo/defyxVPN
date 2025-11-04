@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app."
 publish_to: 'none'
-version: 3.2.30+190
+version: 3.2.31+191
 
 environment:
   sdk: ^3.5.3
@@ -31,6 +31,7 @@ dependencies:
   package_info_plus: ^8.3.0
   version: ^3.0.2
   flutter_timezone: ^4.1.1
+  connectivity_plus: ^7.0.0
 
   # Frontend Packages
   flutter_screenutil: ^5.9.3
