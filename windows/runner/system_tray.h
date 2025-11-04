@@ -27,7 +27,8 @@ class SystemTray {
     VPNMode,
     OpenIntroduction,
     OpenSpeedTest,
-    OpenLogs
+    OpenLogs,
+    OpenPreferences
   };
 
   using ActionCallback = std::function<void(TrayAction)>;
@@ -64,6 +65,7 @@ class SystemTray {
   // Menu item IDs
   static constexpr UINT IDM_SHOW_WINDOW = 1001;
   static constexpr UINT IDM_EXIT = 1002;
+  static constexpr UINT IDM_PREFERENCES = 1003;
 
   // Startup Options
   static constexpr UINT IDM_LAUNCH_ON_STARTUP = 1010;

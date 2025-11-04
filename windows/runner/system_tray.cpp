@@ -87,6 +87,7 @@ void SystemTray::ShowContextMenu(HWND window) {
   // Section 2: Connection status
   std::wstring status_text = connection_status_;
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, status_text.c_str());
+  AppendMenu(menu, MF_STRING, IDM_PREFERENCES, L"Preferences");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
   // Section 3: Startup Options
@@ -131,6 +132,9 @@ void SystemTray::ShowContextMenu(HWND window) {
   switch (cmd) {
     case IDM_SHOW_WINDOW:
       ExecuteAction(TrayAction::ShowWindow);
+      break;
+    case IDM_PREFERENCES:
+      ExecuteAction(TrayAction::OpenPreferences);
       break;
     case IDM_LAUNCH_ON_STARTUP:
       launch_on_startup_ = !launch_on_startup_;

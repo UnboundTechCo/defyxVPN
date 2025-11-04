@@ -25,6 +25,9 @@ class NativeMethodHandler {
       case 'openLogs':
         await _openLogs();
         break;
+      case 'openPreferences':
+        await _openPreferences();
+        break;
       default:
         debugPrint('NativeMethodHandler: Unknown method ${call.method}');
     }
@@ -77,5 +80,15 @@ class NativeMethodHandler {
         ),
       );
     }
+  }
+
+  static Future<void> _openPreferences() async {
+    final context = rootNavigatorKey.currentContext;
+    if (context == null || !context.mounted) {
+      debugPrint('NativeMethodHandler: Context unavailable');
+      return;
+    }
+
+    context.go(DefyxVPNRoutes.settings.route);
   }
 }
