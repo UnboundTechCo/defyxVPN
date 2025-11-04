@@ -159,9 +159,11 @@ void SystemTray::ShowContextMenu(HWND window) {
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Service Mode");
   UINT proxy_flags = MF_STRING | (proxy_service_ ? MF_CHECKED : MF_UNCHECKED);
   UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED);
+//  UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED);
   UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
   AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
   AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
+//  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN");
   AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (disabled)");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
@@ -226,7 +228,12 @@ void SystemTray::ShowContextMenu(HWND window) {
       ExecuteAction(TrayAction::SystemProxy);
       break;
     case IDM_VPN_MODE:
-      // Disabled for now
+      if (!vpn_mode_) {
+        proxy_service_ = false;
+        system_proxy_ = false;
+        vpn_mode_ = true;
+      }
+      ExecuteAction(TrayAction::VPNMode);
       break;
     case IDM_INTRODUCTION:
       ExecuteAction(TrayAction::OpenIntroduction);
