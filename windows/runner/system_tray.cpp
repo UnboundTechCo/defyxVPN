@@ -164,7 +164,7 @@ void SystemTray::ShowContextMenu(HWND window) {
   AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
   AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
 //  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN");
-  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (disabled)");
+  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (Upcoming)");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
   // Section 5: Actions
