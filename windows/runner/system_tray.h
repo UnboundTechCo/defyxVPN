@@ -56,6 +56,9 @@ class SystemTray {
   void ShowContextMenu(HWND window);
   void ExecuteAction(TrayAction action);
   HICON CreateIconWithBorder(TrayIconStatus status);
+  bool IsSystemDarkMode();
+  COLORREF GetMenuBackgroundColor();
+  COLORREF GetMenuTextColor();
 
   HWND window_;
   HINSTANCE instance_;

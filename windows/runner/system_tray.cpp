@@ -1,6 +1,15 @@
 #include "system_tray.h"
 #include "resource.h"
 #include <windowsx.h>
+#include <uxtheme.h>
+#include <dwmapi.h>
+
+#pragma comment(lib, "UxTheme.lib")
+#pragma comment(lib, "Dwmapi.lib")
+
+enum PreferredAppMode { Default, AllowDark, ForceDark, ForceLight, Max };
+using fnSetPreferredAppMode = PreferredAppMode(WINAPI*)(PreferredAppMode appMode);
+using fnFlushMenuThemes = void(WINAPI*)();
 
 SystemTray::SystemTray()
     : window_(nullptr),
@@ -74,17 +83,60 @@ bool SystemTray::HandleMessage(UINT message, WPARAM wparam, LPARAM lparam) {
   return false;
 }
 
+bool SystemTray::IsSystemDarkMode() {
+  HKEY hKey;
+  const wchar_t* regPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+  bool isDark = false;
+
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    DWORD value = 0;
+    DWORD bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"AppsUseLightTheme", nullptr, nullptr, (LPBYTE)&value, &bufSize) == ERROR_SUCCESS) {
+      isDark = (value == 0);
+    }
+    RegCloseKey(hKey);
+  }
+
+  return isDark;
+}
+
+COLORREF SystemTray::GetMenuBackgroundColor() {
+  return IsSystemDarkMode() ? RGB(32, 32, 32) : GetSysColor(COLOR_MENU);
+}
+
+COLORREF SystemTray::GetMenuTextColor() {
+  return IsSystemDarkMode() ? RGB(255, 255, 255) : GetSysColor(COLOR_MENUTEXT);
+}
+
 void SystemTray::ShowContextMenu(HWND window) {
   HMENU menu = CreatePopupMenu();
   if (!menu) {
     return;
   }
 
-  // Section 1: DefyxVPN title
+  bool isDarkMode = IsSystemDarkMode();
+
+  if (isDarkMode) {
+    HMODULE hUxtheme = LoadLibraryExW(L"uxtheme.dll", nullptr, LOAD_LIBRARY_SEARCH_SYSTEM32);
+    if (hUxtheme) {
+      auto SetPreferredAppMode = reinterpret_cast<fnSetPreferredAppMode>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(135)));
+      auto FlushMenuThemes = reinterpret_cast<fnFlushMenuThemes>(GetProcAddress(hUxtheme, MAKEINTRESOURCEA(136)));
+
+      if (SetPreferredAppMode && FlushMenuThemes) {
+        SetPreferredAppMode(AllowDark);
+        FlushMenuThemes();
+      }
+
+      FreeLibrary(hUxtheme);
+    }
+
+    BOOL darkMode = TRUE;
+    DwmSetWindowAttribute(window, 20, &darkMode, sizeof(darkMode));
+  }
+
   AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"DefyxVPN");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
-  // Section 2: Connection status
   std::wstring status_text = connection_status_;
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, status_text.c_str());
   AppendMenu(menu, MF_STRING, IDM_PREFERENCES, L"Preferences");
@@ -131,6 +183,7 @@ void SystemTray::ShowContextMenu(HWND window) {
                             cursor.x, cursor.y, 0, window, nullptr);
 
   DestroyMenu(menu);
+
 
   switch (cmd) {
     case IDM_SHOW_WINDOW:
