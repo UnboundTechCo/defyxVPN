@@ -18,9 +18,16 @@ class SystemTray {
   enum class TrayAction {
     ShowWindow,
     ToggleWindow,
-    RestartProxy,
-    RestartProgram,
-    Exit
+    Exit,
+    LaunchOnStartup,
+    AutoConnect,
+    StartMinimized,
+    ProxyService,
+    SystemProxy,
+    VPNMode,
+    OpenIntroduction,
+    OpenSpeedTest,
+    OpenLogs
   };
 
   using ActionCallback = std::function<void(TrayAction)>;
@@ -33,6 +40,13 @@ class SystemTray {
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam);
   void UpdateTooltip(const std::wstring& tooltip);
   void UpdateIcon(TrayIconStatus status);
+  void UpdateConnectionStatus(const std::wstring& status);
+  void SetLaunchOnStartup(bool value);
+  void SetAutoConnect(bool value);
+  void SetStartMinimized(bool value);
+  void SetProxyService(bool value);
+  void SetSystemProxy(bool value);
+  void SetVPNMode(bool value);
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
@@ -47,10 +61,33 @@ class SystemTray {
   ActionCallback callback_;
   bool initialized_;
 
+  // Menu item IDs
   static constexpr UINT IDM_SHOW_WINDOW = 1001;
-  static constexpr UINT IDM_RESTART_PROXY = 1002;
-  static constexpr UINT IDM_RESTART_PROGRAM = 1003;
-  static constexpr UINT IDM_EXIT = 1004;
+  static constexpr UINT IDM_EXIT = 1002;
+
+  // Startup Options
+  static constexpr UINT IDM_LAUNCH_ON_STARTUP = 1010;
+  static constexpr UINT IDM_AUTO_CONNECT = 1011;
+  static constexpr UINT IDM_START_MINIMIZED = 1012;
+
+  // Service Mode
+  static constexpr UINT IDM_PROXY_SERVICE = 1020;
+  static constexpr UINT IDM_SYSTEM_PROXY = 1021;
+  static constexpr UINT IDM_VPN_MODE = 1022;
+
+  // Other actions
+  static constexpr UINT IDM_INTRODUCTION = 1030;
+  static constexpr UINT IDM_SPEEDTEST = 1031;
+  static constexpr UINT IDM_LOGS = 1032;
+
+  // Checkbox states
+  bool launch_on_startup_;
+  bool auto_connect_;
+  bool start_minimized_;
+  bool proxy_service_;
+  bool system_proxy_;
+  bool vpn_mode_;
+  std::wstring connection_status_;
 };
 
 #endif

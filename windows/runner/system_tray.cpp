@@ -6,7 +6,14 @@ SystemTray::SystemTray()
     : window_(nullptr),
       instance_(nullptr),
       callback_(nullptr),
-      initialized_(false) {
+      initialized_(false),
+      launch_on_startup_(false),
+      auto_connect_(false),
+      start_minimized_(true),
+      proxy_service_(false),
+      system_proxy_(true),
+      vpn_mode_(false),
+      connection_status_(L"Disconnected") {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
 }
 
@@ -73,11 +80,42 @@ void SystemTray::ShowContextMenu(HWND window) {
     return;
   }
 
-  AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"Show DefyxVPN");
+  // Section 1: DefyxVPN title
+  AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"DefyxVPN");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
-  AppendMenu(menu, MF_STRING, IDM_RESTART_PROXY, L"Restart Proxy");
-  AppendMenu(menu, MF_STRING, IDM_RESTART_PROGRAM, L"Restart Program");
+
+  // Section 2: Connection status
+  std::wstring status_text = connection_status_;
+  AppendMenu(menu, MF_STRING | MF_GRAYED, 0, status_text.c_str());
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
+
+  // Section 3: Startup Options
+  AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Startup Options");
+  UINT launch_flags = MF_STRING | (launch_on_startup_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT auto_connect_flags = MF_STRING | (auto_connect_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT start_min_flags = MF_STRING | (start_minimized_ ? MF_CHECKED : MF_UNCHECKED);
+  AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
+  AppendMenu(menu, auto_connect_flags, IDM_AUTO_CONNECT, L"    Auto-connect");
+  AppendMenu(menu, start_min_flags, IDM_START_MINIMIZED, L"    Start minimized");
+  AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
+
+  // Section 4: Service Mode
+  AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Service Mode");
+  UINT proxy_flags = MF_STRING | (proxy_service_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
+  AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
+  AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
+  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (disabled)");
+  AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
+
+  // Section 5: Actions
+  AppendMenu(menu, MF_STRING, IDM_INTRODUCTION, L"Introduction");
+  AppendMenu(menu, MF_STRING, IDM_SPEEDTEST, L"Speedtest");
+  AppendMenu(menu, MF_STRING, IDM_LOGS, L"Logs");
+  AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
+
+  // Section 6: Exit
   AppendMenu(menu, MF_STRING, IDM_EXIT, L"Exit");
 
   POINT cursor;
@@ -94,11 +132,45 @@ void SystemTray::ShowContextMenu(HWND window) {
     case IDM_SHOW_WINDOW:
       ExecuteAction(TrayAction::ShowWindow);
       break;
-    case IDM_RESTART_PROXY:
-      ExecuteAction(TrayAction::RestartProxy);
+    case IDM_LAUNCH_ON_STARTUP:
+      launch_on_startup_ = !launch_on_startup_;
+      ExecuteAction(TrayAction::LaunchOnStartup);
       break;
-    case IDM_RESTART_PROGRAM:
-      ExecuteAction(TrayAction::RestartProgram);
+    case IDM_AUTO_CONNECT:
+      auto_connect_ = !auto_connect_;
+      ExecuteAction(TrayAction::AutoConnect);
+      break;
+    case IDM_START_MINIMIZED:
+      start_minimized_ = !start_minimized_;
+      ExecuteAction(TrayAction::StartMinimized);
+      break;
+    case IDM_PROXY_SERVICE:
+      if (!proxy_service_) {
+        proxy_service_ = true;
+        system_proxy_ = false;
+        vpn_mode_ = false;
+      }
+      ExecuteAction(TrayAction::ProxyService);
+      break;
+    case IDM_SYSTEM_PROXY:
+      if (!system_proxy_) {
+        proxy_service_ = false;
+        system_proxy_ = true;
+        vpn_mode_ = false;
+      }
+      ExecuteAction(TrayAction::SystemProxy);
+      break;
+    case IDM_VPN_MODE:
+      // Disabled for now
+      break;
+    case IDM_INTRODUCTION:
+      ExecuteAction(TrayAction::OpenIntroduction);
+      break;
+    case IDM_SPEEDTEST:
+      ExecuteAction(TrayAction::OpenSpeedTest);
+      break;
+    case IDM_LOGS:
+      ExecuteAction(TrayAction::OpenLogs);
       break;
     case IDM_EXIT:
       ExecuteAction(TrayAction::Exit);
@@ -236,3 +308,32 @@ void SystemTray::UpdateIcon(TrayIconStatus status) {
     Shell_NotifyIcon(NIM_MODIFY, &nid_);
   }
 }
+
+void SystemTray::UpdateConnectionStatus(const std::wstring& status) {
+  connection_status_ = status;
+}
+
+void SystemTray::SetLaunchOnStartup(bool value) {
+  launch_on_startup_ = value;
+}
+
+void SystemTray::SetAutoConnect(bool value) {
+  auto_connect_ = value;
+}
+
+void SystemTray::SetStartMinimized(bool value) {
+  start_minimized_ = value;
+}
+
+void SystemTray::SetProxyService(bool value) {
+  proxy_service_ = value;
+}
+
+void SystemTray::SetSystemProxy(bool value) {
+  system_proxy_ = value;
+}
+
+void SystemTray::SetVPNMode(bool value) {
+  vpn_mode_ = value;
+}
+

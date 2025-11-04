@@ -94,6 +94,7 @@ bool FlutterWindow::OnCreate() {
           if (g_system_tray) {
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connected);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Connected");
+            g_system_tray->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
           }
 
           if (g_proxy.EnableProxy("127.0.0.1:5000")) {
@@ -114,6 +115,7 @@ bool FlutterWindow::OnCreate() {
           if (g_system_tray) {
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Error);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Error");
+            g_system_tray->UpdateConnectionStatus(L"Error");
           }
 
           if (g_proxy.DisableProxy()) {
@@ -204,6 +206,8 @@ bool FlutterWindow::OnCreate() {
           if (g_system_tray) {
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
           }
 
           send_status();
@@ -313,6 +317,7 @@ bool FlutterWindow::OnCreate() {
             if (g_system_tray) {
               g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
               g_system_tray->UpdateTooltip(L"DefyxVPN - Connecting...");
+              g_system_tray->UpdateConnectionStatus(L"Connecting...");
             }
 
             result->Success(flutter::EncodableValue(true));
@@ -327,11 +332,28 @@ bool FlutterWindow::OnCreate() {
           vpn_status = "disconnected";
 
           if (g_system_tray) {
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
           }
 
           send_status();
+          result->Success(flutter::EncodableValue(true));
+        if (method == "openIntroduction") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openSpeedTest") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+          return;
+        }
+        if (method == "openIntroduction") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openSpeedTest") {
           result->Success(flutter::EncodableValue(true));
           return;
         }
@@ -411,31 +433,58 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       }
       break;
 
-    case SystemTray::TrayAction::RestartProxy:
+    case SystemTray::TrayAction::LaunchOnStartup:
+      // TODO: Implement launch on startup functionality
+      break;
+
+    case SystemTray::TrayAction::AutoConnect:
+      // TODO: Implement auto-connect functionality
+      break;
+
+    case SystemTray::TrayAction::StartMinimized:
+      // TODO: Implement start minimized functionality
+      break;
+
+
+    case SystemTray::TrayAction::ProxyService:
+      // TODO: Implement proxy service mode
+      break;
+
+    case SystemTray::TrayAction::SystemProxy:
+      // TODO: Implement system proxy mode
+      break;
+
+    case SystemTray::TrayAction::VPNMode:
+      // TODO: Implement VPN mode (currently disabled)
+      break;
+
+    case SystemTray::TrayAction::OpenIntroduction:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
       if (flutter_controller_) {
         auto messenger = flutter_controller_->engine()->messenger();
         auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
             messenger, "com.defyx.vpn",
             &flutter::StandardMethodCodec::GetInstance());
-        channel->InvokeMethod("restartProxy", nullptr);
+        channel->InvokeMethod("openIntroduction", nullptr);
       }
       break;
 
-    case SystemTray::TrayAction::RestartProgram:
-      {
-        wchar_t exe_path[MAX_PATH];
-        GetModuleFileNameW(nullptr, exe_path, MAX_PATH);
-
-        STARTUPINFOW si = { sizeof(si) };
-        PROCESS_INFORMATION pi;
-
-        if (CreateProcessW(exe_path, nullptr, nullptr, nullptr, FALSE, 0,
-                          nullptr, nullptr, &si, &pi)) {
-          CloseHandle(pi.hProcess);
-          CloseHandle(pi.hThread);
-          PostQuitMessage(0);
-        }
+    case SystemTray::TrayAction::OpenSpeedTest:
+      // Show window first
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openSpeedTest", nullptr);
       }
+      break;
+
+    case SystemTray::TrayAction::OpenLogs:
+      // TODO: Implement logs functionality
       break;
 
     case SystemTray::TrayAction::Exit:
