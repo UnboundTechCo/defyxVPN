@@ -92,14 +92,14 @@ void SystemTray::ShowContextMenu(HWND window) {
 
   // Section 3: Startup Options
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Startup Options");
-  UINT launch_flags = MF_STRING | (launch_on_startup_ ? MF_CHECKED : MF_UNCHECKED);
   UINT auto_connect_flags = MF_STRING | (auto_connect_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT launch_flags = MF_STRING | (launch_on_startup_ ? MF_CHECKED : MF_UNCHECKED);
   UINT start_min_flags = MF_STRING | (start_minimized_ ? MF_CHECKED : MF_UNCHECKED);
   if (!launch_on_startup_) {
     start_min_flags |= MF_GRAYED;
   }
-  AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
   AppendMenu(menu, auto_connect_flags, IDM_AUTO_CONNECT, L"    Auto-connect");
+  AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
   AppendMenu(menu, start_min_flags, IDM_START_MINIMIZED, L"    Start minimized");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 

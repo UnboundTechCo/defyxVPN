@@ -466,6 +466,10 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       }
       break;
 
+    case SystemTray::TrayAction::AutoConnect:
+        // TODO: Implement auto-connect functionality
+      break;
+
     case SystemTray::TrayAction::LaunchOnStartup:
       {
         HKEY hKey;
@@ -507,9 +511,6 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       }
       break;
 
-    case SystemTray::TrayAction::AutoConnect:
-      break;
-
     case SystemTray::TrayAction::StartMinimized:
       {
         HKEY hKey;
@@ -535,7 +536,6 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
         }
       }
       break;
-
 
     case SystemTray::TrayAction::ProxyService:
       // TODO: Implement proxy service mode
