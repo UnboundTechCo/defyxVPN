@@ -48,6 +48,7 @@ class SystemTray {
   void SetProxyService(bool value);
   void SetSystemProxy(bool value);
   void SetVPNMode(bool value);
+  bool GetStartMinimized() const { return start_minimized_; }
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 

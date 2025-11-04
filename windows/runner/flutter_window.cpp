@@ -11,6 +11,8 @@
 #include <flutter/standard_method_codec.h>
 #include <string>
 #include <cstdlib>
+#include <fstream>
+#include <shlobj.h>
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -339,14 +341,10 @@ bool FlutterWindow::OnCreate() {
 
           send_status();
           result->Success(flutter::EncodableValue(true));
-        if (method == "openIntroduction") {
-          result->Success(flutter::EncodableValue(true));
           return;
         }
-        if (method == "openSpeedTest") {
+        if (method == "setStartMinimized") {
           result->Success(flutter::EncodableValue(true));
-          return;
-        }
           return;
         }
         if (method == "openIntroduction") {
@@ -378,6 +376,33 @@ bool FlutterWindow::OnCreate() {
       });
 
   g_system_tray = system_tray_.get();
+
+  HKEY hKey;
+  const wchar_t* appName = L"DefyxVPN";
+  const wchar_t* regPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    wchar_t existingPath[MAX_PATH] = {0};
+    DWORD bufSize = sizeof(existingPath);
+    if (RegQueryValueExW(hKey, appName, nullptr, nullptr, (LPBYTE)existingPath, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetLaunchOnStartup(true);
+      }
+    }
+    RegCloseKey(hKey);
+  }
+
+  const wchar_t* prefRegPath = L"Software\\DefyxVPN";
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, prefRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    DWORD startMinimized = 0;
+    DWORD bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"StartMinimized", nullptr, nullptr, (LPBYTE)&startMinimized, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetStartMinimized(startMinimized != 0);
+      }
+    }
+    RegCloseKey(hKey);
+  }
 
   return true;
 }
@@ -442,15 +467,73 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
 
     case SystemTray::TrayAction::LaunchOnStartup:
-      // TODO: Implement launch on startup functionality
+      {
+        HKEY hKey;
+        const wchar_t* appName = L"DefyxVPN";
+        const wchar_t* regPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+          wchar_t exePath[MAX_PATH];
+          GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+
+          wchar_t existingPath[MAX_PATH] = {0};
+          DWORD bufSize = sizeof(existingPath);
+          LONG queryResult = RegQueryValueExW(hKey, appName, nullptr, nullptr, (LPBYTE)existingPath, &bufSize);
+
+          if (queryResult == ERROR_SUCCESS) {
+            RegDeleteValueW(hKey, appName);
+            if (system_tray_) {
+              system_tray_->SetLaunchOnStartup(false);
+            }
+
+            HKEY prefKey;
+            const wchar_t* prefRegPath = L"Software\\DefyxVPN";
+            if (RegCreateKeyExW(HKEY_CURRENT_USER, prefRegPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &prefKey, nullptr) == ERROR_SUCCESS) {
+              DWORD value = 0;
+              RegSetValueExW(prefKey, L"StartMinimized", 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+              RegCloseKey(prefKey);
+              if (system_tray_) {
+                system_tray_->SetStartMinimized(false);
+              }
+            }
+          } else {
+            RegSetValueExW(hKey, appName, 0, REG_SZ, (const BYTE*)exePath, static_cast<DWORD>((wcslen(exePath) + 1) * sizeof(wchar_t)));
+            if (system_tray_) {
+              system_tray_->SetLaunchOnStartup(true);
+            }
+          }
+          RegCloseKey(hKey);
+        }
+      }
       break;
 
     case SystemTray::TrayAction::AutoConnect:
-      // TODO: Implement auto-connect functionality
       break;
 
     case SystemTray::TrayAction::StartMinimized:
-      // TODO: Implement start minimized functionality
+      {
+        HKEY hKey;
+        const wchar_t* regPath = L"Software\\DefyxVPN";
+        const wchar_t* valueName = L"StartMinimized";
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+          bool currentValue = system_tray_->GetStartMinimized();
+          DWORD value = currentValue ? 1 : 0;
+          RegSetValueExW(hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+          RegCloseKey(hKey);
+
+          if (flutter_controller_) {
+            auto messenger = flutter_controller_->engine()->messenger();
+            auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+                messenger, "com.defyx.vpn",
+                &flutter::StandardMethodCodec::GetInstance());
+
+            flutter::EncodableMap args;
+            args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
+            channel->InvokeMethod("setStartMinimized", std::make_unique<flutter::EncodableValue>(args));
+          }
+        }
+      }
       break;
 
 
@@ -479,7 +562,6 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
 
     case SystemTray::TrayAction::OpenSpeedTest:
-      // Show window first
       ShowWindow(hwnd, SW_RESTORE);
       SetForegroundWindow(hwnd);
       if (flutter_controller_) {
