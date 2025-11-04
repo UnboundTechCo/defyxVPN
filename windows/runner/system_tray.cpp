@@ -19,6 +19,7 @@ SystemTray::SystemTray()
       launch_on_startup_(false),
       auto_connect_(false),
       start_minimized_(true),
+      force_close_(false),
       proxy_service_(false),
       system_proxy_(true),
       vpn_mode_(false),
@@ -147,9 +148,11 @@ void SystemTray::ShowContextMenu(HWND window) {
   UINT launch_flags = MF_STRING | (launch_on_startup_ ? MF_CHECKED : MF_UNCHECKED);
   UINT auto_connect_flags = MF_STRING | (auto_connect_ ? MF_CHECKED : MF_UNCHECKED);
   UINT start_min_flags = MF_STRING | (start_minimized_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT force_close_flags = MF_STRING | (force_close_ ? MF_CHECKED : MF_UNCHECKED);
   AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
   AppendMenu(menu, auto_connect_flags, IDM_AUTO_CONNECT, L"    Auto-connect");
   AppendMenu(menu, start_min_flags, IDM_START_MINIMIZED, L"    Start minimized");
+  AppendMenu(menu, force_close_flags, IDM_FORCE_CLOSE, L"    Force close");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
   // Section 4: Service Mode
@@ -202,6 +205,10 @@ void SystemTray::ShowContextMenu(HWND window) {
     case IDM_START_MINIMIZED:
       start_minimized_ = !start_minimized_;
       ExecuteAction(TrayAction::StartMinimized);
+      break;
+    case IDM_FORCE_CLOSE:
+      force_close_ = !force_close_;
+      ExecuteAction(TrayAction::ForceClose);
       break;
     case IDM_PROXY_SERVICE:
       if (!proxy_service_) {
@@ -387,6 +394,10 @@ void SystemTray::SetAutoConnect(bool value) {
 
 void SystemTray::SetStartMinimized(bool value) {
   start_minimized_ = value;
+}
+
+void SystemTray::SetForceClose(bool value) {
+  force_close_ = value;
 }
 
 void SystemTray::SetProxyService(bool value) {
