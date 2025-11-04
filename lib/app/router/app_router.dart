@@ -105,8 +105,11 @@ CustomTransitionPage<void> _createPageAnimation(
   );
 }
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: DefyxVPNRoutes.splash.route,
     routes: [
       GoRoute(
