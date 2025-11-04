@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -23,6 +25,8 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
+    await VibrationService().init();
+    await AnimationService().init();
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
