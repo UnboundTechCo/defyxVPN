@@ -3,6 +3,7 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/services/native_method_handler.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -104,7 +105,9 @@ class App extends ConsumerWidget {
   }
 
   Widget _appBuilder(BuildContext context, Widget? child) {
-    NativeMethodHandler.initialize();
+    if (defaultTargetPlatform == TargetPlatform.windows) {
+      NativeMethodHandler.initialize();
+    }
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),

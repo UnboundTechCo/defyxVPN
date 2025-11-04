@@ -24,7 +24,7 @@ class DefyxNavBar extends ConsumerWidget {
         children: [
           Container(
             width: 200.w,
-            height: 65.h,
+            height: 75.h,
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(100.r),
