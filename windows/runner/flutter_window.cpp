@@ -41,8 +41,41 @@ bool FlutterWindow::OnCreate() {
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+  bool shouldShowWindow = true;
+
+  int argc = __argc;
+  wchar_t** argv = __wargv;
+  bool isStartupLaunch = false;
+
+  for (int i = 1; i < argc; i++) {
+    std::wstring arg(argv[i]);
+    if (arg == L"--startup") {
+      isStartupLaunch = true;
+      break;
+    }
+  }
+
+  if (isStartupLaunch) {
+    HKEY hKey;
+    const wchar_t* regPath = L"Software\\DefyxVPN";
+    const wchar_t* valueName = L"StartMinimized";
+
+    if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+      DWORD value = 0;
+      DWORD dataSize = sizeof(DWORD);
+      if (RegQueryValueExW(hKey, valueName, nullptr, nullptr, (BYTE*)&value, &dataSize) == ERROR_SUCCESS) {
+        if (value == 1) {
+          shouldShowWindow = false;
+        }
+      }
+      RegCloseKey(hKey);
+    }
+  }
+
+  flutter_controller_->engine()->SetNextFrameCallback([&, shouldShowWindow]() {
+    if (shouldShowWindow) {
+      this->Show();
+    }
   });
 
   flutter_controller_->ForceRedraw();
@@ -501,7 +534,8 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
               }
             }
           } else {
-            RegSetValueExW(hKey, appName, 0, REG_SZ, (const BYTE*)exePath, static_cast<DWORD>((wcslen(exePath) + 1) * sizeof(wchar_t)));
+            std::wstring startupCommand = std::wstring(exePath) + L" --startup";
+            RegSetValueExW(hKey, appName, 0, REG_SZ, (const BYTE*)startupCommand.c_str(), static_cast<DWORD>((startupCommand.length() + 1) * sizeof(wchar_t)));
             if (system_tray_) {
               system_tray_->SetLaunchOnStartup(true);
             }
