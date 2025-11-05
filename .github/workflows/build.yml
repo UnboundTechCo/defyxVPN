@@ -268,7 +268,7 @@ jobs:
   release-to-telegram:
     runs-on: ubuntu-latest
     needs: build-android
-    if: ${{ github.event.inputs.send_telegram == 'true' }}
+    # if: ${{ github.event.inputs.send_telegram == 'true' }}
     steps:
       - name: Download APK artifact
         uses: actions/download-artifact@v4
