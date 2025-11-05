@@ -131,9 +131,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     }).toList();
 
     if (tempState[0].items.every((item) => !item.isEnabled)) {
-      // Show toast message when trying to disable all cores
       if (context != null) {
-        // Use the new settings toast UI
         SettingsToastMessage.show(context, 'At least one core must remain enabled');
       } else {
         ToastUtil.showToast('At least one core must remain enabled');
@@ -173,13 +171,10 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
         final List<SettingsItem> allItems = List.from(group.items)
           ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
-        // Adjust newIndex when moving items down the list
-        // This is needed because ReorderableListView reports newIndex as if the item was already removed
         if (newIndex > oldIndex) {
           newIndex -= 1;
         }
 
-        // Validate indices
         if (oldIndex >= 0 && oldIndex < allItems.length && newIndex >= 0 && newIndex < allItems.length) {
           final item = allItems.removeAt(oldIndex);
           allItems.insert(newIndex, item);

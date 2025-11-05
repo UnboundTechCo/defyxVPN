@@ -11,7 +11,6 @@ import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 
-// Global navigator key for accessing context from anywhere
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class App extends ConsumerWidget {

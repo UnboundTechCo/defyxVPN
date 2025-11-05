@@ -5,11 +5,9 @@ import 'package:defyx_vpn/app/app.dart';
 
 class ToastUtil {
   static void showToast(String message) {
-    // Get the current context from the navigator key
     final context = navigatorKey.currentContext;
     
     if (context != null) {
-      // Use the custom toast if context is available
       CustomToast.show(
         context: context,
         message: message,
@@ -18,7 +16,6 @@ class ToastUtil {
         borderRadius: 8.0,
       );
     } else {
-      // Fallback to Fluttertoast if context is not available
       Fluttertoast.showToast(
         msg: message,
         toastLength: Toast.LENGTH_SHORT,
@@ -31,7 +28,6 @@ class ToastUtil {
     }
   }
   
-  // For use in specific screens where you want to show the custom toast
   static void showCustomToast({
     required BuildContext context,
     required String message,
