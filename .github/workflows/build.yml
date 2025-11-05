@@ -100,6 +100,7 @@ jobs:
             -o android/app/libs/DXcore-android.zip
           cd android/app/libs
           unzip -o DXcore-android.zip
+          mv build/android/* .
           rm DXcore-android.zip
           ls -la
 
