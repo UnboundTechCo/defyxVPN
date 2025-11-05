@@ -282,7 +282,17 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           APP_VERSION: ${{ env.APP_VERSION }}
         run: |
-          curl -F chat_id="$TELEGRAM_CHAT_ID" \
-               -F document=@release/app-release.apk \
-               -F caption="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-               "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+            APK_PATH=$(find release -type f -name "*.apk" | head -n 1)
+
+            if [ -z "$APK_PATH" ]; then
+              echo "No APK file found in artifact!"
+              exit 1
+            fi
+
+            echo "Sending APK: $APK_PATH"
+
+            curl  -F chat_id="$TELEGRAM_CHAT_ID" \
+                  -F document=@"$APK_PATH" \
+                  -F caption="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+                  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+
