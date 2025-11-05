@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/update_dialog_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/scroll_manager.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/secret_tap_handler.dart';
@@ -6,10 +8,11 @@ import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/game.dart';
@@ -24,6 +27,7 @@ class MainScreen extends ConsumerStatefulWidget {
 
 class _MainScreenState extends ConsumerState<MainScreen> {
   final ScrollController _scrollController = ScrollController();
+  final AnimationService _animationService = AnimationService();
   bool _showHeaderShadow = false;
   ConnectionStatus? _previousConnectionStatus;
   bool? _previousShowCountdown;
@@ -107,8 +111,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final connectionState = ref.read(connectionStateProvider);
       _previousConnectionStatus = connectionState.status;
 
-      final newShadowState =
-          connectionState.status == ConnectionStatus.connected;
+      final newShadowState = connectionState.status == ConnectionStatus.connected;
       if (_showHeaderShadow != newShadowState) {
         setState(() {
           _showHeaderShadow = newShadowState;
@@ -127,7 +130,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     PrivacyNoticeDialog.show(
       context,
       () async {
-        await _logic.markPrivacyNoticeShown();
+        if (ref.context.mounted) {
+          final vpnBridge = VpnBridge();
+          final result = await vpnBridge.prepareVpn();
+          if (result && ref.context.mounted) {
+            final vpn = VPN(ProviderScope.containerOf(ref.context));
+            await vpn.initVPN();
+            await _logic.markPrivacyNoticeShown();
+            return true;
+          }
+        }
+        return false;
       },
     );
   }
@@ -176,10 +189,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         Positioned(
                           top: 130.h,
                           child: ConnectionButton(
-                            onTap: connectionState.status ==
-                                        ConnectionStatus.loading ||
-                                    connectionState.status ==
-                                        ConnectionStatus.disconnecting
+                            onTap: connectionState.status == ConnectionStatus.loading ||
+                                    connectionState.status == ConnectionStatus.disconnecting
                                 ? () {}
                                 : _logic.connectOrDisconnect,
                           ),
@@ -193,19 +204,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               onPingRefresh: _logic.refreshPing,
                             ),
                             SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
+                              height: connectionState.status == ConnectionStatus.connected
                                   ? 40.h
                                   : 80.h,
                             ),
                             SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
+                              height: connectionState.status == ConnectionStatus.connected
                                   ? 0.24.sh
                                   : 0.28.sh,
                             ),
-                            _buildContentSection(
-                                connectionState.status, adsState),
+                            _buildContentSection(connectionState.status, adsState),
                             SizedBox(height: 0.15.sh),
                           ],
                         ),
@@ -219,7 +227,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   right: 0,
                   child: IgnorePointer(
                     child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 300),
+                      duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
                       opacity: _showHeaderShadow ? 1.0 : 0.0,
                       child: Container(
                         height: 150.h,
@@ -264,8 +272,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        final shouldShowAd =
-            status == ConnectionStatus.connected && adsState.showCountdown;
+        final shouldShowAd = status == ConnectionStatus.connected && adsState.showCountdown;
 
         return SizedBox(
           height: 280.h,
@@ -275,11 +282,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
               0,
               shouldShowAd ? 0.0 : 1.0,
             ),
-            duration: const Duration(milliseconds: 800),
+            duration: _animationService.adjustDuration(const Duration(milliseconds: 800)),
             curve: Curves.easeOut,
             child: AnimatedOpacity(
               opacity: shouldShowAd ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 500),
+              duration: _animationService.adjustDuration(const Duration(milliseconds: 500)),
               curve: Curves.easeInOut,
               child: DecoratedBox(
                 decoration: BoxDecoration(

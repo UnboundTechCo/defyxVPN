@@ -1,14 +1,14 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
-import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-import 'package:defyx_vpn/modules/core/vpn.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -25,27 +25,9 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
-    await dotenv.load();
-    await _initializeServices(ref);
+    await VibrationService().init();
+    await AnimationService().init();
     return await AdvertiseDirector.shouldUseInternalAds(ref);
-  }
-
-  Future<void> _initializeServices(WidgetRef ref) async {
-    try {
-      final vpnBridge = VpnBridge();
-      await vpnBridge.getVpnStatus();
-      if (!ref.context.mounted) return;
-      final vpn = VPN(ProviderScope.containerOf(ref.context));
-      await vpn.getVPNStatus();
-      await vpnBridge.setAsnName();
-      await ref.read(flowlineServiceProvider).saveFlowline();
-    } on PlatformException catch (e, stack) {
-      debugPrint('PlatformException: ${e.message}, details: ${e.details}');
-      debugPrintStack(stackTrace: stack);
-    } catch (e, stack) {
-      debugPrint('Unexpected error saving flowline: $e');
-      debugPrintStack(stackTrace: stack);
-    }
   }
 
   void _handleAdConfiguration(AsyncSnapshot<bool> snapshot) {
@@ -61,7 +43,9 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      await MobileAds.instance.initialize();
+      if (!Platform.isMacOS) {
+        await MobileAds.instance.initialize();
+      }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
     }
@@ -69,6 +53,7 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
+
     final designSize = _getDesignSize(context);
 
     return ScreenUtilInit(
@@ -78,7 +63,9 @@ class App extends ConsumerWidget {
       builder: (_, __) {
         return MaterialApp.router(
           title: 'Defyx',
-          theme: _buildAppTheme(),
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: ThemeMode.light,
           routerConfig: router,
           builder: _appBuilder,
           debugShowCheckedModeBanner: false,
@@ -97,16 +84,6 @@ class App extends ConsumerWidget {
     if (isLargeTablet) return const Size(1024, 768);
     if (isTablet) return const Size(768, 1024);
     return const Size(393, 852);
-  }
-
-  ThemeData _buildAppTheme() {
-    return ThemeData(
-      useMaterial3: true,
-      fontFamily: 'Lato',
-      textTheme: TextTheme(
-        bodyLarge: TextStyle(fontSize: 18.sp, fontWeight: FontWeight.w400),
-      ),
-    );
   }
 
   Widget _appBuilder(BuildContext context, Widget? child) {

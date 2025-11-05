@@ -13,7 +13,7 @@ class VibrationService {
 
   Future<void> init() async {
     try {
-      _hasVibrator = await Vibration.hasVibrator() ?? false;
+      _hasVibrator = await Vibration.hasVibrator();
       _batteryLevel = await _battery.batteryLevel;
 
       _battery.onBatteryStateChanged.listen((BatteryState state) async {
@@ -36,9 +36,9 @@ class VibrationService {
       final hasAmplitudeControl =
           await Vibration.hasAmplitudeControl() ?? false;
       if (hasAmplitudeControl) {
-        await Vibration.vibrate(duration: 25, amplitude: 40);
+        await Vibration.vibrate(duration: 35, amplitude: 40);
       } else {
-        await Vibration.vibrate(duration: 25);
+        await Vibration.vibrate(duration: 35);
       }
     } catch (e) {
       debugPrint('Error in heartbeat vibration: $e');
@@ -49,7 +49,7 @@ class VibrationService {
     if (!_canVibrate) return;
 
     try {
-      await Vibration.vibrate(duration: 100);
+      await Vibration.vibrate(duration: 75);
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }

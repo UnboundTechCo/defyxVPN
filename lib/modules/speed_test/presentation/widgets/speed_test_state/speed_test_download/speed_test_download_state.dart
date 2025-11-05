@@ -9,10 +9,12 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SpeedTestDownloadState extends ConsumerWidget {
   final SpeedTestState state;
+  final VoidCallback onStop;
 
   const SpeedTestDownloadState({
     super.key,
     required this.state,
+    required this.onStop,
   });
 
   @override
@@ -25,16 +27,19 @@ class SpeedTestDownloadState extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         SizedBox(height: 30.h),
-        SpeedTestProgressIndicator(
-          progress: combinedProgress,
-          color: AppColors.downloadColor,
-          showButton: false,
-          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
-          centerUnit: 'Mbps',
-          subtitle: 'DOWNLOAD',
-          result: state.result,
-          currentStep: SpeedTestStep.download,
-          connectionStatus: connectionState.status,
+        InkWell(
+          onTap: onStop,
+          child: SpeedTestProgressIndicator(
+            progress: combinedProgress,
+            color: AppColors.downloadColor,
+            showButton: false,
+            centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
+            centerUnit: 'Mbps',
+            subtitle: 'DOWNLOAD',
+            result: state.result,
+            currentStep: SpeedTestStep.download,
+            connectionStatus: connectionState.status,
+          ),
         ),
       ],
     );

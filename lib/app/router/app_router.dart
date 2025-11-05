@@ -6,7 +6,7 @@ import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
-import '../../modules/main/presentation/widgets/defyx_navbar.dart';
+import '../../shared/layout/navbar/defyx_navbar.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
 
@@ -14,8 +14,7 @@ enum DefyxVPNRoutes {
   splash("/splash"),
   main("/main"),
   settings("/settings"),
-  speedTest("/speedTest"),
-  ;
+  speedTest("/speedTest");
 
   final String route;
   const DefyxVPNRoutes(this.route);
@@ -162,3 +161,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+final routeInformationProvider =
+    ChangeNotifierProvider<GoRouteInformationProvider>(
+        (ref) => ref.watch(routerProvider).routeInformationProvider);
+
+final currentRouteProvider =
+    Provider((ref) => ref.watch(routeInformationProvider).value.uri.toString());
