@@ -24,7 +24,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.24.3"
+          flutter-version: "3.26.0"
       - name: Modify pubspec.yaml to fix async dependency
         run: |
           echo "Adding dependency override for async in pubspec.yaml"
