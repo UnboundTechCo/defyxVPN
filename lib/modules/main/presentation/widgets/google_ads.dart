@@ -22,7 +22,7 @@ class GoogleAdsState {
   final bool showCountdown;
   final bool shouldDisposeAd;
   final bool adLoadFailed;
-  final bool screenSecurityEnabled; // New field to track screen security state
+  final bool screenSecurityEnabled;
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
