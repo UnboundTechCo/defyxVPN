@@ -130,11 +130,10 @@ jobs:
           UPLOAD_TO_APP_STORE: "false"
           ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
           IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
-          LINK_APP_STORE: ${{ secrets.LINK_APP_STORE }}
-          LINK_TEST_FLIGHT: ${{ secrets.LINK_TEST_FLIGHT }}
-          LINK_GITHUB: ${{ secrets.LINK_GITHUB }}
-          LINK_GOOGLE_PLAY: ${{ secrets.LINK_GOOGLE_PLAY }}
-          IS_TEST_MODE: ${{ secrets.IS_TEST_MODE }}
+          LINK_APP_STORE: ${{ vars.LINK_APP_STORE }}
+          LINK_TEST_FLIGHT: ${{ vars.LINK_TEST_FLIGHT }}
+          LINK_GITHUB: https://github.com/${{ github.repository }}
+          LINK_GOOGLE_PLAY: ${{ vars.LINK_GOOGLE_PLAY }}
         run: |
           chmod +x scripts/build_ci.sh
           ./scripts/build_ci.sh
@@ -237,11 +236,10 @@ jobs:
           UPLOAD_TO_APP_STORE: ${{ github.event.inputs.upload_to_app_store }}
           ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
           IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
-          LINK_APP_STORE: ${{ secrets.LINK_APP_STORE }}
-          LINK_TEST_FLIGHT: ${{ secrets.LINK_TEST_FLIGHT }}
-          LINK_GITHUB: ${{ secrets.LINK_GITHUB }}
-          LINK_GOOGLE_PLAY: ${{ secrets.LINK_GOOGLE_PLAY }}
-          IS_TEST_MODE: ${{ secrets.IS_TEST_MODE }}
+          LINK_APP_STORE: ${{ vars.LINK_APP_STORE }}
+          LINK_TEST_FLIGHT: ${{ vars.LINK_TEST_FLIGHT }}
+          LINK_GITHUB: https://github.com/${{ github.repository }}
+          LINK_GOOGLE_PLAY: ${{ vars.LINK_GOOGLE_PLAY }}
         run: |
           chmod +x scripts/build_ci.sh
           ./scripts/build_ci.sh
