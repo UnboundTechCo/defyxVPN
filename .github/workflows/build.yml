@@ -358,6 +358,10 @@ jobs:
             echo "✅ Created and pushed tag $TAG"
           fi
 
+      - name: Prepare Release Message
+        run: |
+          sed 's|RELEASE_TAG|${{ github.ref_name }}|g' ./.github/release_message.md >> release.md
+
       - name: Create GitHub Release
         id: create_release
         uses: softprops/action-gh-release@v1
