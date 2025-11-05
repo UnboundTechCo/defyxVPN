@@ -49,10 +49,10 @@ import UIKit
   func handleScreenSecurityMethodCall(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
     switch call.method {
     case "enableScreenSecurity":
-      ScreenSecurity.enableScreenSecurity()
+      ScreenSecurity.enableScreenSecurity(for: window)
       result(nil)
     case "disableScreenSecurity":
-      ScreenSecurity.disableScreenSecurity()
+      ScreenSecurity.disableScreenSecurity(for: window)
       result(nil)
     default:
       result(FlutterMethodNotImplemented)
@@ -83,6 +83,19 @@ import UIKit
       defaults.set(currentLogs, forKey: "vpn_logs")
       defaults.synchronize()
     }
+  }
+}
+
+// ScreenSecurity implementation for iOS
+class ScreenSecurity {
+  static func enableScreenSecurity(for window: UIWindow?) {
+    guard let window = window else { return }
+    window.layer.isSecure = true
+  }
+  
+  static func disableScreenSecurity(for window: UIWindow?) {
+    guard let window = window else { return }
+    window.layer.isSecure = false
   }
 }
 
