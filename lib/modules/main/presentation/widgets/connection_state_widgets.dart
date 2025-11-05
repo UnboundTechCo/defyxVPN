@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -98,6 +99,7 @@ class FlagIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final animationService = AnimationService();
     final flagAsync = ref.watch(flagProvider);
     return flagAsync.when(
       data: (flag) => ClipRRect(
@@ -111,7 +113,7 @@ class FlagIndicator extends ConsumerWidget {
       loading: () => Shimmer.fromColors(
         baseColor: const Color(0xFF307065),
         highlightColor: const Color(0xFF1B483F),
-        enabled: true,
+        enabled: animationService.shouldAnimate(),
         child: FlagPlaceholder(width: 40.w),
       ),
       error: (_, __) => SvgPicture.asset('assets/flags/xx.svg', width: 35.w),
@@ -126,6 +128,7 @@ class PingIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final animationService = AnimationService();
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -134,49 +137,50 @@ class PingIndicator extends ConsumerWidget {
         onTap: onRefresh,
         child: Consumer(
           builder: (context, ref, child) {
-            final pingAsync = ref.watch(pingProvider);
+            final ping = ref.watch(pingProvider);
+            final pingLoading = ref.watch(pingLoadingProvider);
 
-            return pingAsync.when(
-              data: (ping) {
-                return Row(
-                  children: [
-                    SizedBox(width: 10.w),
-                    Text(
-                      ping,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      ' ms',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => Shimmer.fromColors(
+            if (pingLoading) {
+              return Shimmer.fromColors(
                 baseColor: const Color(0xFF307065),
                 highlightColor: const Color(0xFF1B483F),
-                enabled: true,
+                enabled: animationService.shouldAnimate(),
                 child: PingPlaceholder(width: 52.w),
-              ),
-              error: (_, __) => Text(
-                '-1 ms',
+              );
+            }
+            if (ping.isEmpty) {
+              return Text(
+                '0 ms',
                 style: TextStyle(
                   fontSize: 18.sp,
                   fontFamily: 'Lato',
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
-              ),
+              );
+            }
+            return Row(
+              children: [
+                SizedBox(width: 10.w),
+                Text(
+                  ping,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  ' ms',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -222,6 +226,7 @@ class AnalyzingContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final animationService = AnimationService();
     return Row(
       children: [
         Consumer(builder: (context, ref, child) {
@@ -233,7 +238,7 @@ class AnalyzingContent extends ConsumerWidget {
             return Shimmer.fromColors(
               baseColor: const Color(0xFF4161A6),
               highlightColor: const Color(0xFF23499C),
-              enabled: true,
+              enabled: animationService.shouldAnimate(),
               child: StepsPlaceholder(width: 40.w),
             );
           }
@@ -262,18 +267,19 @@ class LoggerStatusWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final animationService = AnimationService();
     final loggerState = ref.watch(loggerStateProvider);
     final groupState = ref.watch(groupStateProvider);
     final statusInfo =
         _getLoggerStatusInfo(loggerState.status, groupState.groupName);
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 300),
+      duration: animationService.adjustDuration(const Duration(milliseconds: 300)),
       curve: Curves.easeInOut,
       alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
-        duration: const Duration(milliseconds: 350),
+        duration: animationService.adjustDuration(const Duration(milliseconds: 350)),
         tween: Tween<double>(begin: 0.0, end: 1.0),
         curve: Curves.easeInOut,
         builder: (context, value, child) {
@@ -281,7 +287,7 @@ class LoggerStatusWidget extends ConsumerWidget {
             return Shimmer.fromColors(
               baseColor: const Color(0xFF4161A6),
               highlightColor: const Color(0xFF23499C),
-              enabled: true,
+              enabled: animationService.shouldAnimate(),
               child: StepsPlaceholder(width: 120.w),
             );
           }

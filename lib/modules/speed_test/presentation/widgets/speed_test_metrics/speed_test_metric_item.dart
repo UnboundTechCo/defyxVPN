@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shimmer/shimmer.dart';
@@ -57,6 +58,7 @@ class MetricItemCompact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final animationService = AnimationService();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -98,7 +100,7 @@ class MetricItemCompact extends StatelessWidget {
             : Shimmer.fromColors(
                 baseColor: _getColorByStatus(connectionStatus),
                 highlightColor: _getHighlightColorByStatus(connectionStatus),
-                enabled: true,
+                enabled: animationService.shouldAnimate(),
                 child: Container(
                   width: 75.w,
                   height: 20.h,
@@ -165,6 +167,7 @@ class MetricItemHorizontal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final animationService = AnimationService();
     final bool hasValue = (label == 'P.LOSS') ? true : value > 0;
 
     return SizedBox(
@@ -220,7 +223,7 @@ class MetricItemHorizontal extends StatelessWidget {
                   child: Shimmer.fromColors(
                     baseColor: _getColorByStatus(connectionStatus),
                     highlightColor: _getHighlightColorByStatus(connectionStatus),
-                    enabled: true,
+                    enabled: animationService.shouldAnimate(),
                     child: Container(
                       width: 57.w,
                       height: 11.h,

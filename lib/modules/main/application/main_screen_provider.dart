@@ -43,8 +43,7 @@ class MainScreenLogic {
   MainScreenLogic(this.ref);
 
   Future<void> refreshPing() async {
-    ref.read(pingLoadingProvider.notifier).state = true;
-    ref.read(flagLoadingProvider.notifier).state = true;
+    await VPN(ProviderScope.containerOf(ref.context)).refreshPing();
   }
 
   Future<void> connectOrDisconnect() async {
