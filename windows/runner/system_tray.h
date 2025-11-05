@@ -9,10 +9,12 @@
 class SystemTray {
  public:
   enum class TrayIconStatus {
-    Disconnected,
+    Standby,
     Connected,
     Connecting,
-    Error
+    Failed,
+    KillSwitch,
+    NoInternet
   };
 
   enum class TrayAction {

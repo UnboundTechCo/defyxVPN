@@ -134,7 +134,7 @@ bool FlutterWindow::OnCreate() {
           vpn_status = "disconnected";
 
           if (g_system_tray) {
-            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Error);
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Failed);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Error");
             g_system_tray->UpdateConnectionStatus(L"Error");
           }
@@ -156,7 +156,7 @@ bool FlutterWindow::OnCreate() {
           vpn_status = "disconnected";
 
           if (g_system_tray) {
-            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
           }
 
@@ -225,7 +225,7 @@ bool FlutterWindow::OnCreate() {
           vpn_status = "disconnected";
 
           if (g_system_tray) {
-            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
             g_system_tray->UpdateConnectionStatus(L"Disconnected");
             g_system_tray->UpdateConnectionStatus(L"Disconnected");
@@ -354,7 +354,7 @@ bool FlutterWindow::OnCreate() {
 
           if (g_system_tray) {
             g_system_tray->UpdateConnectionStatus(L"Disconnected");
-            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Disconnected);
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
           }
 
@@ -395,6 +395,11 @@ bool FlutterWindow::OnCreate() {
       });
 
   g_system_tray = system_tray_.get();
+
+  if (system_tray_) {
+    system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+    system_tray_->UpdateTooltip(L"DefyxVPN - Ready");
+  }
 
   HKEY hKey;
   const wchar_t* appName = L"DefyxVPN";

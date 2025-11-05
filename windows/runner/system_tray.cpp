@@ -3,9 +3,15 @@
 #include <windowsx.h>
 #include <uxtheme.h>
 #include <dwmapi.h>
+#include <gdiplus.h>
+#include <shlwapi.h>
 
 #pragma comment(lib, "UxTheme.lib")
 #pragma comment(lib, "Dwmapi.lib")
+#pragma comment(lib, "gdiplus.lib")
+#pragma comment(lib, "Shlwapi.lib")
+
+using namespace Gdiplus;
 
 enum PreferredAppMode { Default, AllowDark, ForceDark, ForceLight, Max };
 using fnSetPreferredAppMode = PreferredAppMode(WINAPI*)(PreferredAppMode appMode);
@@ -265,104 +271,96 @@ void SystemTray::UpdateTooltip(const std::wstring& tooltip) {
 }
 
 HICON SystemTray::CreateIconWithBorder(TrayIconStatus status) {
-  HICON baseIcon = LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
-  if (!baseIcon) return nullptr;
-
-  int canvasSize = 45;
-  int iconSize = 41;
-  int borderWidth = 4;
-  int offsetX = (canvasSize - iconSize) / 2;
-  int offsetY = (canvasSize - iconSize) / 2;
-
-  HDC hdcScreen = GetDC(nullptr);
-  HDC hdcMem = CreateCompatibleDC(hdcScreen);
-
-  BITMAPINFO bmi = {0};
-  bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-  bmi.bmiHeader.biWidth = canvasSize;
-  bmi.bmiHeader.biHeight = -canvasSize;
-  bmi.bmiHeader.biPlanes = 1;
-  bmi.bmiHeader.biBitCount = 32;
-  bmi.bmiHeader.biCompression = BI_RGB;
-
-  BYTE* pBits = nullptr;
-  HBITMAP hbmColor = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS, (void**)&pBits, nullptr, 0);
-  HBITMAP hbmOldColor = (HBITMAP)SelectObject(hdcMem, hbmColor);
-
-  memset(pBits, 0, canvasSize * canvasSize * 4);
-
-  DrawIconEx(hdcMem, offsetX, offsetY, baseIcon, iconSize, iconSize, 0, nullptr, DI_NORMAL);
-
-  if (status != TrayIconStatus::Disconnected && pBits) {
-    COLORREF borderColor;
-    switch (status) {
-      case TrayIconStatus::Connected:
-        borderColor = RGB(0, 255, 0);
-        break;
-      case TrayIconStatus::Connecting:
-        borderColor = RGB(30, 144, 255);
-        break;
-      case TrayIconStatus::Error:
-        borderColor = RGB(255, 0, 0);
-        break;
-      default:
-        borderColor = RGB(128, 128, 128);
-        break;
-    }
-
-    BYTE r = GetRValue(borderColor);
-    BYTE g = GetGValue(borderColor);
-    BYTE b = GetBValue(borderColor);
-
-    int centerX = canvasSize / 2;
-    int centerY = canvasSize / 2;
-    int outerRadius = iconSize / 2 + borderWidth / 2;
-    int innerRadius = iconSize / 2 - borderWidth / 2;
-
-    for (int y = 0; y < canvasSize; y++) {
-      for (int x = 0; x < canvasSize; x++) {
-        int dx = x - centerX;
-        int dy = y - centerY;
-        int distSq = dx * dx + dy * dy;
-        int outerRadiusSq = outerRadius * outerRadius;
-        int innerRadiusSq = innerRadius * innerRadius;
-
-        if (distSq <= outerRadiusSq && distSq >= innerRadiusSq) {
-          int index = (y * canvasSize + x) * 4;
-          pBits[index + 0] = b;
-          pBits[index + 1] = g;
-          pBits[index + 2] = r;
-          pBits[index + 3] = 255;
-        }
-      }
+  static ULONG_PTR gdiplusToken = 0;
+  static bool gdiplusInitialized = false;
+  if (!gdiplusInitialized) {
+    GdiplusStartupInput gdiplusStartupInput;
+    Status gdiStatus = GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, nullptr);
+    if (gdiStatus == Ok) {
+      gdiplusInitialized = true;
+      OutputDebugStringA("[SystemTray] GDI+ initialized successfully\n");
+    } else {
+      OutputDebugStringA("[SystemTray] Failed to initialize GDI+\n");
+      return LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
     }
   }
 
-  HBITMAP hbmMask = CreateBitmap(canvasSize, canvasSize, 1, 1, nullptr);
-  HDC hdcMask = CreateCompatibleDC(hdcScreen);
-  HBITMAP hbmOldMask = (HBITMAP)SelectObject(hdcMask, hbmMask);
+  const wchar_t* iconFilename = nullptr;
+  switch (status) {
+    case TrayIconStatus::Connected:
+      iconFilename = L"Icon-Connected.png";
+      break;
+    case TrayIconStatus::Connecting:
+      iconFilename = L"Icon-Connecting.png";
+      break;
+    case TrayIconStatus::Failed:
+      iconFilename = L"Icon-Failed.png";
+      break;
+    case TrayIconStatus::KillSwitch:
+      iconFilename = L"Icon-KillSwitch.png";
+      break;
+    case TrayIconStatus::NoInternet:
+      iconFilename = L"Icon-NoInternet.png";
+      break;
+    case TrayIconStatus::Standby:
+    default:
+      iconFilename = L"Icon-Standby.png";
+      break;
+  }
 
-  RECT fullRect = {0, 0, canvasSize, canvasSize};
-  FillRect(hdcMask, &fullRect, (HBRUSH)GetStockObject(BLACK_BRUSH));
+  wchar_t exePath[MAX_PATH];
+  GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+  PathRemoveFileSpecW(exePath);
 
-  SelectObject(hdcMem, hbmOldColor);
-  SelectObject(hdcMask, hbmOldMask);
+  std::wstring iconPath = exePath;
+  iconPath += L"\\data\\flutter_assets\\assets\\icons\\";
+  iconPath += iconFilename;
 
-  ICONINFO iconInfo = {0};
-  iconInfo.fIcon = TRUE;
-  iconInfo.hbmColor = hbmColor;
-  iconInfo.hbmMask = hbmMask;
+  std::string debugPath = "[SystemTray] Loading icon from: ";
+  int len = WideCharToMultiByte(CP_UTF8, 0, iconPath.c_str(), -1, nullptr, 0, nullptr, nullptr);
+  if (len > 0) {
+    std::string path8bit(len, 0);
+    WideCharToMultiByte(CP_UTF8, 0, iconPath.c_str(), -1, &path8bit[0], len, nullptr, nullptr);
+    debugPath += path8bit + "\n";
+    OutputDebugStringA(debugPath.c_str());
+  }
 
-  HICON newIcon = CreateIconIndirect(&iconInfo);
+  DWORD fileAttrib = GetFileAttributesW(iconPath.c_str());
+  if (fileAttrib == INVALID_FILE_ATTRIBUTES) {
+    OutputDebugStringA("[SystemTray] Icon file not found, using default icon\n");
+    return LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
+  }
 
-  DeleteObject(hbmColor);
-  DeleteObject(hbmMask);
-  DeleteDC(hdcMem);
-  DeleteDC(hdcMask);
-  ReleaseDC(nullptr, hdcScreen);
-  DestroyIcon(baseIcon);
+  Bitmap* bitmap = new Bitmap(iconPath.c_str());
+  if (!bitmap) {
+    OutputDebugStringA("[SystemTray] Failed to create bitmap\n");
+    return LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
+  }
 
-  return newIcon;
+  Status bitmapStatus = bitmap->GetLastStatus();
+  if (bitmapStatus != Ok) {
+    char errMsg[256];
+    sprintf_s(errMsg, "[SystemTray] Bitmap load failed with status: %d\n", bitmapStatus);
+    OutputDebugStringA(errMsg);
+    delete bitmap;
+    return LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
+  }
+
+  OutputDebugStringA("[SystemTray] Bitmap loaded successfully\n");
+
+  HICON hIcon = nullptr;
+  Status iconStatus = bitmap->GetHICON(&hIcon);
+  delete bitmap;
+
+  if (iconStatus != Ok || !hIcon) {
+    char errMsg[256];
+    sprintf_s(errMsg, "[SystemTray] GetHICON failed with status: %d\n", iconStatus);
+    OutputDebugStringA(errMsg);
+    return LoadIcon(instance_, MAKEINTRESOURCE(IDI_APP_ICON));
+  }
+
+  OutputDebugStringA("[SystemTray] Icon converted successfully\n");
+  return hIcon;
 }
 
 void SystemTray::UpdateIcon(TrayIconStatus status) {
