@@ -3,10 +3,10 @@ name: Android & iOS Build with Store Uploads
 on:
   push:
     branches:
-      - add-workflow
+      - release
   pull_request:
     branches:
-      - add-workflow
+      - release
   workflow_dispatch:
     inputs:
       send_telegram:
