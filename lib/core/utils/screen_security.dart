@@ -4,7 +4,6 @@ import 'package:no_screenshot/no_screenshot.dart';
 class ScreenSecurity {
   static final NoScreenshot _noScreenshot = NoScreenshot.instance;
 
-  /// Enable screen security
   static Future<void> enableScreenSecurity() async {
     try {
       await _noScreenshot.screenshotOff();
@@ -13,7 +12,6 @@ class ScreenSecurity {
     }
   }
 
-  /// Disable screen security
   static Future<void> disableScreenSecurity() async {
     try {
       await _noScreenshot.screenshotOn();
@@ -22,7 +20,6 @@ class ScreenSecurity {
     }
   }
 
-  /// Toggle screen security
   static Future<void> toggleScreenSecurity() async {
     try {
       await _noScreenshot.toggleScreenshot();

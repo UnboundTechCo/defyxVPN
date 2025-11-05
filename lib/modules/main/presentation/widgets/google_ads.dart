@@ -116,7 +116,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
     disableScreenSecurity();
   }
 
-  // Enable screen security
   Future<void> enableScreenSecurity() async {
     if (!state.screenSecurityEnabled) {
       await ScreenSecurity.enableScreenSecurity();
@@ -124,7 +123,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
     }
   }
 
-  // Disable screen security
   Future<void> disableScreenSecurity() async {
     if (state.screenSecurityEnabled) {
       await ScreenSecurity.disableScreenSecurity();
@@ -344,7 +342,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         }
       });
     } else {
-      // Disable screen security
       if (adsState.screenSecurityEnabled) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           ref.read(googleAdsProvider.notifier).disableScreenSecurity();
