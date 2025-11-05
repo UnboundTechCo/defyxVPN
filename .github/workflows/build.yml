@@ -183,7 +183,7 @@ jobs:
       - name: Download iOS Framework
         if: ${{ github.event.inputs.download_ios_framework == 'true' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
         run: |
           mkdir -p ios/Frameworks
           curl -L -H "Authorization: token $GITHUB_TOKEN" \
