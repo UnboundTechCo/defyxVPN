@@ -89,12 +89,17 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
         run: |
           mkdir -p android/app/libs
-          curl -L -H "Authorization: token $GITHUB_TOKEN" \
-               -H "Accept: application/vnd.github.v3.raw" \
-               "https://api.github.com/repos/UnboundTech/DXcore-private/contents/DXcore-android.zip?ref=main" \
-               -o android/app/libs/DXcore-android.zip
+          ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
+            | jq -r '.assets[] | select(.name == "DXcore-android.zip") | .id')
+          echo "Asset ID: $ASSET_ID"
+          curl -L \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/octet-stream" \
+            "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
+            -o android/app/libs/DXcore-android.zip
           cd android/app/libs
-          unzip DXcore-android.zip
+          unzip -o DXcore-android.zip
           rm DXcore-android.zip
           ls -la
 
