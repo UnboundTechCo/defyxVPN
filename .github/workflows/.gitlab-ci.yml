@@ -102,15 +102,6 @@ jobs:
             echo "$ENV_FILE_CONTENT" > .env
           fi
 
-      - name: Update Dart SDK constraint and dependencies
-        run: |
-          sed -i 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true
-          sed -i '/^dependency_overrides:/d' pubspec.yaml || true
-          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
-          sed -i '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
-
-      - name: Debug pubspec.yaml
-        run: cat pubspec.yaml
 
       - name: Create key.properties for Android signing
         run: |
