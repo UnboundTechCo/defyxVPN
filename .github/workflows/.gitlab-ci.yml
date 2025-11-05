@@ -26,9 +26,6 @@ jobs:
         with:
           flutter-version: "3.24.3"
           
-      - name: Fix async dependency conflict
-        run: echo -e "dependency_overrides:\n  async: ^2.11.0" >> pubspec.yaml
-        
       - name: Install dependencies
         run: flutter pub get
 
