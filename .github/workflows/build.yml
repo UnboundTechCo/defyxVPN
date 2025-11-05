@@ -79,16 +79,23 @@ jobs:
           flutter --version
           dart --version
           flutter doctor --verbose
+
+      - name: Get dependencies
+        run: flutter pub get
     
       - name: Get app version
         id: get_version
         run: |
-          VERSION=$(flutter pub run dart:io -e "import 'package:yaml/yaml.dart'; import 'dart:io';
-          void main() {
-            final pubspec = loadYaml(File('pubspec.yaml').readAsStringSync());
-            print(pubspec['version']);
-          }")
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo 'import "dart:io";
+            import "package:yaml/yaml.dart";
+            void main() {
+              final pubspec = loadYaml(File("pubspec.yaml").readAsStringSync());
+              print(pubspec["version"]);
+            }' > get_version.dart
+
+            VERSION=$(dart run get_version.dart)
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+
 
 
       - name: Clear Pub cache
