@@ -1,5 +1,10 @@
 # Defyx Changelog
 
+## v3.2.30 (Build 190)
+
+- Improved ping and location check after connection
+- Improved network status check
+
 ## v3.2.26 (Build 186)
 
 - Improved Speedtest performance and accuracy
