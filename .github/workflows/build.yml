@@ -93,14 +93,17 @@ jobs:
           ls -la
 
       - name: Create .env file
-        env:
-          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
         run: |
-          if [ -z "$ENV_FILE_CONTENT" ]; then
-            touch .env
-          else
-            echo "$ENV_FILE_CONTENT" > .env
-          fi
+          cat <<EOF > .env
+          ANDROID_AD_APP_ID=${{ secrets.ANDROID_AD_APP_ID }}
+          ANDROID_AD_UNIT_ID=${{ secrets.ANDROID_AD_UNIT_ID }}
+          IOS_AD_APP_ID=${{ secrets.IOS_AD_APP_ID }}
+          IOS_AD_UNIT_ID=${{ secrets.IOS_AD_UNIT_ID }}
+          LINK_APP_STORE=${{ vars.LINK_APP_STORE }}
+          LINK_TEST_FLIGHT=${{ vars.LINK_TEST_FLIGHT }}
+          LINK_GITHUB=https://github.com/${{ github.repository }}
+          LINK_GOOGLE_PLAY=${{ vars.LINK_GOOGLE_PLAY }}
+          EOF
 
 
       - name: Create key.properties for Android signing
