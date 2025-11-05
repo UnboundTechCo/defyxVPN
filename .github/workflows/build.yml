@@ -44,7 +44,7 @@ on:
       download_android_framework:
         description: "Download DXcore-android.zip?"
         required: false
-        default: "false"
+        default: "true"
         type: boolean
       download_ios_framework:
         description: "Download IosDXcore.xcframework.zip?"
@@ -84,7 +84,7 @@ jobs:
         run: flutter pub cache clean
 
       - name: Download Android Framework
-        if: ${{ github.event.inputs.download_android_framework == 'true' }}
+        # if: ${{ github.event.inputs.download_android_framework == 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
         run: |
