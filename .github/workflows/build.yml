@@ -91,7 +91,7 @@ jobs:
           mkdir -p android/app/libs
           curl -L -H "Authorization: token $GITHUB_TOKEN" \
                -H "Accept: application/vnd.github.v3.raw" \
-               "https://api.github.com/repos/UnboundTech/DXcoreFrameworks/contents/DXcore-android.zip?ref=main" \
+               "https://api.github.com/repos/UnboundTech/DXcore-private/contents/DXcore-android.zip?ref=main" \
                -o android/app/libs/DXcore-android.zip
           cd android/app/libs
           unzip DXcore-android.zip
@@ -189,7 +189,7 @@ jobs:
           curl -L -H "Authorization: token $GITHUB_TOKEN" \
                -H "Accept: application/vnd.github.v3.raw" \
                -o ios/IosDXcore.xcframework.zip \
-               "https://api.github.com/repos/UnboundTech/DXcoreFrameworks/contents/IosDXcore.xcframework.zip?ref=main"
+               "https://api.github.com/repos/UnboundTech/DXcore-private/contents/IosDXcore.xcframework.zip?ref=main"
           cd ios
           unzip IosDXcore.xcframework.zip
           rm IosDXcore.xcframework.zip
