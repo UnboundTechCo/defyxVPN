@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:defyx_vpn/core/utils/screen_security.dart';
 
 enum ConnectionStatus {
   disconnecting,
@@ -38,8 +39,8 @@ class ConnectionState {
 
 final connectionStateProvider =
     StateNotifierProvider<ConnectionStateNotifier, ConnectionState>((ref) {
-      return ConnectionStateNotifier();
-    });
+  return ConnectionStateNotifier();
+});
 
 class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   static const String _connectionStatusKey = 'connection_status';
@@ -151,6 +152,8 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   void setDisconnected() {
     state = state.copyWith(status: ConnectionStatus.disconnected);
     _saveState();
+
+    ScreenSecurity.disableScreenSecurity();
   }
 
   void setDisconnecting() {

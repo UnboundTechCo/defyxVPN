@@ -1,11 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app."
 publish_to: 'none'
-documentation: "https://github.com/UnboundTechCo/defyxVPN/blob/main/README.md"
-repository: "https://github.com/UnboundTechCo/defyxVPN"
-issue_tracker: "https://github.com/UnboundTechCo/defyxVPN/issues"
-
-version: 3.2.7+164
+version: 3.2.31+191
 
 environment:
   sdk: ^3.5.3
@@ -23,7 +19,6 @@ dependencies:
   shimmer: ^3.0.0
   shake: ^3.0.0
   vibration: ^3.1.3
-  battery_plus: ^7.0.0
   google_mobile_ads: ^6.0.0
   url_launcher: ^6.3.1
   flame: ^1.29.0
@@ -36,6 +31,7 @@ dependencies:
   package_info_plus: ^8.3.0
   version: ^3.0.2
   flutter_timezone: ^4.1.1
+  connectivity_plus: ^7.0.0
 
   # Frontend Packages
   flutter_screenutil: ^5.9.3
@@ -46,6 +42,10 @@ dependencies:
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
+  firebase_core: ^4.2.0
+  firebase_analytics: ^12.0.3
+  battery_plus: ^7.0.0
+  no_screenshot: ^0.3.1
 
 dev_dependencies:
   flutter_test:

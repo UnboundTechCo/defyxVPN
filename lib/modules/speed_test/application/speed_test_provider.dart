@@ -339,12 +339,12 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       onSpeedUpdate: (speed) {
         state = state.copyWith(currentSpeed: speed);
       },
-      onMetricsUpdate: (percentileSpeed, avgSpeed, avgLatency, jitter) {
+      onMetricsUpdate: (percentileSpeed, avgSpeed, currentPing, avgLatency, jitter) {
         state = state.copyWith(
           currentSpeed: avgSpeed,
           result: state.result.copyWith(
             downloadSpeed: percentileSpeed,
-            ping: avgLatency,
+            ping: currentPing,
             latency: avgLatency,
             jitter: jitter,
           ),
