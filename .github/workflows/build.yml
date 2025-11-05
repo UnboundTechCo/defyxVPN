@@ -270,29 +270,32 @@ jobs:
     needs: build-android
     # if: ${{ github.event.inputs.send_telegram == 'true' }}
     steps:
-      - name: Download APK artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: DXcore-android
-          path: release/
+      - name: Get latest artifact ID
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARTIFACT_NAME="DXcore-android"
+          ARTIFACT_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts")
+          ARTIFACT_ID=$(echo "$ARTIFACT_DATA" | jq -r ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .id" | head -n 1)
+        
+          if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
+            echo "Artifact not found!"
+            exit 1
+          fi
+        
+          echo "ARTIFACT_ID=$ARTIFACT_ID" >> $GITHUB_ENV
 
-      - name: Send to Telegram
+      - name: Send artifact link to Telegram
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           APP_VERSION: ${{ env.APP_VERSION }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ARTIFACT_ID: ${{ env.ARTIFACT_ID }}
         run: |
-            APK_PATH=$(find release -type f -name "*.apk" | head -n 1)
-
-            if [ -z "$APK_PATH" ]; then
-              echo "No APK file found in artifact!"
-              exit 1
-            fi
-
-            echo "Sending APK: $APK_PATH"
-
-            curl  -F chat_id="$TELEGRAM_CHAT_ID" \
-                  -F document=@"$APK_PATH" \
-                  -F caption="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Source: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-                  "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
+          ARTIFACT_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts/${ARTIFACT_ID}"
+          curl -F chat_id="$TELEGRAM_CHAT_ID" \
+               -F text="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Download: $ARTIFACT_URL" \
+                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
 
