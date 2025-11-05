@@ -1,6 +1,12 @@
 name: Android & iOS Build with Store Uploads
 
 on:
+  push:
+    branches:
+      - add-workflow
+  pull_request:
+    branches:
+      - add-workflow
   workflow_dispatch:
     inputs:
       send_telegram:
