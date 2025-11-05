@@ -7,12 +7,38 @@ class VpnBridge {
   factory VpnBridge() => _instance;
 
   final _methodChannel = MethodChannel('com.defyx.vpn');
+  final _pingEventChannel = EventChannel('com.defyx.ping_events');
+  final _flagEventChannel = EventChannel('com.defyx.flag_events');
+
+  // Initialize streams on first access and cache broadcast streams
+  Stream<int>? _pingBroadcast;
+  Stream<int> get pingStream {
+    _pingBroadcast ??= _pingEventChannel.receiveBroadcastStream().map((event) {
+      if (event is int) return event;
+      if (event is String) return int.tryParse(event) ?? 0;
+      return 0;
+    }).asBroadcastStream();
+    return _pingBroadcast!;
+  }
+
+  Stream<String>? _flagBroadcast;
+  Stream<String> get flagStream {
+    _flagBroadcast ??= _flagEventChannel.receiveBroadcastStream().map((event) {
+      if (event == null) return '';
+      return event.toString();
+    }).asBroadcastStream();
+    return _flagBroadcast!;
+  }
 
   Future<String?> getVpnStatus() => _methodChannel.invokeMethod('getVpnStatus');
 
   Future<void> setAsnName() => _methodChannel.invokeMethod('setAsnName');
 
+  // Trigger ping measurement (result comes via pingStream on Windows, returns value on other platforms)
   Future<dynamic> getPing() => _methodChannel.invokeMethod('calculatePing');
+
+  // Trigger flag fetch (result comes via flagStream on Windows, returns value on other platforms)
+  Future<dynamic> triggerFlag() => _methodChannel.invokeMethod('getFlag');
 
   Future<void> setTimezone(String timezone) =>
       _methodChannel.invokeMethod("setTimezone", {"timezone": timezone});

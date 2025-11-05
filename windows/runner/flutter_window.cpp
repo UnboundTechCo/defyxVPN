@@ -1,6 +1,8 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <thread>
+#include <memory>
 
 #include "dxcore_bridge.h"
 #include "proxy_config.h"
@@ -9,7 +11,19 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <string>
-#include <cstdlib>
+
+
+#define WM_PING_RESULT (WM_USER + 1)
+#define WM_FLAG_RESULT (WM_USER + 2)
+// Marshal background callbacks to the platform thread
+#define WM_PROGRESS_RESULT (WM_USER + 3)
+#define WM_STATUS_RESULT (WM_USER + 4)
+
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> ping_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> flag_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
+static HWND g_window_handle = nullptr;
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -23,11 +37,10 @@ bool FlutterWindow::OnCreate() {
 
   RECT frame = GetClientArea();
 
-  // The size here must match the window dimensions to avoid unnecessary surface
-  // creation / destruction in the startup path.
+
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
       frame.right - frame.left, frame.bottom - frame.top, project_);
-  // Ensure that basic setup of the controller was successful.
+
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
     return false;
   }
@@ -45,6 +58,8 @@ bool FlutterWindow::OnCreate() {
 
   // Set up method and event channels for Windows
   auto messenger = flutter_controller_->engine()->messenger();
+  // Cache window handle for posting messages from background threads
+  g_window_handle = GetHandle();
 
   // Make bridge global so handlers can access it.
   static DXCoreBridge g_dxcore;
@@ -55,11 +70,10 @@ bool FlutterWindow::OnCreate() {
     OutputDebugStringA("[DXcore] Successfully loaded DXcore.dll\n");
   }
 
-  // Track simple status - must be declared before handlers
+
   static std::string vpn_status = "disconnected";
 
-  // Status events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
+
   class StatusHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -79,8 +93,47 @@ bool FlutterWindow::OnCreate() {
       &flutter::StandardMethodCodec::GetInstance());
   status_channel->SetStreamHandler(std::make_unique<StatusHandler>());
 
+
+  class PingHandler : public flutter::StreamHandler<flutter::EncodableValue> {
+   protected:
+    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
+    OnListenInternal(const flutter::EncodableValue* arguments,
+                     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override {
+      ping_sink = std::move(events);
+      return nullptr;
+    }
+    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
+    OnCancelInternal(const flutter::EncodableValue* arguments) override {
+      ping_sink.reset();
+      return nullptr;
+    }
+  };
+  auto ping_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+      messenger, "com.defyx.ping_events",
+      &flutter::StandardMethodCodec::GetInstance());
+  ping_channel->SetStreamHandler(std::make_unique<PingHandler>());
+
+  // Flag result events channel
+  class FlagHandler : public flutter::StreamHandler<flutter::EncodableValue> {
+   protected:
+    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
+    OnListenInternal(const flutter::EncodableValue* arguments,
+                     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override {
+      flag_sink = std::move(events);
+      return nullptr;
+    }
+    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
+    OnCancelInternal(const flutter::EncodableValue* arguments) override {
+      flag_sink.reset();
+      return nullptr;
+    }
+  };
+  auto flag_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
+      messenger, "com.defyx.flag_events",
+      &flutter::StandardMethodCodec::GetInstance());
+  flag_channel->SetStreamHandler(std::make_unique<FlagHandler>());
+
   // Progress events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
   class ProgressHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -91,27 +144,26 @@ bool FlutterWindow::OnCreate() {
         // Log all progress messages for debugging
         std::string log_msg = "[DXcore Progress] " + msg + "\n";
         OutputDebugStringA(log_msg.c_str());
-        
-        if (progress_sink) {
-          progress_sink->Success(flutter::EncodableValue(msg));
-        }
-        // Update VPN status based on progress messages
+        // Always marshal to platform thread
+        PostMessage(g_window_handle, WM_PROGRESS_RESULT, 0,
+                    reinterpret_cast<LPARAM>(new std::string(msg)));
+
         if (msg.find("Data: VPN connected") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN connected - updating status and enabling proxy\n");
+          OutputDebugStringA("[DXcore] VPN connected - updating status\n");
           vpn_status = "connected";
+          // Emit status on platform thread
+          PostMessage(g_window_handle, WM_STATUS_RESULT, 0,
+                      reinterpret_cast<LPARAM>(new std::string(vpn_status)));
           
-          // Enable system proxy for SOCKS5 on port 5000
-          if (g_proxy.EnableProxy("127.0.0.1:5000")) {
-            OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
-          } else {
-            OutputDebugStringA("[Proxy] Failed to enable system proxy\n");
-          }
-          
-          if (status_sink) {
-            flutter::EncodableMap m;
-            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
-            status_sink->Success(flutter::EncodableValue(m));
-          }
+
+          std::thread([]() {
+            OutputDebugStringA("[Proxy] Enabling system proxy on 127.0.0.1:5000\n");
+            if (g_proxy.EnableProxy("127.0.0.1:5000")) {
+              OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
+            } else {
+              OutputDebugStringA("[Proxy] Failed to enable system proxy\n");
+            }
+          }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos ||
                    msg.find("Data: VPN stopped") != std::string::npos ||
                    msg.find("Data: VPN cancelled") != std::string::npos) {
@@ -124,12 +176,10 @@ bool FlutterWindow::OnCreate() {
           } else {
             OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
           }
-          
-          if (status_sink) {
-            flutter::EncodableMap m;
-            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
-            status_sink->Success(flutter::EncodableValue(m));
-          }
+
+          // Emit status on platform thread
+          PostMessage(g_window_handle, WM_STATUS_RESULT, 0,
+                      reinterpret_cast<LPARAM>(new std::string(vpn_status)));
         }
       });
       return nullptr;
@@ -203,11 +253,19 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "calculatePing") {
-          result->Success(flutter::EncodableValue(g_dxcore.MeasurePing()));
+          result->Success();
+          std::thread([]() {
+            int ping = g_dxcore.MeasurePing();
+            PostMessage(g_window_handle, WM_PING_RESULT, static_cast<WPARAM>(ping), 0);
+          }).detach();
           return;
         }
         if (method == "getFlag") {
-          result->Success(flutter::EncodableValue(g_dxcore.GetFlag()));
+          result->Success();
+          std::thread([]() {
+            std::string* flag_ptr = new std::string(g_dxcore.GetFlag());
+            PostMessage(g_window_handle, WM_FLAG_RESULT, 0, reinterpret_cast<LPARAM>(flag_ptr));
+          }).detach();
           return;
         }
         if (method == "setAsnName") {
@@ -244,7 +302,6 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "setConnectionMethod") {
-          // No-op on Windows for now
           result->Success(flutter::EncodableValue(true));
           return;
         }
@@ -333,6 +390,38 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
+    case WM_PING_RESULT:
+      if (ping_sink) {
+        int ping = static_cast<int>(wparam);
+        ping_sink->Success(flutter::EncodableValue(ping));
+      }
+      return 0;
+    case WM_FLAG_RESULT: {
+      std::unique_ptr<std::string> flag_ptr(reinterpret_cast<std::string*>(lparam));
+      if (flag_sink) {
+        const std::string flag = flag_ptr ? *flag_ptr : std::string();
+        flag_sink->Success(flutter::EncodableValue(flag));
+      }
+      return 0;
+    }
+    case WM_PROGRESS_RESULT: {
+      std::unique_ptr<std::string> msg_ptr(reinterpret_cast<std::string*>(lparam));
+      if (progress_sink) {
+        const std::string msg = msg_ptr ? *msg_ptr : std::string();
+        progress_sink->Success(flutter::EncodableValue(msg));
+      }
+      return 0;
+    }
+    case WM_STATUS_RESULT: {
+      std::unique_ptr<std::string> status_ptr(reinterpret_cast<std::string*>(lparam));
+      if (status_sink) {
+        const std::string status = status_ptr ? *status_ptr : std::string();
+        flutter::EncodableMap m;
+        m[flutter::EncodableValue("status")] = flutter::EncodableValue(status);
+        status_sink->Success(flutter::EncodableValue(m));
+      }
+      return 0;
+    }
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
