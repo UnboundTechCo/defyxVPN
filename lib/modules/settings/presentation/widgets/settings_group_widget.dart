@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/modules/settings/models/settings_item.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -30,6 +31,7 @@ class SettingsGroupWidget extends StatefulWidget {
 
 class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
     with SingleTickerProviderStateMixin {
+  final AnimationService _animationService = AnimationService();
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
   int? _draggingIndex;
@@ -38,7 +40,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 500)),
       vsync: this,
     );
     _rotationAnimation = Tween<double>(
@@ -57,9 +59,11 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   }
 
   void _handleReset() {
-    _rotationController.forward().then((_) {
-      _rotationController.reset();
-    });
+    if (_animationService.shouldAnimate()) {
+      _rotationController.forward().then((_) {
+        _rotationController.reset();
+      });
+    }
     HapticFeedback.mediumImpact();
     widget.onReset?.call();
   }
@@ -229,7 +233,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
             ),
             padding: EdgeInsets.fromLTRB(2.w, 1.h, 2.w, 1.h),
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: _animationService.adjustDuration(const Duration(milliseconds: 200)),
               child: widget.group.id == 'connection_method'
                   ? _buildDraggableItems()
                   : _buildStaticItems(),
