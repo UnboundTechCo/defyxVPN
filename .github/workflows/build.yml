@@ -132,6 +132,13 @@ jobs:
           ANDROID_AD_UNIT_ID=${{ secrets.ANDROID_AD_UNIT_ID }}
           IOS_AD_APP_ID=${{ secrets.IOS_AD_APP_ID }}
           IOS_AD_UNIT_ID=${{ secrets.IOS_AD_UNIT_ID }}
+
+          FIREBASE_PROJECT_NUMBER=${{ secrets.FIREBASE_PROJECT_NUMBER }}
+          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
+
+          FIREBASE_ANDROID_API_KEY=${{ secrets.FIREBASE_ANDROID_API_KEY }}
+          FIREBASE_ANDROID_APP_ID=${{ secrets.FIREBASE_ANDROID_APP_ID }}
+
           LINK_APP_STORE=${{ vars.LINK_APP_STORE }}
           LINK_TEST_FLIGHT=${{ vars.LINK_TEST_FLIGHT }}
           LINK_GITHUB=https://github.com/${{ github.repository }}
