@@ -86,7 +86,7 @@ jobs:
       - name: Download Android Framework
         if: ${{ github.event.inputs.download_android_framework == 'true' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_PAT }}
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
         run: |
           mkdir -p android/app/libs
           curl -L -H "Authorization: token $GITHUB_TOKEN" \

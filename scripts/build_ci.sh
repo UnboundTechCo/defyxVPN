@@ -13,7 +13,7 @@ PUBSPEC_FILE="${PROJECT_ROOT}/pubspec.yaml"
 
 # Validate required environment variables
 validate_env_vars() {
-    local required_vars=("ANDROID_AD_UNIT_ID" "IOS_AD_UNIT_ID" "LINK_APP_STORE" "LINK_TEST_FLIGHT" "LINK_GITHUB" "LINK_GOOGLE_PLAY" "IS_TEST_MODE")
+    local required_vars=("ANDROID_AD_UNIT_ID" "IOS_AD_UNIT_ID" "LINK_APP_STORE" "LINK_TEST_FLIGHT" "LINK_GITHUB" "LINK_GOOGLE_PLAY")
     for var in "${required_vars[@]}"; do
         if [ -z "${!var}" ]; then
             echo -e "${RED}❌ Environment variable $var is not set${NC}"
