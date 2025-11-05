@@ -1,4 +1,4 @@
-## The RELEASE_TAG version of Defyx VPN is now available.
+## Defyx VPN RELEASE_TAG is now available
 
 ### Some software changes:
 
