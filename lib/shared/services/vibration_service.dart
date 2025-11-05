@@ -13,7 +13,7 @@ class VibrationService {
 
   Future<void> init() async {
     try {
-      _hasVibrator = await Vibration.hasVibrator() ?? false;
+      _hasVibrator = await Vibration.hasVibrator();
       _batteryLevel = await _battery.batteryLevel;
 
       _battery.onBatteryStateChanged.listen((BatteryState state) async {

@@ -1,6 +1,6 @@
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class IntroLinkItem extends StatelessWidget {
   final String title;
@@ -15,11 +15,15 @@ class IntroLinkItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () async {
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CustomWebViewScreen(
+              url: url,
+              title: title,
+            ),
+          ),
+        );
       },
       borderRadius: BorderRadius.circular(8.r),
       child: Container(
