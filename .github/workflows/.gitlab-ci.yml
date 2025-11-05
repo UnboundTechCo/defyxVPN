@@ -44,7 +44,7 @@ send_to_telegram:
   rules:
     - if: '$SEND_TELEGRAM == "true"'
   script:
-    - echo "Sending APK to Telegram group..."
+    - echo "Sending APK to Telegram channel..."
     - curl -F chat_id=$TELEGRAM_CHAT_ID \
            -F document=@release/DXcore-android-github.apk \
            "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendDocument"
