@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:io';
 
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:intl/intl.dart';
 
@@ -101,5 +101,13 @@ class NetworkStatus {
     } catch (e) {
       return 'xx';
     }
+  }
+
+  static Future<bool> checkConnectivity() async {
+    final List<ConnectivityResult> connectivityResult =
+        await (Connectivity().checkConnectivity());
+
+    return connectivityResult.contains(ConnectivityResult.mobile) ||
+        connectivityResult.contains(ConnectivityResult.wifi);
   }
 }
