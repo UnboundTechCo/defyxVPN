@@ -41,6 +41,12 @@ jobs:
           echo "Adding dependency override for async in pubspec.yaml"
           sed -i '/^dependency_overrides:/d' pubspec.yaml || true
           echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
+      - name: Fix flutter_test in pubspec.yaml
+        run: |
+          echo "Ensuring correct flutter_test dependency"
+          sed -i '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
+      - name: Debug pubspec.yaml
+        run: cat pubspec.yaml
 
       - name: Create key.properties for signing
         run: |
