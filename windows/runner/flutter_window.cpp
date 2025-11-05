@@ -13,13 +13,11 @@
 #include <string>
 
 
-#define WM_PING_RESULT (WM_USER + 1)
-#define WM_FLAG_RESULT (WM_USER + 2)
+#define WM_FLAG_RESULT (WM_USER + 1)
 // Marshal background callbacks to the platform thread
-#define WM_PROGRESS_RESULT (WM_USER + 3)
-#define WM_STATUS_RESULT (WM_USER + 4)
+#define WM_PROGRESS_RESULT (WM_USER + 2)
+#define WM_STATUS_RESULT (WM_USER + 3)
 
-static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> ping_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> flag_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
@@ -93,25 +91,6 @@ bool FlutterWindow::OnCreate() {
       &flutter::StandardMethodCodec::GetInstance());
   status_channel->SetStreamHandler(std::make_unique<StatusHandler>());
 
-
-  class PingHandler : public flutter::StreamHandler<flutter::EncodableValue> {
-   protected:
-    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
-    OnListenInternal(const flutter::EncodableValue* arguments,
-                     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override {
-      ping_sink = std::move(events);
-      return nullptr;
-    }
-    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
-    OnCancelInternal(const flutter::EncodableValue* arguments) override {
-      ping_sink.reset();
-      return nullptr;
-    }
-  };
-  auto ping_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-      messenger, "com.defyx.ping_events",
-      &flutter::StandardMethodCodec::GetInstance());
-  ping_channel->SetStreamHandler(std::make_unique<PingHandler>());
 
   // Flag result events channel
   class FlagHandler : public flutter::StreamHandler<flutter::EncodableValue> {
@@ -253,11 +232,29 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "calculatePing") {
-          result->Success();
-          std::thread([]() {
-            int ping = g_dxcore.MeasurePing();
-            PostMessage(g_window_handle, WM_PING_RESULT, static_cast<WPARAM>(ping), 0);
-          }).detach();
+          // For now, return a cached/default value immediately to prevent freezing
+          // The real ping will run in background and update next time
+          static int cached_ping = 100;
+          static bool ping_running = false;
+          
+          // Start background ping if not already running
+          if (!ping_running) {
+            ping_running = true;
+            std::thread([&]() {
+              try {
+                int ping = g_dxcore.MeasurePing();
+                if (ping > 0 && ping < 9999) {
+                  cached_ping = ping;
+                }
+                OutputDebugStringA(("[DXcore] Background ping completed: " + std::to_string(ping) + "ms\n").c_str());
+              } catch (...) {
+                OutputDebugStringA("[DXcore] Background ping failed\n");
+              }
+              ping_running = false;
+            }).detach();
+          }
+          
+          result->Success(flutter::EncodableValue(cached_ping));
           return;
         }
         if (method == "getFlag") {
@@ -390,12 +387,6 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
-    case WM_PING_RESULT:
-      if (ping_sink) {
-        int ping = static_cast<int>(wparam);
-        ping_sink->Success(flutter::EncodableValue(ping));
-      }
-      return 0;
     case WM_FLAG_RESULT: {
       std::unique_ptr<std::string> flag_ptr(reinterpret_cast<std::string*>(lparam));
       if (flag_sink) {

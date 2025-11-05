@@ -46,39 +46,6 @@ class NetworkStatus {
     'tr'
   ];
 
-  // Stream of ping results (Windows only)
-  Stream<String> get pingStream {
-    if (Platform.isWindows) {
-      return _vpnBridge.pingStream.map((ping) {
-        final formatter = NumberFormat.decimalPattern();
-        final changePing = ping == 0 ? 100 : ping;
-        return formatter.format(changePing);
-      });
-    }
-    return Stream.empty();
-  }
-
-  // Trigger ping measurement
-  Future<void> triggerPing() async {
-    await _vpnBridge.getPing();
-  }
-
-  // Stream of flag results (Windows only)
-  Stream<String> get flagStream {
-    if (Platform.isWindows) {
-      return _vpnBridge.flagStream.map((flag) {
-        final f = flag.toLowerCase();
-        return _allowedCountries.contains(f) ? f : 'xx';
-      });
-    }
-    return const Stream.empty();
-  }
-
-  // Trigger flag fetch
-  Future<void> triggerFlag() async {
-    await _vpnBridge.triggerFlag();
-  }
-
   Future<String> getPing() async {
     final formatter = NumberFormat.decimalPattern();
 
