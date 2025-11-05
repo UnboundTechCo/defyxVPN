@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXAggregateTarget section */
@@ -126,29 +126,8 @@
 		FA502AF28DAFB529CFC2038F /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		F16AC72E2EA983D00026FB64 /* Exceptions for "PacketTunnel" folder in "PacketTunnel" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = F16AC71C2EA983D00026FB64 /* PacketTunnel */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F16AC7202EA983D00026FB64 /* PacketTunnel */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				F16AC72E2EA983D00026FB64 /* Exceptions for "PacketTunnel" folder in "PacketTunnel" target */,
-			);
-			explicitFileTypes = {
-			};
-			explicitFolders = (
-			);
-			path = PacketTunnel;
-			sourceTree = "<group>";
-		};
+		F16AC7202EA983D00026FB64 /* PacketTunnel */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = PacketTunnel; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -214,6 +193,7 @@
 				D73912EC22F37F3D000D13A0 /* Frameworks */,
 				FE81CEABEE1F2AB2B49C0C32 /* Pods */,
 				F16AC7302EA984240026FB64 /* MacDXcore.xcframework */,
+				F1B0CD672EB952630086BFF2 /* Recovered References */,
 			);
 			sourceTree = "<group>";
 		};
@@ -274,6 +254,14 @@
 				F16AC71E2EA983D00026FB64 /* NetworkExtension.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F1B0CD672EB952630086BFF2 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				B16E9912E31EE4693B4D8D99 /* GoogleService-Info.plist */,
+			);
+			name = "Recovered References";
 			sourceTree = "<group>";
 		};
 		FE81CEABEE1F2AB2B49C0C32 /* Pods */ = {
@@ -530,9 +518,13 @@
 			inputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-input-files.xcfilelist",
 			);
+			inputPaths = (
+			);
 			name = "[CP] Embed Pods Frameworks";
 			outputFileListPaths = (
 				"${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
