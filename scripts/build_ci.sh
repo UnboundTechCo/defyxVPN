@@ -66,14 +66,22 @@ build_android_github() {
 
     flutter clean
     flutter pub get
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Failed to update packages${NC}"
+        exit 1
+    fi
     flutter build apk --release
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}❌ Build failed${NC}"
+        exit 1
+    fi
 }
 
 ### MAIN (non-interactive)
 current_version=$(get_current_version)
 new_version=$(increment_version "$current_version" "patch")
 update_version "$new_version"
-echo "APP_VERSION=$new_version" >> $CI_PROJECT_DIR/build_version.env
+echo "APP_VERSION=$new_version" >> "$GITHUB_ENV"
 
 build_android_github
 
