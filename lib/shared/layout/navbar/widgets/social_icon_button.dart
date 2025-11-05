@@ -1,7 +1,7 @@
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class SocialIconButton extends StatelessWidget {
   final String iconPath;
@@ -26,12 +26,16 @@ class SocialIconButton extends StatelessWidget {
       splashColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
       highlightColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
       borderRadius: BorderRadius.circular(50.r),
-      onTap: () async {
+      onTap: () {
         if (!enable) return;
-        final uri = Uri.parse(url);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (context) => CustomWebViewScreen(
+              url: url,
+              title: _getTitleFromUrl(url),
+            ),
+          ),
+        );
       },
       child: SizedBox(
         width: 35.w,
@@ -49,5 +53,21 @@ class SocialIconButton extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _getTitleFromUrl(String url) {
+    if (url.contains('t.me') || url.contains('telegram')) {
+      return 'Telegram';
+    } else if (url.contains('instagram')) {
+      return 'Instagram';
+    } else if (url.contains('x.com') || url.contains('twitter')) {
+      return 'X';
+    } else if (url.contains('facebook') || url.contains('fb.com')) {
+      return 'Facebook';
+    } else if (url.contains('linkedin')) {
+      return 'LinkedIn';
+    } else {
+      return 'Social Media';
+    }
   }
 }

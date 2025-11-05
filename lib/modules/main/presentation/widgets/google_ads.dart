@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/core/utils/screen_security.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,7 @@ class GoogleAdsState {
   final bool showCountdown;
   final bool shouldDisposeAd;
   final bool adLoadFailed;
+  final bool screenSecurityEnabled;
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
@@ -29,6 +31,7 @@ class GoogleAdsState {
     this.showCountdown = true,
     this.shouldDisposeAd = false,
     this.adLoadFailed = false,
+    this.screenSecurityEnabled = false,
   });
 
   GoogleAdsState copyWith({
@@ -37,6 +40,7 @@ class GoogleAdsState {
     bool? showCountdown,
     bool? shouldDisposeAd,
     bool? adLoadFailed,
+    bool? screenSecurityEnabled,
   }) {
     return GoogleAdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
@@ -44,6 +48,8 @@ class GoogleAdsState {
       showCountdown: showCountdown ?? this.showCountdown,
       shouldDisposeAd: shouldDisposeAd ?? this.shouldDisposeAd,
       adLoadFailed: adLoadFailed ?? this.adLoadFailed,
+      screenSecurityEnabled:
+          screenSecurityEnabled ?? this.screenSecurityEnabled,
     );
   }
 }
@@ -72,6 +78,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
           shouldDisposeAd: true,
           nativeAdIsLoaded: false,
         );
+        disableScreenSecurity();
         timer.cancel();
       }
     });
@@ -87,6 +94,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
         state.showCountdown &&
         state.countdown == _countdownDuration) {
       startCountdownTimer();
+      enableScreenSecurity();
     }
   }
 
@@ -95,19 +103,37 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       adLoadFailed: true,
       nativeAdIsLoaded: false,
     );
+    disableScreenSecurity();
   }
 
   void acknowledgeDisposal() {
     state = state.copyWith(shouldDisposeAd: false);
+    disableScreenSecurity();
   }
 
   void resetState() {
     state = const GoogleAdsState();
+    disableScreenSecurity();
+  }
+
+  Future<void> enableScreenSecurity() async {
+    if (!state.screenSecurityEnabled) {
+      await ScreenSecurity.enableScreenSecurity();
+      state = state.copyWith(screenSecurityEnabled: true);
+    }
+  }
+
+  Future<void> disableScreenSecurity() async {
+    if (state.screenSecurityEnabled) {
+      await ScreenSecurity.disableScreenSecurity();
+      state = state.copyWith(screenSecurityEnabled: false);
+    }
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
+    disableScreenSecurity();
     super.dispose();
   }
 }
@@ -326,6 +352,25 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final adsState = ref.watch(googleAdsProvider);
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
+
+    // Enable screen security
+    if ((adsState.showCountdown &&
+            (adsState.nativeAdIsLoaded ||
+                _isLoading ||
+                adsState.adLoadFailed)) ||
+        (adsState.showCountdown && customAdData != null)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!adsState.screenSecurityEnabled) {
+          ref.read(googleAdsProvider.notifier).enableScreenSecurity();
+        }
+      });
+    } else {
+      if (adsState.screenSecurityEnabled) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          ref.read(googleAdsProvider.notifier).disableScreenSecurity();
+        });
+      }
+    }
 
     // Listen for disposal requests
     ref.listen(googleAdsProvider, (previous, next) {

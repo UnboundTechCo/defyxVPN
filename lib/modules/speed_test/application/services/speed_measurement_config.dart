@@ -25,4 +25,14 @@ class SpeedMeasurementConfig {
     if (bytes < 1000000000) return '${(bytes / 1000000).toStringAsFixed(0)}MB';
     return '${(bytes / 1000000000).toStringAsFixed(0)}GB';
   }
+
+  static double roundSpeed(double speed) {
+    if (speed < 10) {
+      return (speed / 0.1).round() * 0.1;
+    } else if (speed < 50) {
+      return (speed / 0.25).round() * 0.25;
+    } else {
+      return (speed / 0.5).round() * 0.5;
+    }
+  }
 }

@@ -95,7 +95,8 @@ CustomTransitionPage<void> _createPageAnimation(
     child: child,
     transitionDuration: const Duration(milliseconds: 320),
     reverseTransitionDuration: const Duration(milliseconds: 280),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) => _buildSlideTransition(
+    transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+        _buildSlideTransition(
       context,
       animation,
       secondaryAnimation,
@@ -105,8 +106,11 @@ CustomTransitionPage<void> _createPageAnimation(
   );
 }
 
+final rootNavigatorKey = GlobalKey<NavigatorState>();
+
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: DefyxVPNRoutes.splash.route,
     routes: [
       GoRoute(
@@ -160,3 +164,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+final routeInformationProvider =
+    ChangeNotifierProvider<GoRouteInformationProvider>(
+        (ref) => ref.watch(routerProvider).routeInformationProvider);
+
+final currentRouteProvider =
+    Provider((ref) => ref.watch(routeInformationProvider).value.uri.toString());

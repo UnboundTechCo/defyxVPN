@@ -4,17 +4,27 @@
 
 #include "dxcore_bridge.h"
 #include "proxy_config.h"
+#include "system_tray.h"
 #include "flutter/generated_plugin_registrant.h"
 #include <flutter/event_channel.h>
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <string>
 #include <cstdlib>
+#include <fstream>
+#include <shlobj.h>
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
 FlutterWindow::~FlutterWindow() {}
+
+static DXCoreBridge g_dxcore;
+static ProxyConfig g_proxy;
+static SystemTray* g_system_tray = nullptr;
+static std::string vpn_status = "disconnected";
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
 
 bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
@@ -23,43 +33,47 @@ bool FlutterWindow::OnCreate() {
 
   RECT frame = GetClientArea();
 
-  // The size here must match the window dimensions to avoid unnecessary surface
-  // creation / destruction in the startup path.
   flutter_controller_ = std::make_unique<flutter::FlutterViewController>(
       frame.right - frame.left, frame.bottom - frame.top, project_);
-  // Ensure that basic setup of the controller was successful.
   if (!flutter_controller_->engine() || !flutter_controller_->view()) {
     return false;
   }
   RegisterPlugins(flutter_controller_->engine());
   SetChildContent(flutter_controller_->view()->GetNativeWindow());
 
-  flutter_controller_->engine()->SetNextFrameCallback([&]() {
-    this->Show();
+  bool shouldShowWindow = true;
+
+  HKEY hKeyMinimized;
+  const wchar_t* regPathMinimized = L"Software\\DefyxVPN";
+  const wchar_t* valueName = L"StartMinimized";
+
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, regPathMinimized, 0, KEY_QUERY_VALUE, &hKeyMinimized) == ERROR_SUCCESS) {
+    DWORD value = 0;
+    DWORD dataSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKeyMinimized, valueName, nullptr, nullptr, (BYTE*)&value, &dataSize) == ERROR_SUCCESS) {
+      if (value == 1) {
+        shouldShowWindow = false;
+      }
+    }
+    RegCloseKey(hKeyMinimized);
+  }
+
+  flutter_controller_->engine()->SetNextFrameCallback([&, shouldShowWindow]() {
+    if (shouldShowWindow) {
+      this->Show();
+    }
   });
 
-  // Flutter can complete the first frame before the "show window" callback is
-  // registered. The following call ensures a frame is pending to ensure the
-  // window is shown. It is a no-op if the first frame hasn't completed yet.
   flutter_controller_->ForceRedraw();
 
-  // Set up method and event channels for Windows
   auto messenger = flutter_controller_->engine()->messenger();
 
-  // Make bridge global so handlers can access it.
-  static DXCoreBridge g_dxcore;
-  static ProxyConfig g_proxy;
   if (!g_dxcore.Load()) {
     OutputDebugStringA("[DXcore] Failed to load DXcore.dll\n");
   } else {
     OutputDebugStringA("[DXcore] Successfully loaded DXcore.dll\n");
   }
 
-  // Track simple status - must be declared before handlers
-  static std::string vpn_status = "disconnected";
-
-  // Status events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
   class StatusHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -79,8 +93,6 @@ bool FlutterWindow::OnCreate() {
       &flutter::StandardMethodCodec::GetInstance());
   status_channel->SetStreamHandler(std::make_unique<StatusHandler>());
 
-  // Progress events channel
-  static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
   class ProgressHandler : public flutter::StreamHandler<flutter::EncodableValue> {
    protected:
     std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
@@ -99,8 +111,13 @@ bool FlutterWindow::OnCreate() {
         if (msg.find("Data: VPN connected") != std::string::npos) {
           OutputDebugStringA("[DXcore] VPN connected - updating status and enabling proxy\n");
           vpn_status = "connected";
-          
-          // Enable system proxy for SOCKS5 on port 5000
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connected);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Connected");
+            g_system_tray->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
+          }
+
           if (g_proxy.EnableProxy("127.0.0.1:5000")) {
             OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
           } else {
@@ -112,13 +129,37 @@ bool FlutterWindow::OnCreate() {
             m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
             status_sink->Success(flutter::EncodableValue(m));
           }
-        } else if (msg.find("Data: VPN failed") != std::string::npos ||
-                   msg.find("Data: VPN stopped") != std::string::npos ||
-                   msg.find("Data: VPN cancelled") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN stopped/failed - updating status to disconnected and disabling proxy\n");
+        } else if (msg.find("Data: VPN failed") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN failed - updating status to error and disabling proxy\n");
           vpn_status = "disconnected";
-          
-          // Disable system proxy
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Failed);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Error");
+            g_system_tray->UpdateConnectionStatus(L"Error");
+          }
+
+          if (g_proxy.DisableProxy()) {
+            OutputDebugStringA("[Proxy] System proxy disabled\n");
+          } else {
+            OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
+          }
+
+          if (status_sink) {
+            flutter::EncodableMap m;
+            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
+            status_sink->Success(flutter::EncodableValue(m));
+          }
+        } else if (msg.find("Data: VPN stopped") != std::string::npos ||
+                   msg.find("Data: VPN cancelled") != std::string::npos) {
+          OutputDebugStringA("[DXcore] VPN stopped - updating status to disconnected and disabling proxy\n");
+          vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+          }
+
           if (g_proxy.DisableProxy()) {
             OutputDebugStringA("[Proxy] System proxy disabled\n");
           } else {
@@ -182,6 +223,14 @@ bool FlutterWindow::OnCreate() {
           g_dxcore.StopVPN();
           g_dxcore.Stop();
           vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
+          }
+
           send_status();
           result->Success(flutter::EncodableValue(true));
           return;
@@ -284,8 +333,14 @@ bool FlutterWindow::OnCreate() {
             OutputDebugStringA(log.c_str());
             
             g_dxcore.StartVPN(cache_dir, flow, pattern);
-            // Don't set status to connected immediately - wait for DXcore progress callback
-            // vpn_status will be updated by progress handler when "Data: VPN connected" is received
+
+            vpn_status = "connecting";
+            if (g_system_tray) {
+              g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+              g_system_tray->UpdateTooltip(L"DefyxVPN - Connecting...");
+              g_system_tray->UpdateConnectionStatus(L"Connecting...");
+            }
+
             result->Success(flutter::EncodableValue(true));
           } else {
             result->Error("INVALID_ARGUMENT", "missing args");
@@ -294,9 +349,36 @@ bool FlutterWindow::OnCreate() {
         }
         if (method == "stopVPN") {
           g_dxcore.StopVPN();
-          g_proxy.DisableProxy();  // Ensure proxy is disabled
+          g_proxy.DisableProxy();
           vpn_status = "disconnected";
+
+          if (g_system_tray) {
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
+            g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+            g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+          }
+
           send_status();
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "setStartMinimized") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openIntroduction") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openSpeedTest") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openLogs") {
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+        if (method == "openPreferences") {
           result->Success(flutter::EncodableValue(true));
           return;
         }
@@ -304,10 +386,68 @@ bool FlutterWindow::OnCreate() {
         result->NotImplemented();
       });
 
+  system_tray_ = std::make_unique<SystemTray>();
+  system_tray_->Initialize(
+      GetHandle(),
+      GetModuleHandle(nullptr),
+      [this](SystemTray::TrayAction action) {
+        HandleTrayAction(action);
+      });
+
+  g_system_tray = system_tray_.get();
+
+  if (system_tray_) {
+    system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+    system_tray_->UpdateTooltip(L"DefyxVPN - Ready");
+  }
+
+  HKEY hKey;
+  const wchar_t* appName = L"DefyxVPN";
+  const wchar_t* regPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    wchar_t existingPath[MAX_PATH] = {0};
+    DWORD bufSize = sizeof(existingPath);
+    if (RegQueryValueExW(hKey, appName, nullptr, nullptr, (LPBYTE)existingPath, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetLaunchOnStartup(true);
+      }
+    }
+    RegCloseKey(hKey);
+  }
+
+  const wchar_t* prefRegPath = L"Software\\DefyxVPN";
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, prefRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    DWORD startMinimized = 0;
+    DWORD bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"StartMinimized", nullptr, nullptr, (LPBYTE)&startMinimized, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetStartMinimized(startMinimized != 0);
+      }
+    }
+
+    DWORD forceClose = 1;
+    bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"ForceClose", nullptr, nullptr, (LPBYTE)&forceClose, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetForceClose(forceClose != 0);
+      }
+    }
+
+    RegCloseKey(hKey);
+  }
+
   return true;
 }
 
 void FlutterWindow::OnDestroy() {
+  g_system_tray = nullptr;
+
+  if (system_tray_) {
+    system_tray_->Cleanup();
+    system_tray_ = nullptr;
+  }
+
   if (flutter_controller_) {
     flutter_controller_ = nullptr;
   }
@@ -319,7 +459,10 @@ LRESULT
 FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
                               WPARAM const wparam,
                               LPARAM const lparam) noexcept {
-  // Give Flutter, including plugins, an opportunity to handle window messages.
+  if (system_tray_ && system_tray_->HandleMessage(message, wparam, lparam)) {
+    return 0;
+  }
+
   if (flutter_controller_) {
     std::optional<LRESULT> result =
         flutter_controller_->HandleTopLevelWindowProc(hwnd, message, wparam,
@@ -330,6 +473,16 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
   }
 
   switch (message) {
+    case WM_CLOSE:
+      if (system_tray_ && !system_tray_->GetForceClose()) {
+        ShowWindow(hwnd, SW_HIDE);
+        return 0;
+      } else {
+        DestroyWindow(hwnd);
+        return 0;
+      }
+      break;
+
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
@@ -337,3 +490,176 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);
 }
+
+void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
+  HWND hwnd = GetHandle();
+
+  switch (action) {
+    case SystemTray::TrayAction::ShowWindow:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      break;
+
+    case SystemTray::TrayAction::ToggleWindow:
+      if (IsWindowVisible(hwnd)) {
+        ShowWindow(hwnd, SW_HIDE);
+      } else {
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+      }
+      break;
+
+    case SystemTray::TrayAction::LaunchOnStartup:
+      {
+        HKEY hKey;
+        const wchar_t* appName = L"DefyxVPN";
+        const wchar_t* regPath = L"Software\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+        if (RegOpenKeyExW(HKEY_CURRENT_USER, regPath, 0, KEY_SET_VALUE | KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+          wchar_t exePath[MAX_PATH];
+          GetModuleFileNameW(nullptr, exePath, MAX_PATH);
+
+          wchar_t existingPath[MAX_PATH] = {0};
+          DWORD bufSize = sizeof(existingPath);
+          LONG queryResult = RegQueryValueExW(hKey, appName, nullptr, nullptr, (LPBYTE)existingPath, &bufSize);
+
+          if (queryResult == ERROR_SUCCESS) {
+            RegDeleteValueW(hKey, appName);
+            if (system_tray_) {
+              system_tray_->SetLaunchOnStartup(false);
+            }
+          } else {
+            std::wstring startupCommand = std::wstring(exePath) + L" --startup";
+            RegSetValueExW(hKey, appName, 0, REG_SZ, (const BYTE*)startupCommand.c_str(), static_cast<DWORD>((startupCommand.length() + 1) * sizeof(wchar_t)));
+            if (system_tray_) {
+              system_tray_->SetLaunchOnStartup(true);
+            }
+          }
+          RegCloseKey(hKey);
+        }
+      }
+      break;
+
+    case SystemTray::TrayAction::AutoConnect:
+        // TODO: Implement auto-connect functionality
+      break;
+
+    case SystemTray::TrayAction::StartMinimized:
+      {
+        HKEY hKey;
+        const wchar_t* regPath = L"Software\\DefyxVPN";
+        const wchar_t* valueName = L"StartMinimized";
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+          bool currentValue = system_tray_->GetStartMinimized();
+          DWORD value = currentValue ? 1 : 0;
+          RegSetValueExW(hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+          RegCloseKey(hKey);
+
+          if (flutter_controller_) {
+            auto messenger = flutter_controller_->engine()->messenger();
+            auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+                messenger, "com.defyx.vpn",
+                &flutter::StandardMethodCodec::GetInstance());
+
+            flutter::EncodableMap args;
+            args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
+            channel->InvokeMethod("setStartMinimized", std::make_unique<flutter::EncodableValue>(args));
+          }
+        }
+      }
+      break;
+
+    case SystemTray::TrayAction::ForceClose:
+      {
+        HKEY hKey;
+        const wchar_t* regPath = L"Software\\DefyxVPN";
+        const wchar_t* valueName = L"ForceClose";
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+          bool currentValue = system_tray_->GetForceClose();
+          DWORD value = currentValue ? 1 : 0;
+          RegSetValueExW(hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+          RegCloseKey(hKey);
+
+          if (flutter_controller_) {
+            auto messenger = flutter_controller_->engine()->messenger();
+            auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+                messenger, "com.defyx.vpn",
+                &flutter::StandardMethodCodec::GetInstance());
+
+            flutter::EncodableMap args;
+            args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
+            channel->InvokeMethod("setForceClose", std::make_unique<flutter::EncodableValue>(args));
+          }
+        }
+      }
+      break;
+
+    case SystemTray::TrayAction::ProxyService:
+      // TODO: Implement proxy service mode
+      break;
+
+    case SystemTray::TrayAction::SystemProxy:
+      // TODO: Implement system proxy mode
+      break;
+
+    case SystemTray::TrayAction::VPNMode:
+      // TODO: Implement VPN mode (currently disabled)
+      break;
+
+    case SystemTray::TrayAction::OpenIntroduction:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openIntroduction", nullptr);
+      }
+      break;
+
+    case SystemTray::TrayAction::OpenSpeedTest:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openSpeedTest", nullptr);
+      }
+      break;
+
+    case SystemTray::TrayAction::OpenLogs:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openLogs", nullptr);
+      }
+      break;
+
+    case SystemTray::TrayAction::OpenPreferences:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+        channel->InvokeMethod("openPreferences", nullptr);
+      }
+      break;
+
+    case SystemTray::TrayAction::Exit:
+      DestroyWindow(hwnd);
+      break;
+  }
+}
+
+

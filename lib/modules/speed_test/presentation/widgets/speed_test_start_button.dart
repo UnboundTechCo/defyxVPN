@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
@@ -23,6 +24,7 @@ class SpeedTestStartButton extends StatefulWidget {
 
 class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
     with SingleTickerProviderStateMixin {
+  final AnimationService _animationService = AnimationService();
   late AnimationController _animationController;
   late Animation<double> _animation;
 
@@ -30,7 +32,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   void initState() {
     super.initState();
     _animationController = AnimationController(
-      duration: const Duration(milliseconds: 1500),
+      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
       vsync: this,
     );
 
@@ -42,7 +44,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
     );
 
     if (widget.currentStep == SpeedTestStep.ready) {
-      _animationController.repeat(reverse: true);
+      _animationService.conditionalRepeat(_animationController, reverse: true);
     }
   }
 
@@ -50,7 +52,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   void didUpdateWidget(SpeedTestStartButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.currentStep == SpeedTestStep.ready && oldWidget.currentStep != SpeedTestStep.ready) {
-      _animationController.repeat(reverse: true);
+      _animationService.conditionalRepeat(_animationController, reverse: true);
     } else if (widget.currentStep != SpeedTestStep.ready &&
         oldWidget.currentStep == SpeedTestStep.ready) {
       _animationController.stop();
@@ -65,16 +67,10 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
   }
 
   IconData _getIcon() {
-    if (widget.currentStep == SpeedTestStep.ready) {
+    if (widget.currentStep == SpeedTestStep.ready && widget.previousStep == null) {
       return Icons.near_me_outlined;
-    } else if (widget.currentStep == SpeedTestStep.toast) {
-      return Icons.cached_rounded;
-    } else if (widget.currentStep == SpeedTestStep.ads &&
-        widget.previousStep == SpeedTestStep.toast) {
-      return Icons.cached_rounded;
     } else {
       return Icons.cached_rounded;
-      // return Icons.check_rounded;
     }
   }
 
@@ -92,7 +88,7 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (widget.currentStep == SpeedTestStep.ready)
+            if (widget.currentStep == SpeedTestStep.ready && widget.previousStep == null)
               AnimatedBuilder(
                 animation: _animation,
                 builder: (context, child) {
@@ -107,13 +103,19 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
               ),
             Positioned(
               right: 15.h,
-              bottom: 15.h,
+              bottom: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                  ? 15.h
+                  : 0,
               child: Transform.rotate(
-                angle: widget.currentStep == SpeedTestStep.ready ? 15 / 3.14 : 0,
+                angle: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                    ? 15 / 3.14
+                    : 0,
                 child: Icon(
                   _getIcon(),
                   color: Colors.white,
-                  size: widget.currentStep == SpeedTestStep.ready ? 20.sp : 36.sp,
+                  size: widget.currentStep == SpeedTestStep.ready && widget.previousStep == null
+                      ? 20.sp
+                      : 36.sp,
                 ),
               ),
             ),

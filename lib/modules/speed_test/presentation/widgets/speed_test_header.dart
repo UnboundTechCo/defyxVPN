@@ -23,9 +23,6 @@ class SpeedTestHeader extends StatelessWidget {
         bottomText = 'testing speed ...';
         break;
       case SpeedTestStep.ready:
-      case SpeedTestStep.toast:
-      case SpeedTestStep.result:
-      case SpeedTestStep.ads:
         upperText = 'is ready';
         bottomText = 'to speed test';
         break;

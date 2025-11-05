@@ -24,7 +24,10 @@ class DefyxNavBar extends ConsumerWidget {
         children: [
           Container(
             width: 200.w,
-            height: 65.h,
+            height: (Theme.of(context).platform == TargetPlatform.iOS ||
+                    Theme.of(context).platform == TargetPlatform.android)
+                ? 65.h
+                : 75.h,
             decoration: BoxDecoration(
               color: Colors.black,
               borderRadius: BorderRadius.circular(100.r),

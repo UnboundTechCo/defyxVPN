@@ -1,5 +1,29 @@
 # Defyx Changelog
 
+## v3.2.30 (Build 190)
+
+- Improved ping and location check after connection
+- Improved network status check
+
+## v3.2.26 (Build 186)
+
+- Improved Speedtest performance and accuracy
+- Refined Privacy dialog to enhance the VPN profile creation process
+- Fixed issue where Flowline didn’t load on first launch
+- Resolved unnecessary Splash Screen display when already connected
+- Added Quick Menu for easier access to documentation and social pages
+- Added battery level check to disable vibration when the device is low on power
+- Integrated Firebase support
+- Improve Usability in the Preferences Section
+- Fixed several minor app issues
+
+## v3.2.10 (Build 167)
+
+- Speedtest feature added to check download/upload speeds, ping, and jitter
+- Disconnect VPN directly from Android notifications
+- Haptic feedback added in some areas for smoother experience
+- Ongoing improvements to connection stability in the background
+
 ## v3.0.4 (Build 157)
 
 - Added a Preferences feature for managing cores
