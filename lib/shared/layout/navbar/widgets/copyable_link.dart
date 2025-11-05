@@ -33,7 +33,7 @@ class _CopyableLinkState extends State<CopyableLink> {
       },
       child: Container(
         height: 56.h,
-        padding: EdgeInsets.symmetric(vertical: 19.h, horizontal: 15.w),
+        padding: EdgeInsets.symmetric(vertical: 0.h, horizontal: 15.w),
         decoration: BoxDecoration(
           border: Border.all(color: Colors.grey[300]!),
           borderRadius: BorderRadius.circular(8.r),
