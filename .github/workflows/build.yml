@@ -93,7 +93,8 @@ jobs:
             import "package:yaml/yaml.dart";
             void main() {
               final pubspec = loadYaml(File("pubspec.yaml").readAsStringSync());
-              print(pubspec["version"]);
+              final version = pubspec["version"].toString().split("+").first;
+              print(version);
             }' > get_version.dart
 
             VERSION=$(dart run get_version.dart)
@@ -363,6 +364,7 @@ jobs:
         with:
           tag_name: "v${{ needs.build-android.outputs.app_version }}"
           name: "v${{ needs.build-android.outputs.app_version }}"
+          prerelease: true
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
