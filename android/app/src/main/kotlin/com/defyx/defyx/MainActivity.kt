@@ -9,7 +9,6 @@ import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.view.WindowManager
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
 import io.flutter.embedding.android.FlutterActivity
@@ -25,7 +24,6 @@ private const val TAG = "MainActivity"
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.defyx.vpn"
-    private val SCREEN_SECURITY_CHANNEL = "com.defyx.screen_security"
     private val STATUS_CHANNEL = "com.defyx.vpn_events"
     private var eventSink: EventChannel.EventSink? = null
     private var pendingVpnResult: MethodChannel.Result? = null
@@ -38,12 +36,6 @@ class MainActivity : FlutterActivity() {
                 call,
                 result ->
             lifecycleScope.launch { handleMethodCall(call, result) }
-        }
-
-        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, SCREEN_SECURITY_CHANNEL).setMethodCallHandler {
-                call,
-                result ->
-            handleScreenSecurityMethodCall(call, result)
         }
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, STATUS_CHANNEL)
@@ -65,42 +57,6 @@ class MainActivity : FlutterActivity() {
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.defyx.progress_events")
                 .setStreamHandler(ProgressStreamHandler())
     }
-    
-    private fun handleScreenSecurityMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        when (call.method) {
-            "enableScreenSecurity" -> {
-                enableScreenSecurity()
-                result.success(null)
-            }
-            "disableScreenSecurity" -> {
-                disableScreenSecurity()
-                result.success(null)
-            }
-            else -> result.notImplemented()
-        }
-    }
-    
-    private fun enableScreenSecurity() {
-        try {
-            window.setFlags(
-                WindowManager.LayoutParams.FLAG_SECURE,
-                WindowManager.LayoutParams.FLAG_SECURE
-            )
-            Log.d(TAG, "Screen security enabled")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error enabling screen security", e)
-        }
-    }
-    
-    private fun disableScreenSecurity() {
-        try {
-            window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            Log.d(TAG, "Screen security disabled")
-        } catch (e: Exception) {
-            Log.e(TAG, "Error disabling screen security", e)
-        }
-    }
-
     private fun grantNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             ActivityCompat.requestPermissions(
