@@ -8,5 +8,8 @@ final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   const IOSOptions iosOptions = IOSOptions(
     accessibility: KeychainAccessibility.first_unlock,
   );
-  return FlutterSecureStorage(aOptions: androidOptions, iOptions: iosOptions);
+  const MacOsOptions macOSOptions = MacOsOptions(
+    accessibility: KeychainAccessibility.first_unlock,
+  );
+  return FlutterSecureStorage(aOptions: androidOptions, iOptions: iosOptions,mOptions: macOSOptions);
 });

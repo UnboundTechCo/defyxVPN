@@ -1,8 +1,11 @@
+import 'dart:io';
+
+import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class PrivacyNoticeDialog extends StatelessWidget {
-  final VoidCallback onAccept;
+class PrivacyNoticeDialog extends StatefulWidget {
+  final Future<bool> Function() onAccept;
 
   const PrivacyNoticeDialog({
     super.key,
@@ -10,20 +13,48 @@ class PrivacyNoticeDialog extends StatelessWidget {
   });
 
   @override
+  State<PrivacyNoticeDialog> createState() => _PrivacyNoticeDialogState();
+
+  static Future<void> show(
+    BuildContext context,
+    Future<bool> Function() onAccept,
+  ) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return PopScope(
+          canPop: false,
+          child: PrivacyNoticeDialog(onAccept: onAccept),
+        );
+      },
+    );
+  }
+}
+
+class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
+  bool _isLoading = false;
+  @override
   Widget build(BuildContext context) {
     final screenWidth = 1.sw;
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
-    final containerWidth = (300.0 * ratio).clamp(240.0, 390.0).toDouble();
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
+    String message =
+        'This app does not collect, store, or transmit any personal information to its servers.\n\n'
+        'Only a small amount of non-personal data (such as your internet provider’s name) may be stored locally on your device to improve connection performance for future sessions.\n';
+    if (Platform.isIOS) {
+      message += '\nBy continuing,\nyou agree to install the VPN profile.';
+    }
 
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15.r),
       ),
+      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
-        width: containerWidth,
         padding: EdgeInsets.all(20.w),
+        width: 343.w,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(15.r),
@@ -43,10 +74,7 @@ class PrivacyNoticeDialog extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             Text(
-              'This app does not collect any user data or send any information to its servers.\n'
-              'Only some non-personal information (such as the name of your internet provider) '
-              'is stored locally on your device solely to improve connection performance in future attempts.\n'
-              'No personal data is collected, stored, or shared.',
+              message,
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
@@ -56,48 +84,47 @@ class PrivacyNoticeDialog extends StatelessWidget {
             ),
             SizedBox(height: 20.h),
             ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                onAccept();
+              onPressed: () async {
+                if (_isLoading) return;
+                setState(() => _isLoading = true);
+
+                final accepted = await widget.onAccept();
+                setState(() => _isLoading = false);
+                if (accepted && context.mounted) {
+                  Navigator.of(context).pop();
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],
-                foregroundColor: Colors.black,
+                foregroundColor: const Color.fromARGB(255, 47, 41, 41),
                 padding: EdgeInsets.symmetric(vertical: 16.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 elevation: 0,
               ),
-              child: Text(
-                'Got it',
-                style: TextStyle(
-                  fontFamily: 'Lato',
-                  color: const Color(0xFF4B4B4B),
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              child: _isLoading
+                  ? SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 3,
+                        color: AppColors.bottomGradientConnected,
+                      ),
+                    )
+                  : Text(
+                      'Got it',
+                      style: TextStyle(
+                        fontFamily: 'Lato',
+                        color: const Color(0xFF4B4B4B),
+                        fontSize: fontSize,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
             ),
           ],
         ),
       ),
-    );
-  }
-
-  static Future<void> show(
-    BuildContext context,
-    VoidCallback onAccept,
-  ) {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return PopScope(
-          canPop: false,
-          child: PrivacyNoticeDialog(onAccept: onAccept),
-        );
-      },
     );
   }
 }
