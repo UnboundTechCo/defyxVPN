@@ -79,6 +79,17 @@ jobs:
           flutter --version
           dart --version
           flutter doctor --verbose
+    
+      - name: Get app version
+        id: get_version
+        run: |
+          VERSION=$(flutter pub run dart:io -e "import 'package:yaml/yaml.dart'; import 'dart:io';
+          void main() {
+            final pubspec = loadYaml(File('pubspec.yaml').readAsStringSync());
+            print(pubspec['version']);
+          }")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
 
       - name: Clear Pub cache
         run: flutter pub cache clean
@@ -299,3 +310,36 @@ jobs:
                -F text="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Download: $ARTIFACT_URL" \
                 "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
 
+  release-to-github:
+    runs-on: ubuntu-latest
+    needs: build-android
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 
+
+      - name: Create tag if not exists
+        run: |
+          TAG="v${{ needs.build-android.outputs.app_version }}"
+          echo "Detected tag: $TAG"
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists. Skipping."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git tag "$TAG"
+            git push origin "$TAG"
+            echo "✅ Created and pushed tag $TAG"
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ needs.build-android.outputs.app_version }}"
+          name: "v${{ needs.build-android.outputs.app_version }}"
+          files: build/app/outputs/flutter-apk/app-release.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
