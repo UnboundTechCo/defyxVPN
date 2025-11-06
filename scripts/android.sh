@@ -10,7 +10,8 @@ build_android() {
     flutter pub get
     
     if [ "$build_type" == "googlePlay" ]; then
-        flutter build appbundle --release
+        flutter build apk --release
+        flutter build apk --split-per-abi --release  
     elif [ "$build_type" == "github" ]; then
         flutter build apk --release
     else
