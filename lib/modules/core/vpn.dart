@@ -214,7 +214,8 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    // Invalidate the FutureProvider to refresh it
+    _container?.invalidate(pingProvider);
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -240,6 +241,7 @@ class VPN {
   Future<void> _closeTunnel() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
+    final vpnData = await _container?.read(vpnDataProvider.future);
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
@@ -349,6 +351,7 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    // Invalidate the FutureProvider to refresh ping
+    _container?.invalidate(pingProvider);
   }
 }

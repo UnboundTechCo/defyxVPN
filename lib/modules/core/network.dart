@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:io' as dart_io;
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:intl/intl.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 
 class NetworkStatus {
   NetworkStatus._internal();
@@ -50,7 +51,7 @@ class NetworkStatus {
     final formatter = NumberFormat.decimalPattern();
 
     final ping = await _vpnBridge.getPing();
-    if (Platform.isAndroid) {
+    if (dart_io.Platform.isAndroid) {
       final changePing = ping == 0 ? 100 : ping;
       return formatter.format(changePing);
     }
@@ -71,10 +72,22 @@ class NetworkStatus {
   }
 
   static Future<bool> checkConnectivity() async {
-    final List<ConnectivityResult> connectivityResult =
-        await (Connectivity().checkConnectivity());
-
-    return connectivityResult.contains(ConnectivityResult.mobile) ||
-        connectivityResult.contains(ConnectivityResult.wifi);
+    try {
+      final connectivityResult = await Connectivity().checkConnectivity();
+      return connectivityResult.any((result) => 
+        result == ConnectivityResult.mobile || 
+        result == ConnectivityResult.wifi ||
+        result == ConnectivityResult.ethernet ||
+        result == ConnectivityResult.vpn
+      );
+    } catch (e) {
+      // Fallback: try to resolve a DNS query
+      try {
+        final result = await dart_io.InternetAddress.lookup('google.com');
+        return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      } catch (e) {
+        return false;
+      }
+    }
   }
 }

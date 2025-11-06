@@ -148,8 +148,51 @@ class PingIndicator extends ConsumerWidget {
                 child: PingPlaceholder(width: 52.w),
               );
             }
-            if (ping.isEmpty) {
-              return Text(
+            
+            return ping.when(
+              data: (pingValue) {
+                if (pingValue.isEmpty) {
+                  return Text(
+                    '0 ms',
+                    style: TextStyle(
+                      fontSize: 18.sp,
+                      fontFamily: 'Lato',
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  );
+                }
+                return Row(
+                  children: [
+                    SizedBox(width: 10.w),
+                    Text(
+                      pingValue,
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    Text(
+                      ' ms',
+                      style: TextStyle(
+                        fontSize: 16.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w300,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                );
+              },
+              loading: () => Shimmer.fromColors(
+                baseColor: const Color(0xFF307065),
+                highlightColor: const Color(0xFF1B483F),
+                enabled: animationService.shouldAnimate(),
+                child: PingPlaceholder(width: 52.w),
+              ),
+              error: (error, stack) => Text(
                 '0 ms',
                 style: TextStyle(
                   fontSize: 18.sp,
@@ -157,30 +200,7 @@ class PingIndicator extends ConsumerWidget {
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
-              );
-            }
-            return Row(
-              children: [
-                SizedBox(width: 10.w),
-                Text(
-                  ping,
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontFamily: 'Lato',
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  ' ms',
-                  style: TextStyle(
-                    fontSize: 16.sp,
-                    fontFamily: 'Lato',
-                    fontWeight: FontWeight.w300,
-                    color: Colors.white,
-                  ),
-                ),
-              ],
+              ),
             );
           },
         ),

@@ -14,13 +14,15 @@
 
 
 #define WM_FLAG_RESULT (WM_USER + 1)
+#define WM_PING_RESULT (WM_USER + 2)
 // Marshal background callbacks to the platform thread
-#define WM_PROGRESS_RESULT (WM_USER + 2)
-#define WM_STATUS_RESULT (WM_USER + 3)
+#define WM_PROGRESS_RESULT (WM_USER + 3)
+#define WM_STATUS_RESULT (WM_USER + 4)
 
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> flag_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
+static std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> pending_ping_result;
 static HWND g_window_handle = nullptr;
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
@@ -232,30 +234,37 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "calculatePing") {
-          // For now, return a cached/default value immediately to prevent freezing
-          // The real ping will run in background and update next time
-          static int cached_ping = 100;
-          static bool ping_running = false;
+          // Store the result callback to use when ping completes
+          pending_ping_result = std::move(result);
           
-          // Start background ping if not already running
-          if (!ping_running) {
-            ping_running = true;
-            std::thread([&]() {
-              try {
-                int ping = g_dxcore.MeasurePing();
-                if (ping > 0 && ping < 9999) {
-                  cached_ping = ping;
-                }
-                OutputDebugStringA(("[DXcore] Background ping completed: " + std::to_string(ping) + "ms\n").c_str());
-              } catch (...) {
-                OutputDebugStringA("[DXcore] Background ping failed\n");
-              }
-              ping_running = false;
-            }).detach();
-          }
+          // Each click triggers a fresh ping in background thread
+          std::thread([&]() {
+            try {
+              // Lower thread priority to prevent UI blocking
+              SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+              
+              int ping = g_dxcore.MeasurePing();
+              
+              // Handle edge cases
+              if (ping < 0) ping = 0;
+              if (ping > 9999) ping = 9999;
+              if (ping == 0) ping = 100; // Default for invalid ping
+              
+              OutputDebugStringA(("[DXcore] Fresh ping measurement: " + std::to_string(ping) + "ms\n").c_str());
+              
+              // Post the fresh result back to main thread for UI update
+              PostMessage(g_window_handle, WM_PING_RESULT, 0, 
+                         static_cast<LPARAM>(ping));
+              
+            } catch (...) {
+              OutputDebugStringA("[DXcore] Ping measurement failed\n");
+              // Post default value on error
+              PostMessage(g_window_handle, WM_PING_RESULT, 0, 
+                         static_cast<LPARAM>(100));
+            }
+          }).detach();
           
-          result->Success(flutter::EncodableValue(cached_ping));
-          return;
+          return; // Don't call result->Success() here, we'll call it when ping completes
         }
         if (method == "getFlag") {
           result->Success();
@@ -354,6 +363,11 @@ bool FlutterWindow::OnCreate() {
           result->Success(flutter::EncodableValue(true));
           return;
         }
+        if (method == "isVPNPrepared") {
+          // On Windows, VPN is always "prepared" since we don't need special preparation
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
 
         result->NotImplemented();
       });
@@ -392,6 +406,14 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
       if (flag_sink) {
         const std::string flag = flag_ptr ? *flag_ptr : std::string();
         flag_sink->Success(flutter::EncodableValue(flag));
+      }
+      return 0;
+    }
+    case WM_PING_RESULT: {
+      int ping_value = static_cast<int>(lparam);
+      if (pending_ping_result) {
+        pending_ping_result->Success(flutter::EncodableValue(ping_value));
+        pending_ping_result.reset(); // Clear the callback after use
       }
       return 0;
     }
