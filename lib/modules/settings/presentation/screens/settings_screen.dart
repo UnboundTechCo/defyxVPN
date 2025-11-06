@@ -28,7 +28,7 @@ class SettingsScreen extends ConsumerWidget {
                     SizedBox(height: 45.h),
                     _buildHeaderSection(),
                     SizedBox(height: 60.h),
-                    _buildSettingsContent(ref),
+                    _buildSettingsContent(ref, context),
                   ],
                 ),
               )),
@@ -87,7 +87,7 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSettingsContent(WidgetRef ref) {
+  Widget _buildSettingsContent(WidgetRef ref, BuildContext context) {
     final settings = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
@@ -98,7 +98,7 @@ class SettingsScreen extends ConsumerWidget {
                 group: group,
                 showSeparators: group.id == 'connection_method',
                 onToggle: (groupId, itemId) {
-                  settingsNotifier.toggleSetting(groupId, itemId);
+                  settingsNotifier.toggleSetting(groupId, itemId, context);
                 },
                 onReorder: group.id == 'connection_method'
                     ? (oldIndex, newIndex) {
