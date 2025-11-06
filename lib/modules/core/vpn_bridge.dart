@@ -40,6 +40,24 @@ class VpnBridge {
 
   Future<void> setConnectionMethod(String method) =>
       _methodChannel.invokeMethod("setConnectionMethod", {"method": method});
+
+  Future<bool> setSystemProxy({
+    required String host,
+    required int port,
+    String scheme = 'http',
+    String? noProxy,
+  }) async {
+    final result = await _methodChannel.invokeMethod<bool>('setSystemProxy', {
+      'host': host,
+      'port': port,
+      'scheme': scheme,
+      if (noProxy != null) 'noProxy': noProxy,
+    });
+    return result ?? false;
+  }
+
+  Future<void> resetSystemProxy() =>
+      _methodChannel.invokeMethod('resetSystemProxy');
   Future<String> getFlowLine() async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
     final flowLine = await _methodChannel

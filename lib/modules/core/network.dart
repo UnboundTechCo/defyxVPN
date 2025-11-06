@@ -19,7 +19,8 @@ class NetworkStatus {
       final changePing = ping == 0 ? 100 : ping;
       return formatter.format(changePing);
     }
-    final changePing = int.tryParse(ping) == 0 ? 100 : int.tryParse(ping);
+    // ping is already an integer from native code, no need to parse
+    final changePing = ping == 0 ? 100 : ping;
     return formatter.format(changePing);
   }
 

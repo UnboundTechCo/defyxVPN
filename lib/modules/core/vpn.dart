@@ -15,6 +15,7 @@ import 'package:defyx_vpn/shared/services/vibration_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 
 class VPN {
@@ -38,6 +39,7 @@ class VPN {
   bool _initialized = false;
   ProviderContainer? _container;
   StreamSubscription<String>? _vpnSub;
+  bool _proxyApplied = false;
 
   void _init(ProviderContainer container) {
     if (_initialized) return;
@@ -109,6 +111,41 @@ class VPN {
     log.addLog(msg);
   }
 
+  Future<void> _applySystemProxy() async {
+    if (_proxyApplied) {
+      return;
+    }
+
+    final host = dotenv.env['SYSTEM_PROXY_HOST'] ?? '127.0.0.1';
+    final scheme = dotenv.env['SYSTEM_PROXY_SCHEME'] ?? 'http';
+    final noProxy = dotenv.env['SYSTEM_PROXY_NO_PROXY'];
+  final portValue = dotenv.env['SYSTEM_PROXY_PORT'] ?? '5000';
+  final port = int.tryParse(portValue) ?? 5000;
+
+    final applied = await _vpnBridge.setSystemProxy(
+      host: host,
+      port: port,
+      scheme: scheme,
+      noProxy: noProxy,
+    );
+
+    _proxyApplied = applied;
+    if (applied) {
+      log.addLog('System proxy applied: $scheme://$host:$port');
+    } else {
+      log.addLog('Failed to apply system proxy');
+    }
+  }
+
+  Future<void> _clearSystemProxy() async {
+    if (!_proxyApplied) {
+      return;
+    }
+    await _vpnBridge.resetSystemProxy();
+    _proxyApplied = false;
+    log.addLog('System proxy restored to previous state');
+  }
+
   Future<void> _connect() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
@@ -155,6 +192,7 @@ class VPN {
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
+    await _clearSystemProxy();
     vibrationService.vibrateError();
   }
 
@@ -165,6 +203,7 @@ class VPN {
       return;
     }
 
+    await _applySystemProxy();
     await _createTunnel();
     connectionNotifier?.setConnected();
     await _refreshPing();
@@ -181,6 +220,7 @@ class VPN {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
     await _vpnBridge.stopVPN();
+    await _clearSystemProxy();
     _clearData(ref);
     connectionNotifier.setDisconnected();
   }
@@ -189,6 +229,7 @@ class VPN {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
     await _vpnBridge.disconnectVpn();
+    await _clearSystemProxy();
     _clearData(ref);
     connectionNotifier.setDisconnected();
   }
@@ -198,6 +239,7 @@ class VPN {
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
+    await _clearSystemProxy();
     connectionNotifier?.setDisconnected();
   }
 
@@ -207,6 +249,7 @@ class VPN {
         _container?.read(connectionStateProvider.notifier);
     await _vpnBridge.stopVPN();
     await _vpnBridge.stopTun2Socks();
+    await _clearSystemProxy();
     connectionNotifier?.setDisconnected();
   }
 
