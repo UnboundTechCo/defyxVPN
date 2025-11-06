@@ -293,7 +293,6 @@ class VPN {
     }
   }
 
-
   void _setConnectionStep(int step) {
     _container?.read(flowLineStepProvider.notifier).setStep(step);
   }

@@ -74,12 +74,11 @@ class NetworkStatus {
   static Future<bool> checkConnectivity() async {
     try {
       final connectivityResult = await Connectivity().checkConnectivity();
-      return connectivityResult.any((result) => 
-        result == ConnectivityResult.mobile || 
-        result == ConnectivityResult.wifi ||
-        result == ConnectivityResult.ethernet ||
-        result == ConnectivityResult.vpn
-      );
+      return connectivityResult.any((result) =>
+          result == ConnectivityResult.mobile ||
+          result == ConnectivityResult.wifi ||
+          result == ConnectivityResult.ethernet ||
+          result == ConnectivityResult.vpn);
     } catch (e) {
       // Fallback: try to resolve a DNS query
       try {

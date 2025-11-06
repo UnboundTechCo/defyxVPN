@@ -3,7 +3,8 @@ import 'package:flutter/foundation.dart';
 
 class FirebaseAnalyticsService {
   FirebaseAnalyticsService._internal();
-  static final FirebaseAnalyticsService _instance = FirebaseAnalyticsService._internal();
+  static final FirebaseAnalyticsService _instance =
+      FirebaseAnalyticsService._internal();
   factory FirebaseAnalyticsService() => _instance;
 
   // Stub implementation - Firebase disabled
@@ -13,8 +14,10 @@ class FirebaseAnalyticsService {
     debugPrint('Analytics stub: vpn_connect_attempt - $connectionMethod');
   }
 
-  Future<void> logVpnConnected(String connectionMethod, String? server, int durationSeconds) async {
-    debugPrint('Analytics stub: vpn_connected - $connectionMethod, $server, ${durationSeconds}s');
+  Future<void> logVpnConnected(
+      String connectionMethod, String? server, int durationSeconds) async {
+    debugPrint(
+        'Analytics stub: vpn_connected - $connectionMethod, $server, ${durationSeconds}s');
   }
 
   Future<void> logVpnDisconnected() async {
