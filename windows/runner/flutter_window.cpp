@@ -13,17 +13,16 @@
 #include <string>
 
 
-#define WM_FLAG_RESULT (WM_USER + 1)
 #define WM_PING_RESULT (WM_USER + 2)
 // Marshal background callbacks to the platform thread
 #define WM_PROGRESS_RESULT (WM_USER + 3)
 #define WM_STATUS_RESULT (WM_USER + 4)
-
-static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> flag_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
 static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
 static std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> pending_ping_result;
 static HWND g_window_handle = nullptr;
+
+
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -94,25 +93,7 @@ bool FlutterWindow::OnCreate() {
   status_channel->SetStreamHandler(std::make_unique<StatusHandler>());
 
 
-  // Flag result events channel
-  class FlagHandler : public flutter::StreamHandler<flutter::EncodableValue> {
-   protected:
-    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
-    OnListenInternal(const flutter::EncodableValue* arguments,
-                     std::unique_ptr<flutter::EventSink<flutter::EncodableValue>>&& events) override {
-      flag_sink = std::move(events);
-      return nullptr;
-    }
-    std::unique_ptr<flutter::StreamHandlerError<flutter::EncodableValue>>
-    OnCancelInternal(const flutter::EncodableValue* arguments) override {
-      flag_sink.reset();
-      return nullptr;
-    }
-  };
-  auto flag_channel = std::make_unique<flutter::EventChannel<flutter::EncodableValue>>(
-      messenger, "com.defyx.flag_events",
-      &flutter::StandardMethodCodec::GetInstance());
-  flag_channel->SetStreamHandler(std::make_unique<FlagHandler>());
+
 
   // Progress events channel
   class ProgressHandler : public flutter::StreamHandler<flutter::EncodableValue> {
@@ -267,10 +248,19 @@ bool FlutterWindow::OnCreate() {
           return; // Don't call result->Success() here, we'll call it when ping completes
         }
         if (method == "getFlag") {
-          result->Success();
-          std::thread([]() {
-            std::string* flag_ptr = new std::string(g_dxcore.GetFlag());
-            PostMessage(g_window_handle, WM_FLAG_RESULT, 0, reinterpret_cast<LPARAM>(flag_ptr));
+          std::thread([result = std::move(result)]() {
+            std::string flag = "xx"; // default disconnected state
+            
+            // Only get VPN server location if VPN is connected
+            if (vpn_status == "connected") {
+              flag = g_dxcore.GetFlag();
+              // If still failed to get flag through VPN, keep "xx" for disconnected state
+              if (flag.empty()) {
+                flag = "xx";
+              }
+            }
+            
+            result->Success(flutter::EncodableValue(flag));
           }).detach();
           return;
         }
@@ -401,14 +391,7 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
-    case WM_FLAG_RESULT: {
-      std::unique_ptr<std::string> flag_ptr(reinterpret_cast<std::string*>(lparam));
-      if (flag_sink) {
-        const std::string flag = flag_ptr ? *flag_ptr : std::string();
-        flag_sink->Success(flutter::EncodableValue(flag));
-      }
-      return 0;
-    }
+
     case WM_PING_RESULT: {
       int ping_value = static_cast<int>(lparam);
       if (pending_ping_result) {
