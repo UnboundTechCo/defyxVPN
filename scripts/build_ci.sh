@@ -99,6 +99,8 @@ build_android() {
     else
         echo -e "${BLUE}Building APK${NC}"
         flutter build apk --release
+        flutter build apk --split-per-abi --release 
+
         if [ $? -ne 0 ]; then
             echo -e "${RED}❌ APK build failed${NC}"
             exit 1
