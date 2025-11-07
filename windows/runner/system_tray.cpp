@@ -26,6 +26,7 @@ SystemTray::SystemTray()
       auto_connect_(false),
       start_minimized_(true),
       force_close_(false),
+      sound_effect_(true),
       proxy_service_(false),
       system_proxy_(true),
       vpn_mode_(false),
@@ -155,8 +156,10 @@ void SystemTray::ShowContextMenu(HWND window) {
   UINT auto_connect_flags = MF_STRING | (auto_connect_ ? MF_CHECKED : MF_UNCHECKED);
   UINT start_min_flags = MF_STRING | (start_minimized_ ? MF_CHECKED : MF_UNCHECKED);
   UINT force_close_flags = MF_STRING | (force_close_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT sound_effect_flags = MF_STRING | (sound_effect_ ? MF_CHECKED : MF_UNCHECKED);
   AppendMenu(menu, launch_flags, IDM_LAUNCH_ON_STARTUP, L"    Launch on startup");
   AppendMenu(menu, auto_connect_flags, IDM_AUTO_CONNECT, L"    Auto-connect");
+  AppendMenu(menu, sound_effect_flags, IDM_SOUND_EFFECT, L"    Sound Effect");
   AppendMenu(menu, start_min_flags, IDM_START_MINIMIZED, L"    Start minimized");
   AppendMenu(menu, force_close_flags, IDM_FORCE_CLOSE, L"    Force close");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
@@ -207,6 +210,10 @@ void SystemTray::ShowContextMenu(HWND window) {
     case IDM_AUTO_CONNECT:
       auto_connect_ = !auto_connect_;
       ExecuteAction(TrayAction::AutoConnect);
+      break;
+    case IDM_SOUND_EFFECT:
+      sound_effect_ = !sound_effect_;
+      ExecuteAction(TrayAction::SoundEffect);
       break;
     case IDM_START_MINIMIZED:
       start_minimized_ = !start_minimized_;
@@ -396,6 +403,10 @@ void SystemTray::SetStartMinimized(bool value) {
 
 void SystemTray::SetForceClose(bool value) {
   force_close_ = value;
+}
+
+void SystemTray::SetSoundEffect(bool value) {
+  sound_effect_ = value;
 }
 
 void SystemTray::SetProxyService(bool value) {

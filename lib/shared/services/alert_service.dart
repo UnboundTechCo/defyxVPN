@@ -14,6 +14,7 @@ class AlertService {
   bool _hasVibrator = true;
   int _batteryLevel = 100;
   bool _isDesktop = false;
+  bool _soundEnabled = true;
 
   Future<void> init() async {
     _isDesktop = !kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux);
@@ -40,8 +41,14 @@ class AlertService {
     return !_isDesktop && _hasVibrator && _batteryLevel > 20;
   }
 
+  bool get soundEnabled => _soundEnabled;
+
+  void setSoundEnabled(bool enabled) {
+    _soundEnabled = enabled;
+  }
+
   Future<void> _playSound() async {
-    if (!_isDesktop) return;
+    if (!_isDesktop || !_soundEnabled) return;
 
     try {
       await _audioPlayer.stop();

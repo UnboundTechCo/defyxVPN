@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
+import 'package:defyx_vpn/shared/services/alert_service.dart';
 
 class NativeMethodHandler {
   static const MethodChannel _channel = MethodChannel('com.defyx.vpn');
@@ -27,6 +28,13 @@ class NativeMethodHandler {
         break;
       case 'openPreferences':
         await _openPreferences();
+        break;
+      case 'setSoundEffect':
+        _setSoundEffect(call.arguments);
+        break;
+      case 'setStartMinimized':
+        break;
+      case 'setForceClose':
         break;
       default:
         debugPrint('NativeMethodHandler: Unknown method ${call.method}');
@@ -90,5 +98,13 @@ class NativeMethodHandler {
     }
 
     context.go(DefyxVPNRoutes.settings.route);
+  }
+
+  static void _setSoundEffect(dynamic arguments) {
+    if (arguments is Map) {
+      final value = arguments['value'] as bool? ?? true;
+      AlertService().setSoundEnabled(value);
+      debugPrint('NativeMethodHandler: Sound effect set to $value');
+    }
   }
 }

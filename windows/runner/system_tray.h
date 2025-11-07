@@ -25,6 +25,7 @@ class SystemTray {
     AutoConnect,
     StartMinimized,
     ForceClose,
+    SoundEffect,
     ProxyService,
     SystemProxy,
     VPNMode,
@@ -49,11 +50,13 @@ class SystemTray {
   void SetAutoConnect(bool value);
   void SetStartMinimized(bool value);
   void SetForceClose(bool value);
+  void SetSoundEffect(bool value);
   void SetProxyService(bool value);
   void SetSystemProxy(bool value);
   void SetVPNMode(bool value);
   bool GetStartMinimized() const { return start_minimized_; }
   bool GetForceClose() const { return force_close_; }
+  bool GetSoundEffect() const { return sound_effect_; }
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
@@ -81,6 +84,7 @@ class SystemTray {
   static constexpr UINT IDM_AUTO_CONNECT = 1011;
   static constexpr UINT IDM_START_MINIMIZED = 1012;
   static constexpr UINT IDM_FORCE_CLOSE = 1013;
+  static constexpr UINT IDM_SOUND_EFFECT = 1014;
 
   // Service Mode
   static constexpr UINT IDM_PROXY_SERVICE = 1020;
@@ -97,6 +101,7 @@ class SystemTray {
   bool auto_connect_;
   bool start_minimized_;
   bool force_close_;
+  bool sound_effect_;
   bool proxy_service_;
   bool system_proxy_;
   bool vpn_mode_;

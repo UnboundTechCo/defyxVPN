@@ -434,6 +434,24 @@ bool FlutterWindow::OnCreate() {
       }
     }
 
+    DWORD soundEffect = 1;
+    bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"SoundEffect", nullptr, nullptr, (LPBYTE)&soundEffect, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetSoundEffect(soundEffect != 0);
+      }
+
+      if (flutter_controller_) {
+        auto sound_channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+
+        flutter::EncodableMap args;
+        args[flutter::EncodableValue("value")] = flutter::EncodableValue(soundEffect != 0);
+        sound_channel->InvokeMethod("setSoundEffect", std::make_unique<flutter::EncodableValue>(args));
+      }
+    }
+
     RegCloseKey(hKey);
   }
 
@@ -591,6 +609,32 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
             flutter::EncodableMap args;
             args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
             channel->InvokeMethod("setForceClose", std::make_unique<flutter::EncodableValue>(args));
+          }
+        }
+      }
+      break;
+
+    case SystemTray::TrayAction::SoundEffect:
+      {
+        HKEY hKey;
+        const wchar_t* regPath = L"Software\\DefyxVPN";
+        const wchar_t* valueName = L"SoundEffect";
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+          bool currentValue = system_tray_->GetSoundEffect();
+          DWORD value = currentValue ? 1 : 0;
+          RegSetValueExW(hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+          RegCloseKey(hKey);
+
+          if (flutter_controller_) {
+            auto messenger = flutter_controller_->engine()->messenger();
+            auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+                messenger, "com.defyx.vpn",
+                &flutter::StandardMethodCodec::GetInstance());
+
+            flutter::EncodableMap args;
+            args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
+            channel->InvokeMethod("setSoundEffect", std::make_unique<flutter::EncodableValue>(args));
           }
         }
       }
