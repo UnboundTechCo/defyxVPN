@@ -67,6 +67,7 @@ flutter:
     - assets/fonts/
     - assets/lottie/
     - assets/flags/
+    - assets/sounds/
     - assets/settings/config.json
     - .env
 
