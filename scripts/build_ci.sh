@@ -13,6 +13,8 @@ source "$SCRIPT_DIR/firebase_android.sh"
 source "$SCRIPT_DIR/validate_env.sh"
 
 ### MAIN (non-interactive)
+current_version=$(get_current_version)
+echo "APP_VERSION=$current_version" >> "$GITHUB_ENV"
 if [ "$UPLOAD_TO_APP_STORE" = "true" ]; then
     validate_env_vars ios
     build_ios_ci
