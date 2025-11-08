@@ -13,11 +13,11 @@ source "$SCRIPT_DIR/firebase_android.sh"
 source "$SCRIPT_DIR/validate_env.sh"
 
 ### MAIN (non-interactive)
-validate_env_vars
-
 if [ "$UPLOAD_TO_APP_STORE" = "true" ]; then
+    validate_env_vars ios
     build_ios_ci
 else
+    validate_env_vars android
     build_android_ci
 fi
 
