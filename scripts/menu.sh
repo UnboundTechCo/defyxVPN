@@ -2,7 +2,7 @@
 
 update_build_type() {
     local build_type=$1
-    sed -i "" "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
+    sed -i "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
     echo -e "${GREEN}✅ Build type updated to: $build_type${NC}"
 }
 

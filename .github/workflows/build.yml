@@ -3,7 +3,7 @@ name: Android & iOS Build with Store Uploads
 on:
   push:
     branches:
-      - release
+      - fix-on-workflow
   pull_request:
     branches:
       - release
