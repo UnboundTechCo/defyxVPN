@@ -10,8 +10,11 @@ source "$SCRIPT_DIR/ads.sh"
 source "$SCRIPT_DIR/menu.sh"
 source "$SCRIPT_DIR/firebase_ios.sh"
 source "$SCRIPT_DIR/firebase_android.sh"
+source "$SCRIPT_DIR/validate_env.sh"
 
 echo "Using config file: $GLOBAL_VARS_FILE"
+
+validate_env_vars
 
 select_environment
 
