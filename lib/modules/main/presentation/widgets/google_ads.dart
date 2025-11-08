@@ -330,25 +330,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
 
-    // Enable screen security
-    if ((adsState.showCountdown &&
-            (adsState.nativeAdIsLoaded ||
-                _isLoading ||
-                adsState.adLoadFailed)) ||
-        (adsState.showCountdown && customAdData != null)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!adsState.screenSecurityEnabled) {
-          ref.read(googleAdsProvider.notifier).enableScreenSecurity();
-        }
-      });
-    } else {
-      if (adsState.screenSecurityEnabled) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ref.read(googleAdsProvider.notifier).disableScreenSecurity();
-        });
-      }
-    }
-
     // Listen for disposal requests
     ref.listen(googleAdsProvider, (previous, next) {
       if (next.shouldDisposeAd && !_isDisposed) {
