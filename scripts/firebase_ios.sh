@@ -11,18 +11,34 @@ inject_firebase_ios() {
     # Set storage_bucket from project_id
     local storage_bucket="${project_id}.firebasestorage.app"
     if [ -n "$ios_api_key" ]; then
-        sed -i '' "s|<key>API_KEY</key><string>[^<]*</string>|<key>API_KEY</key><string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s|<key>API_KEY</key><string>[^<]*</string>|<key>API_KEY</key><string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        else
+            sed -i "s|<key>API_KEY</key><string>[^<]*</string>|<key>API_KEY</key><string>$ios_api_key</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        fi
     fi
     if [ -n "$ios_app_id" ]; then
-        sed -i '' "s|<key>GOOGLE_APP_ID</key><string>[^<]*</string>|<key>GOOGLE_APP_ID</key><string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s|<key>GOOGLE_APP_ID</key><string>[^<]*</string>|<key>GOOGLE_APP_ID</key><string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        else
+            sed -i "s|<key>GOOGLE_APP_ID</key><string>[^<]*</string>|<key>GOOGLE_APP_ID</key><string>$ios_app_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        fi
     fi
     if [ -n "$ios_sender_id" ]; then
-        sed -i '' "s|<key>GCM_SENDER_ID</key><string>[^<]*</string>|<key>GCM_SENDER_ID</key><string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s|<key>GCM_SENDER_ID</key><string>[^<]*</string>|<key>GCM_SENDER_ID</key><string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        else
+            sed -i "s|<key>GCM_SENDER_ID</key><string>[^<]*</string>|<key>GCM_SENDER_ID</key><string>$ios_sender_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        fi
     fi
     if [ -n "$project_id" ]; then
-        sed -i '' "s|<key>PROJECT_ID</key><string>[^<]*</string>|<key>PROJECT_ID</key><string>$project_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
-        # Update STORAGE_BUCKET
-        sed -i '' "s|<key>STORAGE_BUCKET</key><string>[^<]*</string>|<key>STORAGE_BUCKET</key><string>$storage_bucket</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s|<key>PROJECT_ID</key><string>[^<]*</string>|<key>PROJECT_ID</key><string>$project_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+            sed -i '' "s|<key>STORAGE_BUCKET</key><string>[^<]*</string>|<key>STORAGE_BUCKET</key><string>$storage_bucket</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        else
+            sed -i "s|<key>PROJECT_ID</key><string>[^<]*</string>|<key>PROJECT_ID</key><string>$project_id</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+            sed -i "s|<key>STORAGE_BUCKET</key><string>[^<]*</string>|<key>STORAGE_BUCKET</key><string>$storage_bucket</string>|" "$IOS_GOOGLESERVICE_INFO_PLIST"
+        fi
     fi
     echo -e "${GREEN}[OK] Injected Firebase iOS credentials${NC}"
 }

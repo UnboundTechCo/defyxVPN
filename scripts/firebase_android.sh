@@ -13,18 +13,34 @@ inject_firebase_android() {
     # Set storage_bucket from project_id
     local storage_bucket="${project_id}.firebasestorage.app"
     if [ -n "$app_id" ]; then
-        sed -i '' "s/\"mobilesdk_app_id\": \"[^\"]*\"/\"mobilesdk_app_id\": \"$app_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s/\"mobilesdk_app_id\": \"[^\"]*\"/\"mobilesdk_app_id\": \"$app_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        else
+            sed -i "s/\"mobilesdk_app_id\": \"[^\"]*\"/\"mobilesdk_app_id\": \"$app_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        fi
     fi
     if [ -n "$project_id" ]; then
-        sed -i '' "s/\"project_id\": \"[^\"]*\"/\"project_id\": \"$project_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
-        # Update storage_bucket
-        sed -i '' "s/\"storage_bucket\": \"[^\"]*\"/\"storage_bucket\": \"$storage_bucket\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s/\"project_id\": \"[^\"]*\"/\"project_id\": \"$project_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+            sed -i '' "s/\"storage_bucket\": \"[^\"]*\"/\"storage_bucket\": \"$storage_bucket\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        else
+            sed -i "s/\"project_id\": \"[^\"]*\"/\"project_id\": \"$project_id\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+            sed -i "s/\"storage_bucket\": \"[^\"]*\"/\"storage_bucket\": \"$storage_bucket\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        fi
     fi
     if [ -n "$project_number" ]; then
-        sed -i '' "s/\"project_number\": \"[^\"]*\"/\"project_number\": \"$project_number\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s/\"project_number\": \"[^\"]*\"/\"project_number\": \"$project_number\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        else
+            sed -i "s/\"project_number\": \"[^\"]*\"/\"project_number\": \"$project_number\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        fi
     fi
     if [ -n "$api_key" ]; then
-        sed -i '' "s/\"current_key\": \"[^\"]*\"/\"current_key\": \"$api_key\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s/\"current_key\": \"[^\"]*\"/\"current_key\": \"$api_key\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        else
+            sed -i "s/\"current_key\": \"[^\"]*\"/\"current_key\": \"$api_key\"/" "$ANDROID_GOOGLE_SERVICES_JSON"
+        fi
     fi
     echo -e "${GREEN}[OK] Injected Firebase Android credentials${NC}"
 }

@@ -2,13 +2,21 @@
 
 update_build_type() {
     local build_type=$1
-    sed -i "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
+    else
+        sed -i "s/appBuildType = '[^']*'/appBuildType = '${build_type}'/" "$GLOBAL_VARS_FILE"
+    fi
     echo -e "${GREEN}✅ Build type updated to: $build_type${NC}"
 }
 
 update_test_mode() {
     local is_test=$1
-    sed -i "" "s/IS_TEST_MODE=.*/IS_TEST_MODE=${is_test}/" "$ENV_FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "s/IS_TEST_MODE=.*/IS_TEST_MODE=${is_test}/" "$ENV_FILE"
+    else
+        sed -i "s/IS_TEST_MODE=.*/IS_TEST_MODE=${is_test}/" "$ENV_FILE"
+    fi
     echo -e "${GREEN}✅ Test mode updated to: $is_test${NC}"
 }
 

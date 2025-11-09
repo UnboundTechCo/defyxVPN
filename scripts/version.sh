@@ -56,7 +56,11 @@ update_version() {
         return 1
     fi
     
-    sed -i "" "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+    else
+        sed -i "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+    fi
     echo -e "${GREEN}✅ Version updated to: $version${NC}"
 }
 
