@@ -251,7 +251,11 @@ class DefyxVpnService : VpnService() {
 
                 withContext(Dispatchers.Main) {
                     notifyVpnStatus("disconnected")
-                    updateNotification("DefyxVPN", "Disconnected")
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    val notificationManager =
+                            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                    notificationManager.cancel(NOTIFICATION_ID)
+                    startAsForeground("DefyxVPN", "Ready to connect")
                 }
 
             } catch (e: Exception) {
@@ -325,7 +329,7 @@ class DefyxVpnService : VpnService() {
 
     fun getFlowLine(isTest: Boolean): String {
         return try {
-            Android.getFlowLine(isTest)
+            Android.getFlowLine()
         } catch (e: Exception) {
             log("Get Flow Line failed: ${e.message}")
             ""
