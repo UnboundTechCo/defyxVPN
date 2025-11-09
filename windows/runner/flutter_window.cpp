@@ -1,6 +1,8 @@
 #include "flutter_window.h"
 
 #include <optional>
+#include <thread>
+#include <memory>
 
 #include "dxcore_bridge.h"
 #include "proxy_config.h"
@@ -10,9 +12,16 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <string>
-#include <cstdlib>
-#include <fstream>
-#include <shlobj.h>
+
+#define WM_PING_RESULT (WM_USER + 2)
+// Marshal background callbacks to the platform thread
+#define WM_PROGRESS_RESULT (WM_USER + 3)
+#define WM_STATUS_RESULT (WM_USER + 4)
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
+static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
+static std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> pending_ping_result;
+static HWND g_window_handle = nullptr;
+
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -23,8 +32,6 @@ static DXCoreBridge g_dxcore;
 static ProxyConfig g_proxy;
 static SystemTray* g_system_tray = nullptr;
 static std::string vpn_status = "disconnected";
-static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> status_sink;
-static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sink;
 
 bool FlutterWindow::OnCreate() {
   if (!Win32Window::OnCreate()) {
@@ -67,6 +74,8 @@ bool FlutterWindow::OnCreate() {
   flutter_controller_->ForceRedraw();
 
   auto messenger = flutter_controller_->engine()->messenger();
+  // Cache window handle for posting messages from background threads
+  g_window_handle = GetHandle();
 
   if (!g_dxcore.Load()) {
     OutputDebugStringA("[DXcore] Failed to load DXcore.dll\n");
@@ -103,14 +112,17 @@ bool FlutterWindow::OnCreate() {
         // Log all progress messages for debugging
         std::string log_msg = "[DXcore Progress] " + msg + "\n";
         OutputDebugStringA(log_msg.c_str());
-        
-        if (progress_sink) {
-          progress_sink->Success(flutter::EncodableValue(msg));
-        }
-        // Update VPN status based on progress messages
+        // Always marshal to platform thread
+        PostMessage(g_window_handle, WM_PROGRESS_RESULT, 0,
+                    reinterpret_cast<LPARAM>(new std::string(msg)));
+
         if (msg.find("Data: VPN connected") != std::string::npos) {
-          OutputDebugStringA("[DXcore] VPN connected - updating status and enabling proxy\n");
+          OutputDebugStringA("[DXcore] VPN connected - updating status\n");
           vpn_status = "connected";
+
+          // Emit status on platform thread
+          PostMessage(g_window_handle, WM_STATUS_RESULT, 0,
+                      reinterpret_cast<LPARAM>(new std::string(vpn_status)));
 
           if (g_system_tray) {
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Connected);
@@ -118,17 +130,14 @@ bool FlutterWindow::OnCreate() {
             g_system_tray->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
           }
 
-          if (g_proxy.EnableProxy("127.0.0.1:5000")) {
-            OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
-          } else {
-            OutputDebugStringA("[Proxy] Failed to enable system proxy\n");
-          }
-          
-          if (status_sink) {
-            flutter::EncodableMap m;
-            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
-            status_sink->Success(flutter::EncodableValue(m));
-          }
+          std::thread([]() {
+            OutputDebugStringA("[Proxy] Enabling system proxy on 127.0.0.1:5000\n");
+            if (g_proxy.EnableProxy("127.0.0.1:5000")) {
+              OutputDebugStringA("[Proxy] System proxy enabled on 127.0.0.1:5000\n");
+            } else {
+              OutputDebugStringA("[Proxy] Failed to enable system proxy\n");
+            }
+          }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
           OutputDebugStringA("[DXcore] VPN failed - updating status to error and disabling proxy\n");
           vpn_status = "disconnected";
@@ -139,17 +148,17 @@ bool FlutterWindow::OnCreate() {
             g_system_tray->UpdateConnectionStatus(L"Error");
           }
 
-          if (g_proxy.DisableProxy()) {
-            OutputDebugStringA("[Proxy] System proxy disabled\n");
-          } else {
-            OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
-          }
+          std::thread([]() {
+            if (g_proxy.DisableProxy()) {
+              OutputDebugStringA("[Proxy] System proxy disabled\n");
+            } else {
+              OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
+            }
+          }).detach();
 
-          if (status_sink) {
-            flutter::EncodableMap m;
-            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
-            status_sink->Success(flutter::EncodableValue(m));
-          }
+          // Emit status on platform thread
+          PostMessage(g_window_handle, WM_STATUS_RESULT, 0,
+                      reinterpret_cast<LPARAM>(new std::string(vpn_status)));
         } else if (msg.find("Data: VPN stopped") != std::string::npos ||
                    msg.find("Data: VPN cancelled") != std::string::npos) {
           OutputDebugStringA("[DXcore] VPN stopped - updating status to disconnected and disabling proxy\n");
@@ -158,19 +167,20 @@ bool FlutterWindow::OnCreate() {
           if (g_system_tray) {
             g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             g_system_tray->UpdateTooltip(L"DefyxVPN - Disconnected");
+            g_system_tray->UpdateConnectionStatus(L"Disconnected");
           }
 
-          if (g_proxy.DisableProxy()) {
-            OutputDebugStringA("[Proxy] System proxy disabled\n");
-          } else {
-            OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
-          }
-          
-          if (status_sink) {
-            flutter::EncodableMap m;
-            m[flutter::EncodableValue("status")] = flutter::EncodableValue(vpn_status);
-            status_sink->Success(flutter::EncodableValue(m));
-          }
+          std::thread([]() {
+            if (g_proxy.DisableProxy()) {
+              OutputDebugStringA("[Proxy] System proxy disabled\n");
+            } else {
+              OutputDebugStringA("[Proxy] Failed to disable system proxy\n");
+            }
+          }).detach();
+
+          // Emit status on platform thread
+          PostMessage(g_window_handle, WM_STATUS_RESULT, 0,
+                      reinterpret_cast<LPARAM>(new std::string(vpn_status)));
         }
       });
       return nullptr;
@@ -252,11 +262,53 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "calculatePing") {
-          result->Success(flutter::EncodableValue(g_dxcore.MeasurePing()));
-          return;
+          // Store the result callback to use when ping completes
+          pending_ping_result = std::move(result);
+          
+          // Each click triggers a fresh ping in background thread
+          std::thread([&]() {
+            try {
+              // Lower thread priority to prevent UI blocking
+              SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL);
+              
+              int ping = g_dxcore.MeasurePing();
+              
+              // Handle edge cases
+              if (ping < 0) ping = 0;
+              if (ping > 9999) ping = 9999;
+              if (ping == 0) ping = 100; // Default for invalid ping
+              
+              OutputDebugStringA(("[DXcore] Fresh ping measurement: " + std::to_string(ping) + "ms\n").c_str());
+              
+              // Post the fresh result back to main thread for UI update
+              PostMessage(g_window_handle, WM_PING_RESULT, 0, 
+                         static_cast<LPARAM>(ping));
+              
+            } catch (...) {
+              OutputDebugStringA("[DXcore] Ping measurement failed\n");
+              // Post default value on error
+              PostMessage(g_window_handle, WM_PING_RESULT, 0, 
+                         static_cast<LPARAM>(100));
+            }
+          }).detach();
+          
+          return; // Don't call result->Success() here, we'll call it when ping completes
         }
         if (method == "getFlag") {
-          result->Success(flutter::EncodableValue(g_dxcore.GetFlag()));
+          std::thread([result = std::move(result)]() {
+            std::string flag = "xx"; // default disconnected state
+            
+            // Only get VPN server location if VPN is connected
+            if (vpn_status == "connected") {
+              flag = g_dxcore.GetFlag();
+              // If still failed to get flag through VPN, keep "xx" for disconnected state
+              if (flag.empty()) {
+                flag = "xx";
+              }
+            }
+            
+            result->Success(flutter::EncodableValue(flag));
+          }).detach();
           return;
         }
         if (method == "setAsnName") {
@@ -293,7 +345,6 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "setConnectionMethod") {
-          // No-op on Windows for now
           result->Success(flutter::EncodableValue(true));
           return;
         }
@@ -362,23 +413,8 @@ bool FlutterWindow::OnCreate() {
           result->Success(flutter::EncodableValue(true));
           return;
         }
-        if (method == "setStartMinimized") {
-          result->Success(flutter::EncodableValue(true));
-          return;
-        }
-        if (method == "openIntroduction") {
-          result->Success(flutter::EncodableValue(true));
-          return;
-        }
-        if (method == "openSpeedTest") {
-          result->Success(flutter::EncodableValue(true));
-          return;
-        }
-        if (method == "openLogs") {
-          result->Success(flutter::EncodableValue(true));
-          return;
-        }
-        if (method == "openPreferences") {
+        if (method == "isVPNPrepared") {
+          // On Windows, VPN is always "prepared" since we don't need special preparation
           result->Success(flutter::EncodableValue(true));
           return;
         }
@@ -504,6 +540,33 @@ FlutterWindow::MessageHandler(HWND hwnd, UINT const message,
     case WM_FONTCHANGE:
       flutter_controller_->engine()->ReloadSystemFonts();
       break;
+
+    case WM_PING_RESULT: {
+      int ping_value = static_cast<int>(lparam);
+      if (pending_ping_result) {
+        pending_ping_result->Success(flutter::EncodableValue(ping_value));
+        pending_ping_result.reset(); // Clear the callback after use
+      }
+      return 0;
+    }
+    case WM_PROGRESS_RESULT: {
+      std::unique_ptr<std::string> msg_ptr(reinterpret_cast<std::string*>(lparam));
+      if (progress_sink) {
+        const std::string msg = msg_ptr ? *msg_ptr : std::string();
+        progress_sink->Success(flutter::EncodableValue(msg));
+      }
+      return 0;
+    }
+    case WM_STATUS_RESULT: {
+      std::unique_ptr<std::string> status_ptr(reinterpret_cast<std::string*>(lparam));
+      if (status_sink) {
+        const std::string status = status_ptr ? *status_ptr : std::string();
+        flutter::EncodableMap m;
+        m[flutter::EncodableValue("status")] = flutter::EncodableValue(status);
+        status_sink->Success(flutter::EncodableValue(m));
+      }
+      return 0;
+    }
   }
 
   return Win32Window::MessageHandler(hwnd, message, wparam, lparam);

@@ -55,3 +55,4 @@ app.*.map.json
 
 #developer
 .vscode/
+#consider not adding scape sequence at the end

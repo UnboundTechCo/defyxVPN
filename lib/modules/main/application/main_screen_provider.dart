@@ -1,8 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -16,6 +16,7 @@ final flagLoadingProvider = StateProvider<bool>((ref) => false);
 final pingProvider = FutureProvider<String>((ref) async {
   final isLoading = ref.watch(pingLoadingProvider);
   final network = NetworkStatus();
+
   if (isLoading) {
     final ping = await network.getPing();
     ref.read(pingLoadingProvider.notifier).state = false;
@@ -38,13 +39,11 @@ final flagProvider = FutureProvider<String>((ref) async {
 
 class MainScreenLogic {
   final WidgetRef ref;
-  static const platform = MethodChannel('com.defyx.vpn');
 
   MainScreenLogic(this.ref);
 
   Future<void> refreshPing() async {
-    ref.read(pingLoadingProvider.notifier).state = true;
-    ref.read(flagLoadingProvider.notifier).state = true;
+    await VPN(ProviderScope.containerOf(ref.context)).refreshPing();
   }
 
   Future<void> connectOrDisconnect() async {
@@ -60,7 +59,6 @@ class MainScreenLogic {
 
   Future<void> checkAndReconnect() async {
     final connectionState = ref.read(connectionStateProvider);
-    print("Connection status: ${connectionState.status}");
     if (connectionState.status == ConnectionStatus.connected) {
       // await connectOrDisconnect();
     }

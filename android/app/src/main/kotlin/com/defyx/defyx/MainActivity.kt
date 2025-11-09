@@ -79,7 +79,8 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "connect" -> connectVpn(result)
                 "disconnect" -> disconnectVpn(result)
-                "prepare" -> prepareVpn(result)
+                "prepareVPN" -> prepareVpn(result)
+                "isVPNPrepared" -> prepareVpn(result)
                 "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
                 "isTunnelRunning" -> isTunnelRunning(result)
@@ -104,9 +105,9 @@ class MainActivity : FlutterActivity() {
     private suspend fun prepareVpn(result: MethodChannel.Result) {
         val vpnIntent = VpnService.prepare(this)
         if (vpnIntent != null) {
-            startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
-        } else {
             result.success(true)
+        } else {
+            result.success(false)
         }
     }
 
