@@ -44,7 +44,7 @@ add_dependencies(${BINARY_NAME} flutter_assemble)
 
 # Optional: Copy DXcore.dll next to the built executable if present
 # Use a path relative to this CMakeLists directory to avoid ambiguity.
-set(DXCORE_DLL_PATH "${CMAKE_CURRENT_LIST_DIR}/../../../DXcore-private/out/DXcore.dll")
+set(DXCORE_DLL_PATH "${CMAKE_CURRENT_LIST_DIR}/DXcore.dll")
 if (EXISTS "${DXCORE_DLL_PATH}")
   add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different

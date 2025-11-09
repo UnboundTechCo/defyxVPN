@@ -45,7 +45,7 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      if (!Platform.isMacOS) {
+      if (Platform.isAndroid || Platform.isIOS) {
         await MobileAds.instance.initialize();
       }
     } catch (error) {

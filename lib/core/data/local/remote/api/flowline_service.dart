@@ -49,7 +49,8 @@ class FlowlineService implements IFlowlineService {
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
     } else {
-      throw Exception('Flowline is empty, cannot save');
+      // To test the app without needing the flowline on windows must be remove morgoth :)
+      return;
     }
   }
 }
