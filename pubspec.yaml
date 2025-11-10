@@ -23,6 +23,8 @@ dependencies:
   url_launcher: ^6.3.1
   flame: ^1.29.0
   webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.7.0
+  webview_flutter_wkwebview: ^3.15.0
   async: ^2.12.0
   flutter_secure_storage: ^9.2.4
   freezed_annotation: ^2.4.4

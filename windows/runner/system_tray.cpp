@@ -24,7 +24,7 @@ SystemTray::SystemTray()
       initialized_(false),
       launch_on_startup_(false),
       auto_connect_(false),
-      start_minimized_(true),
+      start_minimized_(false),
       force_close_(false),
       sound_effect_(true),
       proxy_service_(false),
