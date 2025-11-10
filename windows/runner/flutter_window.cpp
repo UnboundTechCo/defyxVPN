@@ -222,7 +222,7 @@ bool FlutterWindow::OnCreate() {
           result->Success(flutter::EncodableValue(true));
           return;
         }
-        if (method == "prepare" || method == "grantVpnPermission") {
+        if (method == "prepareVPN" || method == "grantVpnPermission") {
           result->Success(flutter::EncodableValue(true));
           return;
         }
