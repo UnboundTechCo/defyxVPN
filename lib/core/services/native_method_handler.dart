@@ -103,7 +103,7 @@ class NativeMethodHandler {
   static void _setSoundEffect(dynamic arguments) {
     if (arguments is Map) {
       final value = arguments['value'] as bool? ?? true;
-      AlertService().setSoundEnabled(value);
+      AlertService().setActionEnabled(value);
       debugPrint('NativeMethodHandler: Sound effect set to $value');
     }
   }
