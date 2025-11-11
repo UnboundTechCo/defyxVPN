@@ -240,10 +240,11 @@ jobs:
 
       - name: Update Dart SDK constraint and dependencies
         run: |
-          sed -i '' 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true
-          sed -i '' '/^dependency_overrides:/d' pubspec.yaml || true
+          if [[ "$(uname)" == "Darwin" ]]; then SED_INPLACE_FLAG="-i ''"; else SED_INPLACE_FLAG="-i"; fi
+          eval sed $SED_INPLACE_FLAG 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true
+          eval sed $SED_INPLACE_FLAG '/^dependency_overrides:/d' pubspec.yaml || true
           echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
-          sed -i '' '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
+          eval sed $SED_INPLACE_FLAG '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
 
       - name: Debug pubspec.yaml
         run: cat pubspec.yaml
