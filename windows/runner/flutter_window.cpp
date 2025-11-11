@@ -313,8 +313,14 @@ bool FlutterWindow::OnCreate() {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());
             auto is_test_str = get_string_arg(m, "isTest");
             bool is_test = (is_test_str == "true" || is_test_str == "1");
-            auto fl = g_dxcore.GetFlowLine(is_test);
-            result->Success(flutter::EncodableValue(fl));
+            std::thread([is_test, result = std::move(result)]() mutable {
+              try {
+                std::string fl = g_dxcore.GetFlowLine(is_test);
+                result->Success(flutter::EncodableValue(fl));
+              } catch (...) {
+                result->Success(flutter::EncodableValue(std::string()));
+              }
+            }).detach();
           } else {
             result->Error("INVALID_ARGUMENT", "missing args");
           }
