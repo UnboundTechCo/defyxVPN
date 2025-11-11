@@ -74,16 +74,19 @@ final class VibrationService extends AlertSub {
 }
 
 final class AuidoService extends AlertSub {
+  static bool _soundEnabledState = true;
+
   final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   Future<void> init() async {
-    _hasAction = false;
+    _hasAction = _soundEnabledState;
   }
 
   @override
   void setActionEnabled(bool enabled) {
     _hasAction = enabled;
+    _soundEnabledState = enabled;
   }
 
   Future<void> _playSound() async {
@@ -155,12 +158,13 @@ class AlertService {
   bool get _canAlert => _batteryLevel > 20;
 
   Future<void> init() async {
-    if (kIsWeb ||
-        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (kIsWeb || (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       _alertSub = AuidoService();
     } else if (Platform.isIOS || Platform.isAndroid) {
       _alertSub = VibrationService();
     }
+
+    await _alertSub?.init();
 
     _battery.onBatteryStateChanged.listen((BatteryState state) async {
       _batteryLevel = await _battery.batteryLevel;
