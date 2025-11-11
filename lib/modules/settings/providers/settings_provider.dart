@@ -1,9 +1,12 @@
 import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
+import '../presentation/widgets/settings_toast_message.dart';
 
 class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   final Ref<List<SettingsGroup>> ref;
@@ -113,7 +116,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     ];
   }
 
-  void toggleSetting(String groupId, String itemId) {
+  void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
     final tempState = state.map((group) {
       if (group.id == groupId) {
         final updatedItems = group.items.map((item) {
@@ -128,6 +131,11 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     }).toList();
 
     if (tempState[0].items.every((item) => !item.isEnabled)) {
+      if (context != null) {
+        SettingsToastMessage.show(context, 'At least one core must remain enabled');
+      } else {
+        ToastUtil.showToast('At least one core must remain enabled');
+      }
       return;
     }
 
@@ -163,11 +171,11 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
         final List<SettingsItem> allItems = List.from(group.items)
           ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
-        if (oldIndex < allItems.length && newIndex < allItems.length) {
-          if (newIndex > oldIndex) {
-            newIndex -= 1;
-          }
+        if (newIndex > oldIndex) {
+          newIndex -= 1;
+        }
 
+        if (oldIndex >= 0 && oldIndex < allItems.length && newIndex >= 0 && newIndex < allItems.length) {
           final item = allItems.removeAt(oldIndex);
           allItems.insert(newIndex, item);
 
