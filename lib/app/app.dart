@@ -10,6 +10,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/vibration_service.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class App extends ConsumerWidget {
   const App({super.key});
 
