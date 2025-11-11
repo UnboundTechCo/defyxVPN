@@ -9,14 +9,22 @@ update_ad_id() {
 
     # AndroidManifest.xml
     if [ -n "$android_ad_app_id" ]; then
-        sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'"$android_ad_app_id"'"/>|' "$android_manifest"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
+        else
+            sed -i 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
+        fi
         echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
     else
         echo -e "${YELLOW}⚠️  ANDROID_AD_UNIT_ID not set. Skipping AndroidManifest.xml update.${NC}"
     fi
     # Info.plist
     if [ -n "$ios_ad_app_id" ]; then
-        sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
+        if [[ "$(uname)" == "Darwin" ]]; then
+            sed -i '' "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
+        else
+            sed -i "s|<key>GADApplicationIdentifier</key>[[:space:]]*<string>[^<]*</string>|<key>GADApplicationIdentifier</key><string>$ios_ad_app_id</string>|" "$ios_info_plist"
+        fi
         echo -e "${GREEN}✅ Updated iOS ad id in Info.plist${NC}"
     else
         echo -e "${YELLOW}⚠️  IOS_AD_UNIT_ID not set. Skipping Info.plist update.${NC}"
