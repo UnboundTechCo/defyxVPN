@@ -91,6 +91,9 @@
 
 <hr />
 
+> [!NOTE]  
+> To receive **pre-release Android versions**, simply join the **GooglePlay Beta Tester** program. For **pre-release iOS versions**, you can access them via **TestFlight**. All updates and announcements regarding these versions are shared through the [**Beta Tester group**](https://t.me/+KuigyCHadIpiNDhi). By joining this group, you can help us **identify and fix issues** in the app, contributing to a **better experience for all users**.
+
 #### To report issues or provide suggestions:
 
 https://github.com/UnboundTechCo/defyxVPN/issues
