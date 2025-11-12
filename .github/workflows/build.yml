@@ -368,7 +368,7 @@ jobs:
         with:
           tag_name: "v${{ needs.build-android.outputs.app_version }}"
           name: "v${{ needs.build-android.outputs.app_version }}"
-          prerelease: true
+          draft: true
           files: |
             build/app/outputs/flutter-apk/app-release.apk
             build/app/outputs/bundle/release/app-release.aab
