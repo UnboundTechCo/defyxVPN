@@ -22,9 +22,9 @@ final flagProvider = FutureProvider<String>((ref) async {
   if (isLoading) {
     final flag = await network.getFlag();
     ref.read(flagLoadingProvider.notifier).state = false;
-    return flag;
+    return flag.toLowerCase();
   }
-  return await network.getFlag();
+  return (await network.getFlag()).toLowerCase();
 });
 
 class MainScreenLogic {

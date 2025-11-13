@@ -99,24 +99,41 @@ class FlagIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final animationService = AnimationService();
     final flagAsync = ref.watch(flagProvider);
     return flagAsync.when(
-      data: (flag) => ClipRRect(
-        borderRadius: BorderRadius.circular(6.r),
-        child: SvgPicture.asset(
-          'assets/flags/$flag.svg',
-          height: 30.h,
-          fit: BoxFit.fitHeight,
-        ),
-      ),
-      loading: () => Shimmer.fromColors(
-        baseColor: const Color(0xFF307065),
-        highlightColor: const Color(0xFF1B483F),
-        enabled: animationService.shouldAnimate(),
-        child: FlagPlaceholder(width: 40.w),
-      ),
+      data: (flag) {
+        if (flag == "xx" || flag == "ir") {
+          return SvgPicture.asset('assets/flags/$flag.svg', width: 35.w);
+        }
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(6.r),
+          child: Image.network(
+            'https://flagcdn.com/h120/$flag.png',
+            width: 35.w,
+            fit: BoxFit.fitWidth,
+            errorBuilder: (context, error, stackTrace) {
+              return SvgPicture.asset('assets/flags/xx.svg', width: 35.w);
+            },
+            loadingBuilder: (context, child, loadingProgress) {
+              if (loadingProgress == null) return child;
+              return _loadingFlag();
+            },
+          ),
+        );
+      },
+      loading: _loadingFlag,
       error: (_, __) => SvgPicture.asset('assets/flags/xx.svg', width: 35.w),
+    );
+  }
+
+  Widget _loadingFlag() {
+    final animationService = AnimationService();
+
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFF307065),
+      highlightColor: const Color(0xFF1B483F),
+      enabled: animationService.shouldAnimate(),
+      child: FlagPlaceholder(width: 40.w),
     );
   }
 }
@@ -274,12 +291,14 @@ class LoggerStatusWidget extends ConsumerWidget {
         _getLoggerStatusInfo(loggerState.status, groupState.groupName);
 
     return AnimatedSize(
-      duration: animationService.adjustDuration(const Duration(milliseconds: 300)),
+      duration:
+          animationService.adjustDuration(const Duration(milliseconds: 300)),
       curve: Curves.easeInOut,
       alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
-        duration: animationService.adjustDuration(const Duration(milliseconds: 350)),
+        duration:
+            animationService.adjustDuration(const Duration(milliseconds: 350)),
         tween: Tween<double>(begin: 0.0, end: 1.0),
         curve: Curves.easeInOut,
         builder: (context, value, child) {
