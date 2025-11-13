@@ -54,16 +54,8 @@ class SettingsItemWidget extends StatelessWidget {
           ),
         ],
         Expanded(
-          // child: Text(
-          //   item.title.toUpperCase(),
-          //   style: TextStyle(
-          //     fontSize: 17.sp,
-          //     fontFamily: 'Lato',
-          //     fontWeight: FontWeight.w400,
-          //     color: item.isAccessible ? Colors.white : Colors.grey[600],
-          //   ),
-          // ),
           child: Row(
+            spacing: 7.w,
             children: [
               Text(
                 item.title.toUpperCase(),
@@ -76,7 +68,14 @@ class SettingsItemWidget extends StatelessWidget {
               ),
               if (item.description != null && item.description!.isNotEmpty)
                 InkWell(
-                  child: AppIcons.info(height: 22, width: 20),
+                  child: AppIcons.info(
+                    height: 22,
+                    width: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF8C8C8C),
+                      BlendMode.srcIn,
+                    ),
+                  ),
                   onTap: () => ToastUtil.showToast(item.description ?? ""),
                 )
             ],
