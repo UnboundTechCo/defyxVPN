@@ -6,6 +6,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interfac
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
@@ -49,7 +50,7 @@ class FlowlineService implements IFlowlineService {
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
     } else {
-      throw Exception('Flowline is empty, cannot save');
+      debugPrint('Flowline is empty, cannot save');
     }
   }
 }

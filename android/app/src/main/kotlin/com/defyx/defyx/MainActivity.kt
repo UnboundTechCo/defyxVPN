@@ -80,7 +80,7 @@ class MainActivity : FlutterActivity() {
                 "connect" -> connectVpn(result)
                 "disconnect" -> disconnectVpn(result)
                 "prepareVPN" -> prepareVpn(result)
-                "isVPNPrepared" -> prepareVpn(result)
+                "isVPNPrepared" -> result.success(true)
                 "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
                 "isTunnelRunning" -> isTunnelRunning(result)
@@ -110,7 +110,6 @@ class MainActivity : FlutterActivity() {
             result.success(false)
         }
     }
-
     private fun connectVpn(result: MethodChannel.Result) {
         pendingVpnResult = result
 
@@ -133,15 +132,12 @@ class MainActivity : FlutterActivity() {
         try {
             val vpnIntent = VpnService.prepare(this)
             if (vpnIntent != null) {
-                // store the result to respond later
                 pendingVpnResult = result
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } else {
-                // permission already granted
                 result.success(true)
             }
         } catch (e: SecurityException) {
-            // Samsung devices sometimes throw SecurityException
             Log.e(TAG, "SecurityException requesting VPN permission", e)
             result.error("VPN_PERMISSION_DENIED", "VPN permission denied", e.message)
         } catch (e: Exception) {
