@@ -61,6 +61,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
             isEnabled: flow['enabled'] ?? false,
             isAccessible: true,
             sortOrder: index,
+            description: flow['description'] ?? '',
           );
         }).toList(),
       )
@@ -132,7 +133,8 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
 
     if (tempState[0].items.every((item) => !item.isEnabled)) {
       if (context != null) {
-        SettingsToastMessage.show(context, 'At least one core must remain enabled');
+        SettingsToastMessage.show(
+            context, 'At least one core must remain enabled');
       } else {
         ToastUtil.showToast('At least one core must remain enabled');
       }
@@ -175,7 +177,10 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
           newIndex -= 1;
         }
 
-        if (oldIndex >= 0 && oldIndex < allItems.length && newIndex >= 0 && newIndex < allItems.length) {
+        if (oldIndex >= 0 &&
+            oldIndex < allItems.length &&
+            newIndex >= 0 &&
+            newIndex < allItems.length) {
           final item = allItems.removeAt(oldIndex);
           allItems.insert(newIndex, item);
 
@@ -242,7 +247,8 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
               title: item['label'],
               isAccessible: true,
               isEnabled: true,
-              sortOrder: jsonList.length);
+              sortOrder: jsonList.length,
+              description: item['description']);
           jsonList.add(newItem.toJson());
         }
       }

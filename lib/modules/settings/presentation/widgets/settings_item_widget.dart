@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -11,8 +13,7 @@ class SettingsItemWidget extends StatelessWidget {
   final bool isLastItem;
   final bool showDragHandle;
   final int? dragIndex;
-  final bool
-      showSeparator;
+  final bool showSeparator;
 
   const SettingsItemWidget({
     super.key,
@@ -53,14 +54,31 @@ class SettingsItemWidget extends StatelessWidget {
           ),
         ],
         Expanded(
-          child: Text(
-            item.title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 17.sp,
-              fontFamily: 'Lato',
-              fontWeight: FontWeight.w400,
-              color: item.isAccessible ? Colors.white : Colors.grey[600],
-            ),
+          child: Row(
+            spacing: 7.w,
+            children: [
+              Text(
+                item.title.toUpperCase(),
+                style: TextStyle(
+                  fontSize: 17.sp,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
+                  color: item.isAccessible ? Colors.white : Colors.grey[600],
+                ),
+              ),
+              if (item.description != null && item.description!.isNotEmpty)
+                InkWell(
+                  child: AppIcons.info(
+                    height: 22,
+                    width: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF8C8C8C),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  onTap: () => ToastUtil.showToast(item.description ?? ""),
+                )
+            ],
           ),
         ),
         DefyxSwitch(
