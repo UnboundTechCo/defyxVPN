@@ -39,7 +39,6 @@ class DefyxVpnService : VpnService() {
         super.onCreate()
         instance = this
         createNotificationChannel()
-//        startAsForeground("DefyxVPN", "Ready to connect")
     }
 
     override fun onDestroy() {
@@ -163,7 +162,6 @@ class DefyxVpnService : VpnService() {
             Log.d(TAG, "startVpn called")
             try {
                 notifyVpnStatus("connecting")
-//                updateNotification("DefyxVPN", "Connecting...")
                 startAsForeground("DefyxVPN", "Connecting...")
 
                 val builder =
@@ -256,7 +254,6 @@ class DefyxVpnService : VpnService() {
                     val notificationManager =
                             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(NOTIFICATION_ID)
-//                    startAsForeground("DefyxVPN", "Ready to connect")
                 }
 
             } catch (e: Exception) {
