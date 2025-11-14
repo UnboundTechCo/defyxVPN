@@ -129,8 +129,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                             ),
                             SocialIconButton(
                               iconPath: AppIcons.linkedinPath,
-                              url: 'https://linkedin.com/company/defyxvpn',
-                              enable: false,
+                              url: 'https://www.linkedin.com/products/unboundtechco-defyxvpn/',
                             ),
                           ],
                         ),
