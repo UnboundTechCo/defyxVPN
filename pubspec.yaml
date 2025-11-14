@@ -70,6 +70,7 @@ flutter:
     - assets/flags/
     - assets/sounds/
     - assets/settings/config.json
+    - assets/settings/default_flowline.json
     - .env
 
   fonts:

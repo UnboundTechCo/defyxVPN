@@ -43,6 +43,13 @@ class VpnBridge {
       _methodChannel.invokeMethod("setConnectionMethod", {"method": method});
   Future<String> getFlowLine() async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
+    final useOfflineMode = dotenv.env['USE_OFFLINE_FLOWLINE'] ?? 'false';
+    
+    // If offline mode is enabled, return empty to force using default flowline
+    if (useOfflineMode == 'true' || useOfflineMode == '1') {
+      return '';
+    }
+    
     final flowLine = await _methodChannel
         .invokeMethod<String>('getFlowLine', {"isTest": isTestMode});
     return flowLine ?? '';

@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,6 +23,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   void _navigateToMain() async {
+    // Initialize offline flowline support first
+    try {
+      final flowlineService = ref.read(flowlineServiceProvider);
+      await flowlineService.initializeOfflineMode();
+      
+      // TESTING: Uncomment the next line to force offline mode for testing
+      // await flowlineService.forceOfflineMode();
+      // debugPrint('🧪 TESTING: Forced offline mode activated');
+      
+    } catch (e) {
+      debugPrint('Failed to initialize offline flowline: $e');
+    }
+
     final vpnData = await ref.read(vpnDataProvider.future);
     final vpnBridge = VpnBridge();
     if (vpnData.isVPNEnabled && mounted) {
