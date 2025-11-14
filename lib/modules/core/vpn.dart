@@ -50,6 +50,8 @@ class VPN {
     _initialized = true;
     _container = container;
 
+    _container?.read(settingsProvider.notifier).saveState();
+
     vibrationService.init();
     _loadChangeRootListener();
     log.logAppVersion();
@@ -154,7 +156,6 @@ class VPN {
     }
 
     final isAccepted = await _grantVpnPermission();
-
     if (!isAccepted!) {
       connectionNotifier?.setDisconnected();
       return;
@@ -162,7 +163,6 @@ class VPN {
 
     final flowLineStorage =
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
-
     final pattern = settings?.getPattern() ?? "";
 
     _connectionStartTime = DateTime.now();
@@ -233,7 +233,7 @@ class VPN {
     connectionNotifier.setDisconnecting();
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
-    vpnData?.disableVPN();
+    await vpnData?.disableVPN();
     connectionNotifier.setDisconnected();
     analyticsService.logVpnDisconnected();
   }
@@ -282,7 +282,6 @@ class VPN {
         break;
     }
   }
-
 
   void _setConnectionStep(int step) {
     _container?.read(flowLineStepProvider.notifier).setStep(step);

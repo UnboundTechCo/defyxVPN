@@ -6,6 +6,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interfac
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -60,7 +61,7 @@ class FlowlineService implements IFlowlineService {
         _allowToUpdate = true;
       });
     } else {
-      throw Exception('Flowline is empty, cannot save');
+      debugPrint('Flowline is empty, cannot save');
     }
   }
 }
