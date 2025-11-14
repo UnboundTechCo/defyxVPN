@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
@@ -136,6 +137,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           if (result && ref.context.mounted) {
             final vpn = VPN(ProviderScope.containerOf(ref.context));
             await vpn.initVPN();
+            await ref.read(settingsProvider.notifier).saveState();
             await _logic.markPrivacyNoticeShown();
             return true;
           }
