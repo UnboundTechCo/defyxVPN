@@ -39,7 +39,7 @@ class DefyxVpnService : VpnService() {
         super.onCreate()
         instance = this
         createNotificationChannel()
-        startAsForeground("DefyxVPN", "Ready to connect")
+//        startAsForeground("DefyxVPN", "Ready to connect")
     }
 
     override fun onDestroy() {
@@ -163,7 +163,8 @@ class DefyxVpnService : VpnService() {
             Log.d(TAG, "startVpn called")
             try {
                 notifyVpnStatus("connecting")
-                updateNotification("DefyxVPN", "Connecting...")
+//                updateNotification("DefyxVPN", "Connecting...")
+                startAsForeground("DefyxVPN", "Connecting...")
 
                 val builder =
                         Builder()
@@ -255,7 +256,7 @@ class DefyxVpnService : VpnService() {
                     val notificationManager =
                             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(NOTIFICATION_ID)
-                    startAsForeground("DefyxVPN", "Ready to connect")
+//                    startAsForeground("DefyxVPN", "Ready to connect")
                 }
 
             } catch (e: Exception) {
@@ -329,7 +330,7 @@ class DefyxVpnService : VpnService() {
 
     fun getFlowLine(isTest: Boolean): String {
         return try {
-            Android.getFlowLine()
+            Android.getFlowLine(isTest)
         } catch (e: Exception) {
             log("Get Flow Line failed: ${e.message}")
             ""
