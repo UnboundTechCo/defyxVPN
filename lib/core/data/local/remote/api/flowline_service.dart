@@ -27,7 +27,8 @@ class FlowlineService implements IFlowlineService {
   /// Load default flowline from assets
   Future<Map<String, dynamic>> _loadDefaultFlowline() async {
     try {
-      final String defaultFlowlineJson = await rootBundle.loadString('assets/settings/default_flowline.json');
+      final String defaultFlowlineJson =
+          await rootBundle.loadString('assets/settings/default_flowline.json');
       return json.decode(defaultFlowlineJson);
     } catch (e) {
       // Return a minimal fallback if asset loading fails
@@ -87,29 +88,31 @@ class FlowlineService implements IFlowlineService {
     } catch (e) {
       // Storage read failed, fall back to default
     }
-    
+
     // Load from bundled assets as fallback
     final defaultFlowline = await _loadDefaultFlowline();
     // Store the default for future use
-    await _secureStorage.write(flowLineKey, json.encode(defaultFlowline['flowLine']));
+    await _secureStorage.write(
+        flowLineKey, json.encode(defaultFlowline['flowLine']));
     return defaultFlowline;
   }
 
   @override
   Future<void> saveFlowline() async {
     // Check if offline mode is explicitly enabled
-    const bool useOfflineFlowline = bool.fromEnvironment('USE_OFFLINE_FLOWLINE', defaultValue: false);
-    
+    const bool useOfflineFlowline =
+        bool.fromEnvironment('USE_OFFLINE_FLOWLINE', defaultValue: false);
+
     if (useOfflineFlowline) {
       // Offline mode is enabled, use default flowline regardless of DXcore availability
       debugPrint('Offline flowline mode is enabled via environment variable');
       await _saveDefaultFlowline();
       return;
     }
-    
+
     try {
       final flowLine = await getFlowline();
-      
+
       if (flowLine.isNotEmpty) {
         // Parse flowline from DXcore
         final decoded = json.decode(flowLine);
@@ -128,9 +131,11 @@ class FlowlineService implements IFlowlineService {
           'changeLog': decoded['changeLog'][version],
         };
 
-        await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
+        await _secureStorage.writeMap(
+            apiVersionParametersKey, versionStorageMap);
 
-        await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
+        await _secureStorage.write(
+            flowLineKey, json.encode(decoded['flowLine']));
         final ref = ProviderContainer();
         final settings = ref.read(settingsProvider.notifier);
         await settings.updateSettingsBasedOnFlowLine();
@@ -149,7 +154,8 @@ class FlowlineService implements IFlowlineService {
     try {
       final defaultFlowline = await _loadDefaultFlowline();
       final appBuildType = GlobalVars.appBuildType;
-      final version = defaultFlowline['version'][appBuildType] ?? defaultFlowline['version']['release'];
+      final version = defaultFlowline['version'][appBuildType] ??
+          defaultFlowline['version']['release'];
 
       final advertiseStorageMap = {
         'api_advertise': defaultFlowline['advertise'] ?? {},
@@ -164,8 +170,9 @@ class FlowlineService implements IFlowlineService {
 
       await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
 
-      await _secureStorage.write(flowLineKey, json.encode(defaultFlowline['flowLine']));
-      
+      await _secureStorage.write(
+          flowLineKey, json.encode(defaultFlowline['flowLine']));
+
       // Update settings with offline flowline
       final ref = ProviderContainer();
       final settings = ref.read(settingsProvider.notifier);
@@ -178,15 +185,16 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<void> initializeOfflineMode() async {
-    const bool useOfflineFlowline = bool.fromEnvironment('USE_OFFLINE_FLOWLINE', defaultValue: false);
-    
+    const bool useOfflineFlowline =
+        bool.fromEnvironment('USE_OFFLINE_FLOWLINE', defaultValue: false);
+
     if (useOfflineFlowline) {
       // Offline mode is explicitly enabled, always use default flowline
       debugPrint('Initializing with offline flowline mode enabled');
       await _saveDefaultFlowline();
       return;
     }
-    
+
     // Normal mode: check if we have any stored flowline data
     final stored = await _secureStorage.read(flowLineKey);
     if (stored == null || stored.isEmpty) {

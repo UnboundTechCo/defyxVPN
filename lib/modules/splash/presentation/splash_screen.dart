@@ -27,11 +27,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     try {
       final flowlineService = ref.read(flowlineServiceProvider);
       await flowlineService.initializeOfflineMode();
-      
+
       // TESTING: Uncomment the next line to force offline mode for testing
       // await flowlineService.forceOfflineMode();
       // debugPrint('🧪 TESTING: Forced offline mode activated');
-      
     } catch (e) {
       debugPrint('Failed to initialize offline flowline: $e');
     }
