@@ -208,6 +208,10 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     return items.map((item) => item.id).toList().join(',');
   }
 
+  Future<void> saveState() async {
+    state = await _getDefaultSettings();
+  }
+
   Future<void> _updateSettingsBasedOnFlowLine() async {
     try {
       List<dynamic> flowline = [];
