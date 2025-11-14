@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
@@ -102,27 +103,13 @@ class FlagIndicator extends ConsumerWidget {
     final flagAsync = ref.watch(flagProvider);
     return flagAsync.when(
       data: (flag) {
-        if (flag == "xx" || flag == "ir") {
-          return SvgPicture.asset('assets/flags/$flag.svg', width: 35.w);
-        }
         return ClipRRect(
           borderRadius: BorderRadius.circular(6.r),
-          child: Image.network(
-            'https://flagcdn.com/h120/$flag.png',
-            width: 35.w,
-            fit: BoxFit.fitWidth,
-            errorBuilder: (context, error, stackTrace) {
-              return SvgPicture.asset('assets/flags/xx.svg', width: 35.w);
-            },
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return _loadingFlag();
-            },
-          ),
+          child: _flagHandler(flag),
         );
       },
       loading: _loadingFlag,
-      error: (_, __) => SvgPicture.asset('assets/flags/xx.svg', width: 35.w),
+      error: (_, __) => _errorFlag(),
     );
   }
 
@@ -135,6 +122,41 @@ class FlagIndicator extends ConsumerWidget {
       enabled: animationService.shouldAnimate(),
       child: FlagPlaceholder(width: 40.w),
     );
+  }
+
+  Widget _errorFlag() {
+    return SvgPicture.asset('assets/flags/xx.svg', width: 35.w);
+  }
+
+  Widget _iranFlag() {
+    return SvgPicture.asset('assets/flags/ir.svg', width: 35.w);
+  }
+
+  Widget _flagHandler(String flag) {
+    switch (flag) {
+      case "xx":
+        return _errorFlag();
+      case "ir":
+        return _iranFlag();
+      default:
+        return Image.network(
+          'https://flagpedia.net/data/flags/w580/$flag.png',
+          width: 35.w,
+          fit: BoxFit.fitWidth,
+          errorBuilder: (context, error, stackTrace) {
+            Log().addLog(error.toString());
+            return _errorFlag();
+          },
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return _loadingFlag();
+          },
+          headers:  {
+            'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/237.84.2.178 Safari/537.36',
+          },
+        );
+    }
   }
 }
 
