@@ -79,8 +79,8 @@ class MainActivity : FlutterActivity() {
             when (call.method) {
                 "connect" -> connectVpn(result)
                 "disconnect" -> disconnectVpn(result)
-                "prepareVPN" -> prepareVpn(result)
                 "isVPNPrepared" -> result.success(true)
+                "prepareVPN" -> grantVpnPermission(result)
                 "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
                 "isTunnelRunning" -> isTunnelRunning(result)
