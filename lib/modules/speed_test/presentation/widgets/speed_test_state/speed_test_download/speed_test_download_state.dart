@@ -27,19 +27,17 @@ class SpeedTestDownloadState extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
         SizedBox(height: 30.h),
-        InkWell(
-          onTap: onStop,
-          child: SpeedTestProgressIndicator(
-            progress: combinedProgress,
-            color: AppColors.downloadColor,
-            showButton: false,
-            centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
-            centerUnit: 'Mbps',
-            subtitle: 'DOWNLOAD',
-            result: state.result,
-            currentStep: SpeedTestStep.download,
-            connectionStatus: connectionState.status,
-          ),
+        SpeedTestProgressIndicator(
+          progress: combinedProgress,
+          color: AppColors.downloadColor,
+          showButton: false,
+          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.downloadSpeed,
+          centerUnit: 'Mbps',
+          subtitle: 'DOWNLOAD',
+          result: state.result,
+          currentStep: SpeedTestStep.download,
+          connectionStatus: connectionState.status,
+          onStop: onStop,
         ),
       ],
     );

@@ -20,6 +20,7 @@ class SpeedTestProgressIndicator extends StatefulWidget {
   final Widget? button;
   final SpeedTestStep? currentStep;
   final ConnectionStatus connectionStatus;
+  final VoidCallback? onStop;
 
   const SpeedTestProgressIndicator({
     super.key,
@@ -33,6 +34,7 @@ class SpeedTestProgressIndicator extends StatefulWidget {
     this.result,
     this.button,
     this.currentStep,
+    this.onStop,
     required this.connectionStatus,
   });
 
@@ -183,18 +185,21 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                 bottom: 100.h,
                 left: 0.w,
                 right: 0.w,
-                child: ProgressArcStack(
-                  uploadProgress: _uploadProgress,
-                  downloadProgress: _downloadProgress,
-                  color: widget.color,
-                  uploadProgressAnimation: _uploadProgressAnimation,
-                  downloadProgressAnimation: _downloadProgressAnimation,
-                  gridAnimation: _gridAnimation,
-                  showLoadingIndicator: widget.showLoadingIndicator,
-                  showButton: widget.showButton,
-                  button: widget.button,
-                  currentStep: widget.currentStep,
-                  centerContent: _buildCenterContent(),
+                child: InkWell(
+                  onTap: widget.onStop,
+                  child: ProgressArcStack(
+                    uploadProgress: _uploadProgress,
+                    downloadProgress: _downloadProgress,
+                    color: widget.color,
+                    uploadProgressAnimation: _uploadProgressAnimation,
+                    downloadProgressAnimation: _downloadProgressAnimation,
+                    gridAnimation: _gridAnimation,
+                    showLoadingIndicator: widget.showLoadingIndicator,
+                    showButton: widget.showButton,
+                    button: widget.button,
+                    currentStep: widget.currentStep,
+                    centerContent: _buildCenterContent(),
+                  ),
                 ),
               ),
               if (widget.result != null &&
