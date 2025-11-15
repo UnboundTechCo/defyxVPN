@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'dart:io' as dart_io;
+// import 'dart:io' as dart_io;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
