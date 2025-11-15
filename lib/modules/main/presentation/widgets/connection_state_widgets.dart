@@ -163,51 +163,8 @@ class PingIndicator extends ConsumerWidget {
                 child: PingPlaceholder(width: 52.w),
               );
             }
-            
-            return ping.when(
-              data: (pingValue) {
-                if (pingValue.isEmpty) {
-                  return Text(
-                    '0 ms',
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontFamily: 'Lato',
-                      fontWeight: FontWeight.w400,
-                      color: Colors.white,
-                    ),
-                  );
-                }
-                return Row(
-                  children: [
-                    SizedBox(width: 10.w),
-                    Text(
-                      pingValue,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      ' ms',
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontFamily: 'Lato',
-                        fontWeight: FontWeight.w300,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                );
-              },
-              loading: () => Shimmer.fromColors(
-                baseColor: const Color(0xFF307065),
-                highlightColor: const Color(0xFF1B483F),
-                enabled: animationService.shouldAnimate(),
-                child: PingPlaceholder(width: 52.w),
-              ),
-              error: (error, stack) => Text(
+            if (ping.isEmpty) {
+              return Text(
                 '0 ms',
                 style: TextStyle(
                   fontSize: 18.sp,
@@ -215,7 +172,30 @@ class PingIndicator extends ConsumerWidget {
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
-              ),
+              );
+            }
+            return Row(
+              children: [
+                SizedBox(width: 10.w),
+                Text(
+                  ping,
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                Text(
+                  ' ms',
+                  style: TextStyle(
+                    fontSize: 16.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w300,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
             );
           },
         ),
@@ -246,9 +226,7 @@ class DefaultStateWidget extends StatelessWidget {
       style: TextStyle(
         fontSize: fontSize,
         fontFamily: 'Lato',
-        fontWeight: status == ConnectionStatus.error
-            ? FontWeight.w300
-            : FontWeight.w400,
+        fontWeight: status == ConnectionStatus.error ? FontWeight.w300 : FontWeight.w400,
         color: textColor,
         height: 0,
       ),
@@ -305,18 +283,15 @@ class LoggerStatusWidget extends ConsumerWidget {
     final animationService = AnimationService();
     final loggerState = ref.watch(loggerStateProvider);
     final groupState = ref.watch(groupStateProvider);
-    final statusInfo =
-        _getLoggerStatusInfo(loggerState.status, groupState.groupName);
+    final statusInfo = _getLoggerStatusInfo(loggerState.status, groupState.groupName);
 
     return AnimatedSize(
-      duration:
-          animationService.adjustDuration(const Duration(milliseconds: 300)),
+      duration: animationService.adjustDuration(const Duration(milliseconds: 300)),
       curve: Curves.easeInOut,
       alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
-        duration:
-            animationService.adjustDuration(const Duration(milliseconds: 350)),
+        duration: animationService.adjustDuration(const Duration(milliseconds: 350)),
         tween: Tween<double>(begin: 0.0, end: 1.0),
         curve: Curves.easeInOut,
         builder: (context, value, child) {
@@ -348,8 +323,7 @@ class LoggerStatusWidget extends ConsumerWidget {
     );
   }
 
-  ({String text, Color color}) _getLoggerStatusInfo(
-      LoggerStatus? status, String groupName) {
+  ({String text, Color color}) _getLoggerStatusInfo(LoggerStatus? status, String groupName) {
     const defaultColor = Color(0xFFA7A7A7);
     switch (status) {
       case LoggerStatus.loading:
