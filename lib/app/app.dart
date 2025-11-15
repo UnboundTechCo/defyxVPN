@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/core/services/native_method_handler.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +12,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
+
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 class App extends ConsumerWidget {
   const App({super.key});
@@ -27,6 +30,7 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
+    await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
     return await AdvertiseDirector.shouldUseInternalAds(ref);
@@ -45,7 +49,7 @@ class App extends ConsumerWidget {
 
   Future<void> _initializeMobileAds() async {
     try {
-      if (Platform.isAndroid || Platform.isIOS) {
+      if (!Platform.isMacOS) {
         await MobileAds.instance.initialize();
       }
     } catch (error) {

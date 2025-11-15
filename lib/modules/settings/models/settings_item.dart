@@ -5,6 +5,8 @@ class SettingsItem {
   final bool isAccessible;
   final String? icon;
   final int? sortOrder;
+  final String? description;
+
 
   const SettingsItem({
     required this.id,
@@ -13,6 +15,7 @@ class SettingsItem {
     required this.isAccessible,
     this.icon,
     this.sortOrder,
+    this.description
   });
 
   SettingsItem copyWith({
@@ -22,6 +25,7 @@ class SettingsItem {
     bool? isAccessible,
     String? icon,
     int? sortOrder,
+    String? description
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -30,6 +34,7 @@ class SettingsItem {
       isAccessible: isAccessible ?? this.isAccessible,
       icon: icon ?? this.icon,
       sortOrder: sortOrder ?? this.sortOrder,
+      description: description ?? this.description
     );
   }
 
@@ -41,6 +46,7 @@ class SettingsItem {
       isAccessible: json['isAccessible'] as bool,
       icon: json['icon'] as String?,
       sortOrder: json['sortOrder'] as int?,
+      description: json['description'] as String?
     );
   }
 
@@ -52,6 +58,7 @@ class SettingsItem {
       'isAccessible': isAccessible,
       'icon': icon,
       'sortOrder': sortOrder,
+      'description': description
     };
   }
 }

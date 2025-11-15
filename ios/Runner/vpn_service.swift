@@ -1,15 +1,15 @@
+import Combine
 import Foundation
 import NetworkExtension
-import Combine
 
 @available(iOS 14.2, *)
 class VpnService {
-    static let shared = VpnService() // Singleton instance
+    static let shared = VpnService()  // Singleton instance
 
     private var vpnManager: NETunnelProviderManager?
     private var cancellables = Set<AnyCancellable>()
     private var vpnStatusCancellable: AnyCancellable?
-    
+
     weak var statusDelegate: VpnStatusDelegate?
 
     private init() {}
@@ -31,7 +31,7 @@ class VpnService {
                     vpnManager = managers.first
                     print("✅ VPN Manager found: \(vpnManager?.localizedDescription ?? "Unknown")")
                 }
-                
+
                 try await vpnManager?.loadFromPreferences()
                 observeVPNStatus(vpnManager!)
                 completion(.success(()))
@@ -41,9 +41,30 @@ class VpnService {
         }
     }
 
+    func isVPNPrepared(completion: @escaping (Result<Void, Error>) -> Void) {
+        Task {
+            do {
+                let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+                if !managers.isEmpty {
+                    vpnManager = managers.first
+                    print("✅ VPN Manager found: \(vpnManager?.localizedDescription ?? "Unknown")")
+                    try await vpnManager?.loadFromPreferences()
+                    observeVPNStatus(vpnManager!)
+                    completion(.success(()))
+                }
+                completion(.failure(NSError(domain: "DefyxVPN", code: 0, userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])))
+
+
+           
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+
     private func configureVPNManager(_ manager: NETunnelProviderManager) throws {
         manager.localizedDescription = "DefyxVPN"
-        
+
         let protocolConfig = NETunnelProviderProtocol()
         protocolConfig.providerBundleIdentifier = "de.unboundtech.defyxvpn.PacketTunnel"
         protocolConfig.serverAddress = "localhost"
@@ -51,13 +72,13 @@ class VpnService {
         let configData: [String: Any] = [
             "address": "127.0.0.1",
             "port": 5000,
-            "mtu": 1280
+            "mtu": 1280,
         ]
-        
+
         if let data = try? JSONSerialization.data(withJSONObject: configData) {
             protocolConfig.providerConfiguration = ["config": data]
         }
-        
+
         protocolConfig.excludeLocalNetworks = true
         manager.protocolConfiguration = protocolConfig
         manager.isEnabled = true
@@ -69,28 +90,32 @@ class VpnService {
         Task {
             do {
                 guard let manager = vpnManager else {
-                    throw NSError(domain: "DefyxVPN", code: 0, userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])
+                    throw NSError(
+                        domain: "DefyxVPN", code: 0,
+                        userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])
                 }
 
                 try configureVPNManager(manager)
                 try await manager.saveToPreferences()
-                try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second delay
+                try await Task.sleep(nanoseconds: 1_000_000_000)  // 1 second delay
 
                 try await manager.loadFromPreferences()
 
-                if manager.connection.status == .connected || manager.connection.status == .connecting {
+                if manager.connection.status == .connected
+                    || manager.connection.status == .connecting
+                {
                     manager.connection.stopVPNTunnel()
                     print("🔄 VPN disconnected before reconnecting.")
                     // Add a small delay to ensure the tunnel is fully stopped
-                    try await Task.sleep(nanoseconds: 500_000_000) // 0.5 second delay
+                    try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 second delay
                 }
-                
+
                 let options: [String: NSObject] = [
                     "port": NSNumber(value: port),
                     "address": "127.0.0.1" as NSString,
                     "mtu": NSNumber(value: 1280),
                 ]
-                
+
                 try manager.connection.startVPNTunnel(options: options)
                 print("✅ Starting VPN connection")
                 completion(.success(()))
@@ -105,16 +130,22 @@ class VpnService {
         Task {
             do {
                 guard let manager = vpnManager else {
-                    throw NSError(domain: "DefyxVPN", code: 0, userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])
+                    throw NSError(
+                        domain: "DefyxVPN", code: 0,
+                        userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])
                 }
                 try await manager.loadFromPreferences()
 
-                if manager.connection.status == .connected || manager.connection.status == .connecting {
+                if manager.connection.status == .connected
+                    || manager.connection.status == .connecting
+                {
                     manager.connection.stopVPNTunnel()
                     print("🛑 VPN stopped")
                     completion(.success(()))
                 } else {
-                    print("ℹ️ VPN is already stopped. Current status: \(manager.connection.status.rawValue)")
+                    print(
+                        "ℹ️ VPN is already stopped. Current status: \(manager.connection.status.rawValue)"
+                    )
                     completion(.success(()))
                 }
             } catch {
@@ -126,14 +157,16 @@ class VpnService {
 
     private func observeVPNStatus(_ manager: NETunnelProviderManager) {
         vpnStatusCancellable?.cancel()
-        
-        vpnStatusCancellable = NotificationCenter.default.publisher(for: .NEVPNStatusDidChange, object: manager.connection)
-            .sink { [weak self] _ in
-                guard let self = self else { return }
-                let status = manager.connection.status
-                self.updateVPNStatus(status)
-                self.statusDelegate?.vpnStatusDidChange(status)
-            }
+
+        vpnStatusCancellable = NotificationCenter.default.publisher(
+            for: .NEVPNStatusDidChange, object: manager.connection
+        )
+        .sink { [weak self] _ in
+            guard let self = self else { return }
+            let status = manager.connection.status
+            self.updateVPNStatus(status)
+            self.statusDelegate?.vpnStatusDidChange(status)
+        }
     }
 
     private func updateVPNStatus(_ status: NEVPNStatus) {
@@ -162,7 +195,7 @@ class VpnService {
                 completion(false)
                 return
             }
-            
+
             if let managers = managers, !managers.isEmpty {
                 self.vpnManager = managers.first
                 print("✅ Loaded existing VPN manager")
@@ -178,7 +211,8 @@ class VpnService {
         }
     }
 
-    func sendTunnelMessage(_ messageDict: [String: String], completion: ((String?) -> Void)? = nil) {
+    func sendTunnelMessage(_ messageDict: [String: String], completion: ((String?) -> Void)? = nil)
+    {
         guard let manager = vpnManager else {
             print("❌ VPN Manager is not initialized")
             completion?(nil)
@@ -203,7 +237,8 @@ class VpnService {
 
                 try session.sendProviderMessage(data) { responseData in
                     if let responseData = responseData,
-                       let responseString = String(data: responseData, encoding: .utf8) {
+                        let responseString = String(data: responseData, encoding: .utf8)
+                    {
                         completion?(responseString)
                     } else {
                         print("❌ No response or invalid response")
