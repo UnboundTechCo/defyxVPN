@@ -34,6 +34,7 @@ class VPN {
   VPN._internal();
 
   final _vpnBridge = VpnBridge();
+  final _networkStatus = NetworkStatus();
   final _eventChannel = EventChannel("com.defyx.progress_events");
 
   Stream<String> get vpnUpdates =>
@@ -146,7 +147,8 @@ class VPN {
     });
 
     vibrationService.vibrateHeartbeat();
-    final networkIsConnected = await NetworkStatus.checkConnectivity();
+
+    final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
       vibrationService.vibrateError();
@@ -213,7 +215,7 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -322,6 +324,7 @@ class VPN {
     final isTunnelRunning = await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
+      refreshPing();
     } else {
       connectionNotifier?.setDisconnected();
     }
@@ -338,6 +341,6 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
   }
 }
