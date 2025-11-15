@@ -66,7 +66,7 @@ class NetworkStatus {
     }
   }
 
-  static Future<bool> checkConnectivity() async {
+  Future<bool> checkConnectivity() async {
     final List<ConnectivityResult> connectivityResult =
         await (Connectivity().checkConnectivity());
 

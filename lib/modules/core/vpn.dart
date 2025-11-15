@@ -34,6 +34,7 @@ class VPN {
   VPN._internal();
 
   final _vpnBridge = VpnBridge();
+  final _networkStatus = NetworkStatus();
   final _eventChannel = EventChannel("com.defyx.progress_events");
 
   Stream<String> get vpnUpdates =>
@@ -48,6 +49,8 @@ class VPN {
     if (_initialized) return;
     _initialized = true;
     _container = container;
+
+    _container?.read(settingsProvider.notifier).saveState();
 
     vibrationService.init();
     _loadChangeRootListener();
@@ -145,7 +148,7 @@ class VPN {
 
     vibrationService.vibrateHeartbeat();
 
-    final networkIsConnected = await NetworkStatus.checkConnectivity();
+    final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
       vibrationService.vibrateError();
@@ -153,7 +156,6 @@ class VPN {
     }
 
     final isAccepted = await _grantVpnPermission();
-
     if (!isAccepted!) {
       connectionNotifier?.setDisconnected();
       return;
@@ -161,7 +163,6 @@ class VPN {
 
     final flowLineStorage =
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
-
     final pattern = settings?.getPattern() ?? "";
 
     _connectionStartTime = DateTime.now();
@@ -214,7 +215,7 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -232,7 +233,7 @@ class VPN {
     connectionNotifier.setDisconnecting();
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
-    vpnData?.disableVPN();
+    await vpnData?.disableVPN();
     connectionNotifier.setDisconnected();
     analyticsService.logVpnDisconnected();
   }
@@ -282,7 +283,6 @@ class VPN {
     }
   }
 
-
   void _setConnectionStep(int step) {
     _container?.read(flowLineStepProvider.notifier).setStep(step);
   }
@@ -324,6 +324,7 @@ class VPN {
     final isTunnelRunning = await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
+      refreshPing();
     } else {
       connectionNotifier?.setDisconnected();
     }
@@ -340,6 +341,6 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state = await _vpnBridge.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
   }
 }
