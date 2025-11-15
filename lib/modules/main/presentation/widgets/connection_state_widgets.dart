@@ -1,4 +1,3 @@
-import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
@@ -105,7 +104,11 @@ class FlagIndicator extends ConsumerWidget {
       data: (flag) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(6.r),
-          child: _flagHandler(flag),
+          child: SvgPicture.asset(
+            'assets/flags/$flag.svg',
+            height: 30.h,
+            fit: BoxFit.fitHeight,
+          ),
         );
       },
       loading: _loadingFlag,
@@ -125,38 +128,11 @@ class FlagIndicator extends ConsumerWidget {
   }
 
   Widget _errorFlag() {
-    return SvgPicture.asset('assets/flags/xx.svg', width: 35.w);
-  }
-
-  Widget _iranFlag() {
-    return SvgPicture.asset('assets/flags/ir.svg', width: 35.w);
-  }
-
-  Widget _flagHandler(String flag) {
-    switch (flag) {
-      case "xx":
-        return _errorFlag();
-      case "ir":
-        return _iranFlag();
-      default:
-        return Image.network(
-          'https://flagpedia.net/data/flags/w580/$flag.png',
-          width: 35.w,
-          fit: BoxFit.fitWidth,
-          errorBuilder: (context, error, stackTrace) {
-            Log().addLog(error.toString());
-            return _errorFlag();
-          },
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            return _loadingFlag();
-          },
-          headers:  {
-            'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/237.84.2.178 Safari/537.36',
-          },
-        );
-    }
+    return SvgPicture.asset(
+      'assets/flags/xx.svg',
+      width: 40.w,
+      height: 30.h,
+    );
   }
 }
 
