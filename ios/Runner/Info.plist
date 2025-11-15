@@ -56,5 +56,9 @@
 	<array>
 		<string>group.de.unboundtech.defyxvpn</string>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+    	<key>NSAllowsArbitraryLoads</key><true/>
+	</dict>
 </dict>
 </plist>
