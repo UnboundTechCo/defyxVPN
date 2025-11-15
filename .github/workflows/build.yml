@@ -144,6 +144,8 @@ jobs:
           LINK_TEST_FLIGHT=${{ vars.LINK_TEST_FLIGHT }}
           LINK_GITHUB=https://github.com/${{ github.repository }}
           LINK_GOOGLE_PLAY=${{ vars.LINK_GOOGLE_PLAY }}
+
+          UPDATE_FLOWLINE_PERIOD={{ secrets.UPDATE_FLOWLINE_PERIOD }}
           EOF
 
 

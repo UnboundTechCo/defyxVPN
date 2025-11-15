@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,7 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
+    await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await VibrationService().init();
     await AnimationService().init();
     return await AdvertiseDirector.shouldUseInternalAds(ref);

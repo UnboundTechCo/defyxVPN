@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -17,6 +18,9 @@ final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
   final _vpnBridge = VpnBridge();
+  static var _allowToUpdate = true;
+  static final _updateFlowlinePerios =
+      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "1");
 
   FlowlineService(this._secureStorage);
 
@@ -25,6 +29,9 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<void> saveFlowline() async {
+    if (!_allowToUpdate) {
+      return;
+    }
     final flowLine = await getFlowline();
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
@@ -49,6 +56,10 @@ class FlowlineService implements IFlowlineService {
       final ref = ProviderContainer();
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
+      _allowToUpdate = false;
+      Future.delayed(Duration(seconds: _updateFlowlinePerios), () {
+        _allowToUpdate = true;
+      });
     } else {
       debugPrint('Flowline is empty, cannot save');
     }
