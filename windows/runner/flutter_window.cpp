@@ -12,6 +12,8 @@
 #include <flutter/method_channel.h>
 #include <flutter/standard_method_codec.h>
 #include <string>
+#include <shellapi.h>
+#pragma comment(lib, "shell32.lib")
 
 #define WM_PING_RESULT (WM_USER + 2)
 // Marshal background callbacks to the platform thread
@@ -22,6 +24,56 @@ static std::unique_ptr<flutter::EventSink<flutter::EncodableValue>> progress_sin
 static std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> pending_ping_result;
 static HWND g_window_handle = nullptr;
 
+static bool IsRunningAsAdministrator() {
+  BOOL isAdmin = FALSE;
+  PSID administratorsGroup = NULL;
+  SID_IDENTIFIER_AUTHORITY ntAuthority = SECURITY_NT_AUTHORITY;
+
+  if (AllocateAndInitializeSid(&ntAuthority, 2, SECURITY_BUILTIN_DOMAIN_RID,
+                                DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0,
+                                &administratorsGroup)) {
+    if (!CheckTokenMembership(NULL, administratorsGroup, &isAdmin)) {
+      isAdmin = FALSE;
+    }
+    FreeSid(administratorsGroup);
+  }
+
+  return isAdmin == TRUE;
+}
+
+static bool RequestAdministratorPrivileges() {
+  wchar_t szPath[MAX_PATH];
+  if (GetModuleFileNameW(NULL, szPath, ARRAYSIZE(szPath)) == 0) {
+    return false;
+  }
+
+  LPWSTR* szArglist;
+  int nArgs;
+  szArglist = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+  
+  std::wstring args;
+  for (int i = 1; i < nArgs; i++) {
+    if (i > 1) args += L" ";
+    args += szArglist[i];
+  }
+  LocalFree(szArglist);
+
+  SHELLEXECUTEINFOW sei = { sizeof(sei) };
+  sei.lpVerb = L"runas";
+  sei.lpFile = szPath;
+  sei.lpParameters = args.c_str();
+  sei.hwnd = g_window_handle;
+  sei.nShow = SW_NORMAL;
+
+  if (!ShellExecuteExW(&sei)) {
+    DWORD dwError = GetLastError();
+    if (dwError == ERROR_CANCELLED) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
@@ -223,7 +275,26 @@ bool FlutterWindow::OnCreate() {
           return;
         }
         if (method == "prepareVPN" || method == "grantVpnPermission") {
-          result->Success(flutter::EncodableValue(true));
+          bool needsAdmin = false;
+          if (g_system_tray) {
+            needsAdmin = g_system_tray->GetVPNMode();
+          }
+
+          if (!needsAdmin) {
+            result->Success(flutter::EncodableValue(true));
+          } else {
+            if (IsRunningAsAdministrator()) {
+              result->Success(flutter::EncodableValue(true));
+            } else {
+              bool elevationRequested = RequestAdministratorPrivileges();
+              if (elevationRequested) {
+                result->Success(flutter::EncodableValue(true));
+                PostQuitMessage(0);
+              } else {
+                result->Success(flutter::EncodableValue(false));
+              }
+            }
+          }
           return;
         }
         if (method == "startTun2socks" || method == "stopTun2Socks") {

@@ -259,6 +259,8 @@ class VPN {
         return await _vpnBridge.grantVpnPermission();
       case "ios":
         return await _vpnBridge.connectVpn();
+      case "windows":
+        return await _vpnBridge.grantVpnPermission();
       default:
         return false;
     }

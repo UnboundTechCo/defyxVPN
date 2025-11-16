@@ -57,6 +57,9 @@ class SystemTray {
   bool GetStartMinimized() const { return start_minimized_; }
   bool GetForceClose() const { return force_close_; }
   bool GetSoundEffect() const { return sound_effect_; }
+  bool GetProxyService() const { return proxy_service_; }
+  bool GetSystemProxy() const { return system_proxy_; }
+  bool GetVPNMode() const { return vpn_mode_; }
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
