@@ -1,5 +1,7 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:vibration/vibration.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -73,7 +75,7 @@ final class VibrationService extends AlertSub {
   }
 }
 
-final class AuidoService extends AlertSub {
+final class AudioService extends AlertSub {
   static bool _soundEnabledState = true;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -81,6 +83,13 @@ final class AuidoService extends AlertSub {
   @override
   Future<void> init() async {
     _hasAction = _soundEnabledState;
+
+    try {
+      await _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
+      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+    } catch (e) {
+      debugPrint('Error initializing audio player: $e');
+    }
   }
 
   @override
@@ -93,8 +102,27 @@ final class AuidoService extends AlertSub {
     if (!hasAction) return;
 
     try {
-      await _audioPlayer.stop();
-      await _audioPlayer.play(AssetSource('sounds/notification.wav'));
+      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+        unawaited(_audioPlayer.stop().then((_) {
+          return _audioPlayer.play(AssetSource('sounds/notification.wav'));
+        }).catchError((e) {
+          debugPrint('Error playing sound on desktop: $e');
+        }));
+      } else {
+        if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.idle) {
+          await _audioPlayer.stop();
+          await _audioPlayer.play(AssetSource('sounds/notification.wav'));
+        } else {
+          SchedulerBinding.instance.addPostFrameCallback((_) async {
+            try {
+              await _audioPlayer.stop();
+              await _audioPlayer.play(AssetSource('sounds/notification.wav'));
+            } catch (e) {
+              debugPrint('Error playing sound in post frame callback: $e');
+            }
+          });
+        }
+      }
     } catch (e) {
       debugPrint('Error playing sound: $e');
     }
@@ -144,6 +172,15 @@ final class AuidoService extends AlertSub {
       debugPrint('Error in heartbeat audio: $e');
     }
   }
+
+  Future<void> dispose() async {
+    try {
+      await _audioPlayer.stop();
+      await _audioPlayer.dispose();
+    } catch (e) {
+      debugPrint('Error disposing audio player: $e');
+    }
+  }
 }
 
 class AlertService {
@@ -159,7 +196,7 @@ class AlertService {
 
   Future<void> init() async {
     if (kIsWeb || (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-      _alertSub = AuidoService();
+      _alertSub = AudioService();
     } else if (Platform.isIOS || Platform.isAndroid) {
       _alertSub = VibrationService();
     }
