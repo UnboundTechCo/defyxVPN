@@ -27,8 +27,8 @@ SystemTray::SystemTray()
       start_minimized_(false),
       force_close_(false),
       sound_effect_(true),
-      proxy_service_(false),
-      system_proxy_(true),
+      proxy_service_(true),
+      system_proxy_(false),
       vpn_mode_(false),
       connection_status_(L"Disconnected") {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
@@ -167,12 +167,10 @@ void SystemTray::ShowContextMenu(HWND window) {
   // Section 4: Service Mode
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Service Mode");
   UINT proxy_flags = MF_STRING | (proxy_service_ ? MF_CHECKED : MF_UNCHECKED);
-  UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED);
-//  UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED);
+  UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
   UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
   AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
-  AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
-//  AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN");
+  AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy (Upcoming)");
   AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (Upcoming)");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
