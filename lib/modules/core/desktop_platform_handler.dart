@@ -6,7 +6,7 @@ import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart'
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 
-class NativeMethodHandler {
+class DesktopPlatformHandler {
   static const MethodChannel _channel = MethodChannel('com.defyx.vpn');
 
   static void initialize() {
@@ -14,7 +14,7 @@ class NativeMethodHandler {
   }
 
   static Future<dynamic> _handleMethodCall(MethodCall call) async {
-    debugPrint('NativeMethodHandler: Received ${call.method}');
+    debugPrint('DesktopPlatformHandler: Received ${call.method}');
 
     switch (call.method) {
       case 'openIntroduction':
@@ -37,14 +37,14 @@ class NativeMethodHandler {
       case 'setForceClose':
         break;
       default:
-        debugPrint('NativeMethodHandler: Unknown method ${call.method}');
+        debugPrint('DesktopPlatformHandler: Unknown method ${call.method}');
     }
   }
 
   static Future<void> _openIntroduction() async {
     final context = rootNavigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      debugPrint('NativeMethodHandler: Context unavailable');
+      debugPrint('DesktopPlatformHandler: Context unavailable');
       return;
     }
 
@@ -62,7 +62,7 @@ class NativeMethodHandler {
   static Future<void> _openSpeedTest() async {
     final context = rootNavigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      debugPrint('NativeMethodHandler: Context unavailable');
+      debugPrint('DesktopPlatformHandler: Context unavailable');
       return;
     }
 
@@ -72,7 +72,7 @@ class NativeMethodHandler {
   static Future<void> _openLogs() async {
     final context = rootNavigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      debugPrint('NativeMethodHandler: Context unavailable');
+      debugPrint('DesktopPlatformHandler: Context unavailable');
       return;
     }
 
@@ -93,7 +93,7 @@ class NativeMethodHandler {
   static Future<void> _openPreferences() async {
     final context = rootNavigatorKey.currentContext;
     if (context == null || !context.mounted) {
-      debugPrint('NativeMethodHandler: Context unavailable');
+      debugPrint('DesktopPlatformHandler: Context unavailable');
       return;
     }
 
@@ -104,7 +104,7 @@ class NativeMethodHandler {
     if (arguments is Map) {
       final value = arguments['value'] as bool? ?? true;
       AlertService().setActionEnabled(value);
-      debugPrint('NativeMethodHandler: Sound effect set to $value');
+      debugPrint('DesktopPlatformHandler: Sound effect set to $value');
     }
   }
 }
