@@ -505,8 +505,16 @@ bool FlutterWindow::OnCreate() {
 
   const wchar_t* prefRegPath = L"Software\\DefyxVPN";
   if (RegOpenKeyExW(HKEY_CURRENT_USER, prefRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-    DWORD startMinimized = 0;
+    DWORD autoConnect = 0;
     DWORD bufSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey, L"AutoConnect", nullptr, nullptr, (LPBYTE)&autoConnect, &bufSize) == ERROR_SUCCESS) {
+      if (system_tray_) {
+        system_tray_->SetAutoConnect(autoConnect != 0);
+      }
+    }
+
+    DWORD startMinimized = 0;
+    bufSize = sizeof(DWORD);
     if (RegQueryValueExW(hKey, L"StartMinimized", nullptr, nullptr, (LPBYTE)&startMinimized, &bufSize) == ERROR_SUCCESS) {
       if (system_tray_) {
         system_tray_->SetStartMinimized(startMinimized != 0);
@@ -540,6 +548,21 @@ bool FlutterWindow::OnCreate() {
     }
 
     RegCloseKey(hKey);
+  }
+
+  if (system_tray_ && system_tray_->GetAutoConnect()) {
+    std::thread([this]() {
+      std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+
+        channel->InvokeMethod("triggerAutoConnect", nullptr);
+      }
+    }).detach();
   }
 
   return true;
@@ -673,7 +696,29 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
 
     case SystemTray::TrayAction::AutoConnect:
-        // TODO: Implement auto-connect functionality
+      {
+        HKEY hKey;
+        const wchar_t* regPath = L"Software\\DefyxVPN";
+        const wchar_t* valueName = L"AutoConnect";
+
+        if (RegCreateKeyExW(HKEY_CURRENT_USER, regPath, 0, nullptr, 0, KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+          bool currentValue = system_tray_->GetAutoConnect();
+          DWORD value = currentValue ? 1 : 0;
+          RegSetValueExW(hKey, valueName, 0, REG_DWORD, (const BYTE*)&value, sizeof(DWORD));
+          RegCloseKey(hKey);
+
+          if (flutter_controller_) {
+            auto messenger = flutter_controller_->engine()->messenger();
+            auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+                messenger, "com.defyx.vpn",
+                &flutter::StandardMethodCodec::GetInstance());
+
+            flutter::EncodableMap args;
+            args[flutter::EncodableValue("value")] = flutter::EncodableValue(currentValue);
+            channel->InvokeMethod("setAutoConnect", std::make_unique<flutter::EncodableValue>(args));
+          }
+        }
+      }
       break;
 
     case SystemTray::TrayAction::StartMinimized:

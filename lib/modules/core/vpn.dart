@@ -68,6 +68,17 @@ class VPN {
     _vpnSub?.cancel();
   }
 
+  Future<void> autoConnect() async {
+    final connectionState = _container?.read(connectionStateProvider);
+
+    if (connectionState?.status == ConnectionStatus.disconnected) {
+      log.addLog('[INFO] Auto-connect triggered');
+      await _connect();
+    } else {
+      log.addLog('[INFO] Auto-connect skipped - already connected or connecting');
+    }
+  }
+
   void _loadChangeRootListener() {
     final router = _container?.read(routerProvider);
     router?.routeInformationProvider.addListener(() {

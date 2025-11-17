@@ -54,6 +54,7 @@ class SystemTray {
   void SetProxyService(bool value);
   void SetSystemProxy(bool value);
   void SetVPNMode(bool value);
+  bool GetAutoConnect() const { return auto_connect_; }
   bool GetStartMinimized() const { return start_minimized_; }
   bool GetForceClose() const { return force_close_; }
   bool GetSoundEffect() const { return sound_effect_; }
