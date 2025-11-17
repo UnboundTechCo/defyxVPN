@@ -51,12 +51,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       cornerRadius: 10.0.r,
     );
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
       _logic.checkAndReconnect();
-      _logic.checkAndShowPrivacyNotice(_showPrivacyNoticeDialog);
+      await _logic.checkAndShowPrivacyNotice(_showPrivacyNoticeDialog);
       _checkInitialConnectionState();
 
-      UpdateDialogHandler.checkAndShowUpdates(context, _logic.checkForUpdate);
+      await _logic.triggerAutoConnectIfEnabled();
+
+      if (mounted) {
+        UpdateDialogHandler.checkAndShowUpdates(context, _logic.checkForUpdate);
+      }
     });
   }
 
@@ -139,6 +143,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             await vpn.initVPN();
             await ref.read(settingsProvider.notifier).saveState();
             await _logic.markPrivacyNoticeShown();
+
+            await _logic.triggerAutoConnectIfEnabled();
+
             return true;
           }
         }

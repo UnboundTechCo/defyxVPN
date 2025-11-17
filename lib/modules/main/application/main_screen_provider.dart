@@ -66,6 +66,20 @@ class MainScreenLogic {
     await prefs.setBool('privacy_notice_shown', true);
   }
 
+  Future<void> triggerAutoConnectIfEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    final autoConnectEnabled = prefs.getBool('auto_connect_enabled') ?? false;
+
+    if (autoConnectEnabled) {
+      final connectionState = ref.read(connectionStateProvider);
+      if (connectionState.status == ConnectionStatus.disconnected) {
+        final container = ProviderScope.containerOf(ref.context);
+        final vpn = VPN(container);
+        await vpn.autoConnect();
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> checkForUpdate() async {
     final storage = ref.read(secureStorageProvider);
 

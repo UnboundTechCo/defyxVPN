@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
-import 'package:defyx_vpn/modules/core/vpn.dart';
 
 class DesktopPlatformHandler {
   static const MethodChannel _channel = MethodChannel('com.defyx.vpn');
@@ -36,9 +35,6 @@ class DesktopPlatformHandler {
         break;
       case 'setAutoConnect':
         _setAutoConnect(call.arguments);
-        break;
-      case 'triggerAutoConnect':
-        await _triggerAutoConnect();
         break;
       case 'setStartMinimized':
         break;
@@ -116,38 +112,13 @@ class DesktopPlatformHandler {
     }
   }
 
-  static void _setAutoConnect(dynamic arguments) {
+  static void _setAutoConnect(dynamic arguments) async {
     if (arguments is Map) {
       final value = arguments['value'] as bool? ?? false;
       debugPrint('DesktopPlatformHandler: Auto-connect set to $value');
-    }
-  }
 
-  static Future<void> _triggerAutoConnect() async {
-    debugPrint('DesktopPlatformHandler: Triggering auto-connect');
-
-    final context = rootNavigatorKey.currentContext;
-    if (context == null || !context.mounted) {
-      debugPrint('DesktopPlatformHandler: Context unavailable for auto-connect');
-      return;
-    }
-
-    await Future.delayed(const Duration(milliseconds: 1000));
-
-    if (!context.mounted) {
-      debugPrint('DesktopPlatformHandler: Context no longer mounted for auto-connect');
-      return;
-    }
-
-    try {
-      final container = ProviderScope.containerOf(context);
-
-      final vpn = VPN(container);
-      await vpn.autoConnect();
-
-      debugPrint('DesktopPlatformHandler: Auto-connect triggered successfully');
-    } catch (e) {
-      debugPrint('DesktopPlatformHandler: Error during auto-connect: $e');
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auto_connect_enabled', value);
     }
   }
 }
