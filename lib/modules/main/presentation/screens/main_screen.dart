@@ -14,6 +14,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart'
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/game.dart';
@@ -56,8 +57,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       await _logic.checkAndShowPrivacyNotice(_showPrivacyNoticeDialog);
       _checkInitialConnectionState();
 
-      await _logic.triggerAutoConnectIfEnabled();
-
+      if (defaultTargetPlatform == TargetPlatform.windows ||
+          defaultTargetPlatform == TargetPlatform.linux) {
+        await _logic.triggerAutoConnectIfEnabled();
+      }
       if (mounted) {
         UpdateDialogHandler.checkAndShowUpdates(context, _logic.checkForUpdate);
       }
@@ -144,8 +147,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
             await ref.read(settingsProvider.notifier).saveState();
             await _logic.markPrivacyNoticeShown();
 
-            await _logic.triggerAutoConnectIfEnabled();
-
+            if (defaultTargetPlatform == TargetPlatform.windows ||
+                defaultTargetPlatform == TargetPlatform.linux) {
+              await _logic.triggerAutoConnectIfEnabled();
+            }
             return true;
           }
         }

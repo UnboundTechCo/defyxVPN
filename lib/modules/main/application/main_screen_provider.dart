@@ -67,13 +67,13 @@ class MainScreenLogic {
   }
 
   Future<void> triggerAutoConnectIfEnabled() async {
+    final container = ProviderScope.containerOf(ref.context);
     final prefs = await SharedPreferences.getInstance();
     final autoConnectEnabled = prefs.getBool('auto_connect_enabled') ?? false;
 
     if (autoConnectEnabled) {
       final connectionState = ref.read(connectionStateProvider);
       if (connectionState.status == ConnectionStatus.disconnected) {
-        final container = ProviderScope.containerOf(ref.context);
         final vpn = VPN(container);
         await vpn.autoConnect();
       }
