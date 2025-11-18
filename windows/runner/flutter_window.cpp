@@ -363,6 +363,30 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       }
       break;
 
+    case SystemTray::TrayAction::ConnectionStatusClick:
+      ShowWindow(hwnd, SW_RESTORE);
+      SetForegroundWindow(hwnd);
+      if (flutter_controller_) {
+        auto messenger = flutter_controller_->engine()->messenger();
+        auto channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
+            messenger, "com.defyx.vpn",
+            &flutter::StandardMethodCodec::GetInstance());
+
+        flutter::EncodableMap args;
+        std::wstring wideStatus = system_tray_->GetConnectionStatus();
+
+        int size_needed = WideCharToMultiByte(CP_UTF8, 0, wideStatus.c_str(),
+                                             (int)wideStatus.length(), NULL, 0, NULL, NULL);
+        std::string statusStr(size_needed, 0);
+        WideCharToMultiByte(CP_UTF8, 0, wideStatus.c_str(), (int)wideStatus.length(),
+                           &statusStr[0], size_needed, NULL, NULL);
+
+        args[flutter::EncodableValue("status")] = flutter::EncodableValue(statusStr);
+        channel->InvokeMethod("handleConnectionStatusClick",
+                             std::make_unique<flutter::EncodableValue>(args));
+      }
+      break;
+
     case SystemTray::TrayAction::Exit:
       DestroyWindow(hwnd);
       break;

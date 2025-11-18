@@ -32,7 +32,8 @@ class SystemTray {
     OpenIntroduction,
     OpenSpeedTest,
     OpenLogs,
-    OpenPreferences
+    OpenPreferences,
+    ConnectionStatusClick
   };
 
   using ActionCallback = std::function<void(TrayAction)>;
@@ -61,6 +62,7 @@ class SystemTray {
   bool GetProxyService() const { return proxy_service_; }
   bool GetSystemProxy() const { return system_proxy_; }
   bool GetVPNMode() const { return vpn_mode_; }
+  std::wstring GetConnectionStatus() const { return connection_status_; }
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
@@ -99,6 +101,7 @@ class SystemTray {
   static constexpr UINT IDM_INTRODUCTION = 1030;
   static constexpr UINT IDM_SPEEDTEST = 1031;
   static constexpr UINT IDM_LOGS = 1032;
+  static constexpr UINT IDM_CONNECTION_STATUS = 1033;
 
   // Checkbox states
   bool launch_on_startup_;

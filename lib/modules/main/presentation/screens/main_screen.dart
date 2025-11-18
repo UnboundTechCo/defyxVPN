@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/update_dialog_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/scroll_manager.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/secret_tap_handler.dart';
@@ -164,8 +165,15 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final connectionState = ref.watch(connectionStateProvider);
     final adsState = ref.watch(googleAdsProvider);
 
-    // CRITICAL FIX: Only handle state changes when actually different
-    // This prevents infinite rebuild loops that crash Samsung devices
+    if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      ref.listen<int>(trayConnectionToggleTriggerProvider, (previous, next) {
+        if (previous != next && next > 0) {
+          _logic.connectOrDisconnect();
+        }
+      });
+    }
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted && _previousConnectionStatus != connectionState.status) {
         _previousConnectionStatus = connectionState.status;

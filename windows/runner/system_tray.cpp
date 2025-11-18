@@ -146,7 +146,7 @@ void SystemTray::ShowContextMenu(HWND window) {
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
   std::wstring status_text = connection_status_;
-  AppendMenu(menu, MF_STRING | MF_GRAYED, 0, status_text.c_str());
+  AppendMenu(menu, MF_STRING, IDM_CONNECTION_STATUS, status_text.c_str());
   AppendMenu(menu, MF_STRING, IDM_PREFERENCES, L"Preferences");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
@@ -253,6 +253,9 @@ void SystemTray::ShowContextMenu(HWND window) {
       break;
     case IDM_LOGS:
       ExecuteAction(TrayAction::OpenLogs);
+      break;
+    case IDM_CONNECTION_STATUS:
+      ExecuteAction(TrayAction::ConnectionStatusClick);
       break;
     case IDM_EXIT:
       ExecuteAction(TrayAction::Exit);
