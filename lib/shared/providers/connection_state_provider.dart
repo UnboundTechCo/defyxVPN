@@ -69,23 +69,24 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
           if (statusEvent.containsKey('status')) {
             final String vpnStatus = statusEvent['status'] as String;
             debugPrint('VPN status update received: $vpnStatus');
-            // Update the UI based on the actual VPN status string
-            switch (vpnStatus) {
-              case 'connected':
-                setConnected();
+
+            // Always update the UI based on the actual VPN status
+            debugPrint('VPN status : $vpnStatus');
+            // Update the state based on the VPN status from iOS
+            switch (state.status) {
+              case ConnectionStatus.analyzing:
                 break;
-              case 'disconnected':
-                setDisconnected();
+              case ConnectionStatus.error:
                 break;
-              case 'analyzing':
-              case 'loading':
-                setAnalyzing();
+              case ConnectionStatus.noInternet:
                 break;
-              case 'error':
-                setError();
+              case ConnectionStatus.connected:
+                if (vpnStatus == "disconnected") {
+                  debugPrint('VPN status is disconnected from case');
+                  setDisconnected();
+                }
                 break;
               default:
-                // Unknown status: do nothing, keep current state
                 break;
             }
           }
