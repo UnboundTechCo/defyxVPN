@@ -4,12 +4,14 @@ import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
-import 'package:defyx_vpn/shared/services/vibration_service.dart';
+import 'package:defyx_vpn/shared/services/alert_service.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -29,7 +31,7 @@ class App extends ConsumerWidget {
 
   Future<bool> _initializeApp(WidgetRef ref) async {
     await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
-    await VibrationService().init();
+    await AlertService().init();
     await AnimationService().init();
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
@@ -91,6 +93,11 @@ class App extends ConsumerWidget {
   }
 
   Widget _appBuilder(BuildContext context, Widget? child) {
+    if (defaultTargetPlatform == TargetPlatform.windows ||
+        defaultTargetPlatform == TargetPlatform.linux) {
+      DesktopPlatformHandler.initialize();
+    }
+
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
       child: child ?? const SizedBox.shrink(),

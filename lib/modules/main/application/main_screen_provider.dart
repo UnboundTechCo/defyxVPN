@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -29,7 +28,6 @@ final flagProvider = FutureProvider<String>((ref) async {
 
 class MainScreenLogic {
   final WidgetRef ref;
-  static const platform = MethodChannel('com.defyx.vpn');
 
   MainScreenLogic(this.ref);
 
@@ -50,7 +48,6 @@ class MainScreenLogic {
 
   Future<void> checkAndReconnect() async {
     final connectionState = ref.read(connectionStateProvider);
-    print("Connection status: ${connectionState.status}");
     if (connectionState.status == ConnectionStatus.connected) {
       // await connectOrDisconnect();
     }
@@ -58,8 +55,7 @@ class MainScreenLogic {
 
   Future<void> checkAndShowPrivacyNotice(Function showDialog) async {
     final prefs = await SharedPreferences.getInstance();
-    final bool privacyNoticeShown =
-        prefs.getBool('privacy_notice_shown') ?? false;
+    final bool privacyNoticeShown = prefs.getBool('privacy_notice_shown') ?? false;
     if (!privacyNoticeShown) {
       showDialog();
     }
@@ -70,17 +66,29 @@ class MainScreenLogic {
     await prefs.setBool('privacy_notice_shown', true);
   }
 
+  Future<void> triggerAutoConnectIfEnabled() async {
+    final container = ProviderScope.containerOf(ref.context);
+    final prefs = await SharedPreferences.getInstance();
+    final autoConnectEnabled = prefs.getBool('auto_connect_enabled') ?? false;
+
+    if (autoConnectEnabled) {
+      final connectionState = ref.read(connectionStateProvider);
+      if (connectionState.status == ConnectionStatus.disconnected) {
+        final vpn = VPN(container);
+        await vpn.autoConnect();
+      }
+    }
+  }
+
   Future<Map<String, dynamic>> checkForUpdate() async {
     final storage = ref.read(secureStorageProvider);
 
     final packageInfo = await PackageInfo.fromPlatform();
-    final apiVersionParameters =
-        await storage.readMap('api_version_parameters');
+    final apiVersionParameters = await storage.readMap('api_version_parameters');
 
     final forceUpdate = apiVersionParameters['forceUpdate'] ?? false;
 
-    final removeBuildNumber =
-        apiVersionParameters['api_app_version']?.split('+').first ?? '0.0.0';
+    final removeBuildNumber = apiVersionParameters['api_app_version']?.split('+').first ?? '0.0.0';
 
     final appVersion = Version.parse(packageInfo.version);
     final apiAppVersion = Version.parse(removeBuildNumber);

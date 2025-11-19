@@ -32,6 +32,7 @@ key.keystore
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+pubspec.lock
 *build
 .env
 lib/shared/global_vars.dart
