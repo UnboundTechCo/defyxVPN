@@ -55,7 +55,27 @@ add_subdirectory("runner")
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+# Patch generated_plugins.cmake to remove firebase_core before including it
+# and Patch the generated_plugin_registrant.cc to remove Firebase references. this makes sure you dont have firebase issue on windows. creeepy but tricky.
+# TODO : Remove when appropiate mechanisem implemented for  handeling firebase or a substitute service.
+set(GENERATED_PLUGINS_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/flutter/generated_plugins.cmake")
+if(EXISTS ${GENERATED_PLUGINS_CMAKE})
+  file(READ ${GENERATED_PLUGINS_CMAKE} PLUGINS_CMAKE_CONTENT)
+  string(REGEX REPLACE "  firebase_core\n" "" PLUGINS_CMAKE_CONTENT "${PLUGINS_CMAKE_CONTENT}")
+  file(WRITE ${GENERATED_PLUGINS_CMAKE} "${PLUGINS_CMAKE_CONTENT}")
+  message(STATUS "Removed firebase_core from generated_plugins.cmake")
+endif()
+
 include(flutter/generated_plugins.cmake)
+
+set(REGISTRANT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/flutter/generated_plugin_registrant.cc")
+if(EXISTS ${REGISTRANT_FILE})
+  file(READ ${REGISTRANT_FILE} REGISTRANT_CONTENT)
+  string(REGEX REPLACE "#include <firebase_core/firebase_core_plugin_c_api\\.h>\n" "" REGISTRANT_CONTENT "${REGISTRANT_CONTENT}")
+  string(REGEX REPLACE "  FirebaseCorePluginCApiRegisterWithRegistrar\\(\n      registry->GetRegistrarForPlugin\\(\"FirebaseCorePluginCApi\"\\)\\);\n" "" REGISTRANT_CONTENT "${REGISTRANT_CONTENT}")
+  file(WRITE ${REGISTRANT_FILE} "${REGISTRANT_CONTENT}")
+  message(STATUS "Patched generated_plugin_registrant.cc to remove Firebase")
+endif()
 
 
 # === Installation ===

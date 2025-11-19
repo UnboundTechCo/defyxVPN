@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,11 +10,14 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  // Firebase temporarily disabled for Windows testing
-  await Firebase.initializeApp(
-    name: "defyx-vpn",
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  
+  // Initialize Firebase only on supported platforms (not Windows)
+  if (!Platform.isWindows) {
+    await Firebase.initializeApp(
+      name: "defyx-vpn",
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
 
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   runApp(const ProviderScope(child: App()));
