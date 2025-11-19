@@ -13,7 +13,10 @@ class VpnBridge {
   Future<void> setAsnName() => _methodChannel.invokeMethod('setAsnName');
 
   // Get ping measurement synchronously
-  Future<dynamic> getPing() => _methodChannel.invokeMethod('calculatePing');
+  Future<String> getPing() async {
+    final ping = await _methodChannel.invokeMethod('calculatePing');
+    return ping.toString();
+  }
 
   Future<void> setTimezone(String timezone) =>
       _methodChannel.invokeMethod("setTimezone", {"timezone": timezone});

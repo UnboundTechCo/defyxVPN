@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:defyx_vpn/core/theme/app_colors.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,8 +27,7 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
   void initState() {
     super.initState();
 
-    // Check if running on desktop platform
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    if (!(Platform.isAndroid || Platform.isIOS)) {
       _openInBrowser();
       return;
     }
@@ -77,7 +75,7 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
   @override
   Widget build(BuildContext context) {
     // For desktop platforms, show loading while opening browser
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux)) {
+    if (!(Platform.isAndroid || Platform.isIOS)) {
       return Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(

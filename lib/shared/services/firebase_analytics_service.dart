@@ -1,4 +1,6 @@
-// Firebase temporarily disabled for Windows testing
+import 'dart:io';
+
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 
 class FirebaseAnalyticsService {
@@ -7,36 +9,103 @@ class FirebaseAnalyticsService {
       FirebaseAnalyticsService._internal();
   factory FirebaseAnalyticsService() => _instance;
 
-  // Stub implementation - Firebase disabled
-  dynamic getAnalyticsObserver() => null;
+  FirebaseAnalytics? _analytics;
+
+  bool get _isDesktopPlatform {
+    return !(Platform.isAndroid || Platform.isIOS);
+  }
+
+  FirebaseAnalytics? get _analyticsInstance {
+    if (_isDesktopPlatform) return null;
+    _analytics ??= FirebaseAnalytics.instance;
+    return _analytics;
+  }
+
+  FirebaseAnalyticsObserver getAnalyticsObserver() {
+    if (_isDesktopPlatform) {
+      throw UnsupportedError(
+          'Firebase Analytics is not supported on desktop platforms');
+    }
+    return FirebaseAnalyticsObserver(analytics: _analyticsInstance!);
+  }
 
   Future<void> logVpnConnectAttempt(String connectionMethod) async {
-    debugPrint('Analytics stub: vpn_connect_attempt - $connectionMethod');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(
+        name: 'vpn_connect_attempt',
+        parameters: {'connection_method': connectionMethod},
+      );
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> logVpnConnected(
       String connectionMethod, String? server, int durationSeconds) async {
-    debugPrint(
-        'Analytics stub: vpn_connected - $connectionMethod, $server, ${durationSeconds}s');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(
+        name: 'vpn_connected',
+        parameters: {
+          'connection_method': connectionMethod,
+          'connection_duration_seconds': durationSeconds,
+          if (server != null) 'server': server,
+        },
+      );
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> logVpnDisconnected() async {
-    debugPrint('Analytics stub: vpn_disconnected');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(name: 'vpn_disconnected');
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> logConnectionMethodChanged(String newMethod) async {
-    debugPrint('Analytics stub: connection_method_changed - $newMethod');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(
+        name: 'connection_method_changed',
+        parameters: {'method': newMethod},
+      );
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> logServerSelected(String serverName) async {
-    debugPrint('Analytics stub: server_selected - $serverName');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(
+        name: 'server_selected',
+        parameters: {'server': serverName},
+      );
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> setUserId(String? userId) async {
-    debugPrint('Analytics stub: setUserId - $userId');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.setUserId(id: userId);
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 
   Future<void> setUserProperty(String name, String? value) async {
-    debugPrint('Analytics stub: setUserProperty - $name: $value');
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.setUserProperty(name: name, value: value);
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
   }
 }
