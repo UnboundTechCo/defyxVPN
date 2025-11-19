@@ -8,9 +8,15 @@ project(runner LANGUAGES CXX)
 # Any new source files that you add to the application should be added here.
 add_executable(${BINARY_NAME} WIN32
   "flutter_window.cpp"
+  "dxcore_bridge.cpp"
+  "proxy_config.cpp"
+  "admin_privileges.cpp"
+  "registry_manager.cpp"
+  "vpn_channel_handler.cpp"
   "main.cpp"
   "utils.cpp"
   "win32_window.cpp"
+  "system_tray.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
   "Runner.rc"
   "runner.exe.manifest"
@@ -33,8 +39,21 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # Add dependency libraries and include directories. Add any application-specific
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
-target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib" "wininet.lib" "rasapi32.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
 add_dependencies(${BINARY_NAME} flutter_assemble)
+
+# Optional: Copy DXcore.dll next to the built executable if present
+# Use a path relative to this CMakeLists directory to avoid ambiguity.
+set(DXCORE_DLL_PATH "${CMAKE_CURRENT_LIST_DIR}/DXcore.dll")
+if (EXISTS "${DXCORE_DLL_PATH}")
+  add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${DXCORE_DLL_PATH}"
+      "$<TARGET_FILE_DIR:${BINARY_NAME}>/DXcore.dll"
+  )
+else()
+  message(WARNING "DXcore.dll not found at ${DXCORE_DLL_PATH}; skipping copy. Build the DLL first.")
+endif()
