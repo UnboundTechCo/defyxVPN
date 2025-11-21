@@ -1,0 +1,100 @@
+on:
+  workflow_call:
+
+jobs:
+  build-android:
+    if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.2"
+          channel: "stable"
+          architecture: "x64"
+          cache: false
+
+      - name: Verify Flutter version
+        run: |
+          flutter --version
+          dart --version
+          flutter doctor --verbose
+
+      - name: Get dependencies
+        run: flutter pub get
+    
+      - name: Get app version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Clear Pub cache
+        run: flutter pub cache clean
+
+      - name: Download Android Framework
+        env:
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+        run: |
+          mkdir -p android/app/libs
+          curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest | tee api.json
+
+          ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
+            | jq -r '.assets[] | select(.name == "DXcore-android.zip") | .id')
+          echo "Asset ID: $ASSET_ID"
+          curl -L \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/octet-stream" \
+            "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
+            -o android/app/libs/DXcore-android.zip
+          cd android/app/libs
+          unzip -o DXcore-android.zip
+          mv build/android/* .
+          rm DXcore-android.zip
+          ls -la
+
+      - name: Generate .env
+        uses: ./.github/actions/create-env
+        with:
+          secret_blob: ${{ toJson(secrets) }}
+          var_blob: ${{ toJson(vars) }}
+
+      - name: Create key.properties for Android signing
+        run: |
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+          echo "storeFile=keystore.jks" >> android/key.properties
+
+      - name: Decode and save Android keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
+
+      - name: Build APK & Bundle
+        run: |
+          chmod +x scripts/build_release.sh
+          bash scripts/build_release.sh <<EOF
+          2
+          4
+          4
+
+          EOF
+  
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release
+          path: |
+            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/bundle/release/app-release.aab

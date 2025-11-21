@@ -1,4 +1,7 @@
-name: Android & iOS Build with Store Uploads
+name: Android & iOS & Linux & Windows Build with Store Uploads
+
+permissions:
+    contents: write
 
 on:
   push:
@@ -53,329 +56,30 @@ on:
         type: boolean
 
 jobs:
-  build-android:
-    if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
-    runs-on: ubuntu-latest
-    outputs:
-      app_version: ${{ steps.get_version.outputs.version }}
+  android:
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
+  ios:
+    if: false
+    uses: ./.github/workflows/ios.yml
+    secrets: inherit
+
+  windows:
+    uses: ./.github/workflows/windows.yml
+    secrets: inherit
   
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "17"
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.35.5"
-          channel: "stable"
-          architecture: "x64"
-          cache: false
-
-      - name: Verify Flutter version
-        run: |
-          flutter --version
-          dart --version
-          flutter doctor --verbose
-
-      - name: Get dependencies
-        run: flutter pub get
-    
-      - name: Get app version
-        id: get_version
-        run: |
-            echo 'import "dart:io";
-            import "package:yaml/yaml.dart";
-            void main() {
-              final pubspec = loadYaml(File("pubspec.yaml").readAsStringSync());
-              final version = pubspec["version"].toString().split("+").first;
-              print(version);
-            }' > get_version.dart
-
-            VERSION=$(dart run get_version.dart)
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-
-
-      - name: Clear Pub cache
-        run: flutter pub cache clean
-
-      - name: Download Android Framework
-        # if: ${{ github.event.inputs.download_android_framework == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
-        run: |
-          mkdir -p android/app/libs
-          ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
-            | jq -r '.assets[] | select(.name == "DXcore-android.zip") | .id')
-          echo "Asset ID: $ASSET_ID"
-          curl -L \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/octet-stream" \
-            "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
-            -o android/app/libs/DXcore-android.zip
-          cd android/app/libs
-          unzip -o DXcore-android.zip
-          mv build/android/* .
-          rm DXcore-android.zip
-          ls -la
-
-      - name: Create .env file
-        run: |
-          cat <<EOF > .env
-          ANDROID_AD_APP_ID=${{ secrets.ANDROID_AD_APP_ID }}
-          ANDROID_AD_UNIT_ID=${{ secrets.ANDROID_AD_UNIT_ID }}
-          IOS_AD_APP_ID=${{ secrets.IOS_AD_APP_ID }}
-          IOS_AD_UNIT_ID=${{ secrets.IOS_AD_UNIT_ID }}
-
-          FIREBASE_PROJECT_NUMBER=${{ secrets.FIREBASE_PROJECT_NUMBER }}
-          FIREBASE_PROJECT_ID=${{ secrets.FIREBASE_PROJECT_ID }}
-
-          FIREBASE_ANDROID_API_KEY=${{ secrets.FIREBASE_ANDROID_API_KEY }}
-          FIREBASE_ANDROID_APP_ID=${{ secrets.FIREBASE_ANDROID_APP_ID }}
-
-          LINK_APP_STORE=${{ vars.LINK_APP_STORE }}
-          LINK_TEST_FLIGHT=${{ vars.LINK_TEST_FLIGHT }}
-          LINK_GITHUB=https://github.com/${{ github.repository }}
-          LINK_GOOGLE_PLAY=${{ vars.LINK_GOOGLE_PLAY }}
-
-          UPDATE_FLOWLINE_PERIOD={{ secrets.UPDATE_FLOWLINE_PERIOD }}
-          EOF
-
-
-      - name: Create key.properties for Android signing
-        run: |
-          echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
-          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
-          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
-          echo "storeFile=keystore.jks" >> android/key.properties
-
-      - name: Decode and save Android keystore
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
-
-      - name: Make build_ci.sh executable and run build
-        env:
-          UPLOAD_TO_PLAY_STORE: ${{ github.event.inputs.upload_to_play_store }}
-          UPLOAD_TO_APP_STORE: "false"
-          ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
-          IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
-          LINK_APP_STORE: ${{ vars.LINK_APP_STORE }}
-          LINK_TEST_FLIGHT: ${{ vars.LINK_TEST_FLIGHT }}
-          LINK_GITHUB: https://github.com/${{ github.repository }}
-          LINK_GOOGLE_PLAY: ${{ vars.LINK_GOOGLE_PLAY }}
-        run: |
-          chmod +x scripts/build_ci.sh
-          ./scripts/build_ci.sh
-
-      - name: Upload AAB to Google Play Store
-        if: ${{ github.event.inputs.upload_to_play_store == 'true' }}
-        uses: r0adkll/upload-google-play@v1
-        with:
-          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: de.unboundtech.defyxvpn
-          releaseFiles: build/app/outputs/bundle/release/app-release.aab
-          track: ${{ github.event.inputs.play_track }}
-          status: draft
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-release
-          path: build/app/outputs/flutter-apk/*.apk
-
-  build-ios:
-    if: ${{ github.event.inputs.upload_to_app_store == 'true' }}
-    runs-on: macos-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: "3.27.0"
-          channel: "stable"
-          architecture: "x64"
-          cache: false
-
-      - name: Verify Flutter version
-        run: |
-          flutter --version
-          dart --version
-          flutter doctor --verbose
-
-      - name: Clear Pub cache
-        run: flutter pub cache clean
-
-      - name: Download iOS Framework
-        if: ${{ github.event.inputs.download_ios_framework == 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
-        run: |
-          mkdir -p ios/Frameworks
-          curl -L -H "Authorization: token $GITHUB_TOKEN" \
-               -H "Accept: application/vnd.github.v3.raw" \
-               -o ios/IosDXcore.xcframework.zip \
-               "https://api.github.com/repos/UnboundTech/DXcore-private/contents/IosDXcore.xcframework.zip?ref=main"
-          cd ios
-          unzip IosDXcore.xcframework.zip
-          rm IosDXcore.xcframework.zip
-          ls -la Frameworks/
-
-      - name: Create .env file
-        env:
-          ENV_FILE_CONTENT: ${{ secrets.ENV_FILE_CONTENT }}
-        run: |
-          if [ -z "$ENV_FILE_CONTENT" ]; then
-            touch .env
-          else
-            echo "$ENV_FILE_CONTENT" > .env
-          fi
-
-      - name: Update Dart SDK constraint and dependencies
-        run: |
-          if [[ "$(uname)" == "Darwin" ]]; then SED_INPLACE_FLAG="-i ''"; else SED_INPLACE_FLAG="-i"; fi
-          eval sed $SED_INPLACE_FLAG 's/sdk:.*$/sdk: ">=2.12.0 <4.0.0"/' pubspec.yaml || true
-          eval sed $SED_INPLACE_FLAG '/^dependency_overrides:/d' pubspec.yaml || true
-          echo -e "\ndependency_overrides:\n  async: 2.11.0" >> pubspec.yaml
-          eval sed $SED_INPLACE_FLAG '/flutter_test:/{n;s/.*$/    sdk: flutter/}' pubspec.yaml || true
-
-      - name: Debug pubspec.yaml
-        run: cat pubspec.yaml
-
-      - name: Import iOS code signing certificates
-        uses: apple-actions/import-codesign-certs@v3
-        with:
-          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
-          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
-
-      - name: Install iOS provisioning profile
-        env:
-          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE }}
-        run: |
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 -d > Runner.mobileprovision
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp Runner.mobileprovision ~/Library/MobileDevice/Provisioning\ Profiles/
-
-      - name: Make build_ci.sh executable and run build
-        env:
-          UPLOAD_TO_PLAY_STORE: "false"
-          UPLOAD_TO_APP_STORE: ${{ github.event.inputs.upload_to_app_store }}
-          ANDROID_AD_UNIT_ID: ${{ secrets.ANDROID_AD_UNIT_ID }}
-          IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
-          LINK_APP_STORE: ${{ vars.LINK_APP_STORE }}
-          LINK_TEST_FLIGHT: ${{ vars.LINK_TEST_FLIGHT }}
-          LINK_GITHUB: https://github.com/${{ github.repository }}
-          LINK_GOOGLE_PLAY: ${{ vars.LINK_GOOGLE_PLAY }}
-        run: |
-          chmod +x scripts/build_ci.sh
-          ./scripts/build_ci.sh
-
-      - name: Upload IPA to App Store/TestFlight
-        uses: apple-actions/upload-app-store@v1
-        with:
-          app-store-connect-api-key: ${{ secrets.APP_STORE_KEY_P8 }}
-          app-store-connect-key-id: ${{ secrets.APP_STORE_KEY_ID }}
-          app-store-connect-issuer-id: ${{ secrets.APP_STORE_ISSUER_ID }}
-          ipa-path: build/ios/ipa/Runner.ipa
-          destination: ${{ github.event.inputs.app_store_destination }}
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: DXcore-ios
-          path: build/ios/ipa/Runner.ipa
-
+  linux:
+    if: false
+    uses: ./.github/workflows/linux.yml
+    secrets: inherit
+  
   release-to-telegram:
-    runs-on: ubuntu-latest
-    needs: build-android
-    # if: ${{ github.event.inputs.send_telegram == 'true' }}
-    steps:
-      - name: Get latest artifact ID
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ARTIFACT_NAME="DXcore-android"
-          ARTIFACT_DATA=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/artifacts")
-          ARTIFACT_ID=$(echo "$ARTIFACT_DATA" | jq -r ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .id" | head -n 1)
-        
-          if [ -z "$ARTIFACT_ID" ] || [ "$ARTIFACT_ID" = "null" ]; then
-            echo "Artifact not found!"
-            exit 1
-          fi
-        
-          echo "ARTIFACT_ID=$ARTIFACT_ID" >> $GITHUB_ENV
+    needs: [android, windows]
+    uses: ./.github/workflows/telegram.yml
+    secrets: inherit
 
-      - name: Send artifact link to Telegram
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          APP_VERSION: ${{ env.APP_VERSION }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-          ARTIFACT_ID: ${{ env.ARTIFACT_ID }}
-        run: |
-          ARTIFACT_URL="https://github.com/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts/${ARTIFACT_ID}"
-          curl -F chat_id="$TELEGRAM_CHAT_ID" \
-               -F text="🚀 New DXcore Android Build\n📌 Version: $APP_VERSION\n🔗 Download: $ARTIFACT_URL" \
-                "https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage"
-
-  release-to-github:
-    runs-on: ubuntu-latest
-    needs: build-android
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0 
-
-      - name: Create tag if not exists
-        run: |
-          TAG="v${{ needs.build-android.outputs.app_version }}"
-          echo "Detected tag: $TAG"
-
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists. Skipping."
-          else
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG"
-            git push origin "$TAG"
-            echo "✅ Created and pushed tag $TAG"
-          fi
-
-      - name: Prepare Release Message
-        run: |
-          sed 's|RELEASE_TAG|${{ github.ref_name }}|g' ./.github/release_message.md >> release.md
-
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: android-release
-          path: build/app/outputs/flutter-apk/
-
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: "v${{ needs.build-android.outputs.app_version }}"
-          name: "v${{ needs.build-android.outputs.app_version }}"
-          draft: true
-          files: |
-            build/app/outputs/flutter-apk/app-release.apk
-            build/app/outputs/bundle/release/app-release.aab
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-x86_64-release.apk
-          body_path: release.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  release:
+    needs: [android, windows]
+    uses: ./.github/workflows/release.yml
+    secrets: inherit
