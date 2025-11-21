@@ -26,6 +26,8 @@ class DXCoreBridge {
   void SetAsnName();
   int SetTimeZone(float tz);
   std::string GetFlowLine(bool is_test);
+  int SetSystemProxy();
+  int ResetSystemProxy();
 
   bool IsLoaded() const { return lib_ != nullptr; }
 
@@ -43,6 +45,8 @@ class DXCoreBridge {
   using WinSetTimeZone_t = int (*)(float);
   using WinGetFlowLine_t = const char* (*)(int);
   using WinFreeString_t = void (*)(char*);
+  using WinSetSystemProxy_t = int (*)();
+  using WinResetSystemProxy_t = int (*)();
 
   WinSetProgressListener_t pSetProgress_ = nullptr;
   WinStop_t pStop_ = nullptr;
@@ -54,6 +58,8 @@ class DXCoreBridge {
   WinSetTimeZone_t pSetTimeZone_ = nullptr;
   WinGetFlowLine_t pGetFlowLine_ = nullptr;
   WinFreeString_t pFreeString_ = nullptr;
+  WinSetSystemProxy_t pSetSystemProxy_ = nullptr;
+  WinResetSystemProxy_t pResetSystemProxy_ = nullptr;
 
   static void __stdcall ProgressTrampoline(const char* msg);
   static DXCoreBridge* s_instance_;

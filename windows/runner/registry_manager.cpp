@@ -134,3 +134,27 @@ bool RegistryManager::SetSoundEffect(bool value) {
   return false;
 }
 
+int RegistryManager::GetServiceMode() const {
+  HKEY hKey;
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    DWORD value = 1;
+    DWORD bufSize = sizeof(DWORD);
+    RegQueryValueExW(hKey, L"ServiceMode", nullptr, nullptr, (LPBYTE)&value, &bufSize);
+    RegCloseKey(hKey);
+    return static_cast<int>(value);
+  }
+  return 1;
+}
+
+bool RegistryManager::SetServiceMode(int mode) {
+  HKEY hKey;
+  if (RegCreateKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, nullptr, 0,
+                      KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+    DWORD dwValue = static_cast<DWORD>(mode);
+    RegSetValueExW(hKey, L"ServiceMode", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
+    RegCloseKey(hKey);
+    return true;
+  }
+  return false;
+}
+

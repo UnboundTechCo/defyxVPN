@@ -87,8 +87,12 @@ void VPNChannelHandler::SetupProgressChannel() {
             parent->system_tray_->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
           }
 
-          std::thread([]() {
-            g_proxy.EnableProxy("127.0.0.1:5000");
+          std::thread([parent]() {
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->SetSystemProxy();
+            } else {
+              g_proxy.EnableProxy("127.0.0.1:5000");
+            }
           }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
           parent->vpn_status_ = "disconnected";
@@ -99,8 +103,12 @@ void VPNChannelHandler::SetupProgressChannel() {
             parent->system_tray_->UpdateConnectionStatus(L"Error");
           }
 
-          std::thread([]() {
-            g_proxy.DisableProxy();
+          std::thread([parent]() {
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->ResetSystemProxy();
+            } else {
+              g_proxy.DisableProxy();
+            }
           }).detach();
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
@@ -115,8 +123,12 @@ void VPNChannelHandler::SetupProgressChannel() {
             parent->system_tray_->UpdateConnectionStatus(L"Disconnected");
           }
 
-          std::thread([]() {
-            g_proxy.DisableProxy();
+          std::thread([parent]() {
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->ResetSystemProxy();
+            } else {
+              g_proxy.DisableProxy();
+            }
           }).detach();
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
@@ -179,6 +191,14 @@ void VPNChannelHandler::SetupMethodChannel() {
             system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
             system_tray_->UpdateConnectionStatus(L"Disconnected");
           }
+
+          std::thread([this]() {
+            if (system_tray_ && system_tray_->GetSystemProxy()) {
+              dxcore_->ResetSystemProxy();
+            } else {
+              g_proxy.DisableProxy();
+            }
+          }).detach();
 
           SendStatus();
           result->Success(flutter::EncodableValue(true));

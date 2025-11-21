@@ -93,6 +93,21 @@ bool FlutterWindow::OnCreate() {
     bool soundEffect = registry.GetSoundEffect();
     system_tray_->SetSoundEffect(soundEffect);
 
+    int serviceMode = registry.GetServiceMode();
+    if (serviceMode == 0) {
+      system_tray_->SetProxyService(true);
+      system_tray_->SetSystemProxy(false);
+      system_tray_->SetVPNMode(false);
+    } else if (serviceMode == 1) {
+      system_tray_->SetProxyService(false);
+      system_tray_->SetSystemProxy(true);
+      system_tray_->SetVPNMode(false);
+    } else if (serviceMode == 2) {
+      system_tray_->SetProxyService(false);
+      system_tray_->SetSystemProxy(false);
+      system_tray_->SetVPNMode(true);
+    }
+
     if (flutter_controller_) {
       auto sound_channel = std::make_unique<flutter::MethodChannel<flutter::EncodableValue>>(
           messenger, "com.defyx.vpn",
@@ -304,15 +319,24 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       break;
 
     case SystemTray::TrayAction::ProxyService:
-      // TODO: Implement proxy service mode
+      {
+        RegistryManager registry;
+        registry.SetServiceMode(0);
+      }
       break;
 
     case SystemTray::TrayAction::SystemProxy:
-      // TODO: Implement system proxy mode
+      {
+        RegistryManager registry;
+        registry.SetServiceMode(1);
+      }
       break;
 
     case SystemTray::TrayAction::VPNMode:
-      // TODO: Implement VPN mode (currently disabled)
+      {
+        RegistryManager registry;
+        registry.SetServiceMode(2);
+      }
       break;
 
     case SystemTray::TrayAction::OpenIntroduction:
