@@ -49,6 +49,7 @@ jobs:
           path: windows-release/
       
       - name: Download iOS artifacts
+        if: false
         uses: actions/download-artifact@v4
         with:
           name: ios-release
@@ -79,6 +80,7 @@ jobs:
           status: draft
 
       - name: Upload to TestFlight
+        if: false
         uses: apple-actions/upload-testflight-build@v3
         with:
           app-path: build/ios/ipa/Runner.ipa
