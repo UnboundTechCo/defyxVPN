@@ -188,7 +188,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
 
   @override
   void dispose() {
-    ref.read(logsProvider.notifier).stopAutoRefresh();
+    ProviderContainer().read(logsProvider.notifier).stopAutoRefresh();
     scrollController.dispose();
     super.dispose();
   }
@@ -455,6 +455,7 @@ class _LogScreenState extends ConsumerState<LogScreen> {
   void _showLogPopup() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
