@@ -17,7 +17,7 @@ class NetworkStatus {
 
     final ping = await _vpnBridge.getPing();
 
-    final changePing = int.tryParse(ping) == 0 ? 100 : int.tryParse(ping);
+    final changePing = int.tryParse(ping);
     return formatter.format(changePing);
   }
 
