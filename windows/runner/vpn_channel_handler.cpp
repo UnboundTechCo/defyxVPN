@@ -15,6 +15,8 @@ VPNChannelHandler::VPNChannelHandler(flutter::BinaryMessenger* messenger,
       vpn_status_("disconnected") {}
 
 VPNChannelHandler::~VPNChannelHandler() {
+  is_active_ = false;
+  Sleep(100);
   status_sink_.reset();
   progress_sink_.reset();
   pending_ping_result_.reset();
@@ -67,12 +69,18 @@ void VPNChannelHandler::SetupProgressChannel() {
       parent_->progress_sink_ = std::move(events);
 
       parent_->dxcore_->SetProgressCallback([this, parent = parent_](const std::string& msg) {
+        if (!parent->is_active_) {
+          return;
+        }
 
         PostMessage(parent->window_handle_, WM_PROGRESS_RESULT, 0,
                     reinterpret_cast<LPARAM>(new std::string(msg)));
 
         if (msg.find("Data: VPN connected") != std::string::npos) {
-          parent->vpn_status_ = "connected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "connected";
+          }
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
                       reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
@@ -84,12 +92,16 @@ void VPNChannelHandler::SetupProgressChannel() {
           }
 
           std::thread([parent]() {
+            if (!parent->is_active_) return;
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->SetSystemProxy();
             }
           }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
-          parent->vpn_status_ = "disconnected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "disconnected";
+          }
 
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
@@ -98,6 +110,7 @@ void VPNChannelHandler::SetupProgressChannel() {
           }
 
           std::thread([parent]() {
+            if (!parent->is_active_) return;
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->ResetSystemProxy();
             }
@@ -107,7 +120,10 @@ void VPNChannelHandler::SetupProgressChannel() {
                       reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
         } else if (msg.find("Data: VPN stopped") != std::string::npos ||
                    msg.find("Data: VPN cancelled") != std::string::npos) {
-          parent->vpn_status_ = "disconnected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "disconnected";
+          }
 
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
@@ -116,6 +132,7 @@ void VPNChannelHandler::SetupProgressChannel() {
           }
 
           std::thread([parent]() {
+            if (!parent->is_active_) return;
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->ResetSystemProxy();
             }
@@ -174,7 +191,12 @@ void VPNChannelHandler::SetupMethodChannel() {
         if (method == "disconnect") {
           dxcore_->StopVPN();
           dxcore_->Stop();
-          vpn_status_ = "disconnected";
+          Sleep(50);
+
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnected";
+          }
 
           if (system_tray_) {
             system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
@@ -183,6 +205,7 @@ void VPNChannelHandler::SetupMethodChannel() {
           }
 
           std::thread([this]() {
+            if (!is_active_) return;
             if (system_tray_ && system_tray_->GetSystemProxy()) {
               dxcore_->ResetSystemProxy();
             }
@@ -334,7 +357,11 @@ void VPNChannelHandler::SetupMethodChannel() {
 
             dxcore_->StartVPN(cache_dir, flow, pattern);
 
-            vpn_status_ = "connecting";
+            {
+              std::lock_guard<std::mutex> lock(status_mutex_);
+              vpn_status_ = "connecting";
+            }
+
             if (system_tray_) {
               system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
               system_tray_->UpdateTooltip(L"DefyxVPN - Connecting...");
@@ -350,7 +377,12 @@ void VPNChannelHandler::SetupMethodChannel() {
 
         if (method == "stopVPN") {
           dxcore_->StopVPN();
-          vpn_status_ = "disconnected";
+          Sleep(50);
+
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnected";
+          }
 
           if (system_tray_) {
             system_tray_->UpdateConnectionStatus(L"Disconnected");
