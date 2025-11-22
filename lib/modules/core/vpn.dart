@@ -32,6 +32,7 @@ class VPN {
   }
 
   VPN._internal();
+  String? _lastRoute;
 
   final _vpnBridge = VpnBridge();
   final _networkStatus = NetworkStatus();
@@ -75,7 +76,8 @@ class VPN {
       log.addLog('[INFO] Auto-connect triggered');
       await _connect();
     } else {
-      log.addLog('[INFO] Auto-connect skipped - already connected or connecting');
+      log.addLog(
+          '[INFO] Auto-connect skipped - already connected or connecting');
     }
   }
 
@@ -83,6 +85,10 @@ class VPN {
     final router = _container?.read(routerProvider);
     router?.routeInformationProvider.addListener(() {
       final currentRoute = _container?.read(currentRouteProvider);
+      if (currentRoute == _lastRoute) {
+        return;
+      }
+      _lastRoute = currentRoute;
       if (currentRoute == DefyxVPNRoutes.main.route) {
         _updatePing();
       }
@@ -139,7 +145,8 @@ class VPN {
   }
 
   Future<void> _connect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final loggerNotifier = _container?.read(loggerStateProvider.notifier);
     final settings = _container?.read(settingsProvider.notifier);
 
@@ -171,7 +178,8 @@ class VPN {
       return;
     }
 
-    final flowLineStorage = await _container?.read(secureStorageProvider).read('flowLine') ?? "";
+    final flowLineStorage =
+        await _container?.read(secureStorageProvider).read('flowLine') ?? "";
     final pattern = settings?.getPattern() ?? "";
 
     _connectionStartTime = DateTime.now();
@@ -181,7 +189,8 @@ class VPN {
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
@@ -189,7 +198,8 @@ class VPN {
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final connectionState = _container?.read(connectionStateProvider);
     final vpnData = await _container?.read(vpnDataProvider.future);
     if (connectionState?.status != ConnectionStatus.analyzing) {
@@ -208,11 +218,13 @@ class VPN {
 
     int connectionDuration = 0;
     if (_connectionStartTime != null) {
-      connectionDuration = DateTime.now().difference(_connectionStartTime!).inSeconds;
+      connectionDuration =
+          DateTime.now().difference(_connectionStartTime!).inSeconds;
       _connectionStartTime = null;
     }
 
-    analyticsService.logVpnConnected(pattern, groupState?.groupName, connectionDuration);
+    analyticsService.logVpnConnected(
+        pattern, groupState?.groupName, connectionDuration);
 
     await _container?.read(flowlineServiceProvider).saveFlowline();
   }
@@ -220,7 +232,8 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state =
+        await _networkStatus.getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -244,7 +257,8 @@ class VPN {
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier?.setDisconnecting();
     if (Platform.isIOS) {
@@ -256,7 +270,8 @@ class VPN {
   }
 
   Future<void> _onTunnelClosed() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     connectionNotifier?.setDisconnecting();
     final vpnData = await _container?.read(vpnDataProvider.future);
     await _vpnBridge.stopVPN();
@@ -324,7 +339,8 @@ class VPN {
   }
 
   Future<void> getVPNStatus() async {
-    final connectionNotifier = _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
     final isTunnelRunning = await _vpnBridge.isTunnelRunning();
     if (isTunnelRunning) {
       connectionNotifier?.setConnected();
@@ -345,6 +361,7 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state =
+        await _networkStatus.getPing();
   }
 }
