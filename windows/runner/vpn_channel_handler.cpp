@@ -233,16 +233,15 @@ void VPNChannelHandler::SetupMethodChannel() {
 
               int ping = dxcore_->MeasurePing();
 
-              if (ping < 0) ping = 0;
+              if (ping <= 0) ping = 0;
               if (ping > 9999) ping = 9999;
-              if (ping == 0) ping = 100;
 
               PostMessage(window_handle_, WM_PING_RESULT, 0,
                          static_cast<LPARAM>(ping));
 
             } catch (...) {
               PostMessage(window_handle_, WM_PING_RESULT, 0,
-                         static_cast<LPARAM>(100));
+                         static_cast<LPARAM>(0));
             }
           }).detach();
 
