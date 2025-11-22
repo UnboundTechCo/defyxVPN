@@ -3,10 +3,6 @@
 #include <thread>
 #include "dxcore_bridge.h"
 #include "system_tray.h"
-#include "proxy_config.h"
-#include "admin_privileges.h"
-
-extern ProxyConfig g_proxy;
 
 VPNChannelHandler::VPNChannelHandler(flutter::BinaryMessenger* messenger,
                                      HWND window_handle,
@@ -90,8 +86,6 @@ void VPNChannelHandler::SetupProgressChannel() {
           std::thread([parent]() {
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->SetSystemProxy();
-            } else {
-              g_proxy.EnableProxy("127.0.0.1:5000");
             }
           }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
@@ -106,8 +100,6 @@ void VPNChannelHandler::SetupProgressChannel() {
           std::thread([parent]() {
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->ResetSystemProxy();
-            } else {
-              g_proxy.DisableProxy();
             }
           }).detach();
 
@@ -126,8 +118,6 @@ void VPNChannelHandler::SetupProgressChannel() {
           std::thread([parent]() {
             if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
               parent->dxcore_->ResetSystemProxy();
-            } else {
-              g_proxy.DisableProxy();
             }
           }).detach();
 
@@ -195,8 +185,6 @@ void VPNChannelHandler::SetupMethodChannel() {
           std::thread([this]() {
             if (system_tray_ && system_tray_->GetSystemProxy()) {
               dxcore_->ResetSystemProxy();
-            } else {
-              g_proxy.DisableProxy();
             }
           }).detach();
 
@@ -206,26 +194,7 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "prepareVPN" || method == "grantVpnPermission") {
-          bool needsAdmin = false;
-          if (system_tray_) {
-            needsAdmin = system_tray_->GetVPNMode();
-          }
-
-          if (!needsAdmin) {
-            result->Success(flutter::EncodableValue(true));
-          } else {
-            if (AdminPrivileges::IsRunningAsAdministrator()) {
-              result->Success(flutter::EncodableValue(true));
-            } else {
-              bool elevationRequested = AdminPrivileges::RequestAdministratorPrivileges(window_handle_);
-              if (elevationRequested) {
-                result->Success(flutter::EncodableValue(true));
-                PostQuitMessage(0);
-              } else {
-                result->Success(flutter::EncodableValue(false));
-              }
-            }
-          }
+          result->Success(flutter::EncodableValue(true));
           return;
         }
 
@@ -381,7 +350,6 @@ void VPNChannelHandler::SetupMethodChannel() {
 
         if (method == "stopVPN") {
           dxcore_->StopVPN();
-          g_proxy.DisableProxy();
           vpn_status_ = "disconnected";
 
           if (system_tray_) {

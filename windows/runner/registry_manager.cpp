@@ -158,3 +158,27 @@ bool RegistryManager::SetServiceMode(int mode) {
   return false;
 }
 
+bool RegistryManager::GetProxyService() const {
+  HKEY hKey;
+  if (RegOpenKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
+    DWORD value = 1;
+    DWORD bufSize = sizeof(DWORD);
+    RegQueryValueExW(hKey, L"ProxyService", nullptr, nullptr, (LPBYTE)&value, &bufSize);
+    RegCloseKey(hKey);
+    return value != 0;
+  }
+  return true;
+}
+
+bool RegistryManager::SetProxyService(bool value) {
+  HKEY hKey;
+  if (RegCreateKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, nullptr, 0,
+                      KEY_SET_VALUE, nullptr, &hKey, nullptr) == ERROR_SUCCESS) {
+    DWORD dwValue = value ? 1 : 0;
+    RegSetValueExW(hKey, L"ProxyService", 0, REG_DWORD, (const BYTE*)&dwValue, sizeof(DWORD));
+    RegCloseKey(hKey);
+    return true;
+  }
+  return false;
+}
+

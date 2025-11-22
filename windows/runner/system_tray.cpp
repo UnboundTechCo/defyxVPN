@@ -27,8 +27,8 @@ SystemTray::SystemTray()
       start_minimized_(false),
       force_close_(false),
       sound_effect_(true),
-      proxy_service_(false),
-      system_proxy_(true),
+      proxy_service_(true),
+      system_proxy_(false),
       vpn_mode_(false),
       connection_status_(L"Disconnected") {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
@@ -222,27 +222,21 @@ void SystemTray::ShowContextMenu(HWND window) {
       ExecuteAction(TrayAction::ForceClose);
       break;
     case IDM_PROXY_SERVICE:
-      if (!proxy_service_) {
-        proxy_service_ = true;
-        system_proxy_ = false;
-        vpn_mode_ = false;
-      }
+      proxy_service_ = true;
+      system_proxy_ = false;
+      vpn_mode_ = false;
       ExecuteAction(TrayAction::ProxyService);
       break;
     case IDM_SYSTEM_PROXY:
-      if (!system_proxy_) {
-        proxy_service_ = false;
-        system_proxy_ = true;
-        vpn_mode_ = false;
-      }
+      proxy_service_ = false;
+      system_proxy_ = true;
+      vpn_mode_ = false;
       ExecuteAction(TrayAction::SystemProxy);
       break;
     case IDM_VPN_MODE:
-      if (!vpn_mode_) {
-        proxy_service_ = false;
-        system_proxy_ = false;
-        vpn_mode_ = true;
-      }
+      proxy_service_ = false;
+      system_proxy_ = false;
+      vpn_mode_ = true;
       ExecuteAction(TrayAction::VPNMode);
       break;
     case IDM_INTRODUCTION:

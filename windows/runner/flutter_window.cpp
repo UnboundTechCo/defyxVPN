@@ -5,9 +5,7 @@
 #include <memory>
 
 #include "dxcore_bridge.h"
-#include "proxy_config.h"
 #include "system_tray.h"
-#include "admin_privileges.h"
 #include "registry_manager.h"
 #include "vpn_channel_handler.h"
 #include "flutter/generated_plugin_registrant.h"
@@ -21,7 +19,6 @@ FlutterWindow::FlutterWindow(const flutter::DartProject& project)
 FlutterWindow::~FlutterWindow() {}
 
 static DXCoreBridge g_dxcore;
-ProxyConfig g_proxy;
 static SystemTray* g_system_tray = nullptr;
 
 bool FlutterWindow::OnCreate() {
@@ -93,9 +90,10 @@ bool FlutterWindow::OnCreate() {
     bool soundEffect = registry.GetSoundEffect();
     system_tray_->SetSoundEffect(soundEffect);
 
+    bool proxyService = registry.GetProxyService();
     int serviceMode = registry.GetServiceMode();
     if (serviceMode == 0) {
-      system_tray_->SetProxyService(true);
+      system_tray_->SetProxyService(proxyService);
       system_tray_->SetSystemProxy(false);
       system_tray_->SetVPNMode(false);
     } else if (serviceMode == 1) {
@@ -322,6 +320,8 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
       {
         RegistryManager registry;
         registry.SetServiceMode(0);
+        bool currentState = system_tray_->GetProxyService();
+        registry.SetProxyService(currentState);
       }
       break;
 
