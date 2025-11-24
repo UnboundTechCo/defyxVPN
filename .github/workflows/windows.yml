@@ -1,0 +1,77 @@
+on:
+  workflow_call:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    outputs:
+      app_version: ${{ steps.get_version.outputs.version }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.2"
+          channel: "stable"
+          architecture: "x64"
+
+      - name: Verify Flutter version
+        run: |
+          flutter --version
+          dart --version
+          flutter doctor --verbose
+
+      - name: Get dependencies
+        run: flutter pub get
+      
+      - name: Get app version
+        id: get_version
+        uses: ./.github/actions/get-version
+  
+      - name: Generate .env
+        uses: ./.github/actions/create-env
+        with:
+          secret_blob: ${{ toJson(secrets) }}
+          var_blob: ${{ toJson(vars) }}
+
+      - name: Download Windows Framework
+        env:
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "windows/runner" | Out-Null
+          $release = Invoke-RestMethod `
+            -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest" `
+            -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
+          $asset = $release.assets | Where-Object { $_.name -eq "DXcore.zip" }
+          $asset_id = $asset.id
+          Invoke-WebRequest `
+            -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$asset_id" `
+            -Headers @{ Authorization = "token $env:GITHUB_TOKEN"; Accept = "application/octet-stream" } `
+            -OutFile "DXcore.zip"
+          Expand-Archive -Path "DXcore.zip" -DestinationPath "windows/runner" -Force
+          Remove-Item "DXcore.zip"
+          Get-ChildItem -Recurse "windows/runner"
+
+      - name: Enable Windows Desktop support
+        run: flutter config --enable-windows-desktop
+
+      - name: Build Windows Release
+        run: flutter build windows --release
+
+      - name: Zip Windows Release Output
+        shell: pwsh
+        run: |
+          $source = "build/windows/x64/runner/Release"
+          $zipPath = "build/windows/x64/runner/Release/windows-release.zip"
+          if (Test-Path $zipPath) { Remove-Item $zipPath }
+          Compress-Archive -Path "$source\*" -DestinationPath $zipPath
+
+      - name: Upload Windows Release ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-release
+          path: build/windows/x64/runner/Release/windows-release.zip

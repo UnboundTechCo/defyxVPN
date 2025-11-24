@@ -1,0 +1,97 @@
+on:
+  workflow_call:
+
+jobs:
+  release-to-telegram:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get app version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Download Android Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release
+          path: android-files/
+  
+      - name: Download Windows Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-release
+          path: windows-files/
+
+      - name: Send initial message (version + summary)
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+          VERSION: ${{ steps.get_version.outputs.version }}
+        run: |
+          TEXT="🚀 *New Build Generated*\n\n📌 *Version:* $VERSION\nIncluded Platforms:\n• Android\n• Windows\n\nSending all build files..."
+
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d "{\"chat_id\":\"$CHAT\",\"text\":\"$TEXT\",\"parse_mode\":\"Markdown\"}" \
+            "https://api.telegram.org/bot$BOT/sendMessage"
+
+      - name: Send all Android + Windows files
+        env:
+          BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          MAX_SIZE=$((50 * 1024 * 1024)) # 50MB
+
+          send_file() {
+            FILE="$1"
+            DESC="$2"
+            BASENAME=$(basename "$FILE")
+
+            if [ ! -f "$FILE" ]; then
+              echo "File not found: $FILE"
+              return
+            fi
+
+            FILE_SIZE=$(stat -c%s "$FILE")
+
+            if [ "$FILE_SIZE" -le "$MAX_SIZE" ]; then
+              echo "Uploading (raw): $BASENAME ($((FILE_SIZE/1024/1024)) MB)"
+              curl -s -F chat_id="$CHAT" \
+                   -F document=@"$FILE" \
+                   -F caption="$DESC" \
+                   "https://api.telegram.org/bot$BOT/sendDocument"
+              return
+            fi
+
+            echo "File $BASENAME is too large ($((FILE_SIZE/1024/1024)) MB). Zipping..."
+
+            ZIP_PATH="${FILE}.zip"
+            zip -j "$ZIP_PATH" "$FILE" >/dev/null
+
+            ZIP_SIZE=$(stat -c%s "$ZIP_PATH")
+
+            if [ "$ZIP_SIZE" -le "$MAX_SIZE" ]; then
+              echo "Uploading ZIP: $(basename "$ZIP_PATH") ($((ZIP_SIZE/1024/1024)) MB)"
+
+              curl -s -F chat_id="$CHAT" \
+                   -F document=@"$ZIP_PATH" \
+                   -F caption="$DESC (ZIPPED)" \
+                   "https://api.telegram.org/bot$BOT/sendDocument"
+            else
+              echo "Skipping $BASENAME. ZIP is still too large ($((ZIP_SIZE/1024/1024)) MB)"
+            fi
+          }
+
+          echo "=== Sending Android Files ==="
+          find android-files -type f | while read -r f; do
+            send_file "$f" "📱 Android Build File"
+          done
+
+
+          echo "=== Sending Windows Files ==="
+          find windows-files -type f | while read -r f; do
+            send_file "$f" "🖥 Windows Build File"
+          done

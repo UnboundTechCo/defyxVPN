@@ -1,0 +1,17 @@
+name: "Get App Version"
+description: "Reads version from pubspec.yaml"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Run Python version extractor
+      id: get_version
+      shell: bash
+      run: |
+        VERSION=$(python3 "${{ github.action_path }}/get_version.py")
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+outputs:
+  version:
+    description: "App version (without +build)"
+    value: ${{ steps.get_version.outputs.version }}
