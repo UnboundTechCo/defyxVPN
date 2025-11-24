@@ -12,7 +12,7 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
-import 'package:defyx_vpn/shared/services/vibration_service.dart';
+import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -23,8 +23,8 @@ import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
-  final vibrationService = VibrationService();
   final analyticsService = FirebaseAnalyticsService();
+  final alertService = AlertService();
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -32,6 +32,7 @@ class VPN {
   }
 
   VPN._internal();
+  String? _lastRoute;
 
   final _vpnBridge = VpnBridge();
   final _networkStatus = NetworkStatus();
@@ -52,7 +53,7 @@ class VPN {
 
     _container?.read(settingsProvider.notifier).saveState();
 
-    vibrationService.init();
+    alertService.init();
     _loadChangeRootListener();
     log.logAppVersion();
     final now = DateTime.now();
@@ -68,10 +69,26 @@ class VPN {
     _vpnSub?.cancel();
   }
 
+  Future<void> autoConnect() async {
+    final connectionState = _container?.read(connectionStateProvider);
+
+    if (connectionState?.status == ConnectionStatus.disconnected) {
+      log.addLog('[INFO] Auto-connect triggered');
+      await _connect();
+    } else {
+      log.addLog(
+          '[INFO] Auto-connect skipped - already connected or connecting');
+    }
+  }
+
   void _loadChangeRootListener() {
     final router = _container?.read(routerProvider);
     router?.routeInformationProvider.addListener(() {
       final currentRoute = _container?.read(currentRouteProvider);
+      if (currentRoute == _lastRoute) {
+        return;
+      }
+      _lastRoute = currentRoute;
       if (currentRoute == DefyxVPNRoutes.main.route) {
         _updatePing();
       }
@@ -90,7 +107,7 @@ class VPN {
       loggerNotifier.setConnecting();
 
       if (step > 1) {
-        vibrationService.vibrateHeartbeat();
+        alertService.heartbeat();
       }
     }
 
@@ -146,12 +163,12 @@ class VPN {
       loggerNotifier?.setLoading();
     });
 
-    vibrationService.vibrateHeartbeat();
+    alertService.heartbeat();
 
     final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
-      vibrationService.vibrateError();
+      alertService.error();
       return;
     }
 
@@ -177,7 +194,7 @@ class VPN {
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
-    vibrationService.vibrateError();
+    alertService.error();
   }
 
   Future<void> _onSuccessConnect() async {
@@ -193,7 +210,7 @@ class VPN {
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
-    vibrationService.vibrateSuccess();
+    alertService.success();
 
     final settings = _container?.read(settingsProvider.notifier);
     final groupState = _container?.read(groupStateProvider);
@@ -215,7 +232,8 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state =
+        await _networkStatus.getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -267,6 +285,8 @@ class VPN {
         return await _vpnBridge.grantVpnPermission();
       case "ios":
         return await _vpnBridge.connectVpn();
+      case "windows":
+        return await _vpnBridge.grantVpnPermission();
       default:
         return false;
     }
@@ -341,6 +361,7 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state = await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state =
+        await _networkStatus.getPing();
   }
 }

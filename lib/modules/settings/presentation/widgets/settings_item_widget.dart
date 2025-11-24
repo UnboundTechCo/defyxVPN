@@ -1,5 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
-import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -76,7 +76,7 @@ class SettingsItemWidget extends StatelessWidget {
                       BlendMode.srcIn,
                     ),
                   ),
-                  onTap: () => ToastUtil.showToast(item.description ?? ""),
+                  onTap: () => SettingsToastMessage.show(context,item.description ?? ""),
                 )
             ],
           ),

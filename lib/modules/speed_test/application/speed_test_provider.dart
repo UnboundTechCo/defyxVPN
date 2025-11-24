@@ -5,7 +5,7 @@ import 'package:defyx_vpn/core/network/http_client_interface.dart';
 import 'package:defyx_vpn/modules/speed_test/data/api/speed_test_api.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
-import 'package:defyx_vpn/shared/services/vibration_service.dart';
+import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/cloudflare_logger_service.dart';
@@ -74,7 +74,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final Ref _ref;
   late final SpeedTestApi _api;
   late final CloudflareLoggerService _logger;
-  late final VibrationService _vibrationService;
+  late final AlertService _alertService;
 
   bool _isTestCanceled = false;
   Timer? _testTimer;
@@ -96,8 +96,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     _api = SpeedTestApi(dio);
     _logger = CloudflareLoggerService(_api);
-    _vibrationService = VibrationService();
-    _vibrationService.init();
+    _alertService = AlertService();
+    _alertService.init();
   }
 
   String _generateMeasurementId() {
@@ -191,7 +191,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     } catch (e) {
       debugPrint('❌ Speed test error: $e');
       _stopConnectionMonitoring();
-      _vibrationService.vibrateError();
+      _alertService.error();
       state = state.copyWith(
         errorMessage: 'Speed test failed. Please try again.',
         step: SpeedTestStep.ready,
@@ -417,7 +417,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     final isStable = ResultsCalculatorService.checkConnectionStability(state.result);
 
     if (!isStable) {
-      _vibrationService.vibrateError();
+      _alertService.error();
       state = state.copyWith(
         step: SpeedTestStep.ready,
         isConnectionStable: false,

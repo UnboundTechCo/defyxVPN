@@ -19,8 +19,7 @@ class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
   final _vpnBridge = VpnBridge();
   static var _allowToUpdate = true;
-  static final _updateFlowlinePerios =
-      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "1");
+  static final _updateFlowlinePerios = int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "1");
 
   FlowlineService(this._secureStorage);
 
