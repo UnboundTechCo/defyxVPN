@@ -15,6 +15,7 @@ jobs:
         uses: ./.github/actions/get-version
 
       - name: Create tag if not exists
+        id: create_tag
         run: |
           TAG="v${{ steps.get_version.outputs.version }}"
           echo "Detected tag: $TAG"
