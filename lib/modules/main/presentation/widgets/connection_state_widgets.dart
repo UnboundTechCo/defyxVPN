@@ -143,7 +143,6 @@ class PingIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final animationService = AnimationService();
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -154,26 +153,11 @@ class PingIndicator extends ConsumerWidget {
           builder: (context, ref, child) {
             final ping = ref.watch(pingProvider);
             final pingLoading = ref.watch(pingLoadingProvider);
+            final isLoading = pingLoading || ping.isEmpty || ping == "0";
+            if (isLoading) {
+              return _pingLoading();
+            }
 
-            if (pingLoading) {
-              return Shimmer.fromColors(
-                baseColor: const Color(0xFF307065),
-                highlightColor: const Color(0xFF1B483F),
-                enabled: animationService.shouldAnimate(),
-                child: PingPlaceholder(width: 52.w),
-              );
-            }
-            if (ping.isEmpty) {
-              return Text(
-                '0 ms',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
-              );
-            }
             return Row(
               children: [
                 SizedBox(width: 10.w),
@@ -200,6 +184,16 @@ class PingIndicator extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _pingLoading() {
+    final animationService = AnimationService();
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFF307065),
+      highlightColor: const Color(0xFF1B483F),
+      enabled: animationService.shouldAnimate(),
+      child: PingPlaceholder(width: 52.w),
     );
   }
 }
