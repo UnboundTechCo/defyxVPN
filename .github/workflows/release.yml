@@ -57,7 +57,7 @@ jobs:
           path: ios-release/
 
       - name: Create GitHub Release
-        if: steps.create_tag.outputs.created == 'false'
+        if: steps.create_tag.outputs.created == 'true'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -72,7 +72,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Delete existing release assets
-        if: steps.create_tag.outputs.created == 'true'
+        if: steps.create_tag.outputs.created == 'false'
         uses: mknejp/delete-release-assets@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
           assets: "*"
 
       - name: Update GitHub Release
-        if: steps.create_tag.outputs.created == 'true'
+        if: steps.create_tag.outputs.created == 'false'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
