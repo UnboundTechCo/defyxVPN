@@ -83,7 +83,7 @@ class ProgressArcStack extends StatelessWidget {
           ),
         if (centerContent != null)
           Positioned(
-            top: 100.h,
+            top: 90.h,
             child: centerContent!,
           ),
         if (showButton && button != null)

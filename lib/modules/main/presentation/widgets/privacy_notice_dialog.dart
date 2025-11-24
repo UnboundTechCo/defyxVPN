@@ -43,7 +43,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
     String message =
         'This app does not collect, store, or transmit any personal information to its servers.\n\n'
         'Only a small amount of non-personal data (such as your internet provider’s name) may be stored locally on your device to improve connection performance for future sessions.\n';
-    if (Platform.isIOS) {
+    if (Platform.isIOS || Platform.isAndroid) {
       message += '\nBy continuing,\nyou agree to install the VPN profile.';
     }
 

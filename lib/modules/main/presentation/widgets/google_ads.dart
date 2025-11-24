@@ -1,7 +1,6 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
-import 'package:defyx_vpn/core/utils/screen_security.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +22,6 @@ class GoogleAdsState {
   final bool showCountdown;
   final bool shouldDisposeAd;
   final bool adLoadFailed;
-  final bool screenSecurityEnabled;
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
@@ -31,7 +29,6 @@ class GoogleAdsState {
     this.showCountdown = true,
     this.shouldDisposeAd = false,
     this.adLoadFailed = false,
-    this.screenSecurityEnabled = false,
   });
 
   GoogleAdsState copyWith({
@@ -40,7 +37,6 @@ class GoogleAdsState {
     bool? showCountdown,
     bool? shouldDisposeAd,
     bool? adLoadFailed,
-    bool? screenSecurityEnabled,
   }) {
     return GoogleAdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
@@ -48,8 +44,6 @@ class GoogleAdsState {
       showCountdown: showCountdown ?? this.showCountdown,
       shouldDisposeAd: shouldDisposeAd ?? this.shouldDisposeAd,
       adLoadFailed: adLoadFailed ?? this.adLoadFailed,
-      screenSecurityEnabled:
-          screenSecurityEnabled ?? this.screenSecurityEnabled,
     );
   }
 }
@@ -78,7 +72,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
           shouldDisposeAd: true,
           nativeAdIsLoaded: false,
         );
-        disableScreenSecurity();
         timer.cancel();
       }
     });
@@ -94,7 +87,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
         state.showCountdown &&
         state.countdown == _countdownDuration) {
       startCountdownTimer();
-      enableScreenSecurity();
     }
   }
 
@@ -103,37 +95,19 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       adLoadFailed: true,
       nativeAdIsLoaded: false,
     );
-    disableScreenSecurity();
   }
 
   void acknowledgeDisposal() {
     state = state.copyWith(shouldDisposeAd: false);
-    disableScreenSecurity();
   }
 
   void resetState() {
     state = const GoogleAdsState();
-    disableScreenSecurity();
-  }
-
-  Future<void> enableScreenSecurity() async {
-    if (!state.screenSecurityEnabled) {
-      await ScreenSecurity.enableScreenSecurity();
-      state = state.copyWith(screenSecurityEnabled: true);
-    }
-  }
-
-  Future<void> disableScreenSecurity() async {
-    if (state.screenSecurityEnabled) {
-      await ScreenSecurity.disableScreenSecurity();
-      state = state.copyWith(screenSecurityEnabled: false);
-    }
   }
 
   @override
   void dispose() {
     _countdownTimer?.cancel();
-    disableScreenSecurity();
     super.dispose();
   }
 }
@@ -170,7 +144,8 @@ class AdHelper {
     } else if (Platform.isIOS) {
       return dotenv.env['IOS_AD_UNIT_ID'] ?? '';
     } else {
-      throw UnsupportedError('Unsupported platform');
+      return "";
+      // throw UnsupportedError('Unsupported platform');
     }
   }
 }
@@ -202,6 +177,17 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     if (_isDisposed || _hasInitialized) return;
 
     try {
+      // Disable Google Ads on non-mobile platforms.
+      if (!(Platform.isAndroid || Platform.isIOS)) {
+        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+        if (!_isDisposed) {
+          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+        }
+        return;
+      }
+
       final shouldShowGoogle = await _shouldShowGoogleAds(ref);
 
       if (_isDisposed) return;
@@ -238,6 +224,17 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     _nativeAd = null;
 
     try {
+      if (_adUnitId.isEmpty) {
+        // No ad unit id available for this platform; fall back to custom ads.
+        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+        if (!_isDisposed) {
+          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+        }
+        return;
+      }
+
       _nativeAd = NativeAd(
         adUnitId: _adUnitId,
         listener: NativeAdListener(

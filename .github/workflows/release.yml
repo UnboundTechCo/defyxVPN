@@ -56,6 +56,7 @@ jobs:
           path: ios-release/
 
       - name: Create GitHub Release
+        if: steps.create_tag.outputs.created == 'false'
         id: create_release
         uses: softprops/action-gh-release@v1
         with:
@@ -68,7 +69,27 @@ jobs:
           body_path: release.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  
+
+      - name: Delete existing release assets
+        if: steps.create_tag.outputs.created == 'true'
+        uses: mknejp/delete-release-assets@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: "v${{ steps.get_version.outputs.version }}"
+          assets: "*"
+
+      - name: Update GitHub Release
+        if: steps.create_tag.outputs.created == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: "v${{ steps.get_version.outputs.version }}"
+          name: "v${{ steps.get_version.outputs.version }}"
+          files: |
+            android-release/**
+            windows-release/**
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload AAB to Google Play Store
         if: steps.create_tag.outputs.created == 'true'
         uses: r0adkll/upload-google-play@v1
