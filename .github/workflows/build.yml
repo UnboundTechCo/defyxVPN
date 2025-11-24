@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - release
+      - fix-android-vesion-bug
   workflow_dispatch:
     inputs:
       send_telegram:
