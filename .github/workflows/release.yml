@@ -65,7 +65,7 @@ jobs:
           name: "v${{ steps.get_version.outputs.version }}"
           draft: true
           files: |
-            android-release/**
+            android-release/**/*.apk
             windows-release/**
           body_path: release.md
         env:
@@ -86,7 +86,7 @@ jobs:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           name: "v${{ steps.get_version.outputs.version }}"
           files: |
-            android-release/**.apk
+            android-release/**/*.apk
             windows-release/**
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -97,7 +97,7 @@ jobs:
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.unboundtech.defyxvpn
-          releaseFiles: android-release/*.aab
+          releaseFiles: android-release/**/*.aab
           track: internal
           status: draft
 
