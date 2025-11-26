@@ -16,6 +16,16 @@ jobs:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Accept Android SDK licenses
+        run: yes | sudo "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses
+
+      - name: Install NDK 28
+        run: |
+          yes | sudo "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.0.12674087"
+
+      - name: Set NDK version
+        run: echo "ndkVersion=28.0.12674087" >> android/local.properties
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
