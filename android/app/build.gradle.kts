@@ -17,7 +17,7 @@ plugins {
 android {
     namespace = "de.unboundtech.defyxvpn"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"
+    ndkVersion = "28.0.12674087"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
