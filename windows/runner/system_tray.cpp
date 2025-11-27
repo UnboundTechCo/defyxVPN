@@ -30,7 +30,7 @@ SystemTray::SystemTray()
       proxy_service_(true),
       system_proxy_(false),
       vpn_mode_(false),
-      connection_status_(L"Disconnected") {
+      connection_status_(L"Connect") {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
 }
 

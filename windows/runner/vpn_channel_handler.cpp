@@ -88,7 +88,7 @@ void VPNChannelHandler::SetupProgressChannel() {
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
             parent->system_tray_->UpdateTooltip(L"DefyxVPN - Connected");
-            parent->system_tray_->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
+            parent->system_tray_->UpdateConnectionStatus(L"Disconnect");
           }
 
           std::thread([parent]() {
@@ -128,7 +128,7 @@ void VPNChannelHandler::SetupProgressChannel() {
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             parent->system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
-            parent->system_tray_->UpdateConnectionStatus(L"Disconnected");
+            parent->system_tray_->UpdateConnectionStatus(L"Connect");
           }
 
           std::thread([parent]() {
@@ -189,6 +189,19 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "disconnect") {
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnecting";
+          }
+
+          if (system_tray_) {
+            system_tray_->UpdateConnectionStatus(L"Disconnecting ...");
+            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+            system_tray_->UpdateTooltip(L"DefyxVPN - Disconnecting ...");
+          }
+
+          SendStatus();
+
           dxcore_->StopVPN();
           dxcore_->Stop();
           Sleep(50);
@@ -201,7 +214,7 @@ void VPNChannelHandler::SetupMethodChannel() {
           if (system_tray_) {
             system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
-            system_tray_->UpdateConnectionStatus(L"Disconnected");
+            system_tray_->UpdateConnectionStatus(L"Connect");
           }
 
           std::thread([this]() {
@@ -363,8 +376,8 @@ void VPNChannelHandler::SetupMethodChannel() {
 
             if (system_tray_) {
               system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
-              system_tray_->UpdateTooltip(L"DefyxVPN - Connecting...");
-              system_tray_->UpdateConnectionStatus(L"Connecting...");
+              system_tray_->UpdateTooltip(L"DefyxVPN - Connecting ...");
+              system_tray_->UpdateConnectionStatus(L"Connecting ...");
             }
 
             result->Success(flutter::EncodableValue(true));
@@ -375,6 +388,19 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "stopVPN") {
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnecting";
+          }
+
+          if (system_tray_) {
+            system_tray_->UpdateConnectionStatus(L"Disconnecting ...");
+            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+            system_tray_->UpdateTooltip(L"DefyxVPN - Disconnecting ...");
+          }
+
+          SendStatus();
+
           dxcore_->StopVPN();
           Sleep(50);
 
@@ -384,7 +410,7 @@ void VPNChannelHandler::SetupMethodChannel() {
           }
 
           if (system_tray_) {
-            system_tray_->UpdateConnectionStatus(L"Disconnected");
+            system_tray_->UpdateConnectionStatus(L"Connect");
             system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
           }
