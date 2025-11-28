@@ -72,11 +72,11 @@ jobs:
     secrets: inherit
   
   release-to-telegram:
-    needs: android
+    needs: [android, windows]
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    needs: android
+    needs: [android, windows]
     uses: ./.github/workflows/release.yml
     secrets: inherit
