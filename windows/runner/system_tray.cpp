@@ -30,7 +30,7 @@ SystemTray::SystemTray()
       proxy_service_(true),
       system_proxy_(false),
       vpn_mode_(false),
-      connection_status_(L"Connect") {
+      connection_status_(ConnectionStatus::Connect) {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
 }
 
@@ -145,8 +145,11 @@ void SystemTray::ShowContextMenu(HWND window) {
   AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"DefyxVPN");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
-  std::wstring status_text = connection_status_;
-  AppendMenu(menu, MF_STRING, IDM_CONNECTION_STATUS, status_text.c_str());
+  std::wstring status_text = GetConnectionStatusText();
+  bool isTransitioning = (connection_status_ == ConnectionStatus::Connecting ||
+                          connection_status_ == ConnectionStatus::Disconnecting);
+  UINT status_flags = MF_STRING | (isTransitioning ? MF_GRAYED : 0);
+  AppendMenu(menu, status_flags, IDM_CONNECTION_STATUS, status_text.c_str());
   AppendMenu(menu, MF_STRING, IDM_PREFERENCES, L"Preferences");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
@@ -387,7 +390,28 @@ void SystemTray::UpdateIcon(TrayIconStatus status) {
   }
 }
 
-void SystemTray::UpdateConnectionStatus(const std::wstring& status) {
+std::wstring SystemTray::ConnectionStatusToString(ConnectionStatus status) {
+  switch (status) {
+    case ConnectionStatus::Connect:
+      return L"Connect";
+    case ConnectionStatus::Disconnect:
+      return L"Disconnect";
+    case ConnectionStatus::Connecting:
+      return L"Connecting ...";
+    case ConnectionStatus::Disconnecting:
+      return L"Disconnecting ...";
+    case ConnectionStatus::Error:
+      return L"Error";
+    default:
+      return L"Connect";
+  }
+}
+
+std::wstring SystemTray::GetConnectionStatusText() const {
+  return ConnectionStatusToString(connection_status_);
+}
+
+void SystemTray::UpdateConnectionStatus(ConnectionStatus status) {
   connection_status_ = status;
 }
 
@@ -424,6 +448,6 @@ void SystemTray::SetVPNMode(bool value) {
 }
 
 bool SystemTray::IsVPNDisconnected() const {
-  return connection_status_ == L"Connect";
+  return connection_status_ == ConnectionStatus::Connect;
 }
 

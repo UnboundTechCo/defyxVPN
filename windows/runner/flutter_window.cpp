@@ -394,7 +394,7 @@ void FlutterWindow::HandleTrayAction(SystemTray::TrayAction action) {
             &flutter::StandardMethodCodec::GetInstance());
 
         flutter::EncodableMap args;
-        std::wstring wideStatus = system_tray_->GetConnectionStatus();
+        std::wstring wideStatus = system_tray_->GetConnectionStatusText();
 
         int size_needed = WideCharToMultiByte(CP_UTF8, 0, wideStatus.c_str(),
                                              (int)wideStatus.length(), NULL, 0, NULL, NULL);
