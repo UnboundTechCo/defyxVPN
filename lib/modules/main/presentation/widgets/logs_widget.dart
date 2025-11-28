@@ -152,13 +152,50 @@ class _ShakeLogDetectorState extends ConsumerState<ShakeLogDetector> {
   }
 }
 
-class LogPopupContent extends ConsumerWidget {
+class LogPopupContent extends ConsumerStatefulWidget {
   const LogPopupContent({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LogPopupContent> createState() => _LogPopupContentState();
+}
+
+class _LogPopupContentState extends ConsumerState<LogPopupContent> {
+  final ScrollController scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final logsNotifier = ref.read(logsProvider.notifier);
+
+      final allLogs = Log().getLogs();
+
+      if (allLogs.isNotEmpty) {
+        List<String> logEntries = allLogs.split('\n');
+        List<String> filteredLogs = logEntries.where((log) => log.isNotEmpty).toList();
+
+        if (filteredLogs.isNotEmpty) {
+          logsNotifier._existingLogs.clear();
+          logsNotifier._existingLogs.addAll(filteredLogs);
+          logsNotifier.state = logsNotifier.state.copyWith(logs: filteredLogs);
+        }
+      }
+
+      logsNotifier.startAutoRefresh();
+    });
+  }
+
+  @override
+  void dispose() {
+    ProviderContainer().read(logsProvider.notifier).stopAutoRefresh();
+    scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final logsState = ref.watch(logsProvider);
-    final ScrollController scrollController = ScrollController();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (scrollController.hasClients && logsState.logs.isNotEmpty) {
@@ -418,6 +455,7 @@ class _LogScreenState extends ConsumerState<LogScreen> {
   void _showLogPopup() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(

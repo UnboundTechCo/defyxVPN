@@ -12,6 +12,7 @@ class VpnBridge {
 
   Future<void> setAsnName() => _methodChannel.invokeMethod('setAsnName');
 
+  // Get ping measurement synchronously
   Future<String> getPing() async {
     final ping = await _methodChannel.invokeMethod('calculatePing');
     return ping.toString();

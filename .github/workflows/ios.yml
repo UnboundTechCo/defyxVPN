@@ -1,0 +1,93 @@
+name: Build iOS
+
+on:
+  workflow_call:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.35.2"
+
+      - name: Download iOS Framework
+        env:
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+        run: |
+          mkdir -p ios/Frameworks
+          ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
+            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
+            | jq -r '.assets[] | select(.name == "IosDXcore.xcframework.zip") | .id')
+
+          curl -L \
+            -H "Authorization: token $GITHUB_TOKEN" \
+            -H "Accept: application/octet-stream" \
+            "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
+            -o ios/IosDXcore.xcframework.zip
+
+          cd ios
+          unzip -o IosDXcore.xcframework.zip
+          mv build/ios/* .
+          rm -rf build IosDXcore.xcframework.zip
+          ls -la
+
+      - name: Get app version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Generate .env
+        uses: ./.github/actions/create-env
+        with:
+          secret_blob: ${{ toJson(secrets) }}
+          var_blob: ${{ toJson(vars) }}
+
+      - name: Import iOS certificates
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+
+      - name: Install provisioning profiles
+        run: |
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "${{ secrets.IOS_PROVISION_MAIN }}"   | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/main.mobileprovision
+          echo "${{ secrets.IOS_PROVISION_TUNNEL }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/tunnel.mobileprovision
+
+      - name: Build Flutter IPA (signed by Xcode)
+        run: |
+          chmod +x scripts/build_release.sh
+          bash scripts/build_release.sh <<EOF
+          2
+          2
+          4
+          EOF
+
+      - name: Fix Signing (Apply identity + team)
+        run: |
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
+
+      - name: Upload IPA to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          app-path: build/ios/ipa/*.ipa
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: build/ios/ipa/*.ipa

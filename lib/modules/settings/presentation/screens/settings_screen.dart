@@ -6,32 +6,75 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/settings_group_widget.dart';
 
-class SettingsScreen extends ConsumerWidget {
+class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends ConsumerState<SettingsScreen> {
+  late final ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
 
     return MainScreenBackground(
       connectionStatus: connectionState.status,
       child: SafeArea(
         bottom: false,
-        child: Center(
-          child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 393.w),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(height: 45.h),
-                    _buildHeaderSection(),
-                    SizedBox(height: 60.h),
-                    _buildSettingsContent(ref, context),
-                  ],
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return Scrollbar(
+              controller: _scrollController,
+              thumbVisibility: false,
+              thickness: 6.0,
+              radius: const Radius.circular(8.0),
+              interactive: true,
+              child: SingleChildScrollView(
+                controller: _scrollController,
+                physics: const ClampingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
                 ),
-              )),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: constraints.maxHeight,
+                  ),
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: 393.w),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 24.w),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            SizedBox(height: 45.h),
+                            _buildHeaderSection(),
+                            SizedBox(height: 60.h),
+                            _buildSettingsContent(ref, context),
+                            SizedBox(height: 100.h),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -102,7 +145,8 @@ class SettingsScreen extends ConsumerWidget {
                 },
                 onReorder: group.id == 'connection_method'
                     ? (oldIndex, newIndex) {
-                        settingsNotifier.reorderConnectionMethodItems(oldIndex, newIndex);
+                        settingsNotifier.reorderConnectionMethodItems(
+                            oldIndex, newIndex);
                       }
                     : null,
                 onReset: group.id == 'connection_method'
