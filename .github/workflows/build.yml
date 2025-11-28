@@ -5,8 +5,8 @@ permissions:
 
 on:
   push:
-    branches:
-      - release
+    branches: release
+
   workflow_dispatch:
     inputs:
       send_telegram:
@@ -72,11 +72,11 @@ jobs:
     secrets: inherit
   
   release-to-telegram:
-    needs: [android, windows]
+    needs: android
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    needs: [android, windows]
+    needs: android
     uses: ./.github/workflows/release.yml
     secrets: inherit
