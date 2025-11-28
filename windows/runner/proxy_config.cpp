@@ -16,7 +16,7 @@ ProxyConfig::~ProxyConfig() {
   }
 }
 
-bool ProxyConfig::EnableProxy(const std::string& socks_address) {
+bool ProxyConfig::EnableProxy(const std::string& proxy_address, bool use_socks) {
   if (proxy_enabled_) {
     return true;  // Already enabled
   }
@@ -45,8 +45,13 @@ bool ProxyConfig::EnableProxy(const std::string& socks_address) {
     }
   }
 
-  // Enable proxy with SOCKS5
-  std::string proxy_setting = "socks=" + socks_address;
+  // Enable proxy with HTTP or SOCKS5
+  std::string proxy_setting;
+  if (use_socks) {
+    proxy_setting = "socks=" + proxy_address;
+  } else {
+    proxy_setting = proxy_address;
+  }
   
   if (SetInternetProxy(true, proxy_setting)) {
     proxy_enabled_ = true;
