@@ -17,7 +17,7 @@ plugins {
 android {
     namespace = "de.unboundtech.defyxvpn"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "28.0.12674087"
+    ndkVersion = "29.0.13846066"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -25,21 +25,14 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = JavaVersion.VERSION_11.toString()
     }
-
     defaultConfig {
         applicationId = "de.unboundtech.defyxvpn"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        externalNativeBuild {
-            cmake {
-                arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-            }
-        }
     }
 
     signingConfigs {

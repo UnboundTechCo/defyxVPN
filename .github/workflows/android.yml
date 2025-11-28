@@ -19,12 +19,14 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | sudo "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --licenses
 
-      - name: Install NDK 28
+      - name: Install NDK 29
         run: |
-          yes | sudo "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.0.12674087"
+          yes | sudo "${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager" --install "ndk;29.0.13846066"
 
-      - name: Set NDK version
-        run: echo "ndkVersion=28.0.12674087" >> android/local.properties
+      - name: Force Gradle to use NDK 29 (absolute override)
+        run: |
+          echo "ndk.dir=${ANDROID_HOME}/ndk/29.0.13846066" >> android/local.properties
+          echo "ndkVersion=29.0.13846066" >> android/local.properties
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
@@ -47,8 +49,11 @@ jobs:
         id: get_version
         uses: ./.github/actions/get-version
 
-      - name: Clear Pub cache
-        run: flutter pub cache clean
+      - name: Clean Flutter & Gradle caches
+        run: |
+          flutter clean
+          rm -rf ~/.gradle
+          rm -rf android/.gradle
 
       - name: Download Android Framework
         env:
@@ -71,7 +76,6 @@ jobs:
           unzip -o DXcore-android.zip
           mv build/android/* .
           rm DXcore-android.zip
-          ls -la
 
       - name: Generate .env
         uses: ./.github/actions/create-env
@@ -98,9 +102,8 @@ jobs:
           2
           4
           4
-
           EOF
-  
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
