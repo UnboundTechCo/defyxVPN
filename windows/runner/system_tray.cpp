@@ -166,9 +166,16 @@ void SystemTray::ShowContextMenu(HWND window) {
 
   // Section 4: Service Mode
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Service Mode");
+  bool isDisconnected = IsVPNDisconnected();
   UINT proxy_flags = MF_STRING | (proxy_service_ ? MF_CHECKED : MF_UNCHECKED);
   UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED);
   UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
+
+  if (!isDisconnected) {
+    proxy_flags |= MF_GRAYED;
+    system_flags |= MF_GRAYED;
+  }
+
   AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
   AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
   AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (Upcoming)");
@@ -414,5 +421,9 @@ void SystemTray::SetSystemProxy(bool value) {
 
 void SystemTray::SetVPNMode(bool value) {
   vpn_mode_ = value;
+}
+
+bool SystemTray::IsVPNDisconnected() const {
+  return connection_status_ == L"Connect";
 }
 

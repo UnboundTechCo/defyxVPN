@@ -63,6 +63,7 @@ class SystemTray {
   bool GetSystemProxy() const { return system_proxy_; }
   bool GetVPNMode() const { return vpn_mode_; }
   std::wstring GetConnectionStatus() const { return connection_status_; }
+  bool IsVPNDisconnected() const;
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
