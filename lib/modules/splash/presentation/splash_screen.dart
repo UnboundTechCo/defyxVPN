@@ -21,11 +21,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     _navigateToMain();
   }
 
-  void _navigateToMain() async {
+  Future<void> _navigateToMain() async {
+    final router = GoRouter.of(context);
     final vpnData = await ref.read(vpnDataProvider.future);
+
     final vpnBridge = VpnBridge();
-    if (vpnData.isVPNEnabled && mounted) {
-      context.go('/main');
+    if (vpnData.isVPNEnabled) {
+      router.go('/main');
       return;
     }
 
@@ -34,16 +36,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (ref.context.mounted && vpnIsPrepared) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.initVPN();
-      if (mounted) {
-        context.go('/main');
-        return;
-      }
+      router.go('/main');
+      return;
     }
 
     if (!vpnIsPrepared) {
       await Future.delayed(const Duration(seconds: 3));
     }
-    if (mounted) context.go('/main');
+    router.go('/main');
   }
 
   @override

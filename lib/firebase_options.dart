@@ -40,39 +40,43 @@ class DefaultFirebaseOptions {
   }
 
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    authDomain: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebaseapp.com',
-    storageBucket: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
-    measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID'] ?? '',
-  );
+        apiKey: dotenv.env['FIREBASE_WEB_API_KEY'] ?? '',
+        appId: dotenv.env['FIREBASE_WEB_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
+        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+        authDomain: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebaseapp.com',
+        storageBucket:
+            '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
+        measurementId: dotenv.env['FIREBASE_WEB_MEASUREMENT_ID'] ?? '',
+      );
 
   static FirebaseOptions get android => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
-  );
+        apiKey: dotenv.env['FIREBASE_ANDROID_API_KEY'] ?? '',
+        appId: dotenv.env['FIREBASE_ANDROID_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
+        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+        storageBucket:
+            '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
+      );
 
   static FirebaseOptions get ios => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    storageBucket: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
-    iosBundleId: 'de.unboundtech.defyxvpn',
-  );
+        apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',
+        appId: dotenv.env['FIREBASE_IOS_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
+        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+        storageBucket:
+            '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
+        iosBundleId: 'de.unboundtech.defyxvpn',
+      );
 
   static FirebaseOptions get windows => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY'] ?? '',
-    appId: dotenv.env['FIREBASE_WINDOWS_APP_ID'] ?? '',
-    messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
-    projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
-    authDomain: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebaseapp.com',
-    storageBucket: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
-    measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'] ?? '',
-  );
+        apiKey: dotenv.env['FIREBASE_WINDOWS_API_KEY'] ?? '',
+        appId: dotenv.env['FIREBASE_WINDOWS_APP_ID'] ?? '',
+        messagingSenderId: dotenv.env['FIREBASE_PROJECT_NUMBER'] ?? '',
+        projectId: dotenv.env['FIREBASE_PROJECT_ID'] ?? '',
+        authDomain: '${dotenv.env['FIREBASE_PROJECT_ID']}.firebaseapp.com',
+        storageBucket:
+            '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
+        measurementId: dotenv.env['FIREBASE_WINDOWS_MEASUREMENT_ID'] ?? '',
+      );
 }
