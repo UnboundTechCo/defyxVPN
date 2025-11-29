@@ -88,7 +88,7 @@ void VPNChannelHandler::SetupProgressChannel() {
           }
 
           std::thread([]() {
-            g_proxy.EnableProxy("127.0.0.1:5000");
+            g_proxy.EnableProxy("127.0.0.1:5000", false);
           }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
           parent->vpn_status_ = "disconnected";

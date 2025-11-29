@@ -8,8 +8,8 @@ class ProxyConfig {
   ProxyConfig();
   ~ProxyConfig();
 
-  // Enable system-wide proxy for the SOCKS5 server
-  bool EnableProxy(const std::string& socks_address);
+  // Enable system-wide proxy for the HTTP/SOCKS5 server
+  bool EnableProxy(const std::string& proxy_address, bool use_socks = false);
   
   // Disable system-wide proxy and restore original settings
   bool DisableProxy();
