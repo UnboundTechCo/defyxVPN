@@ -51,6 +51,12 @@ class VpnBridge {
     return flowLine ?? '';
   }
 
+  Future<String> getCachedFlowLine() async {
+    final flowLine =
+        await _methodChannel.invokeMethod<String>('getCachedFlowLine');
+    return flowLine ?? '';
+  }
+
   Future<String> getFlag() async {
     final flag = await _methodChannel.invokeMethod<String>('getFlag');
     return flag ?? '';

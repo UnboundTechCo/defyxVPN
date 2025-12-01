@@ -19,7 +19,8 @@ class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
   final _vpnBridge = VpnBridge();
   static var _allowToUpdate = true;
-  static final _updateFlowlinePerios = int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "1");
+  static final _updateFlowlinePerios =
+      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60");
 
   FlowlineService(this._secureStorage);
 
@@ -27,11 +28,20 @@ class FlowlineService implements IFlowlineService {
   Future<String> getFlowline() => _vpnBridge.getFlowLine();
 
   @override
-  Future<void> saveFlowline() async {
+  Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
+
+  @override
+  Future<void> saveFlowline(bool offlineMode) async {
     if (!_allowToUpdate) {
       return;
     }
-    final flowLine = await getFlowline();
+    String flowLine = "";
+    if (offlineMode) {
+      flowLine = await getCachedFlowLine();
+    } else {
+      flowLine = await getFlowline();
+    }
+
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
 
@@ -55,10 +65,12 @@ class FlowlineService implements IFlowlineService {
       final ref = ProviderContainer();
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
-      _allowToUpdate = false;
-      Future.delayed(Duration(seconds: _updateFlowlinePerios), () {
-        _allowToUpdate = true;
-      });
+      if (!offlineMode) {
+        _allowToUpdate = false;
+        Future.delayed(Duration(seconds: _updateFlowlinePerios), () {
+          _allowToUpdate = true;
+        });
+      }
     } else {
       debugPrint('Flowline is empty, cannot save');
     }

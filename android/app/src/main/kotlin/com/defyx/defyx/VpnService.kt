@@ -334,6 +334,15 @@ class DefyxVpnService : VpnService() {
         }
     }
 
+    fun getCachedFlowLine(): String {
+        return try {
+            Android.getCachedFlowLine()
+        } catch (e: Exception) {
+            log("Get Cached Flow Line failed: ${e.message}")
+            ""
+        }
+    }
+
     fun log(message: String) {
         try {
             Android.log(message)
