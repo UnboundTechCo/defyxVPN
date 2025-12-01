@@ -5,8 +5,8 @@ permissions:
 
 on:
   push:
-    branches:
-      - release
+    branches: release
+
   workflow_dispatch:
     inputs:
       send_telegram:
