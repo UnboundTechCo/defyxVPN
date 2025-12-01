@@ -51,6 +51,8 @@ bool DXCoreBridge::Load() {
   ok &= load(pSetTimeZone_, "WinSetTimeZone");
   ok &= load(pGetFlowLine_, "WinGetFlowLine");
   ok &= load(pFreeString_, "WinFreeString");
+  ok &= load(pSetSystemProxy_, "WinSetSystemProxy");
+  ok &= load(pResetSystemProxy_, "WinResetSystemProxy");
 
   if (!ok) {
     Unload();
@@ -110,3 +112,12 @@ std::string DXCoreBridge::GetFlowLine(bool is_test) {
   if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
   return out;
 }
+
+int DXCoreBridge::SetSystemProxy() {
+  return pSetSystemProxy_ ? pSetSystemProxy_() : 0;
+}
+
+int DXCoreBridge::ResetSystemProxy() {
+  return pResetSystemProxy_ ? pResetSystemProxy_() : 0;
+}
+
