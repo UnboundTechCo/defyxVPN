@@ -30,7 +30,7 @@ SystemTray::SystemTray()
       proxy_service_(true),
       system_proxy_(false),
       vpn_mode_(false),
-      connection_status_(L"Disconnected") {
+      connection_status_(ConnectionStatus::Connect) {
   ZeroMemory(&nid_, sizeof(NOTIFYICONDATA));
 }
 
@@ -145,8 +145,11 @@ void SystemTray::ShowContextMenu(HWND window) {
   AppendMenu(menu, MF_STRING, IDM_SHOW_WINDOW, L"DefyxVPN");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
-  std::wstring status_text = connection_status_;
-  AppendMenu(menu, MF_STRING, IDM_CONNECTION_STATUS, status_text.c_str());
+  std::wstring status_text = GetConnectionStatusText();
+  bool isTransitioning = (connection_status_ == ConnectionStatus::Connecting ||
+                          connection_status_ == ConnectionStatus::Disconnecting);
+  UINT status_flags = MF_STRING | (isTransitioning ? MF_GRAYED : 0);
+  AppendMenu(menu, status_flags, IDM_CONNECTION_STATUS, status_text.c_str());
   AppendMenu(menu, MF_STRING, IDM_PREFERENCES, L"Preferences");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
@@ -166,11 +169,18 @@ void SystemTray::ShowContextMenu(HWND window) {
 
   // Section 4: Service Mode
   AppendMenu(menu, MF_STRING | MF_GRAYED, 0, L"Service Mode");
+  bool isDisconnected = IsVPNDisconnected();
   UINT proxy_flags = MF_STRING | (proxy_service_ ? MF_CHECKED : MF_UNCHECKED);
-  UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
+  UINT system_flags = MF_STRING | (system_proxy_ ? MF_CHECKED : MF_UNCHECKED);
   UINT vpn_flags = MF_STRING | (vpn_mode_ ? MF_CHECKED : MF_UNCHECKED) | MF_GRAYED;
+
+  if (!isDisconnected) {
+    proxy_flags |= MF_GRAYED;
+    system_flags |= MF_GRAYED;
+  }
+
   AppendMenu(menu, proxy_flags, IDM_PROXY_SERVICE, L"    Proxy Service");
-  AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy (Upcoming)");
+  AppendMenu(menu, system_flags, IDM_SYSTEM_PROXY, L"    System Proxy");
   AppendMenu(menu, vpn_flags, IDM_VPN_MODE, L"    VPN (Upcoming)");
   AppendMenu(menu, MF_SEPARATOR, 0, nullptr);
 
@@ -222,27 +232,21 @@ void SystemTray::ShowContextMenu(HWND window) {
       ExecuteAction(TrayAction::ForceClose);
       break;
     case IDM_PROXY_SERVICE:
-      if (!proxy_service_) {
-        proxy_service_ = true;
-        system_proxy_ = false;
-        vpn_mode_ = false;
-      }
+      proxy_service_ = true;
+      system_proxy_ = false;
+      vpn_mode_ = false;
       ExecuteAction(TrayAction::ProxyService);
       break;
     case IDM_SYSTEM_PROXY:
-      if (!system_proxy_) {
-        proxy_service_ = false;
-        system_proxy_ = true;
-        vpn_mode_ = false;
-      }
+      proxy_service_ = false;
+      system_proxy_ = true;
+      vpn_mode_ = false;
       ExecuteAction(TrayAction::SystemProxy);
       break;
     case IDM_VPN_MODE:
-      if (!vpn_mode_) {
-        proxy_service_ = false;
-        system_proxy_ = false;
-        vpn_mode_ = true;
-      }
+      proxy_service_ = false;
+      system_proxy_ = false;
+      vpn_mode_ = true;
       ExecuteAction(TrayAction::VPNMode);
       break;
     case IDM_INTRODUCTION:
@@ -386,7 +390,28 @@ void SystemTray::UpdateIcon(TrayIconStatus status) {
   }
 }
 
-void SystemTray::UpdateConnectionStatus(const std::wstring& status) {
+std::wstring SystemTray::ConnectionStatusToString(ConnectionStatus status) {
+  switch (status) {
+    case ConnectionStatus::Connect:
+      return L"Connect";
+    case ConnectionStatus::Disconnect:
+      return L"Disconnect";
+    case ConnectionStatus::Connecting:
+      return L"Connecting ...";
+    case ConnectionStatus::Disconnecting:
+      return L"Disconnecting ...";
+    case ConnectionStatus::Error:
+      return L"Error";
+    default:
+      return L"Connect";
+  }
+}
+
+std::wstring SystemTray::GetConnectionStatusText() const {
+  return ConnectionStatusToString(connection_status_);
+}
+
+void SystemTray::UpdateConnectionStatus(ConnectionStatus status) {
   connection_status_ = status;
 }
 
@@ -420,5 +445,9 @@ void SystemTray::SetSystemProxy(bool value) {
 
 void SystemTray::SetVPNMode(bool value) {
   vpn_mode_ = value;
+}
+
+bool SystemTray::IsVPNDisconnected() const {
+  return connection_status_ == ConnectionStatus::Connect;
 }
 
