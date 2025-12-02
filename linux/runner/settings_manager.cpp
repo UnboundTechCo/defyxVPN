@@ -1,12 +1,15 @@
 #include "settings_manager.h"
 
 #include <cstdlib>
+#include <cerrno>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <map>
 #include <sstream>
 #include <unistd.h>
 #include <pwd.h>
+#include <glib.h>
 
 const char *SettingsManager::kAppName = "DefyxVPN";
 const char *SettingsManager::kConfigFileName = "settings.conf";
@@ -288,45 +291,79 @@ bool SettingsManager::SetLaunchOnStartup(bool enable)
 
     if (enable)
     {
-        // Create autostart directory if it doesn't exist
         std::error_code ec;
         std::filesystem::create_directories(autostart_dir, ec);
+        if (ec)
+        {
+            g_warning("Failed to create autostart directory: %s", ec.message().c_str());
+            return false;
+        }
 
-        // Get the executable path
         char exe_path[4096];
         ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
         if (len == -1)
         {
+            g_warning("Failed to read executable path: %s", strerror(errno));
             return false;
         }
         exe_path[len] = '\0';
 
-        // Create .desktop file
-        std::ofstream file(autostart_path);
+        std::ostringstream content;
+        content << "[Desktop Entry]\n";
+        content << "Type=Application\n";
+        content << "Name=DefyxVPN\n";
+        content << "Comment=DefyxVPN Application\n";
+        content << "Exec=" << exe_path << " --startup\n";
+        content << "Icon=defyxvpn\n";
+        content << "Terminal=false\n";
+        content << "Categories=Network;VPN;\n";
+        content << "StartupNotify=false\n";
+        content << "X-GNOME-Autostart-enabled=true\n";
+
+        std::ofstream file(autostart_path, std::ios::out | std::ios::trunc);
         if (!file.is_open())
         {
+            g_warning("Failed to open autostart file for writing: %s", autostart_path.c_str());
             return false;
         }
 
-        file << "[Desktop Entry]\n";
-        file << "Type=Application\n";
-        file << "Name=DefyxVPN\n";
-        file << "Comment=DefyxVPN Application\n";
-        file << "Exec=" << exe_path << " --startup\n";
-        file << "Icon=defyxvpn\n";
-        file << "Terminal=false\n";
-        file << "Categories=Network;VPN;\n";
-        file << "StartupNotify=false\n";
-        file << "X-GNOME-Autostart-enabled=true\n";
+        file << content.str();
+        file.flush();
+        
+        if (file.fail())
+        {
+            g_warning("Failed to write to autostart file: %s", autostart_path.c_str());
+            file.close();
+            return false;
+        }
 
         file.close();
+        
+        if (!std::filesystem::exists(autostart_path))
+        {
+            g_warning("Autostart file does not exist after creation: %s", autostart_path.c_str());
+            return false;
+        }
+        
+        auto file_size = std::filesystem::file_size(autostart_path);
+        if (file_size == 0)
+        {
+            g_warning("Autostart file is empty after creation: %s", autostart_path.c_str());
+            return false;
+        }
+
+        g_message("Successfully created autostart file: %s (size: %zu bytes)", 
+                  autostart_path.c_str(), static_cast<size_t>(file_size));
         return true;
     }
     else
     {
-        // Remove .desktop file
         std::error_code ec;
         std::filesystem::remove(autostart_path, ec);
+        if (ec)
+        {
+            g_warning("Failed to remove autostart file: %s", ec.message().c_str());
+        }
         return true;
     }
 }
