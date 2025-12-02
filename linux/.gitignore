@@ -1,1 +1,7 @@
 flutter/ephemeral
+
+
+# Remove Core
+runner/DXcore.dll
+runner/DXcore.h
+runner/dxcore_windows.h
