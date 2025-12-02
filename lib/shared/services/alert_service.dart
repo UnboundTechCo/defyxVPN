@@ -102,7 +102,8 @@ final class AudioService extends AlertSub {
     if (!hasAction) return;
 
     try {
-      if (!kIsWeb && (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+      if (!kIsWeb &&
+          (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
         unawaited(_audioPlayer.stop().then((_) {
           return _audioPlayer.play(AssetSource('sounds/notification.wav'));
         }).catchError((e) {
@@ -149,7 +150,7 @@ final class AudioService extends AlertSub {
   @override
   Future<void> short() async {
     try {
-      await _playSound();
+      // await _playSound();
     } catch (e) {
       debugPrint('Error in short audio: $e');
     }
@@ -158,7 +159,7 @@ final class AudioService extends AlertSub {
   @override
   Future<void> error() async {
     try {
-      await _playSound();
+      // await _playSound();
     } catch (e) {
       debugPrint('Error in error audio: $e');
     }
@@ -167,7 +168,7 @@ final class AudioService extends AlertSub {
   @override
   Future<void> heartbeat() async {
     try {
-      await _playSound();
+      // await _playSound();
     } catch (e) {
       debugPrint('Error in heartbeat audio: $e');
     }
@@ -195,7 +196,8 @@ class AlertService {
   bool get _canAlert => _batteryLevel > 20;
 
   Future<void> init() async {
-    if (kIsWeb || (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (kIsWeb ||
+        (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       _alertSub = AudioService();
     } else if (Platform.isIOS || Platform.isAndroid) {
       _alertSub = VibrationService();

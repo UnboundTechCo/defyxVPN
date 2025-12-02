@@ -40,7 +40,7 @@ endif()
 # default. In most cases, you should add new options to specific targets instead
 # of modifying this function.
 function(APPLY_STANDARD_SETTINGS TARGET)
-  target_compile_features(${TARGET} PUBLIC cxx_std_14)
+  target_compile_features(${TARGET} PUBLIC cxx_std_17)
   target_compile_options(${TARGET} PRIVATE -Wall -Werror)
   target_compile_options(${TARGET} PRIVATE "$<$<NOT:$<CONFIG:Debug>>:-O3>")
   target_compile_definitions(${TARGET} PRIVATE "$<$<NOT:$<CONFIG:Debug>>:NDEBUG>")
@@ -72,7 +72,24 @@ set_target_properties(${BINARY_NAME}
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
+set(GENERATED_PLUGINS_CMAKE "${CMAKE_CURRENT_SOURCE_DIR}/flutter/generated_plugins.cmake")
+if(EXISTS ${GENERATED_PLUGINS_CMAKE})
+  file(READ ${GENERATED_PLUGINS_CMAKE} PLUGINS_CMAKE_CONTENT)
+  string(REGEX REPLACE "  firebase_core\n" "" PLUGINS_CMAKE_CONTENT "${PLUGINS_CMAKE_CONTENT}")
+  file(WRITE ${GENERATED_PLUGINS_CMAKE} "${PLUGINS_CMAKE_CONTENT}")
+  message(STATUS "Removed firebase_core from generated_plugins.cmake")
+endif()
+
 include(flutter/generated_plugins.cmake)
+
+set(REGISTRANT_FILE "${CMAKE_CURRENT_SOURCE_DIR}/flutter/generated_plugin_registrant.cc")
+if(EXISTS ${REGISTRANT_FILE})
+  file(READ ${REGISTRANT_FILE} REGISTRANT_CONTENT)
+  string(REGEX REPLACE "#include <firebase_core/firebase_core_plugin_c_api\\.h>\n" "" REGISTRANT_CONTENT "${REGISTRANT_CONTENT}")
+  string(REGEX REPLACE "  FirebaseCorePluginCApiRegisterWithRegistrar\\(\n      registry->GetRegistrarForPlugin\\(\"FirebaseCorePluginCApi\"\\)\\);\n" "" REGISTRANT_CONTENT "${REGISTRANT_CONTENT}")
+  file(WRITE ${REGISTRANT_FILE} "${REGISTRANT_CONTENT}")
+  message(STATUS "Patched generated_plugin_registrant.cc to remove Firebase")
+endif()
 
 
 # === Installation ===

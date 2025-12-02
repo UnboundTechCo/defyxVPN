@@ -6,6 +6,8 @@
 #include <memory>
 #include <string>
 #include <windows.h>
+#include <mutex>
+#include <atomic>
 
 class DXCoreBridge;
 class SystemTray;
@@ -43,6 +45,8 @@ class VPNChannelHandler {
   SystemTray* system_tray_;
 
   std::string vpn_status_;
+  std::mutex status_mutex_;
+  std::atomic<bool> is_active_{true};
 
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>> status_channel_;
   std::unique_ptr<flutter::EventChannel<flutter::EncodableValue>> progress_channel_;

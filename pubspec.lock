@@ -948,10 +948,10 @@ packages:
     dependency: "direct main"
     description:
       name: retrofit
-      sha256: "84063c18a00d55af41d6b8401edf8473e8c215bd7068ef7ec5e34c60657ffdbe"
+      sha256: "7d78824afa6eeeaf6ac58220910ee7a97597b39e93360d4bda230b7c6df45089"
       url: "https://pub.dev"
     source: hosted
-    version: "4.9.1"
+    version: "4.9.0"
   retrofit_generator:
     dependency: "direct dev"
     description:

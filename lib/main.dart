@@ -12,7 +12,7 @@ void main() async {
   await dotenv.load();
   
   // Initialize Firebase only on supported platforms (not Windows)
-  if (!Platform.isWindows) {
+  if (!Platform.isWindows && !Platform.isLinux) {
     await Firebase.initializeApp(
       name: "defyx-vpn",
       options: DefaultFirebaseOptions.currentPlatform,
