@@ -93,3 +93,4 @@ msix_config:
   msix_version: 1.0.1.0
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
+  capabilities: runFullTrust,internetClientServer,privateNetworkClientServer
