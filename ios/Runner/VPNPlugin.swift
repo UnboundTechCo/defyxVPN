@@ -298,10 +298,14 @@ class VpnPlugin: VpnStatusDelegate {
     }
 
     private func isVPNPrepared(_ result: @escaping FlutterResult) {
-        if VpnService.shared.manager == nil {
-            result(false)
-        } else {
-            result(true)
+            VpnService.shared.isVPNPrepared { prepareResult in
+            switch prepareResult {
+            case .success:
+                result(true)
+            case .failure(let error):
+                print("❌ VPN is not Prepared: \(error)")
+                result(false)
+            }
         }
     }
 

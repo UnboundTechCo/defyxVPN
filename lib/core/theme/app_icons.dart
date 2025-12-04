@@ -79,12 +79,12 @@ class AppIcons {
     return SvgPicture.asset(copyPath, width: width, height: height);
   }
 
-  static SvgPicture chevronLeft({double? width, double? height}) {
+  static SvgPicture chevronLeft({double? width, double? height,Color? color}) {
     return SvgPicture.asset(chevronLeftPath, width: width, height: height);
   }
 
-  static SvgPicture info({double? width, double? height}) {
-    return SvgPicture.asset(infoPath, width: width, height: height);
+  static SvgPicture info({double? width, double? height,ColorFilter? colorFilter}) {
+    return SvgPicture.asset(infoPath, width: width, height: height,colorFilter: colorFilter,);
   }
 
   static SvgPicture checkCircle({double? width, double? height}) {

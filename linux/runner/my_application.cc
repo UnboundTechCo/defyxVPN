@@ -7,6 +7,9 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+// Forward declaration for our custom plugin
+void RegisterDefyxLinuxPlugin(FlPluginRegistrar* registrar);
+
 struct _MyApplication {
   GtkApplication parent_instance;
   char** dart_entrypoint_arguments;
@@ -58,6 +61,11 @@ static void my_application_activate(GApplication* application) {
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
+
+  // Register custom DefyX VPN plugin
+  g_autoptr(FlPluginRegistrar) defyx_registrar =
+    fl_plugin_registry_get_registrar_for_plugin(FL_PLUGIN_REGISTRY(view), "DefyxLinuxPlugin");
+  RegisterDefyxLinuxPlugin(defyx_registrar);
 
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }

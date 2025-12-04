@@ -1,0 +1,18 @@
+name: "Create ENV file"
+description: "Generate .env from secrets & vars"
+
+inputs:
+  secret_blob:
+    required: true
+  var_blob:
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Write .env (cross platform)
+      shell: bash
+      run: |
+        INPUT_SECRET_BLOB='${{ inputs.secret_blob }}' \
+        INPUT_VAR_BLOB='${{ inputs.var_blob }}' \
+        node "$GITHUB_ACTION_PATH/writer.js"
