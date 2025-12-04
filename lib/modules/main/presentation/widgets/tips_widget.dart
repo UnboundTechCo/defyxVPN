@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -165,47 +166,55 @@ class TipsSlider extends ConsumerWidget {
               children: [
                 // Sliding content
                 Expanded(
-                  child: PageView.builder(
-                    controller: pageController,
-                    itemCount: tips.length,
-                    onPageChanged: (page) {
-                      ref.read(tipsCurrentPageProvider.notifier).state = page;
-                    },
-                    itemBuilder: (context, index) {
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          if (tips[index]['title'] != null &&
-                              tips[index]['title']!.isNotEmpty)
-                            Text(
-                              tips[index]['title']!,
-                              style: TextStyle(
-                                fontFamily: 'Lato',
-                                color: Colors.white,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          if (tips[index]['title'] != null &&
-                              tips[index]['title']!.isNotEmpty)
-                            SizedBox(height: 8.h),
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: Text(
-                                tips[index]['message']!,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                      },
+                    ),
+                    child: PageView.builder(
+                      controller: pageController,
+                      itemCount: tips.length,
+                      onPageChanged: (page) {
+                        ref.read(tipsCurrentPageProvider.notifier).state = page;
+                      },
+                      itemBuilder: (context, index) {
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            if (tips[index]['title'] != null &&
+                                tips[index]['title']!.isNotEmpty)
+                              Text(
+                                tips[index]['title']!,
                                 style: TextStyle(
                                   fontFamily: 'Lato',
-                                  color: Colors.white70,
-                                  fontSize: 15.sp,
-                                  height: 1.3,
+                                  color: Colors.white,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            if (tips[index]['title'] != null &&
+                                tips[index]['title']!.isNotEmpty)
+                              SizedBox(height: 8.h),
+                            Expanded(
+                              child: SingleChildScrollView(
+                                child: Text(
+                                  tips[index]['message']!,
+                                  style: TextStyle(
+                                    fontFamily: 'Lato',
+                                    color: Colors.white70,
+                                    fontSize: 15.sp,
+                                    height: 1.3,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
               ],

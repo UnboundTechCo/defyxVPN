@@ -1,5 +1,10 @@
 # Defyx Changelog
 
+> [!NOTE]  
+> After the full open-sourcing of the **Defyx** Flutter project and the setup of its automated build process on GitHub using GitHub Actions, from now on, each version’s changelog will be published in the [**Releases** section](https://github.com/UnboundTechCo/defyxVPN/releases), and contributors of each version will also be listed on the same page.
+
+<hr />
+
 ## v3.2.30 (Build 190)
 
 - Improved ping and location check after connection

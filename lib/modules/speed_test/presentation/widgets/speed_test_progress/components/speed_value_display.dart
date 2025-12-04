@@ -37,7 +37,7 @@ class SpeedValueDisplay extends StatelessWidget {
           children: [
             SizedBox(
               width: 150.w,
-              height: 90.h,
+              height: 100.h,
               child: Center(
                 child: Text(
                   doubleFormatNumber(value),

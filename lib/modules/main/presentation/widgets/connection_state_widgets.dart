@@ -99,24 +99,39 @@ class FlagIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final animationService = AnimationService();
     final flagAsync = ref.watch(flagProvider);
     return flagAsync.when(
-      data: (flag) => ClipRRect(
-        borderRadius: BorderRadius.circular(6.r),
-        child: SvgPicture.asset(
-          'assets/flags/$flag.svg',
-          height: 30.h,
-          fit: BoxFit.fitHeight,
-        ),
-      ),
-      loading: () => Shimmer.fromColors(
-        baseColor: const Color(0xFF307065),
-        highlightColor: const Color(0xFF1B483F),
-        enabled: animationService.shouldAnimate(),
-        child: FlagPlaceholder(width: 40.w),
-      ),
-      error: (_, __) => SvgPicture.asset('assets/flags/xx.svg', width: 35.w),
+      data: (flag) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(6.r),
+          child: SvgPicture.asset(
+            'assets/flags/$flag.svg',
+            height: 30.h,
+            fit: BoxFit.fitHeight,
+          ),
+        );
+      },
+      loading: _loadingFlag,
+      error: (_, __) => _errorFlag(),
+    );
+  }
+
+  Widget _loadingFlag() {
+    final animationService = AnimationService();
+
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFF307065),
+      highlightColor: const Color(0xFF1B483F),
+      enabled: animationService.shouldAnimate(),
+      child: FlagPlaceholder(width: 40.w),
+    );
+  }
+
+  Widget _errorFlag() {
+    return SvgPicture.asset(
+      'assets/flags/xx.svg',
+      width: 40.w,
+      height: 30.h,
     );
   }
 }
@@ -128,7 +143,6 @@ class PingIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final animationService = AnimationService();
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -139,26 +153,11 @@ class PingIndicator extends ConsumerWidget {
           builder: (context, ref, child) {
             final ping = ref.watch(pingProvider);
             final pingLoading = ref.watch(pingLoadingProvider);
+            final isLoading = pingLoading || ping.isEmpty || ping == "0";
+            if (isLoading) {
+              return _pingLoading();
+            }
 
-            if (pingLoading) {
-              return Shimmer.fromColors(
-                baseColor: const Color(0xFF307065),
-                highlightColor: const Color(0xFF1B483F),
-                enabled: animationService.shouldAnimate(),
-                child: PingPlaceholder(width: 52.w),
-              );
-            }
-            if (ping.isEmpty) {
-              return Text(
-                '0 ms',
-                style: TextStyle(
-                  fontSize: 18.sp,
-                  fontFamily: 'Lato',
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
-                ),
-              );
-            }
             return Row(
               children: [
                 SizedBox(width: 10.w),
@@ -185,6 +184,16 @@ class PingIndicator extends ConsumerWidget {
           },
         ),
       ),
+    );
+  }
+
+  Widget _pingLoading() {
+    final animationService = AnimationService();
+    return Shimmer.fromColors(
+      baseColor: const Color(0xFF307065),
+      highlightColor: const Color(0xFF1B483F),
+      enabled: animationService.shouldAnimate(),
+      child: PingPlaceholder(width: 52.w),
     );
   }
 }
@@ -274,12 +283,14 @@ class LoggerStatusWidget extends ConsumerWidget {
         _getLoggerStatusInfo(loggerState.status, groupState.groupName);
 
     return AnimatedSize(
-      duration: animationService.adjustDuration(const Duration(milliseconds: 300)),
+      duration:
+          animationService.adjustDuration(const Duration(milliseconds: 300)),
       curve: Curves.easeInOut,
       alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
-        duration: animationService.adjustDuration(const Duration(milliseconds: 350)),
+        duration:
+            animationService.adjustDuration(const Duration(milliseconds: 350)),
         tween: Tween<double>(begin: 0.0, end: 1.0),
         curve: Curves.easeInOut,
         builder: (context, value, child) {
