@@ -90,14 +90,12 @@ msix_config:
   display_name: Defyx VPN
   publisher_display_name: UnboundTech UG
   identity_name: UnboundTechUG.6065AEC5A207
-  msix_version: 1.0.1.0
+  msix_version: 1.0.4.0
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
   capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,broadFileSystemAccess,allowElevation,unvirtualizedResources
   execution_alias: defyxvpn
   architecture: x64
   languages: en-us
-  registry_write_virtualization: disabled
-  file_system_write_virtualization: disabled
-  enable_at_startup: false
   install_certificate: false
+  enable_at_startup: false
