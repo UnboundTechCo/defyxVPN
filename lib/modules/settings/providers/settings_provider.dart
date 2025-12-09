@@ -196,7 +196,6 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
       state = data.map((json) => SettingsGroup.fromJson(json)).toList();
       _saveSettings();
     } catch (e) {
-      print(e);
       state = await _getDefaultSettings();
     }
   }
@@ -211,3 +210,5 @@ final settingsProvider =
     StateNotifierProvider<SettingsNotifier, List<SettingsGroup>>(
   (ref) => SettingsNotifier(ref),
 );
+
+final settingsLoadingProvider = StateProvider<bool>((ref) => false);

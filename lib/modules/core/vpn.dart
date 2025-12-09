@@ -156,13 +156,6 @@ class VPN {
       connectionNotifier?.setLoading();
     });
 
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier?.setAnalyzing();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      loggerNotifier?.setLoading();
-    });
-
     alertService.heartbeat();
 
     final networkIsConnected = await _networkStatus.checkConnectivity();
@@ -186,6 +179,10 @@ class VPN {
     analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
 
     await _vpnBridge.startVPN(flowLineStorage, pattern);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      loggerNotifier?.setLoading();
+      connectionNotifier?.setAnalyzing();
+    });
   }
 
   Future<void> _onFailerConnect() async {
@@ -230,8 +227,8 @@ class VPN {
   }
 
   Future<void> refreshPing() async {
-    _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(flagLoadingProvider.notifier).state = true;
+    _container?.read(pingLoadingProvider.notifier).state = true;
     _container?.read(pingProvider.notifier).state =
         await _networkStatus.getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
@@ -324,7 +321,6 @@ class VPN {
       case ConnectionStatus.connected:
         await _disconnect(ref);
         return;
-      case ConnectionStatus.loading:
       case ConnectionStatus.analyzing:
         await _stopVPN(ref);
         return;
@@ -333,6 +329,7 @@ class VPN {
       case ConnectionStatus.noInternet:
         await _connect();
         return;
+      case ConnectionStatus.loading:
       default:
         break;
     }
@@ -351,9 +348,11 @@ class VPN {
   }
 
   Future<void> initVPN() async {
+    _container?.read(settingsLoadingProvider.notifier).state = true;
     await _container?.read(flowlineServiceProvider).saveFlowline(true);
     await _vpnBridge.setAsnName();
     await _container?.read(flowlineServiceProvider).saveFlowline(false);
+    _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 
   Future<void> _updatePing() async {

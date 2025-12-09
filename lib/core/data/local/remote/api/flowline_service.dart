@@ -9,6 +9,7 @@ import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -18,9 +19,9 @@ final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
   final _vpnBridge = VpnBridge();
-  static var _allowToUpdate = true;
+  final lastFlowlineUpdateKey = 'lastFlowlineUpdate';
   static final _updateFlowlinePerios =
-      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60");
+      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60") * 1000;
 
   FlowlineService(this._secureStorage);
 
@@ -32,7 +33,12 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<void> saveFlowline(bool offlineMode) async {
-    if (!_allowToUpdate) {
+    final prefs = await SharedPreferences.getInstance();
+    final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
+    final shouldUpdate =
+        (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
+            _updateFlowlinePerios;
+    if (!shouldUpdate) {
       return;
     }
     String flowLine = "";
@@ -66,10 +72,8 @@ class FlowlineService implements IFlowlineService {
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
       if (!offlineMode) {
-        _allowToUpdate = false;
-        Future.delayed(Duration(seconds: _updateFlowlinePerios), () {
-          _allowToUpdate = true;
-        });
+        prefs.setInt(
+            lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);
       }
     } else {
       debugPrint('Flowline is empty, cannot save');
