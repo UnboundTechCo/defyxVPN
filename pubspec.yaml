@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app"
 publish_to: 'none'
-version: 3.3.1+210
+version: 3.3.4+213
 
 environment:
   sdk: ^3.5.3
@@ -93,7 +93,7 @@ msix_config:
   msix_version: 1.0.4.0
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
-  capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,broadFileSystemAccess,allowElevation,unvirtualizedResources
+  capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,unvirtualizedResources
   execution_alias: defyxvpn
   architecture: x64
   languages: en-us
