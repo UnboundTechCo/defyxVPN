@@ -243,7 +243,9 @@ void HandleMethodCall(FlMethodChannel* channel,
       bool ok = defyx_core::StopVPN();
       SendStatus(state, ok ? "disconnected" : "disconnect_failed");
       FinishWithBool(method_call, ok);
-    } else if (strcmp(method, "prepare") == 0) {
+    } else if (strcmp(method, "isVPNPrepared") == 0) {
+      FinishWithBool(method_call, true);
+    } else if (strcmp(method, "prepareVPN") == 0 || strcmp(method, "prepare") == 0) {
       FinishWithBool(method_call, true);
     } else if (strcmp(method, "startTun2socks") == 0) {
       defyx_core::StartTun2Socks(0, "127.0.0.1:0");
