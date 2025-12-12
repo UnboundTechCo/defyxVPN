@@ -40,7 +40,8 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 500)),
+      duration:
+          _animationService.adjustDuration(const Duration(milliseconds: 500)),
       vsync: this,
     );
     _rotationAnimation = Tween<double>(
@@ -90,7 +91,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
         });
       },
       itemCount: allItems.length,
-      buildDefaultDragHandles: false, 
+      buildDefaultDragHandles: false,
       proxyDecorator: (Widget child, int index, Animation<double> animation) {
         final item = allItems[index];
 
@@ -157,20 +158,15 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
       itemBuilder: (context, index) {
         final item = allItems[index];
 
-        return Container(
-          key: ValueKey(item.id),
-          margin: EdgeInsets.symmetric(vertical: 2.h),
-          child: SettingsItemWidget(
-            key: ValueKey(item.id),
-            item: item,
-            onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
-            isDraggable:
-                item.isAccessible,
-            isLastItem: index == allItems.length - 1,
-            showDragHandle: true,
-            dragIndex: index,
-            showSeparator: true,
-          ),
+        return SettingsItemWidget(
+          key: ValueKey('${widget.group.id}_${item.id}_$index'),
+          item: item,
+          onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
+          isDraggable: item.isAccessible,
+          isLastItem: index == allItems.length - 1,
+          showDragHandle: true,
+          dragIndex: index,
+          showSeparator: true,
         );
       },
     );
@@ -185,14 +181,13 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
         final index = entry.key;
         final item = entry.value;
         return SettingsItemWidget(
-          key: ValueKey(item.id),
+          key: ValueKey('${widget.group.id}_${item.id}_$index'),
           item: item,
           onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
           isDraggable: false,
           isLastItem: index == sortedItems.length - 1,
           showDragHandle: false,
-          showSeparator: widget.showSeparators &&
-              _draggingIndex != index, 
+          showSeparator: widget.showSeparators && _draggingIndex != index,
         );
       }).toList(),
     );
@@ -233,7 +228,8 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
             ),
             padding: EdgeInsets.fromLTRB(2.w, 1.h, 2.w, 1.h),
             child: AnimatedContainer(
-              duration: _animationService.adjustDuration(const Duration(milliseconds: 200)),
+              duration: _animationService
+                  .adjustDuration(const Duration(milliseconds: 200)),
               child: widget.group.id == 'connection_method'
                   ? _buildDraggableItems()
                   : _buildStaticItems(),
