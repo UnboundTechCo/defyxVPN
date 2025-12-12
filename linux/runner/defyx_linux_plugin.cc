@@ -315,11 +315,22 @@ void HandleMethodCall(FlMethodChannel* channel,
       }
       FinishWithError(method_call, "INVALID_ARGUMENT", "timezone missing or invalid");
     } else if (strcmp(method, "getFlowLine") == 0) {
-      std::string flowLine = defyx_core::GetFlowLine();
+      FlValue* args = fl_method_call_get_args(method_call);
+      std::string is_test_str = LookupString(args, "isTest");
+      bool is_test = (is_test_str == "true" || is_test_str == "1");
+
+      std::string flowLine = defyx_core::GetFlowLine(is_test);
       if (flowLine.empty()) {
         flowLine = "{}";
       }
       FinishWithString(method_call, flowLine);
+    } else if (strcmp(method, "getCachedFlowLine") == 0) {
+      std::string flowLine = defyx_core::GetCachedFlowLine();
+      if (flowLine.empty()) {
+        FinishWithError(method_call, "GET_CACHED_FLOW_LINE_ERROR", "Failed to get cached flow line");
+      } else {
+        FinishWithString(method_call, flowLine);
+      }
     } else if (strcmp(method, "setConnectionMethod") == 0) {
       FlValue* args = fl_method_call_get_args(method_call);
       std::string method_name = LookupString(args, "method");
