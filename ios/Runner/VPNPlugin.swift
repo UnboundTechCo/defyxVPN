@@ -73,6 +73,8 @@ class VpnPlugin: VpnStatusDelegate {
             setTimezone(call.arguments as? [String: Any], result)
         case "getFlowLine":
             getFlowLine(call.arguments as? [String: Any], result)
+        case "getCachedFlowLine":
+            getCachedFlowLine(result)
         case "setConnectionMethod":
             print("setConnectionMethod")
         case "isTunnelRunning":
@@ -259,6 +261,12 @@ class VpnPlugin: VpnStatusDelegate {
 
         VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
             response in
+            result(response)
+        }
+    }
+
+    private func getCachedFlowLine(_ result: @escaping FlutterResult) {
+        VpnService.shared.sendTunnelMessage(["command": "GET_CACHED_FLOW_LINE"]) { response in
             result(response)
         }
     }

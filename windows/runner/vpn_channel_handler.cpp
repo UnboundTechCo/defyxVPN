@@ -332,8 +332,31 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "getCachedFlowLine") {
+          std::thread([this, result = std::move(result)]() mutable {
+            try {
+              std::string fl = dxcore_->GetCachedFlowLine();
+              result->Success(flutter::EncodableValue(fl));
+            } catch (...) {
+              result->Error("GET_CACHED_FLOW_LINE_ERROR", "Failed to get cached flow line");
+            }
+          }).detach();
+          return;
+        }
+
         if (method == "setConnectionMethod") {
-          result->Success(flutter::EncodableValue(true));
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto method_name = get_string_arg(m, "method");
+            if (!method_name.empty()) {
+              dxcore_->SetConnectionMethod(method_name);
+              result->Success(flutter::EncodableValue(true));
+            } else {
+              result->Error("INVALID_ARGUMENT", "method is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
           return;
         }
 
