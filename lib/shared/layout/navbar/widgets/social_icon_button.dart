@@ -2,6 +2,7 @@ import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dar
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class SocialIconButton extends StatelessWidget {
   final String iconPath;
@@ -26,16 +27,14 @@ class SocialIconButton extends StatelessWidget {
       splashColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
       highlightColor: enable ? const Color(0xffDFDFDF) : Colors.transparent,
       borderRadius: BorderRadius.circular(50.r),
-      onTap: () {
+      onTap: () async {
         if (!enable) return;
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (context) => CustomWebViewScreen(
-              url: url,
-              title: _getTitleFromUrl(url),
-            ),
-          ),
-        );
+        final uri = Uri.parse(url);
+        try {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          debugPrint('Error launching URL: $e');
+        }
       },
       child: SizedBox(
         width: 35.w,

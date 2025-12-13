@@ -224,9 +224,9 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         case "GET_FLOW_LINE":
             do {
-                let isTime = dict["isTime"] ?? "false"
-                let isTimeBool = Bool(isTime) ?? false
-                let flowLine = IosGetFlowLine(isTimeBool)
+                let isTest = dict["isTest"] ?? "false"
+                let isTestBool = Bool(isTest) ?? false
+                let flowLine = IosGetFlowLine(isTestBool)
                 let response: String = flowLine
 
                 if let data = response.data(using: .utf8) {
@@ -239,6 +239,25 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                     )
                 }
             } catch {
+                print("Error: \(error.localizedDescription)")
+                completionHandler?(nil)
+            }
+        case "GET_CACHED_FLOW_LINE":
+            do {
+                let flowLine = IosGetCachedFlowLine()
+                let response: String = flowLine
+
+                if let data = response.data(using: .utf8) {
+                    completionHandler?(data)
+                } else {
+                    throw NSError(
+                        domain: "EncodingError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
+                    )
+                }
+                
+                }catch {
                 print("Error: \(error.localizedDescription)")
                 completionHandler?(nil)
             }
