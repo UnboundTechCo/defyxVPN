@@ -243,7 +243,9 @@ void HandleMethodCall(FlMethodChannel* channel,
       bool ok = defyx_core::StopVPN();
       SendStatus(state, ok ? "disconnected" : "disconnect_failed");
       FinishWithBool(method_call, ok);
-    } else if (strcmp(method, "prepare") == 0) {
+    } else if (strcmp(method, "isVPNPrepared") == 0) {
+      FinishWithBool(method_call, true);
+    } else if (strcmp(method, "prepareVPN") == 0 || strcmp(method, "prepare") == 0) {
       FinishWithBool(method_call, true);
     } else if (strcmp(method, "startTun2socks") == 0) {
       defyx_core::StartTun2Socks(0, "127.0.0.1:0");
@@ -315,11 +317,22 @@ void HandleMethodCall(FlMethodChannel* channel,
       }
       FinishWithError(method_call, "INVALID_ARGUMENT", "timezone missing or invalid");
     } else if (strcmp(method, "getFlowLine") == 0) {
-      std::string flowLine = defyx_core::GetFlowLine();
+      FlValue* args = fl_method_call_get_args(method_call);
+      std::string is_test_str = LookupString(args, "isTest");
+      bool is_test = (is_test_str == "true" || is_test_str == "1");
+
+      std::string flowLine = defyx_core::GetFlowLine(is_test);
       if (flowLine.empty()) {
         flowLine = "{}";
       }
       FinishWithString(method_call, flowLine);
+    } else if (strcmp(method, "getCachedFlowLine") == 0) {
+      std::string flowLine = defyx_core::GetCachedFlowLine();
+      if (flowLine.empty()) {
+        FinishWithError(method_call, "GET_CACHED_FLOW_LINE_ERROR", "Failed to get cached flow line");
+      } else {
+        FinishWithString(method_call, flowLine);
+      }
     } else if (strcmp(method, "setConnectionMethod") == 0) {
       FlValue* args = fl_method_call_get_args(method_call);
       std::string method_name = LookupString(args, "method");

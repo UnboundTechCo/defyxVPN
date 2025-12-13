@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/app/router/app_router.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/defyx_nav_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_dialog.dart';
@@ -15,6 +16,7 @@ class DefyxNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
     final currentScreen = _getCurrentScreenFromLocation(location);
+    final settingsLoading = ref.watch(settingsLoadingProvider);
 
     return SafeArea(
         child: Padding(
@@ -50,6 +52,7 @@ class DefyxNavBar extends ConsumerWidget {
                 DefyxNavItem(
                   screen: AppScreen.settings,
                   icon: "settings",
+                  isLoading: settingsLoading,
                   current: currentScreen,
                   onTap: () => _navigateToSettings(context),
                 ),

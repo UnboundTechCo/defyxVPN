@@ -23,6 +23,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _navigateToMain() async {
     final router = GoRouter.of(context);
+    Future.delayed(Duration(seconds: 3), () {
+      router.go('/main');
+      return;
+    });
     final vpnData = await ref.read(vpnDataProvider.future);
 
     final vpnBridge = VpnBridge();
