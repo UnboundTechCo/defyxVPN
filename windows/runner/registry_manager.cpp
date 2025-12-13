@@ -89,13 +89,13 @@ bool RegistryManager::SetStartMinimized(bool value) {
 bool RegistryManager::GetForceClose() const {
   HKEY hKey;
   if (RegOpenKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-    DWORD value = 1;  // Default to true
+    DWORD value = 0;  // Default to false
     DWORD bufSize = sizeof(DWORD);
     RegQueryValueExW(hKey, L"ForceClose", nullptr, nullptr, (LPBYTE)&value, &bufSize);
     RegCloseKey(hKey);
     return value != 0;
   }
-  return true;  // Default to true
+  return false;  // Default to false
 }
 
 bool RegistryManager::SetForceClose(bool value) {
