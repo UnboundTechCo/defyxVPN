@@ -18,7 +18,8 @@ typedef void (*dx_stop_t2s_fn)();
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
-typedef char* (*dx_get_flowline_fn)();
+typedef char* (*dx_get_flowline_fn)(int);
+typedef char* (*dx_get_cached_flowline_fn)();
 typedef char* (*dx_get_vpn_status_fn)();
 typedef void (*dx_set_asn_name_fn)();
 typedef void (*dx_set_timezone_fn)(float);
@@ -42,6 +43,7 @@ static dx_get_flag_fn g_get_flag = nullptr;
 static dx_set_asn_name_fn g_set_asn_name = nullptr;
 static dx_set_timezone_fn g_set_timezone = nullptr;
 static dx_get_flowline_fn g_get_flowline = nullptr;
+static dx_get_cached_flowline_fn g_get_cached_flowline = nullptr;
 static dx_get_vpn_status_fn g_get_vpn_status = nullptr;
 static dx_set_progress_callback_fn g_set_progress_cb = nullptr;
 static dx_set_verbose_logging_fn g_set_verbose = nullptr;
@@ -151,6 +153,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_set_asn_name = (dx_set_asn_name_fn)dlsym(g_dx_dll, "SetAsnName");
   g_set_timezone = (dx_set_timezone_fn)dlsym(g_dx_dll, "SetTimeZone");
   g_get_flowline = (dx_get_flowline_fn)dlsym(g_dx_dll, "GetFlowLine");
+  g_get_cached_flowline = (dx_get_cached_flowline_fn)dlsym(g_dx_dll, "GetCachedFlowLine");
   g_get_vpn_status = (dx_get_vpn_status_fn)dlsym(g_dx_dll, "GetVpnStatus");
   g_set_progress_cb = (dx_set_progress_callback_fn)dlsym(g_dx_dll, "SetProgressCallback");
   g_set_verbose = (dx_set_verbose_logging_fn)dlsym(g_dx_dll, "SetVerboseLogging");
@@ -176,6 +179,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("SetAsnName", g_set_asn_name);
   check("SetTimeZone", g_set_timezone);
   check("GetFlowLine", g_get_flowline);
+  check("GetCachedFlowLine", g_get_cached_flowline);
   check("GetVpnStatus", g_get_vpn_status);
   check("SetConnectionMethod", g_set_connection_method);
   check("IsTunnelRunning", g_is_tunnel_running);
@@ -198,6 +202,7 @@ void UnloadCoreDll() {
     g_set_asn_name = nullptr;
     g_set_timezone = nullptr;
     g_get_flowline = nullptr;
+    g_get_cached_flowline = nullptr;
     g_get_vpn_status = nullptr;
     g_set_progress_cb = nullptr;
     g_set_verbose = nullptr;
@@ -339,18 +344,32 @@ void SetTimeZone(float tz) {
   (void)tz;
 }
 
-std::string GetFlowLine() {
+std::string GetFlowLine(bool isTest) {
   try {
-    defyx_core::LogMessage("GetFlowLine called");
+    defyx_core::LogMessage("GetFlowLine called isTest=" + std::to_string(isTest));
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_flowline) {
-      char* line = g_get_flowline();
+      char* line = g_get_flowline(isTest ? 1 : 0);
       std::string result = line ? std::string(line) : std::string();
       if (g_free_string && line) g_free_string(line);
       return result;
     }
   } catch (...) {}
   return "default";
+}
+
+std::string GetCachedFlowLine() {
+  try {
+    defyx_core::LogMessage("GetCachedFlowLine called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_get_cached_flowline) {
+      char* line = g_get_cached_flowline();
+      std::string result = line ? std::string(line) : std::string();
+      if (g_free_string && line) g_free_string(line);
+      return result;
+    }
+  } catch (...) {}
+  return "";
 }
 
 std::string GetVpnStatus() {

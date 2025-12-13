@@ -53,6 +53,7 @@ jobs:
             -Headers @{ Authorization = "token $env:GITHUB_TOKEN"; Accept = "application/octet-stream" } `
             -OutFile "DXcore.zip"
           Expand-Archive -Path "DXcore.zip" -DestinationPath "windows/runner" -Force
+          Move-Item "windows/runner/build/windows/*" "windows/runner/" -Force
           Remove-Item "DXcore.zip"
           Get-ChildItem -Recurse "windows/runner"
 
