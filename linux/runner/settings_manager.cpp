@@ -390,7 +390,7 @@ bool SettingsManager::SetStartMinimized(bool value)
 
 bool SettingsManager::GetForceClose() const
 {
-    return ReadBoolValue("ForceClose", true);
+    return ReadBoolValue("ForceClose", false);
 }
 
 bool SettingsManager::SetForceClose(bool value)
