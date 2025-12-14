@@ -51,7 +51,7 @@ bool DXCoreBridge::Load() {
   ok &= load(pSetTimeZone_, "WinSetTimeZone");
   ok &= load(pGetFlowLine_, "WinGetFlowLine");
   ok &= load(pGetCachedFlowLine_, "WinGetCachedFlowLine");
-  ok &= load(pSetConnectionMethod_, "WinSetConnectionMethod");
+  // ok &= load(pSetConnectionMethod_, "WinSetConnectionMethod");
   ok &= load(pFreeString_, "WinFreeString");
   ok &= load(pSetSystemProxy_, "WinSetSystemProxy");
   ok &= load(pResetSystemProxy_, "WinResetSystemProxy");
@@ -123,9 +123,9 @@ std::string DXCoreBridge::GetCachedFlowLine() {
   return out;
 }
 
-void DXCoreBridge::SetConnectionMethod(const std::string& method) {
-  if (pSetConnectionMethod_) pSetConnectionMethod_(method.c_str());
-}
+// void DXCoreBridge::SetConnectionMethod(const std::string& method) {
+//   if (pSetConnectionMethod_) pSetConnectionMethod_(method.c_str());
+// }
 
 int DXCoreBridge::SetSystemProxy() {
   return pSetSystemProxy_ ? pSetSystemProxy_() : 0;
