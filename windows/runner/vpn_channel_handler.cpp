@@ -349,7 +349,7 @@ void VPNChannelHandler::SetupMethodChannel() {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());
             auto method_name = get_string_arg(m, "method");
             if (!method_name.empty()) {
-              dxcore_->SetConnectionMethod(method_name);
+              // dxcore_->SetConnectionMethod(method_name);
               result->Success(flutter::EncodableValue(true));
             } else {
               result->Error("INVALID_ARGUMENT", "method is missing or empty");
