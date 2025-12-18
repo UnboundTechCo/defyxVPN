@@ -44,8 +44,8 @@ class VpnBridge {
   Future<bool> isTunnelRunning() async =>
       (await _methodChannel.invokeMethod<bool>("isTunnelRunning")) ?? false;
 
-  Future<void> setConnectionMethod(String method)async =>
-     await _methodChannel.invokeMethod("setConnectionMethod", {"method": method});
+  Future<void> setConnectionMethod(String method) async => await _methodChannel
+      .invokeMethod("setConnectionMethod", {"method": method});
   Future<String> getFlowLine() async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
     final flowLine = await _methodChannel
@@ -53,8 +53,10 @@ class VpnBridge {
     return flowLine ?? '';
   }
 
-  Future<String> getCachedFlowLine() async =>
-      (await _methodChannel.invokeMethod<String>('getCachedFlowLine')) ?? "";
+  Future<String> getCachedFlowLine() async {
+    final info = await _methodChannel.invokeMethod<String>('getCachedFlowLine');
+    return info ?? "";
+  }
 
   Future<String> getFlag() async =>
       (await _methodChannel.invokeMethod<String>('getFlag') ?? "");
