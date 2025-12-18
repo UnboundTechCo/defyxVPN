@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:toastification/toastification.dart';
 
 class SettingsToastMessage extends StatelessWidget {
   final String message;
@@ -31,23 +32,23 @@ class SettingsToastMessage extends StatelessWidget {
   }
 
   static void show(BuildContext context, String message) {
-    final overlay = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        bottom: 130.h,
-        left: 20.w,
-        right: 20.w,
-        child: Material(
-          color: Colors.transparent,
-          child: SettingsToastMessage(message: message),
-        ),
+    toastification.show(
+      context: context,
+      description: Text(
+        message,
+        style: TextStyle(color: Colors.white),
       ),
+      style: ToastificationStyle.fillColored,
+      backgroundColor: Colors.black,
+      primaryColor: Colors.black,
+      showIcon: false,
+      closeButton: ToastCloseButton(
+        showType: CloseButtonShowType.none,
+      ),
+      alignment: Alignment.bottomCenter,
+      borderRadius: BorderRadius.circular(6.0),
+      padding: const EdgeInsets.all(16.0),
+      autoCloseDuration: const Duration(seconds: 5),
     );
-
-    overlay.insert(overlayEntry);
-
-    Future.delayed(const Duration(seconds: 3), () {
-      overlayEntry.remove();
-    });
   }
 }

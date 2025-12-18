@@ -38,6 +38,7 @@ dependencies:
   flutter_svg: ^2.1.0
   lottie: ^3.3.1
   fluttertoast: ^8.2.12
+  toastification: ^3.0.3
   path_drawing: ^1.0.1
   intl: ^0.19.0
   cupertino_icons: ^1.0.8
