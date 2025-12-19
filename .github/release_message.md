@@ -55,10 +55,18 @@
             </tr>
             <tr>
                 <td>
-                    <img src="https://img.shields.io/badge/Windows-Upcoming-0C88D8.svg?logo=gitforwindows">
+                    <a href="https://apps.microsoft.com/detail/9n0qtbzz4kx4?hl=en-US&gl=US" target="_blank">
+                        <img src="https://img.shields.io/badge/Windows-Microsoft Store-08559e.svg?logo=gitforwindows">
+                    </a>
+                    <br />
+                    <img src="https://img.shields.io/badge/Windows-Setup (Upcoming)-0C88D8.svg?logo=github" />
+                    <br />
+                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/windows-release.zip">
+                        <img src="https://img.shields.io/badge/Windows-Portable-0C88D8.svg?logo=github" />
+                    </a>
                 </td>
                 <td valign="top">
-                    -
+                    10 or later
                 </td>
             </tr>
             <tr>
