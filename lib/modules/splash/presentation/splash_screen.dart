@@ -137,6 +137,41 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return SizedBox(
       width: 28.w,
       height: 28.w,
+      child: const AlwaysSpinningIndicator(),
+    );
+  }
+}
+
+class AlwaysSpinningIndicator extends StatefulWidget {
+  const AlwaysSpinningIndicator({super.key});
+
+  @override
+  State<AlwaysSpinningIndicator> createState() => _AlwaysSpinningIndicatorState();
+}
+
+class _AlwaysSpinningIndicatorState extends State<AlwaysSpinningIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
       child: const CircularProgressIndicator(
         strokeCap: StrokeCap.round,
         color: Colors.white,
