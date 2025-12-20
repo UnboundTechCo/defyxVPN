@@ -5,6 +5,7 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
+import 'package:defyx_vpn/shared/services/huawei_device_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,6 +34,10 @@ class App extends ConsumerWidget {
     await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
+    
+    // Log device information for debugging
+    await HuaweiDeviceService.logDeviceInfo();
+    
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
@@ -50,10 +55,24 @@ class App extends ConsumerWidget {
   Future<void> _initializeMobileAds() async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
+        // Check if device is Huawei without Google Play Services
+        final isHuaweiWithoutGMS = await HuaweiDeviceService.shouldUseInternalAds();
+        if (isHuaweiWithoutGMS) {
+          debugPrint('Skipping Google Mobile Ads initialization on Huawei device without GMS');
+          return;
+        }
+        
+        debugPrint('Initializing Google Mobile Ads...');
         await MobileAds.instance.initialize();
+        debugPrint('Google Mobile Ads initialized successfully');
       }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
+      // On Huawei devices, this error is expected and should not crash the app
+      final isHuawei = await HuaweiDeviceService.isHuaweiDevice();
+      if (isHuawei) {
+        debugPrint('Google Play Services error on Huawei device - falling back to internal ads');
+      }
     }
   }
 

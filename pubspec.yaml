@@ -32,6 +32,7 @@ dependencies:
   version: ^3.0.2
   flutter_timezone: ^4.1.1
   connectivity_plus: ^7.0.0
+  device_info_plus: ^12.0.0
 
   # Frontend Packages
   flutter_screenutil: ^5.9.3

@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
+import 'package:defyx_vpn/shared/services/huawei_device_service.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math';
@@ -10,6 +11,13 @@ class AdvertiseDirector {
   AdvertiseDirector(this.ref);
 
   static Future<bool> shouldUseInternalAds(WidgetRef ref) async {
+    // Check if device is Huawei without Google Play Services first
+    final shouldUseInternalForHuawei = await HuaweiDeviceService.shouldUseInternalAds();
+    if (shouldUseInternalForHuawei) {
+      return true;
+    }
+
+    // Original logic for timezone-based internal ads
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
 
     final adversies =

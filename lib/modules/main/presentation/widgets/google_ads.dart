@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/shared/services/huawei_device_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -224,6 +225,22 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     _nativeAd = null;
 
     try {
+      // Check if this is a Huawei device without Google Play Services
+      final isHuaweiWithoutGMS = await HuaweiDeviceService.shouldUseInternalAds();
+      if (isHuaweiWithoutGMS) {
+        debugPrint('Huawei device without GMS detected - using internal ads');
+        final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+        if (!_isDisposed) {
+          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+          setState(() {
+            _isLoading = false;
+          });
+        }
+        return;
+      }
+
       if (_adUnitId.isEmpty) {
         // No ad unit id available for this platform; fall back to custom ads.
         final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
@@ -231,6 +248,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
           ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
           ref.read(customAdDataProvider.notifier).state = customAdData;
           ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+          setState(() {
+            _isLoading = false;
+          });
         }
         return;
       }
@@ -247,7 +267,12 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
             }
           },
           onAdFailedToLoad: (ad, error) {
+            debugPrint('Failed to load Google ad: ${error.message}');
             ad.dispose();
+            
+            // Check if this is a Huawei device and fall back to internal ads
+            _handleAdLoadFailure();
+            
             if (!_isDisposed && mounted) {
               setState(() {
                 _isLoading = false;
@@ -297,11 +322,29 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       _nativeAd!.load();
     } catch (e) {
       debugPrint('❌ Error creating NativeAd: $e');
+      
+      // Handle potential Google Play Services errors on Huawei devices
+      _handleAdLoadFailure();
+      
       if (!_isDisposed && mounted) {
         setState(() {
           _isLoading = false;
         });
         ref.read(googleAdsProvider.notifier).setAdLoadFailed();
+      }
+    }
+  }
+
+  void _handleAdLoadFailure() async {
+    // Check if this is a Huawei device and fall back to internal ads
+    final isHuawei = await HuaweiDeviceService.isHuaweiDevice();
+    if (isHuawei) {
+      debugPrint('Ad load failed on Huawei device - falling back to internal ads');
+      final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
+      if (!_isDisposed) {
+        ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
+        ref.read(customAdDataProvider.notifier).state = customAdData;
+        ref.read(googleAdsProvider.notifier).setAdLoaded(true);
       }
     }
   }
