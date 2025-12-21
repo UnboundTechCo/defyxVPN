@@ -962,6 +962,8 @@ mixin _$Version {
   String get appleStore => throw _privateConstructorUsedError;
   @JsonKey(name: "googlePlay")
   String get googlePlay => throw _privateConstructorUsedError;
+  @JsonKey(name: "microsoftStore")
+  String get microsoftStore => throw _privateConstructorUsedError;
 
   /// Serializes this Version to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -981,7 +983,8 @@ abstract class $VersionCopyWith<$Res> {
       {@JsonKey(name: "github") String github,
       @JsonKey(name: "testFlight") String testFlight,
       @JsonKey(name: "appleStore") String appleStore,
-      @JsonKey(name: "googlePlay") String googlePlay});
+      @JsonKey(name: "googlePlay") String googlePlay,
+      @JsonKey(name: "microsoftStore") String microsoftStore});
 }
 
 /// @nodoc
@@ -1003,6 +1006,7 @@ class _$VersionCopyWithImpl<$Res, $Val extends Version>
     Object? testFlight = null,
     Object? appleStore = null,
     Object? googlePlay = null,
+    Object? microsoftStore = null,
   }) {
     return _then(_value.copyWith(
       github: null == github
@@ -1021,6 +1025,10 @@ class _$VersionCopyWithImpl<$Res, $Val extends Version>
           ? _value.googlePlay
           : googlePlay // ignore: cast_nullable_to_non_nullable
               as String,
+      microsoftStore: null == microsoftStore
+          ? _value.microsoftStore
+          : microsoftStore // ignore: cast_nullable_to_non_nullable
+              as String,
     ) as $Val);
   }
 }
@@ -1036,7 +1044,8 @@ abstract class _$$VersionImplCopyWith<$Res> implements $VersionCopyWith<$Res> {
       {@JsonKey(name: "github") String github,
       @JsonKey(name: "testFlight") String testFlight,
       @JsonKey(name: "appleStore") String appleStore,
-      @JsonKey(name: "googlePlay") String googlePlay});
+      @JsonKey(name: "googlePlay") String googlePlay,
+      @JsonKey(name: "microsoftStore") String microsoftStore});
 }
 
 /// @nodoc
@@ -1056,6 +1065,7 @@ class __$$VersionImplCopyWithImpl<$Res>
     Object? testFlight = null,
     Object? appleStore = null,
     Object? googlePlay = null,
+    Object? microsoftStore = null,
   }) {
     return _then(_$VersionImpl(
       github: null == github
@@ -1074,6 +1084,10 @@ class __$$VersionImplCopyWithImpl<$Res>
           ? _value.googlePlay
           : googlePlay // ignore: cast_nullable_to_non_nullable
               as String,
+      microsoftStore: null == microsoftStore
+          ? _value.microsoftStore
+          : microsoftStore // ignore: cast_nullable_to_non_nullable
+              as String,
     ));
   }
 }
@@ -1085,7 +1099,8 @@ class _$VersionImpl implements _Version {
       {@JsonKey(name: "github") required this.github,
       @JsonKey(name: "testFlight") required this.testFlight,
       @JsonKey(name: "appleStore") required this.appleStore,
-      @JsonKey(name: "googlePlay") required this.googlePlay});
+      @JsonKey(name: "googlePlay") required this.googlePlay,
+      @JsonKey(name: "microsoftStore") required this.microsoftStore});
 
   factory _$VersionImpl.fromJson(Map<String, dynamic> json) =>
       _$$VersionImplFromJson(json);
@@ -1102,10 +1117,13 @@ class _$VersionImpl implements _Version {
   @override
   @JsonKey(name: "googlePlay")
   final String googlePlay;
+  @override
+  @JsonKey(name: "microsoftStore")
+  final String microsoftStore;
 
   @override
   String toString() {
-    return 'Version(github: $github, testFlight: $testFlight, appleStore: $appleStore, googlePlay: $googlePlay)';
+    return 'Version(github: $github, testFlight: $testFlight, appleStore: $appleStore, googlePlay: $googlePlay, microsoftStore: $microsoftStore)';
   }
 
   @override
@@ -1119,13 +1137,15 @@ class _$VersionImpl implements _Version {
             (identical(other.appleStore, appleStore) ||
                 other.appleStore == appleStore) &&
             (identical(other.googlePlay, googlePlay) ||
-                other.googlePlay == googlePlay));
+                other.googlePlay == googlePlay) &&
+            (identical(other.microsoftStore, microsoftStore) ||
+                other.microsoftStore == microsoftStore));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, github, testFlight, appleStore, googlePlay);
+  int get hashCode => Object.hash(
+      runtimeType, github, testFlight, appleStore, googlePlay, microsoftStore);
 
   /// Create a copy of Version
   /// with the given fields replaced by the non-null parameter values.
@@ -1145,11 +1165,12 @@ class _$VersionImpl implements _Version {
 
 abstract class _Version implements Version {
   const factory _Version(
-          {@JsonKey(name: "github") required final String github,
-          @JsonKey(name: "testFlight") required final String testFlight,
-          @JsonKey(name: "appleStore") required final String appleStore,
-          @JsonKey(name: "googlePlay") required final String googlePlay}) =
-      _$VersionImpl;
+      {@JsonKey(name: "github") required final String github,
+      @JsonKey(name: "testFlight") required final String testFlight,
+      @JsonKey(name: "appleStore") required final String appleStore,
+      @JsonKey(name: "googlePlay") required final String googlePlay,
+      @JsonKey(name: "microsoftStore")
+      required final String microsoftStore}) = _$VersionImpl;
 
   factory _Version.fromJson(Map<String, dynamic> json) = _$VersionImpl.fromJson;
 
@@ -1165,6 +1186,9 @@ abstract class _Version implements Version {
   @override
   @JsonKey(name: "googlePlay")
   String get googlePlay;
+  @override
+  @JsonKey(name: "microsoftStore")
+  String get microsoftStore;
 
   /// Create a copy of Version
   /// with the given fields replaced by the non-null parameter values.
