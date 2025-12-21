@@ -36,7 +36,7 @@ class SettingsToastMessage extends StatelessWidget {
       context: context,
       description: Text(
         message,
-        style: TextStyle(color: Colors.white),
+        style: TextStyle(color: Colors.white, fontSize: 16.0),
       ),
       style: ToastificationStyle.fillColored,
       backgroundColor: Colors.black,
@@ -49,6 +49,7 @@ class SettingsToastMessage extends StatelessWidget {
       borderRadius: BorderRadius.circular(6.0),
       padding: const EdgeInsets.all(16.0),
       autoCloseDuration: const Duration(seconds: 5),
+      margin: const EdgeInsets.symmetric(vertical: 80.0, horizontal: 25.0),
     );
   }
 }
