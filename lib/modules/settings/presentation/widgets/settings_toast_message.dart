@@ -36,7 +36,7 @@ class SettingsToastMessage extends StatelessWidget {
       context: context,
       description: Text(
         message,
-        style: TextStyle(color: Colors.white, fontSize: 16.0),
+        style: TextStyle(color: Colors.white, fontSize: 15.0),
       ),
       style: ToastificationStyle.fillColored,
       backgroundColor: Colors.black,
