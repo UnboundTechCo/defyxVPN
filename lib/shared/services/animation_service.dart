@@ -12,9 +12,10 @@ class AnimationService {
 
   Future<void> init() async {
     try {
-      _batteryLevel = await _battery.batteryLevel;
       _battery.onBatteryStateChanged.listen((BatteryState state) async {
-        _batteryLevel = await _battery.batteryLevel;
+        await _battery.batteryLevel
+            .then((value) => _batteryLevel = value)
+            .catchError((error) => _batteryLevel = 100);
       });
     } catch (e) {
       debugPrint('Error initializing animation service: $e');
@@ -29,7 +30,8 @@ class AnimationService {
     return shouldAnimate() ? originalDuration : Duration.zero;
   }
 
-  void conditionalRepeat(AnimationController controller, {bool reverse = false}) {
+  void conditionalRepeat(AnimationController controller,
+      {bool reverse = false}) {
     if (shouldAnimate()) {
       controller.repeat(reverse: reverse);
     } else {
@@ -45,4 +47,3 @@ class AnimationService {
     }
   }
 }
-
