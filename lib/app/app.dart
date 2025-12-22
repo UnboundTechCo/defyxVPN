@@ -66,6 +66,8 @@ class App extends ConsumerWidget {
     return ToastificationWrapper(
         config: ToastificationConfig(
           maxToastLimit: 1,
+          blockBackgroundInteraction: false,
+          applyMediaQueryViewInsets: true,
         ),
         child: ScreenUtilInit(
           designSize: designSize,

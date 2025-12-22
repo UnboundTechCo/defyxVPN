@@ -1,6 +1,6 @@
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:toastification/toastification.dart';
 
 class SettingsToastMessage extends StatelessWidget {
   final String message;
@@ -31,25 +31,7 @@ class SettingsToastMessage extends StatelessWidget {
     );
   }
 
-  static void show(BuildContext context, String message) {
-    toastification.show(
-      context: context,
-      description: Text(
-        message,
-        style: TextStyle(color: Colors.white, fontSize: 15.0),
-      ),
-      style: ToastificationStyle.fillColored,
-      backgroundColor: Colors.black,
-      primaryColor: Colors.black,
-      showIcon: false,
-      closeButton: ToastCloseButton(
-        showType: CloseButtonShowType.none,
-      ),
-      alignment: Alignment.bottomCenter,
-      borderRadius: BorderRadius.circular(6.0),
-      padding: const EdgeInsets.all(16.0),
-      autoCloseDuration: const Duration(seconds: 5),
-      margin: const EdgeInsets.symmetric(vertical: 80.0, horizontal: 25.0),
-    );
+  static void show(String message) {
+    ToastUtil.showToast(message);
   }
 }
