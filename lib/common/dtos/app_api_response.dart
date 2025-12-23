@@ -56,6 +56,7 @@ class Version with _$Version {
     @JsonKey(name: "testFlight") required String testFlight,
     @JsonKey(name: "appleStore") required String appleStore,
     @JsonKey(name: "googlePlay") required String googlePlay,
+    @JsonKey(name: "microsoftStore") required String microsoftStore,
   }) = _Version;
 
   factory Version.fromJson(Map<String, dynamic> json) =>
