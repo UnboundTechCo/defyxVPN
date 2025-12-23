@@ -209,27 +209,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
     return Column(
-      children: settings
-          .map((group) => SettingsGroupWidget(
-                key: ValueKey(group.id),
-                group: group,
-                showSeparators: group.id == 'connection_method',
-                onToggle: (groupId, itemId) {
-                  settingsNotifier.toggleSetting(groupId, itemId, context);
-                },
-                onReorder: group.id == 'connection_method'
-                    ? (oldIndex, newIndex) {
-                        settingsNotifier.reorderConnectionMethodItems(
-                            oldIndex, newIndex);
-                      }
-                    : null,
-                onReset: group.id == 'connection_method'
-                    ? () {
-                        settingsNotifier.resetConnectionMethodToDefault();
-                      }
-                    : null,
-              ))
-          .toList(),
+      children: settings.map((group) {
+        final itemsHash = group.items
+            .map((i) => '${i.id}_${i.sortOrder}_${i.isEnabled}')
+            .join('_');
+        return SettingsGroupWidget(
+          key: ValueKey('${group.id}_${group.items.length}_$itemsHash'),
+          group: group,
+          showSeparators: group.id == 'connection_method',
+          onToggle: (groupId, itemId) {
+            settingsNotifier.toggleSetting(groupId, itemId, context);
+          },
+          onReorder: group.id == 'connection_method'
+              ? (oldIndex, newIndex) {
+                  settingsNotifier.reorderConnectionMethodItems(
+                      oldIndex, newIndex);
+                }
+              : null,
+          onReset: group.id == 'connection_method'
+              ? () {
+                  settingsNotifier.resetConnectionMethodToDefault();
+                }
+              : null,
+        );
+      }).toList(),
     );
   }
 }

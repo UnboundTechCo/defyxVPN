@@ -11,19 +11,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
+final flowlineServiceProvider = Provider<FlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
-  return FlowlineService(secureStorage);
+  return FlowlineService(secureStorage, ref);
 });
 
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
+  final Ref _ref;
   final _vpnBridge = VpnBridge();
   final lastFlowlineUpdateKey = 'lastFlowlineUpdate';
   static final _updateFlowlinePerios =
       int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60") * 1000;
 
-  FlowlineService(this._secureStorage);
+  FlowlineService(this._secureStorage, this._ref);
 
   @override
   Future<String> getFlowline() => _vpnBridge.getFlowLine();
@@ -68,9 +69,13 @@ class FlowlineService implements IFlowlineService {
       await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
 
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
-      final ref = ProviderContainer();
-      final settings = ref.read(settingsProvider.notifier);
-      await settings.updateSettingsBasedOnFlowLine();
+      try {
+        final settingsNotifier = _ref.read(settingsProvider.notifier);
+        await settingsNotifier.syncWithFlowline();
+      } catch (e) {
+        debugPrint('Error syncing settings with flowline: $e');
+      }
+
       if (!offlineMode) {
         prefs.setInt(
             lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);

@@ -13,10 +13,34 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   final Ref<List<SettingsGroup>> ref;
   ISecureStorage? _secureStorage;
   final String _settingsKey = 'app_settings';
+  int _versionCounter = 0;
 
   SettingsNotifier(this.ref) : super([]) {
     _secureStorage = ref.read(secureStorageProvider);
-    _updateSettingsBasedOnFlowLine();
+    _initializeSettings();
+  }
+
+  Future<void> _initializeSettings() async {
+    final loadedSettings = await _loadSettingsFromStorage();
+    if (loadedSettings != null) {
+      state = loadedSettings;
+    } else {
+      state = await _getDefaultSettings();
+      await _saveSettings();
+    }
+  }
+
+  Future<List<SettingsGroup>?> _loadSettingsFromStorage() async {
+    try {
+      final settingsJson = await _secureStorage?.read(_settingsKey);
+      if (settingsJson == null) return null;
+
+      final List<dynamic> data = jsonDecode(settingsJson);
+      return data.map((json) => SettingsGroup.fromJson(json)).toList();
+    } catch (e) {
+      debugPrint('Error loading settings: $e');
+      return null;
+    }
   }
 
   Future<void> _saveSettings() async {
@@ -25,11 +49,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   }
 
   Future<List<SettingsGroup>> _getDefaultSettings() async {
-    List<dynamic> flowline = [];
-    final flowLineStorage = await _secureStorage?.read(flowLineKey);
-    if (flowLineStorage != null) {
-      flowline = json.decode(flowLineStorage);
-    }
+    final flowline = await _getFlowlineFromStorage();
 
     return [
       SettingsGroup(
@@ -50,6 +70,18 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
         }).toList(),
       )
     ];
+  }
+
+  Future<List<dynamic>> _getFlowlineFromStorage() async {
+    try {
+      final flowLineStorage = await _secureStorage?.read(flowLineKey);
+      if (flowLineStorage != null) {
+        return json.decode(flowLineStorage);
+      }
+    } catch (e) {
+      debugPrint('Error reading flowline: $e');
+    }
+    return [];
   }
 
   void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
@@ -77,13 +109,12 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     }
 
     state = tempState;
-
     _saveSettings();
   }
 
   Future<void> resetToDefault() async {
     state = await _getDefaultSettings();
-    _saveSettings();
+    await _saveSettings();
   }
 
   Future<void> resetConnectionMethodToDefault() async {
@@ -99,7 +130,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
       return group;
     }).toList();
 
-    _saveSettings();
+    await _saveSettings();
   }
 
   void reorderConnectionMethodItems(int oldIndex, int newIndex) {
@@ -138,71 +169,87 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   }
 
   String getPattern() {
+    if (state.isEmpty) return '';
     final items = state[0].items.where((item) => item.isEnabled).toList();
     items.sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
     return items.map((item) => item.id).toList().join(',');
   }
 
-  Future<void> saveState() async {
-    state = await _getDefaultSettings();
-  }
-
-  Future<void> _updateSettingsBasedOnFlowLine() async {
+  Future<void> syncWithFlowline() async {
     try {
-      List<dynamic> flowline = [];
-      final flowLineStorage = await _secureStorage?.read(flowLineKey);
-      if (flowLineStorage == null) {
-        state = await _getDefaultSettings();
+      final flowline = await _getFlowlineFromStorage();
+      if (flowline.isEmpty) {
+        debugPrint('Flowline is empty, skipping sync');
         return;
       }
 
-      flowline = json.decode(flowLineStorage);
-      List<dynamic> jsonList = [];
-      final settingsJson = await _secureStorage?.read(_settingsKey);
+      final currentSettings = await _loadSettingsFromStorage();
 
-      if (settingsJson == null) {
+      if (currentSettings == null || currentSettings.isEmpty) {
         state = await _getDefaultSettings();
+        await _saveSettings();
         return;
       }
 
-      final List<dynamic> data = jsonDecode(settingsJson);
-      jsonList = data[0]["items"];
-      jsonList = jsonList.where((settingItem) {
-        if (flowline.any(
-            (flowlineItem) => flowlineItem['label'] == settingItem['id'])) {
-          return true;
+      final connectionGroup = currentSettings.firstWhere(
+        (group) => group.id == 'connection_method',
+        orElse: () => SettingsGroup(
+          id: 'connection_method',
+          title: 'CONNECTION METHOD',
+          isDraggable: true,
+          items: [],
+        ),
+      );
+
+      final currentItemsMap = {
+        for (var item in connectionGroup.items) item.id: item
+      };
+
+      final enabledFlowlineItems =
+          flowline.where((flow) => flow['enabled'] == true).toList();
+
+      final List<SettingsItem> newItems = [];
+
+      for (var i = 0; i < enabledFlowlineItems.length; i++) {
+        final flowItem = enabledFlowlineItems[i];
+        final itemId = flowItem['label'] ?? '';
+
+        if (currentItemsMap.containsKey(itemId)) {
+          final existingItem = currentItemsMap[itemId]!;
+          newItems.add(existingItem.copyWith(
+            sortOrder: existingItem.sortOrder ?? newItems.length,
+            description: flowItem['description'] ?? existingItem.description,
+          ));
+        } else {
+          newItems.add(SettingsItem(
+            id: itemId,
+            title: itemId,
+            isAccessible: true,
+            isEnabled: flowItem['enabled'] ?? false,
+            sortOrder: newItems.length,
+            description: flowItem['description'] ?? '',
+          ));
         }
-        return false;
+      }
+
+      newItems.sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+
+      final reorderedItems = newItems.asMap().entries.map((entry) {
+        return entry.value.copyWith(sortOrder: entry.key);
       }).toList();
 
-      final filteredFlowline =
-          flowline.where((test) => test['enabled'] == true).toList();
+      final updatedGroup = connectionGroup.copyWith(items: reorderedItems);
 
-      for (var item in filteredFlowline) {
-        if (jsonList
-            .every((settingItem) => settingItem['id'] != item['label'])) {
-          final newItem = SettingsItem(
-              id: item['label'],
-              title: item['label'],
-              isAccessible: true,
-              isEnabled: true,
-              sortOrder: jsonList.length,
-              description: item['description']);
-          jsonList.add(newItem.toJson());
-        }
-      }
-      data[0]["items"] = jsonList;
+      state = [updatedGroup];
+      _versionCounter++;
+      await _saveSettings();
 
-      state = data.map((json) => SettingsGroup.fromJson(json)).toList();
-      _saveSettings();
+      debugPrint('Settings synced with flowline. Version: $_versionCounter');
     } catch (e) {
+      debugPrint('Error syncing with flowline: $e');
       state = await _getDefaultSettings();
+      await _saveSettings();
     }
-  }
-
-  Future<void> updateSettingsBasedOnFlowLine() async {
-    _updateSettingsBasedOnFlowLine();
-    saveState();
   }
 }
 

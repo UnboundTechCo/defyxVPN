@@ -51,8 +51,6 @@ class VPN {
     _initialized = true;
     _container = container;
 
-    _container?.read(settingsProvider.notifier).saveState();
-
     alertService.init();
     _loadChangeRootListener();
     log.logAppVersion();

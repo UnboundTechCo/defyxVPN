@@ -159,7 +159,8 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
         final item = allItems[index];
 
         return SettingsItemWidget(
-          key: ValueKey('${widget.group.id}_${item.id}_$index'),
+          key: ValueKey(
+              '${widget.group.id}_${item.id}_${item.sortOrder}_${item.isEnabled}'),
           item: item,
           onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
           isDraggable: item.isAccessible,
@@ -181,7 +182,8 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
         final index = entry.key;
         final item = entry.value;
         return SettingsItemWidget(
-          key: ValueKey('${widget.group.id}_${item.id}_$index'),
+          key: ValueKey(
+              '${widget.group.id}_${item.id}_${item.sortOrder}_${item.isEnabled}'),
           item: item,
           onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
           isDraggable: false,
