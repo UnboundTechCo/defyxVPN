@@ -8,17 +8,23 @@ build_android() {
     
     flutter clean
     flutter pub get
+
+    flutter build appbundle --release
+
+    update_build_type "github"
+    flutter build apk --release
+    flutter build apk --split-per-abi --release
     
-    if [ "$build_type" == "googlePlay" ]; then
-        flutter build appbundle --release
-    elif [ "$build_type" == "github" ]; then
-        flutter build apk --release
-        flutter build apk --split-per-abi --release
-        flutter build appbundle --release
-    else
-        echo -e "${RED}❌ Invalid Android build type${NC}"
-        exit 1
-    fi
+    # if [ "$build_type" == "googlePlay" ]; then
+    #    flutter build appbundle --release
+    # elif [ "$build_type" == "github" ]; then
+    #    flutter build apk --release
+    #    flutter build apk --split-per-abi --release
+    #    flutter build appbundle --release
+    # else
+    #    echo -e "${RED}❌ Invalid Android build type${NC}"
+    #    exit 1
+    # fi
 }
 
 build_android_ci() {
