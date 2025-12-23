@@ -103,6 +103,9 @@ class CustomUpdateDialog {
                               case 'github':
                                 url = GlobalVars.github;
                                 break;
+                              case 'microsoftStore':
+                                  url = GlobalVars.microsoftStore;
+                                  break;
                               default:
                                 url = GlobalVars.github;
                                 break;

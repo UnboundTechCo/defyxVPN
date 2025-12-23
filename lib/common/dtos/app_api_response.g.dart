@@ -86,6 +86,7 @@ _$VersionImpl _$$VersionImplFromJson(Map<String, dynamic> json) =>
       testFlight: json['testFlight'] as String,
       appleStore: json['appleStore'] as String,
       googlePlay: json['googlePlay'] as String,
+      microsoftStore: json['microsoftStore'] as String,
     );
 
 Map<String, dynamic> _$$VersionImplToJson(_$VersionImpl instance) =>
@@ -94,4 +95,5 @@ Map<String, dynamic> _$$VersionImplToJson(_$VersionImpl instance) =>
       'testFlight': instance.testFlight,
       'appleStore': instance.appleStore,
       'googlePlay': instance.googlePlay,
+      'microsoftStore': instance.microsoftStore,
     };

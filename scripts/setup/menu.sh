@@ -53,7 +53,9 @@ select_platform() {
   echo "2) iOS - App Store"
   echo "3) Android - Google Play"
   echo "4) Android - GitHub"
-  echo "5) Exit"
+  echo "5) Windows - Microsoft Store"
+  echo "6) Windows - GitHub"
+  echo "7) Exit"
 
   echo -n "Enter your choice (1-5): "
   read choice
@@ -83,7 +85,9 @@ execute_build() {
         2) build_ios "appStore" ;;
         3) build_android "googlePlay" ;;
         4) build_android "github" ;;
-        5)
+        5) build_windows "microsoftStore" ;;
+        6) build_windows "github" ;;
+        7)
             echo -e "${BLUE}👋 Goodbye!${NC}"
             exit 0 ;;
         *)

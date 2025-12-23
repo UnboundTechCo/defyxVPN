@@ -13,6 +13,7 @@ source "$SETUP_DIR/menu.sh"
 
 source "$PLATFORM_DIR/android.sh"
 source "$PLATFORM_DIR/ios.sh"
+source "$PLATFORM_DIR/windows.sh"
 source "$PLATFORM_DIR/firebase/firebase_ios.sh"
 source "$PLATFORM_DIR/firebase/firebase_android.sh"
 
