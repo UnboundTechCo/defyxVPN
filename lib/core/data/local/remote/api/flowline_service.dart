@@ -9,6 +9,7 @@ import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -18,8 +19,9 @@ final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
   final _vpnBridge = VpnBridge();
-  static var _allowToUpdate = true;
-  static final _updateFlowlinePerios = int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "1");
+  final lastFlowlineUpdateKey = 'lastFlowlineUpdate';
+  static final _updateFlowlinePerios =
+      int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60") * 1000;
 
   FlowlineService(this._secureStorage);
 
@@ -27,11 +29,25 @@ class FlowlineService implements IFlowlineService {
   Future<String> getFlowline() => _vpnBridge.getFlowLine();
 
   @override
-  Future<void> saveFlowline() async {
-    if (!_allowToUpdate) {
+  Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
+
+  @override
+  Future<void> saveFlowline(bool offlineMode) async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
+    final shouldUpdate =
+        (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
+            _updateFlowlinePerios;
+    if (!shouldUpdate) {
       return;
     }
-    final flowLine = await getFlowline();
+    String flowLine = "";
+    if (offlineMode) {
+      flowLine = await getCachedFlowLine();
+    } else {
+      flowLine = await getFlowline();
+    }
+
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
 
@@ -55,10 +71,10 @@ class FlowlineService implements IFlowlineService {
       final ref = ProviderContainer();
       final settings = ref.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
-      _allowToUpdate = false;
-      Future.delayed(Duration(seconds: _updateFlowlinePerios), () {
-        _allowToUpdate = true;
-      });
+      if (!offlineMode) {
+        prefs.setInt(
+            lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);
+      }
     } else {
       debugPrint('Flowline is empty, cannot save');
     }
