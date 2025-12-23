@@ -1,48 +1,31 @@
 import 'package:flutter/material.dart';
-import 'package:fluttertoast/fluttertoast.dart';
-import 'package:defyx_vpn/shared/widgets/custom_toast.dart';
-import 'package:defyx_vpn/app/app.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:toastification/toastification.dart';
 
 class ToastUtil {
   static void showToast(String message) {
-    final context = navigatorKey.currentContext;
-    
-    if (context != null) {
-      CustomToast.show(
-        context: context,
-        message: message,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        borderRadius: 8.0,
-      );
-    } else {
-      Fluttertoast.showToast(
-        msg: message,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM,
-        timeInSecForIosWeb: 1,
-        backgroundColor: Colors.black,
-        textColor: Colors.white,
-        fontSize: 16.0,
-      );
-    }
-  }
-  
-  static void showCustomToast({
-    required BuildContext context,
-    required String message,
-    IconData? icon,
-    String? svgIcon,
-  }) {
-    CustomToast.show(
-      context: context,
-      message: message,
-      icon: icon,
-      svgIcon: svgIcon,
-      backgroundColor: const Color(0xFF1A1A1A),
-      textColor: Colors.white,
-      iconColor: Colors.white,
-      borderRadius: 8.0,
+    toastification.show(
+      description: Text(
+        message,
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 15.sp,
+          fontFamily: 'Lato',
+          fontWeight: FontWeight.w400,
+        ),
+      ),
+      style: ToastificationStyle.fillColored,
+      backgroundColor: Colors.black,
+      primaryColor: Colors.black,
+      showIcon: false,
+      closeButton: ToastCloseButton(
+        showType: CloseButtonShowType.none,
+      ),
+      alignment: Alignment(0, 0.7),
+      borderRadius: BorderRadius.circular(6.0),
+      padding: const EdgeInsets.all(16.0),
+      autoCloseDuration: const Duration(seconds: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 25.0),
     );
   }
 }

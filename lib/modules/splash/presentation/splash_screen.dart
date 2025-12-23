@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -22,16 +23,15 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToMain() async {
-    final router = GoRouter.of(context);
     Future.delayed(Duration(seconds: 3), () {
-      router.go('/main');
+      _onNavigate();
       return;
     });
     final vpnData = await ref.read(vpnDataProvider.future);
 
     final vpnBridge = VpnBridge();
     if (vpnData.isVPNEnabled) {
-      router.go('/main');
+      _onNavigate();
       return;
     }
 
@@ -40,14 +40,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (ref.context.mounted && vpnIsPrepared) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.initVPN();
-      router.go('/main');
+      _onNavigate();
       return;
     }
 
     if (!vpnIsPrepared) {
       await Future.delayed(const Duration(seconds: 3));
     }
-    router.go('/main');
+    _onNavigate();
+  }
+
+  void _onNavigate() {
+    if (!ref.context.mounted) return;
+    final currentRoute = ref.read(currentRouteProvider);
+    if (currentRoute == DefyxVPNRoutes.splash.route) {
+      context.go('/main');
+    }
   }
 
   @override

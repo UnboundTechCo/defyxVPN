@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -30,24 +31,7 @@ class SettingsToastMessage extends StatelessWidget {
     );
   }
 
-  static void show(BuildContext context, String message) {
-    final overlay = Overlay.of(context);
-    final overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        bottom: 130.h,
-        left: 20.w,
-        right: 20.w,
-        child: Material(
-          color: Colors.transparent,
-          child: SettingsToastMessage(message: message),
-        ),
-      ),
-    );
-
-    overlay.insert(overlayEntry);
-
-    Future.delayed(const Duration(seconds: 3), () {
-      overlayEntry.remove();
-    });
+  static void show(String message) {
+    ToastUtil.showToast(message);
   }
 }

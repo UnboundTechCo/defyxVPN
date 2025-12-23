@@ -76,7 +76,7 @@ class SettingsItemWidget extends StatelessWidget {
                       BlendMode.srcIn,
                     ),
                   ),
-                  onTap: () => SettingsToastMessage.show(context,item.description ?? ""),
+                  onTap: () => SettingsToastMessage.show(item.description ?? ""),
                 )
             ],
           ),

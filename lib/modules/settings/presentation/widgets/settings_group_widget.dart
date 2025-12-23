@@ -237,7 +237,8 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
           ),
 
           // Reset button for connection method
-          if (widget.group.id == 'connection_method' && widget.onReset != null)
+          if (widget.group.id == ('connection_method') &&
+              widget.onReset != null)
             Padding(
               padding: EdgeInsets.only(top: 12.h),
               child: Row(
