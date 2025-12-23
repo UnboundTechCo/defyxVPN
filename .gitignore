@@ -51,3 +51,7 @@ app.*.map.json
 # Firebase
 # android/app/google-services.json
 # ios/Runner/GoogleService-Info.plist
+
+# Windows
+defyx_complete.ps1
+defyxvpn_cert.pfx
