@@ -100,7 +100,7 @@ jobs:
           chmod +x scripts/build_release.sh
           bash scripts/build_release.sh <<EOF
           2
-          4
+          3
           4
           EOF
 
