@@ -25,6 +25,12 @@ class RegistryManager {
   bool GetSoundEffect() const;
   bool SetSoundEffect(bool value);
 
+  int GetServiceMode() const;
+  bool SetServiceMode(int mode);
+
+  bool GetProxyService() const;
+  bool SetProxyService(bool value);
+
  private:
   static const wchar_t* kAppName;
   static const wchar_t* kStartupRegPath;

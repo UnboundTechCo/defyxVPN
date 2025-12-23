@@ -3,10 +3,6 @@
 #include <thread>
 #include "dxcore_bridge.h"
 #include "system_tray.h"
-#include "proxy_config.h"
-#include "admin_privileges.h"
-
-extern ProxyConfig g_proxy;
 
 VPNChannelHandler::VPNChannelHandler(flutter::BinaryMessenger* messenger,
                                      HWND window_handle,
@@ -19,6 +15,8 @@ VPNChannelHandler::VPNChannelHandler(flutter::BinaryMessenger* messenger,
       vpn_status_("disconnected") {}
 
 VPNChannelHandler::~VPNChannelHandler() {
+  is_active_ = false;
+  Sleep(100);
   status_sink_.reset();
   progress_sink_.reset();
   pending_ping_result_.reset();
@@ -71,12 +69,18 @@ void VPNChannelHandler::SetupProgressChannel() {
       parent_->progress_sink_ = std::move(events);
 
       parent_->dxcore_->SetProgressCallback([this, parent = parent_](const std::string& msg) {
+        if (!parent->is_active_) {
+          return;
+        }
 
         PostMessage(parent->window_handle_, WM_PROGRESS_RESULT, 0,
                     reinterpret_cast<LPARAM>(new std::string(msg)));
 
         if (msg.find("Data: VPN connected") != std::string::npos) {
-          parent->vpn_status_ = "connected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "connected";
+          }
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
                       reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
@@ -84,39 +88,54 @@ void VPNChannelHandler::SetupProgressChannel() {
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
             parent->system_tray_->UpdateTooltip(L"DefyxVPN - Connected");
-            parent->system_tray_->UpdateConnectionStatus(L"\u2714\uFE0F Connected");
+            parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
           }
 
-          std::thread([]() {
-            g_proxy.EnableProxy("127.0.0.1:5000");
+          std::thread([parent]() {
+            if (!parent->is_active_) return;
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->SetSystemProxy();
+            }
           }).detach();
         } else if (msg.find("Data: VPN failed") != std::string::npos) {
-          parent->vpn_status_ = "disconnected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "disconnected";
+          }
 
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
             parent->system_tray_->UpdateTooltip(L"DefyxVPN - Error");
-            parent->system_tray_->UpdateConnectionStatus(L"Error");
+            parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
           }
 
-          std::thread([]() {
-            g_proxy.DisableProxy();
+          std::thread([parent]() {
+            if (!parent->is_active_) return;
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->ResetSystemProxy();
+            }
           }).detach();
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
                       reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
         } else if (msg.find("Data: VPN stopped") != std::string::npos ||
                    msg.find("Data: VPN cancelled") != std::string::npos) {
-          parent->vpn_status_ = "disconnected";
+          {
+            std::lock_guard<std::mutex> lock(parent->status_mutex_);
+            parent->vpn_status_ = "disconnected";
+          }
 
           if (parent->system_tray_) {
             parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             parent->system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
-            parent->system_tray_->UpdateConnectionStatus(L"Disconnected");
+            parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
           }
 
-          std::thread([]() {
-            g_proxy.DisableProxy();
+          std::thread([parent]() {
+            if (!parent->is_active_) return;
+            if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
+              parent->dxcore_->ResetSystemProxy();
+            }
           }).detach();
 
           PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
@@ -170,15 +189,40 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "disconnect") {
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnecting";
+          }
+
+          if (system_tray_) {
+            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnecting);
+            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+            system_tray_->UpdateTooltip(L"DefyxVPN - Disconnecting ...");
+          }
+
+          SendStatus();
+
           dxcore_->StopVPN();
           dxcore_->Stop();
-          vpn_status_ = "disconnected";
+          Sleep(50);
+
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnected";
+          }
 
           if (system_tray_) {
             system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
-            system_tray_->UpdateConnectionStatus(L"Disconnected");
+            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
           }
+
+          std::thread([this]() {
+            if (!is_active_) return;
+            if (system_tray_ && system_tray_->GetSystemProxy()) {
+              dxcore_->ResetSystemProxy();
+            }
+          }).detach();
 
           SendStatus();
           result->Success(flutter::EncodableValue(true));
@@ -186,26 +230,7 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "prepareVPN" || method == "grantVpnPermission") {
-          bool needsAdmin = false;
-          if (system_tray_) {
-            needsAdmin = system_tray_->GetVPNMode();
-          }
-
-          if (!needsAdmin) {
-            result->Success(flutter::EncodableValue(true));
-          } else {
-            if (AdminPrivileges::IsRunningAsAdministrator()) {
-              result->Success(flutter::EncodableValue(true));
-            } else {
-              bool elevationRequested = AdminPrivileges::RequestAdministratorPrivileges(window_handle_);
-              if (elevationRequested) {
-                result->Success(flutter::EncodableValue(true));
-                PostQuitMessage(0);
-              } else {
-                result->Success(flutter::EncodableValue(false));
-              }
-            }
-          }
+          result->Success(flutter::EncodableValue(true));
           return;
         }
 
@@ -307,8 +332,31 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "getCachedFlowLine") {
+          std::thread([this, result = std::move(result)]() mutable {
+            try {
+              std::string fl = dxcore_->GetCachedFlowLine();
+              result->Success(flutter::EncodableValue(fl));
+            } catch (...) {
+              result->Error("GET_CACHED_FLOW_LINE_ERROR", "Failed to get cached flow line");
+            }
+          }).detach();
+          return;
+        }
+
         if (method == "setConnectionMethod") {
-          result->Success(flutter::EncodableValue(true));
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto method_name = get_string_arg(m, "method");
+            if (!method_name.empty()) {
+              // dxcore_->SetConnectionMethod(method_name);
+              result->Success(flutter::EncodableValue(true));
+            } else {
+              result->Error("INVALID_ARGUMENT", "method is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
           return;
         }
 
@@ -344,11 +392,15 @@ void VPNChannelHandler::SetupMethodChannel() {
 
             dxcore_->StartVPN(cache_dir, flow, pattern);
 
-            vpn_status_ = "connecting";
+            {
+              std::lock_guard<std::mutex> lock(status_mutex_);
+              vpn_status_ = "connecting";
+            }
+
             if (system_tray_) {
               system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
-              system_tray_->UpdateTooltip(L"DefyxVPN - Connecting...");
-              system_tray_->UpdateConnectionStatus(L"Connecting...");
+              system_tray_->UpdateTooltip(L"DefyxVPN - Connecting ...");
+              system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connecting);
             }
 
             result->Success(flutter::EncodableValue(true));
@@ -359,12 +411,29 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "stopVPN") {
-          dxcore_->StopVPN();
-          g_proxy.DisableProxy();
-          vpn_status_ = "disconnected";
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnecting";
+          }
 
           if (system_tray_) {
-            system_tray_->UpdateConnectionStatus(L"Disconnected");
+            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnecting);
+            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connecting);
+            system_tray_->UpdateTooltip(L"DefyxVPN - Disconnecting ...");
+          }
+
+          SendStatus();
+
+          dxcore_->StopVPN();
+          Sleep(50);
+
+          {
+            std::lock_guard<std::mutex> lock(status_mutex_);
+            vpn_status_ = "disconnected";
+          }
+
+          if (system_tray_) {
+            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
             system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
             system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
           }

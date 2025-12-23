@@ -73,8 +73,8 @@ class ProgressArcStack extends StatelessWidget {
           Positioned(
             top: 150.h,
             child: SizedBox(
-              width: 30.w,
-              height: 30.h,
+              width: 30,
+              height: 30,
               child: CircularProgressIndicator(
                 strokeWidth: 2.w,
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -88,7 +88,9 @@ class ProgressArcStack extends StatelessWidget {
           ),
         if (showButton && button != null)
           Positioned(
-            top: currentStep == null || currentStep == SpeedTestStep.ready ? 125.h : 150.h,
+            top: currentStep == null || currentStep == SpeedTestStep.ready
+                ? 125.h
+                : 150.h,
             child: button!,
           ),
       ],

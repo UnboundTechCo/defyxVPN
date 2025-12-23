@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
@@ -18,23 +19,6 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
     _updateSettingsBasedOnFlowLine();
   }
 
-  Future<void> _loadSettings() async {
-    final settingsJson = await _secureStorage?.read(_settingsKey);
-
-    if (settingsJson != null) {
-      try {
-        final List<dynamic> jsonList = jsonDecode(settingsJson);
-        state = jsonList
-            .map((json) => SettingsGroup.fromJson(json as Map<String, dynamic>))
-            .toList();
-      } catch (e) {
-        state = await _getDefaultSettings();
-      }
-    } else {
-      state = await _getDefaultSettings();
-    }
-  }
-
   Future<void> _saveSettings() async {
     final jsonList = state.map((group) => group.toJson()).toList();
     await _secureStorage?.write(_settingsKey, jsonEncode(jsonList));
@@ -42,7 +26,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
 
   Future<List<SettingsGroup>> _getDefaultSettings() async {
     List<dynamic> flowline = [];
-    final flowLineStorage = await _secureStorage?.read('flowLine');
+    final flowLineStorage = await _secureStorage?.read(flowLineKey);
     if (flowLineStorage != null) {
       flowline = json.decode(flowLineStorage);
     }
@@ -65,55 +49,6 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
           );
         }).toList(),
       )
-      // SettingsGroup(
-      //   id: 'escape_mode',
-      //   title: 'ESCAPE MODE',
-      //   isDraggable: false,
-      //   items: [
-      //     SettingsItem(
-      //       id: 'route_reconnect',
-      //       title: 'ROUTE RECONNECT',
-      //       isEnabled: true,
-      //       isAccessible: true,
-      //       sortOrder: 0,
-      //     ),
-      //     SettingsItem(
-      //       id: 'deep_scan',
-      //       title: 'DEEP SCAN',
-      //       isEnabled: false,
-      //       isAccessible: true,
-      //       sortOrder: 1,
-      //     ),
-      //   ],
-      // ),
-      // SettingsGroup(
-      //   id: 'protective_measures',
-      //   title: 'PROTECTIVE MEASURES',
-      //   isDraggable: false,
-      //   items: [
-      //     SettingsItem(
-      //       id: 'child_safety',
-      //       title: 'CHILD SAFETY',
-      //       isEnabled: true,
-      //       isAccessible: true,
-      //       sortOrder: 0,
-      //     ),
-      //     SettingsItem(
-      //       id: 'threat_protection',
-      //       title: 'THREAT PROTECTION',
-      //       isEnabled: true,
-      //       isAccessible: true,
-      //       sortOrder: 1,
-      //     ),
-      //     SettingsItem(
-      //       id: 'ad_blocker',
-      //       title: 'AD BLOCKER',
-      //       isEnabled: true,
-      //       isAccessible: true,
-      //       sortOrder: 2,
-      //     ),
-      //   ],
-      // ),
     ];
   }
 
@@ -215,7 +150,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
   Future<void> _updateSettingsBasedOnFlowLine() async {
     try {
       List<dynamic> flowline = [];
-      final flowLineStorage = await _secureStorage?.read('flowLine');
+      final flowLineStorage = await _secureStorage?.read(flowLineKey);
       if (flowLineStorage == null) {
         state = await _getDefaultSettings();
         return;
@@ -267,6 +202,7 @@ class SettingsNotifier extends StateNotifier<List<SettingsGroup>> {
 
   Future<void> updateSettingsBasedOnFlowLine() async {
     _updateSettingsBasedOnFlowLine();
+    saveState();
   }
 }
 
@@ -274,3 +210,5 @@ final settingsProvider =
     StateNotifierProvider<SettingsNotifier, List<SettingsGroup>>(
   (ref) => SettingsNotifier(ref),
 );
+
+final settingsLoadingProvider = StateProvider<bool>((ref) => false);

@@ -93,6 +93,7 @@ class MainActivity : FlutterActivity() {
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
+                "getCachedFlowLine" -> getCachedFlowLine(result)
                 "setConnectionMethod" -> setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
@@ -319,6 +320,24 @@ class MainActivity : FlutterActivity() {
                     result.error(
                             "GET_FLOW_LINE_ERROR",
                             "Failed to Get Flow Line",
+                            e.localizedMessage
+                    )
+                }
+            }
+        }
+    }
+
+    private fun getCachedFlowLine(result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val flowLine = DefyxVpnService.getInstance().getCachedFlowLine()
+                result.success(flowLine)
+            } catch (e: Exception) {
+                Log.e("Get Cached Flow Line", "Get Cached Flow Line failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error(
+                            "GET_CACHED_FLOW_LINE_ERROR",
+                            "Failed to Get Cached Flow Line",
                             e.localizedMessage
                     )
                 }

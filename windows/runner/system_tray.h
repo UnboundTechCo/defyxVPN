@@ -17,6 +17,14 @@ class SystemTray {
     NoInternet
   };
 
+  enum class ConnectionStatus {
+    Connect,
+    Disconnect,
+    Connecting,
+    Disconnecting,
+    Error
+  };
+
   enum class TrayAction {
     ShowWindow,
     ToggleWindow,
@@ -46,7 +54,7 @@ class SystemTray {
   bool HandleMessage(UINT message, WPARAM wparam, LPARAM lparam);
   void UpdateTooltip(const std::wstring& tooltip);
   void UpdateIcon(TrayIconStatus status);
-  void UpdateConnectionStatus(const std::wstring& status);
+  void UpdateConnectionStatus(ConnectionStatus status);
   void SetLaunchOnStartup(bool value);
   void SetAutoConnect(bool value);
   void SetStartMinimized(bool value);
@@ -62,7 +70,9 @@ class SystemTray {
   bool GetProxyService() const { return proxy_service_; }
   bool GetSystemProxy() const { return system_proxy_; }
   bool GetVPNMode() const { return vpn_mode_; }
-  std::wstring GetConnectionStatus() const { return connection_status_; }
+  ConnectionStatus GetConnectionStatus() const { return connection_status_; }
+  std::wstring GetConnectionStatusText() const;
+  bool IsVPNDisconnected() const;
 
   static constexpr UINT WM_TRAYICON = WM_USER + 1;
 
@@ -73,6 +83,7 @@ class SystemTray {
   bool IsSystemDarkMode();
   COLORREF GetMenuBackgroundColor();
   COLORREF GetMenuTextColor();
+  static std::wstring ConnectionStatusToString(ConnectionStatus status);
 
   HWND window_;
   HINSTANCE instance_;
@@ -112,7 +123,7 @@ class SystemTray {
   bool proxy_service_;
   bool system_proxy_;
   bool vpn_mode_;
-  std::wstring connection_status_;
+  ConnectionStatus connection_status_;
 };
 
 #endif

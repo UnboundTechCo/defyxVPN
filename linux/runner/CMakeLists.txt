@@ -12,6 +12,9 @@ add_executable(${BINARY_NAME}
   "defyx_core.cpp"
   "defyx_linux_plugin.cc"
   "proxy_manager.cpp"
+  "settings_manager.cpp"
+  "system_tray.cpp"
+  "vpn_channel_handler.cpp"
   "${FLUTTER_MANAGED_DIR}/generated_plugin_registrant.cc"
 )
 
@@ -24,12 +27,21 @@ add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 
 # Add dependency libraries. Add any application-specific dependencies here.
 find_package(Threads REQUIRED)
+
+# Find AppIndicator library for system tray
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(APPINDICATOR REQUIRED ayatana-appindicator3-0.1)
+
 target_link_libraries(${BINARY_NAME} PRIVATE flutter)
 target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GTK)
 target_link_libraries(${BINARY_NAME} PRIVATE dl)
 target_link_libraries(${BINARY_NAME} PRIVATE Threads::Threads)
+target_link_libraries(${BINARY_NAME} PRIVATE ${APPINDICATOR_LIBRARIES})
 
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
+target_include_directories(${BINARY_NAME} PRIVATE ${APPINDICATOR_INCLUDE_DIRS})
+
+target_compile_options(${BINARY_NAME} PRIVATE ${APPINDICATOR_CFLAGS_OTHER})
 
 # --- DXcore native library build and packaging --------------------------------
 
@@ -37,6 +49,7 @@ target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 if(NOT DEFYX_DXCORE_DIR AND DEFINED ENV{DEFYX_DXCORE_DIR})
   set(DEFYX_DXCORE_DIR "$ENV{DEFYX_DXCORE_DIR}")
 endif()
+
 if(NOT DEFYX_DXCORE_LIB AND DEFINED ENV{DEFYX_DXCORE_LIB})
   set(DEFYX_DXCORE_LIB "$ENV{DEFYX_DXCORE_LIB}")
 endif()
@@ -44,6 +57,7 @@ endif()
 get_filename_component(_runner_dir "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
 
 set(_dxcore_source_candidates "")
+
 if(DEFYX_DXCORE_LIB)
   get_filename_component(_override_lib "${DEFYX_DXCORE_LIB}" ABSOLUTE)
   list(APPEND _dxcore_source_candidates "${_override_lib}")
@@ -62,6 +76,7 @@ set(_dxcore_repo_lib "${_dxcore_root}/libDXcore.so")
 list(APPEND _dxcore_source_candidates "${_dxcore_repo_lib}")
 
 set(_dxcore_source "")
+
 foreach(candidate IN LISTS _dxcore_source_candidates)
   if(EXISTS "${candidate}")
     set(_dxcore_source "${candidate}")
@@ -72,6 +87,7 @@ endforeach()
 set(_have_dxcore_lib FALSE)
 
 find_program(GO_EXECUTABLE go)
+
 if(NOT _dxcore_source AND GO_EXECUTABLE AND EXISTS "${_dxcore_root}")
   set(_dxcore_source "${_dxcore_repo_lib}")
   add_custom_target(dxcore_shared_lib
@@ -103,9 +119,11 @@ if(NOT PROJECT_BUILD_DIR)
 endif()
 
 set(_bundle_config "${CMAKE_BUILD_TYPE}")
+
 if("${_bundle_config}" STREQUAL "")
   set(_bundle_config "Debug")
 endif()
+
 string(TOLOWER "${_bundle_config}" _bundle_config_lower)
 set(_bundle_dir "${PROJECT_BUILD_DIR}linux/x64/${_bundle_config_lower}/bundle")
 
