@@ -1,27 +1,37 @@
 ### Change Description
+Briefly describe what this PR does and why. Keep it short and clear.
 
-What does this change add to or fix in the project?
+---
 
-### Checklist
+### Related Platforms
+> Which platforms are affected by your changes? Check only the ones you actually tested.
 
-- Code has been built and tested:
-  - **iOS**
-    - [ ] Real device
-    - [ ] Simulator
-  - **iPad**
-    - [ ] Real device
-    - [ ] Simulator
-  - **Android**
-    - [ ] Real device
-    - [ ] Emulator
+- [ ] Android
+- [ ] iOS
+- [ ] iPad
+- [ ] Windows
+- [ ] Linux
+- [ ] Android TV
+- [ ] OpenWrt
 
-- [ ] App output has been tested on real devices and VPN functionality works correctly.
-- [ ] Unit and E2E tests have been written for critical parts of the code.
-- [ ] Relevant documentation (Documentation or README references) has been updated.
-- [ ] Compatibility and regression checks across different OS versions have been performed.
-- [ ] Verified there are no security, connection, or error-handling issues.
-- [ ] Confirmed there are no crashes or freezes on real devices.
+---
+
+### Verification Checklist
+> Make sure the things you checked actually work. It's okay if you didn't test everything.
+
+- [ ] Project builds successfully
+- [ ] App runs without crashes on tested platforms
+- [ ] VPN connection works correctly
+- [ ] No obvious regressions observed
+- [ ] Documentation updated (if needed)
+
+---
+
+### Optional (for bigger changes)
+- [ ] Added or updated unit / E2E tests
+- [ ] Checked security and edge cases
+
+---
 
 ### Related Links
-
-- Link to any related issue or feature in the repository. Example: Closes #123
+Closes #ID.
