@@ -20,6 +20,9 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 <a href="https://play.google.com/store/apps/details?id=de.unboundtech.defyxvpn" target="_blank">
     <img height="60" src=".github/images/download/google-play.png" alt="download" />
 </a>
+<a href="https://apps.microsoft.com/detail/9n0qtbzz4kx4?hl=en-us">
+    <img height="60" src=".github/images/download/microsoft.png" alt="download" />
+</a>
 <a href="https://github.com/UnboundTechCo/defyxVPN/releases">
     <img height="60" src=".github/images/download/github.png" alt="download" />
 </a>
