@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
+import 'package:toastification/toastification.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -62,22 +63,28 @@ class App extends ConsumerWidget {
 
     final designSize = _getDesignSize(context);
 
-    return ScreenUtilInit(
-      designSize: designSize,
-      minTextAdapt: true,
-      splitScreenMode: true,
-      builder: (_, __) {
-        return MaterialApp.router(
-          title: 'Defyx',
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.light,
-          routerConfig: router,
-          builder: _appBuilder,
-          debugShowCheckedModeBanner: false,
-        );
-      },
-    );
+    return ToastificationWrapper(
+        config: ToastificationConfig(
+          maxToastLimit: 1,
+          blockBackgroundInteraction: false,
+          applyMediaQueryViewInsets: true,
+        ),
+        child: ScreenUtilInit(
+          designSize: designSize,
+          minTextAdapt: true,
+          splitScreenMode: true,
+          builder: (_, __) {
+            return MaterialApp.router(
+              title: 'Defyx',
+              theme: AppTheme.lightTheme,
+              darkTheme: AppTheme.darkTheme,
+              themeMode: ThemeMode.light,
+              routerConfig: router,
+              builder: _appBuilder,
+              debugShowCheckedModeBanner: false,
+            );
+          },
+        ));
   }
 
   Size _getDesignSize(BuildContext context) {
