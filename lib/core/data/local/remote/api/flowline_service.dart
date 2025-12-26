@@ -13,17 +13,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
-  return FlowlineService(secureStorage);
+  return FlowlineService(secureStorage, ref.container);
 });
 
 class FlowlineService implements IFlowlineService {
   final ISecureStorage _secureStorage;
+  final ProviderContainer _container;
   final _vpnBridge = VpnBridge();
   final lastFlowlineUpdateKey = 'lastFlowlineUpdate';
   static final _updateFlowlinePerios =
       int.parse(dotenv.env['UPDATE_FLOWLINE_PERIOD'] ?? "60") * 1000;
 
-  FlowlineService(this._secureStorage);
+  FlowlineService(this._secureStorage, this._container);
 
   @override
   Future<String> getFlowline() => _vpnBridge.getFlowLine();
@@ -68,8 +69,7 @@ class FlowlineService implements IFlowlineService {
       await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
 
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
-      final ref = ProviderContainer();
-      final settings = ref.read(settingsProvider.notifier);
+      final settings = _container.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
       if (!offlineMode) {
         prefs.setInt(
