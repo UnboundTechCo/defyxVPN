@@ -58,7 +58,7 @@ class _SpeedTestApi implements SpeedTestApi {
     try {
       _value = _result.data!.cast<int>();
     } on Object catch (e, s) {
-      // errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     final httpResponse = HttpResponse(_value, _result);
@@ -206,7 +206,7 @@ class _SpeedTestApi implements SpeedTestApi {
     try {
       _value = _result.data!;
     } on Object catch (e, s) {
-      // errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options);
       rethrow;
     }
     final httpResponse = HttpResponse(_value, _result);

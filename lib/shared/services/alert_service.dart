@@ -206,7 +206,9 @@ class AlertService {
     await _alertSub?.init();
 
     _battery.onBatteryStateChanged.listen((BatteryState state) async {
-      _batteryLevel = await _battery.batteryLevel;
+      await _battery.batteryLevel
+          .then((value) => _batteryLevel = value)
+          .catchError((error) => _batteryLevel = 100);
     });
   }
 

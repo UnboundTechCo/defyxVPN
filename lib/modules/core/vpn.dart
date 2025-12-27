@@ -154,6 +154,7 @@ class VPN {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       connectionNotifier?.setLoading();
+      loggerNotifier?.setLoading();
     });
 
     alertService.heartbeat();
@@ -180,7 +181,6 @@ class VPN {
 
     await _vpnBridge.startVPN(flowLineStorage, pattern);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loggerNotifier?.setLoading();
       connectionNotifier?.setAnalyzing();
     });
   }
