@@ -6,6 +6,7 @@ class SecretTapHandler {
   int _secretTapCounter = 0;
   DateTime? _lastTapTime;
   final alertService = AlertService();
+  bool hapticEnabled = true;
 
   void handleSecretTap(BuildContext context) {
     final now = DateTime.now();
@@ -16,7 +17,9 @@ class SecretTapHandler {
     _secretTapCounter++;
 
     if (_secretTapCounter >= 7) {
-      alertService.heartbeat();
+      if (hapticEnabled) {
+        alertService.heartbeat();
+      }
       _secretTapCounter = 0;
       showDialog(
         context: context,

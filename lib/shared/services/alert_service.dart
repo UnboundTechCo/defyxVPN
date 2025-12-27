@@ -19,6 +19,8 @@ abstract class AlertSub {
 }
 
 final class VibrationService extends AlertSub {
+  bool _userEnabled = true;
+
   @override
   Future<void> init() async {
     _hasAction = await Vibration.hasVibrator();
@@ -26,11 +28,14 @@ final class VibrationService extends AlertSub {
 
   @override
   void setActionEnabled(bool enabled) {
-    _hasAction = enabled;
+    _userEnabled = enabled;
   }
+
+  bool get _canVibrate => _hasAction && _userEnabled;
 
   @override
   Future<void> success() async {
+    if (!_canVibrate) return;
     try {
       await Vibration.vibrate(duration: 75);
     } catch (e) {
@@ -40,6 +45,7 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> heartbeat() async {
+    if (!_canVibrate) return;
     try {
       await Vibration.vibrate(duration: 35);
     } catch (e) {
@@ -49,6 +55,7 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> error() async {
+    if (!_canVibrate) return;
     try {
       await Vibration.vibrate(duration: 100);
     } catch (e) {
@@ -58,6 +65,7 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> short() async {
+    if (!_canVibrate) return;
     try {
       await Vibration.vibrate(duration: 50);
     } catch (e) {

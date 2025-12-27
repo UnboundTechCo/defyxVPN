@@ -5,6 +5,7 @@ import 'package:defyx_vpn/core/network/http_client_interface.dart';
 import 'package:defyx_vpn/modules/speed_test/data/api/speed_test_api.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/haptic_provider.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -191,7 +192,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     } catch (e) {
       debugPrint('❌ Speed test error: $e');
       _stopConnectionMonitoring();
-      _alertService.error();
+      if (_ref.read(hapticEnabledProvider)) {
+        _alertService.error();
+      }
       state = state.copyWith(
         errorMessage: 'Speed test failed. Please try again.',
         step: SpeedTestStep.ready,
@@ -417,7 +420,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     final isStable = ResultsCalculatorService.checkConnectionStability(state.result);
 
     if (!isStable) {
-      _alertService.error();
+      if (_ref.read(hapticEnabledProvider)) {
+        _alertService.error();
+      }
       state = state.copyWith(
         step: SpeedTestStep.ready,
         isConnectionStable: false,
