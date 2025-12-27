@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:vibration/vibration.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -19,9 +20,21 @@ abstract class AlertSub {
 }
 
 final class VibrationService extends AlertSub {
+  bool _systemHapticEnabled = true;
+
   @override
   Future<void> init() async {
-    _hasAction = await Vibration.hasVibrator();
+    _hasAction = await Vibration.hasVibrator() ?? false;
+    await _checkSystemHapticSetting();
+  }
+
+  Future<void> _checkSystemHapticSetting() async {
+    try {
+      final result = await HapticFeedback.vibrate();
+      _systemHapticEnabled = true;
+    } catch (e) {
+      _systemHapticEnabled = false;
+    }
   }
 
   @override
@@ -29,10 +42,16 @@ final class VibrationService extends AlertSub {
     _hasAction = enabled;
   }
 
+  bool get _canVibrate => _hasAction && _systemHapticEnabled;
+
   @override
   Future<void> success() async {
+    if (!_canVibrate) return;
     try {
-      await Vibration.vibrate(duration: 75);
+      final hasCustomVibration = await Vibration.hasCustomVibrationsSupport() ?? false;
+      if (hasCustomVibration) {
+        await Vibration.vibrate(duration: 75);
+      }
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }
@@ -40,8 +59,12 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> heartbeat() async {
+    if (!_canVibrate) return;
     try {
-      await Vibration.vibrate(duration: 35);
+      final hasCustomVibration = await Vibration.hasCustomVibrationsSupport() ?? false;
+      if (hasCustomVibration) {
+        await Vibration.vibrate(duration: 35);
+      }
     } catch (e) {
       debugPrint('Error in heartbeat vibration: $e');
     }
@@ -49,8 +72,12 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> error() async {
+    if (!_canVibrate) return;
     try {
-      await Vibration.vibrate(duration: 100);
+      final hasCustomVibration = await Vibration.hasCustomVibrationsSupport() ?? false;
+      if (hasCustomVibration) {
+        await Vibration.vibrate(duration: 100);
+      }
     } catch (e) {
       debugPrint('Error in error vibration: $e');
     }
@@ -58,8 +85,12 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> short() async {
+    if (!_canVibrate) return;
     try {
-      await Vibration.vibrate(duration: 50);
+      final hasCustomVibration = await Vibration.hasCustomVibrationsSupport() ?? false;
+      if (hasCustomVibration) {
+        await Vibration.vibrate(duration: 50);
+      }
     } catch (e) {
       debugPrint('Error in short vibration: $e');
     }
@@ -150,7 +181,6 @@ final class AudioService extends AlertSub {
   @override
   Future<void> short() async {
     try {
-      // await _playSound();
     } catch (e) {
       debugPrint('Error in short audio: $e');
     }
@@ -159,7 +189,6 @@ final class AudioService extends AlertSub {
   @override
   Future<void> error() async {
     try {
-      // await _playSound();
     } catch (e) {
       debugPrint('Error in error audio: $e');
     }
@@ -168,7 +197,6 @@ final class AudioService extends AlertSub {
   @override
   Future<void> heartbeat() async {
     try {
-      // await _playSound();
     } catch (e) {
       debugPrint('Error in heartbeat audio: $e');
     }

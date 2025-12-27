@@ -1,20 +1,21 @@
 import 'package:defyx_vpn/modules/settings/models/settings_item.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/providers/haptic_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/settings_group.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
 
-class SettingsGroupWidget extends StatefulWidget {
+class SettingsGroupWidget extends ConsumerStatefulWidget {
   final SettingsGroup group;
   final Function(String, String)? onToggle;
   final VoidCallback? onReset;
   final ReorderCallback? onReorder;
-  final bool
-      showSeparators; // Controls whether separators are shown between items
+  final bool showSeparators;
 
   const SettingsGroupWidget({
     super.key,
@@ -26,10 +27,10 @@ class SettingsGroupWidget extends StatefulWidget {
   });
 
   @override
-  State<SettingsGroupWidget> createState() => _SettingsGroupWidgetState();
+  ConsumerState<SettingsGroupWidget> createState() => _SettingsGroupWidgetState();
 }
 
-class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
+class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     with SingleTickerProviderStateMixin {
   final AnimationService _animationService = AnimationService();
   late AnimationController _rotationController;
@@ -65,7 +66,10 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
         _rotationController.reset();
       });
     }
-    HapticFeedback.mediumImpact();
+    final hapticEnabled = ref.read(hapticEnabledProvider);
+    if (hapticEnabled) {
+      HapticFeedback.mediumImpact();
+    }
     widget.onReset?.call();
   }
 
@@ -73,11 +77,15 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
     final List<SettingsItem> allItems = List.from(widget.group.items)
       ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
+    final hapticEnabled = ref.watch(hapticEnabledProvider);
+
     return ReorderableListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       onReorder: (oldIndex, newIndex) {
-        HapticFeedback.lightImpact();
+        if (hapticEnabled) {
+          HapticFeedback.lightImpact();
+        }
         widget.onReorder?.call(oldIndex, newIndex);
       },
       onReorderStart: (index) {

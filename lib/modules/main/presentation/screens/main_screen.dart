@@ -16,6 +16,7 @@ import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/haptic_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,6 +134,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _handleSecretTap() {
+    _secretTapHandler.hapticEnabled = ref.read(hapticEnabledProvider);
     _secretTapHandler.handleSecretTap(context);
   }
 

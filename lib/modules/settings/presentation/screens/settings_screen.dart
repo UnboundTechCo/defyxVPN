@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/settings_group_widget.dart';
+import '../widgets/haptic_setting_widget.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -209,27 +210,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsNotifier = ref.read(settingsProvider.notifier);
 
     return Column(
-      children: settings
-          .map((group) => SettingsGroupWidget(
-                key: ValueKey(group.id),
-                group: group,
-                showSeparators: group.id == 'connection_method',
-                onToggle: (groupId, itemId) {
-                  settingsNotifier.toggleSetting(groupId, itemId, context);
-                },
-                onReorder: group.id == 'connection_method'
-                    ? (oldIndex, newIndex) {
-                        settingsNotifier.reorderConnectionMethodItems(
-                            oldIndex, newIndex);
-                      }
-                    : null,
-                onReset: group.id == 'connection_method'
-                    ? () {
-                        settingsNotifier.resetConnectionMethodToDefault();
-                      }
-                    : null,
-              ))
-          .toList(),
+      children: [
+        const HapticSettingWidget(),
+        ...settings
+            .map((group) => SettingsGroupWidget(
+                  key: ValueKey(group.id),
+                  group: group,
+                  showSeparators: group.id == 'connection_method',
+                  onToggle: (groupId, itemId) {
+                    settingsNotifier.toggleSetting(groupId, itemId, context);
+                  },
+                  onReorder: group.id == 'connection_method'
+                      ? (oldIndex, newIndex) {
+                          settingsNotifier.reorderConnectionMethodItems(
+                              oldIndex, newIndex);
+                        }
+                      : null,
+                  onReset: group.id == 'connection_method'
+                      ? () {
+                          settingsNotifier.resetConnectionMethodToDefault();
+                        }
+                      : null,
+                ))
+            .toList(),
+      ],
     );
   }
 }

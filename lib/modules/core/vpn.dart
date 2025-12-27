@@ -12,6 +12,7 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
+import 'package:defyx_vpn/shared/providers/haptic_provider.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:flutter/material.dart';
@@ -45,6 +46,14 @@ class VPN {
   ProviderContainer? _container;
   StreamSubscription<String>? _vpnSub;
   DateTime? _connectionStartTime;
+
+  bool get _hapticEnabled => _container?.read(hapticEnabledProvider) ?? true;
+
+  void _vibrate(void Function() action) {
+    if (_hapticEnabled) {
+      action();
+    }
+  }
 
   void _init(ProviderContainer container) {
     if (_initialized) return;
@@ -107,7 +116,7 @@ class VPN {
       loggerNotifier.setConnecting();
 
       if (step > 1) {
-        alertService.heartbeat();
+        _vibrate(() => alertService.heartbeat());
       }
     }
 
@@ -157,12 +166,12 @@ class VPN {
       loggerNotifier?.setLoading();
     });
 
-    alertService.heartbeat();
+    _vibrate(() => alertService.heartbeat());
 
     final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
-      alertService.error();
+      _vibrate(() => alertService.error());
       return;
     }
 
@@ -191,7 +200,7 @@ class VPN {
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
-    alertService.error();
+    _vibrate(() => alertService.error());
   }
 
   Future<void> _onSuccessConnect() async {
@@ -207,7 +216,7 @@ class VPN {
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
-    alertService.success();
+    _vibrate(() => alertService.success());
 
     final settings = _container?.read(settingsProvider.notifier);
     final groupState = _container?.read(groupStateProvider);
