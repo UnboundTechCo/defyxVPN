@@ -61,6 +61,7 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Build Windows Release
+        shell: bash
         run: |
           chmod +x scripts/build_release.sh
           bash scripts/build_release.sh <<EOF
