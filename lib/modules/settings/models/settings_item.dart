@@ -14,6 +14,7 @@ class SettingsItem {
   final SettingsItemType itemType;
   final String? navigationRoute;
   final String? subtitle;
+  final bool showLeftIcon;
 
   const SettingsItem({
     required this.id,
@@ -26,6 +27,7 @@ class SettingsItem {
     this.itemType = SettingsItemType.toggle,
     this.navigationRoute,
     this.subtitle,
+    this.showLeftIcon = false,
   });
 
   SettingsItem copyWith({
@@ -39,6 +41,7 @@ class SettingsItem {
     SettingsItemType? itemType,
     String? navigationRoute,
     String? subtitle,
+    bool? showLeftIcon,
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -51,6 +54,7 @@ class SettingsItem {
       itemType: itemType ?? this.itemType,
       navigationRoute: navigationRoute ?? this.navigationRoute,
       subtitle: subtitle ?? this.subtitle,
+      showLeftIcon: showLeftIcon ?? this.showLeftIcon,
     );
   }
 
@@ -69,6 +73,7 @@ class SettingsItem {
       ),
       navigationRoute: json['navigationRoute'] as String?,
       subtitle: json['subtitle'] as String?,
+      showLeftIcon: json['showLeftIcon'] as bool? ?? false,
     );
   }
 
@@ -84,6 +89,7 @@ class SettingsItem {
       'itemType': itemType.name,
       'navigationRoute': navigationRoute,
       'subtitle': subtitle,
+      'showLeftIcon': showLeftIcon,
     };
   }
 }

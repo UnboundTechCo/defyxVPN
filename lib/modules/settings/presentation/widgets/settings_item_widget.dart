@@ -54,6 +54,21 @@ class SettingsItemWidget extends StatelessWidget {
               ),
             ),
           ),
+        ] else if (item.showLeftIcon) ...[
+          Container(
+            width: 24.w,
+            height: 24.h,
+            margin: EdgeInsets.only(right: 12.w),
+            child: SvgPicture.asset(
+              'assets/icons/draggable_setting_indicator.svg',
+              width: 24.w,
+              height: 24.h,
+              colorFilter: ColorFilter.mode(
+                Colors.grey[400]!,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
         ],
         Expanded(
           child: Row(
@@ -142,7 +157,7 @@ class SettingsItemWidget extends StatelessWidget {
                 color: Colors.grey[500],
               ),
             ),
-          SizedBox(width: 8.w),
+          if (item.subtitle != null) SizedBox(width: 8.w),
           Icon(
             Icons.chevron_right,
             color: Colors.grey[400],

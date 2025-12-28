@@ -102,7 +102,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       sortOrder: 9999,
       itemType: SettingsItemType.navigation,
       navigationRoute: '/settings/destination',
-      subtitle: 'AUTO',
+      showLeftIcon: true,
     );
 
     return SettingsGroup(
@@ -203,7 +203,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     final navigationItems = savedItems
         .where((item) => item.itemType == SettingsItemType.navigation)
-        .toList();
+        .map((item) {
+      if (item.id == 'destination') {
+        return item.copyWith(showLeftIcon: true);
+      }
+      return item;
+    }).toList();
 
     final filteredItems = savedItems
         .where((item) =>
@@ -235,7 +240,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         sortOrder: 9999,
         itemType: SettingsItemType.navigation,
         navigationRoute: '/settings/destination',
-        subtitle: 'AUTO',
+        showLeftIcon: true,
       ));
     }
 
