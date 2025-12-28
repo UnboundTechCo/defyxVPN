@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
+import '../constants/settings_constants.dart';
+import '../factories/settings_factory.dart';
 import '../presentation/widgets/settings_toast_message.dart';
 
 class SettingsState {
@@ -35,35 +37,35 @@ class SettingsState {
 class SettingsNotifier extends StateNotifier<SettingsState> {
   final Ref<SettingsState> ref;
   ISecureStorage? _secureStorage;
-  final String _settingsKey = 'app_settings_v2';
-
-  static const String connectionMethodGroupId = 'connection_method';
-  static const String trafficControlGroupId = 'traffic_control';
+  bool _isInitialized = false;
 
   SettingsNotifier(this.ref) : super(const SettingsState(groups: {})) {
     _secureStorage = ref.read(secureStorageProvider);
     _initializeSettings();
   }
 
+  // ============== Initialization ==============
+
   Future<void> _initializeSettings() async {
     await _updateConnectionMethodFromFlowLine();
     _ensureStaticGroups();
+    _isInitialized = true;
+    debugPrint('Settings initialized');
   }
+
+  // ============== Storage Operations ==============
 
   Future<void> _saveSettings() async {
+    if (!_isInitialized && state.groups.isEmpty) {
+      debugPrint('Skipping save - not initialized yet');
+      return;
+    }
+
     final jsonMap =
         state.groups.map((key, group) => MapEntry(key, group.toJson()));
-    await _secureStorage?.write(_settingsKey, jsonEncode(jsonMap));
-  }
-
-  Future<Map<String, dynamic>?> _loadSavedSettings() async {
-    final settingsJson = await _secureStorage?.read(_settingsKey);
-    if (settingsJson == null) return null;
-    try {
-      return jsonDecode(settingsJson) as Map<String, dynamic>;
-    } catch (_) {
-      return null;
-    }
+    final jsonString = jsonEncode(jsonMap);
+    // debugPrint('Saving settings: $jsonString');
+    await _secureStorage?.write(SettingsStorageKey.appSettings, jsonString);
   }
 
   Future<List<dynamic>> _loadFlowLine() async {
@@ -76,182 +78,145 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     }
   }
 
-  List<SettingsItem> _createConnectionMethodItems(List<dynamic> flowline) {
-    return flowline.asMap().entries.map((entry) {
-      final index = entry.key;
-      final flow = entry.value as Map<String, dynamic>;
-      return SettingsItem(
-        id: flow['label'] ?? '',
-        title: flow['label'] ?? '',
-        isEnabled: flow['enabled'] ?? false,
-        isAccessible: true,
-        sortOrder: index,
-        description: flow['description'] ?? '',
-        itemType: SettingsItemType.toggle,
-      );
-    }).toList();
-  }
-
-  SettingsGroup _createDefaultConnectionMethodGroup(List<dynamic> flowline) {
-    final connectionItems = _createConnectionMethodItems(flowline);
-    final destinationItem = SettingsItem(
-      id: 'destination',
-      title: 'DESTINATION',
-      isEnabled: false,
-      isAccessible: true,
-      sortOrder: 9999,
-      itemType: SettingsItemType.navigation,
-      navigationRoute: '/settings/destination',
-      showLeftIcon: true,
-    );
-
-    return SettingsGroup(
-      id: connectionMethodGroupId,
-      title: 'CONNECTION METHOD',
-      isDraggable: true,
-      items: [...connectionItems, destinationItem],
-    );
-  }
-
-  SettingsGroup _createTrafficControlGroup() {
-    final savedGroup = state.groups[trafficControlGroupId];
-
-    return SettingsGroup(
-      id: trafficControlGroupId,
-      title: 'TRAFFIC CONTROL',
-      isDraggable: false,
-      items: [
-        SettingsItem(
-          id: 'split_tunnel',
-          title: 'SPLIT TUNNEL',
-          isEnabled: savedGroup?.items
-                  .where((i) => i.id == 'split_tunnel')
-                  .firstOrNull
-                  ?.isEnabled ??
-              false,
-          isAccessible: true,
-          sortOrder: 0,
-          itemType: SettingsItemType.navigation,
-          navigationRoute: '/settings/split_tunnel',
-          subtitle: 'INCLUDED',
-        ),
-        SettingsItem(
-          id: 'kill_switch',
-          title: 'KILL SWITCH',
-          isEnabled: savedGroup?.items
-                  .where((i) => i.id == 'kill_switch')
-                  .firstOrNull
-                  ?.isEnabled ??
-              false,
-          isAccessible: true,
-          sortOrder: 1,
-          itemType: SettingsItemType.toggle,
-        ),
-      ],
-    );
-  }
-
-  void _ensureStaticGroups() {
-    final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
-
-    if (!updatedGroups.containsKey(trafficControlGroupId)) {
-      updatedGroups[trafficControlGroupId] = _createTrafficControlGroup();
-    }
-
-    state = state.copyWith(groups: updatedGroups);
-    _saveSettings();
-  }
-
-  Future<void> _updateConnectionMethodFromFlowLine() async {
-    try {
-      final flowline = await _loadFlowLine();
-
-      if (flowline.isEmpty) {
-        final defaultGroup = _createDefaultConnectionMethodGroup([]);
-        _updateGroup(defaultGroup);
-        return;
-      }
-
-      final savedSettings = await _loadSavedSettings();
-
-      if (savedSettings == null ||
-          !savedSettings.containsKey(connectionMethodGroupId)) {
-        final defaultGroup = _createDefaultConnectionMethodGroup(flowline);
-        _updateGroup(defaultGroup);
-        return;
-      }
-
-      final savedGroup =
-          SettingsGroup.fromJson(savedSettings[connectionMethodGroupId]);
-      final mergedItems =
-          _mergeConnectionMethodItems(savedGroup.items, flowline);
-
-      final updatedGroup = savedGroup.copyWith(items: mergedItems);
-      _updateGroup(updatedGroup);
-    } catch (_) {
-      final defaultGroup = _createDefaultConnectionMethodGroup([]);
-      _updateGroup(defaultGroup);
-    }
-  }
-
-  List<SettingsItem> _mergeConnectionMethodItems(
-      List<SettingsItem> savedItems, List<dynamic> flowline) {
-    final flowlineLabels = flowline
-        .where((f) => f['enabled'] == true)
-        .map((f) => f['label'] as String)
-        .toSet();
-
-    final navigationItems = savedItems
-        .where((item) => item.itemType == SettingsItemType.navigation)
-        .map((item) {
-      if (item.id == 'destination') {
-        return item.copyWith(showLeftIcon: true);
-      }
-      return item;
-    }).toList();
-
-    final filteredItems = savedItems
-        .where((item) =>
-            item.itemType != SettingsItemType.navigation &&
-            flowlineLabels.contains(item.id))
-        .toList();
-
-    for (var flow in flowline.where((f) => f['enabled'] == true)) {
-      final label = flow['label'] as String;
-      if (!filteredItems.any((item) => item.id == label)) {
-        filteredItems.add(SettingsItem(
-          id: label,
-          title: label,
-          isAccessible: true,
-          isEnabled: true,
-          sortOrder: filteredItems.length,
-          description: flow['description'] ?? '',
-          itemType: SettingsItemType.toggle,
-        ));
-      }
-    }
-
-    if (!navigationItems.any((item) => item.id == 'destination')) {
-      navigationItems.add(SettingsItem(
-        id: 'destination',
-        title: 'DESTINATION',
-        isEnabled: false,
-        isAccessible: true,
-        sortOrder: 9999,
-        itemType: SettingsItemType.navigation,
-        navigationRoute: '/settings/destination',
-        showLeftIcon: true,
-      ));
-    }
-
-    return [...filteredItems, ...navigationItems];
-  }
+  // ============== Group Management ==============
 
   void _updateGroup(SettingsGroup group) {
     final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
     updatedGroups[group.id] = group;
     state = state.copyWith(groups: updatedGroups);
   }
+
+  void _ensureStaticGroups() {
+    final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
+
+    // Only add traffic control if it doesn't exist
+    if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
+      updatedGroups[SettingsGroupId.trafficControl] =
+          _createTrafficControlGroup();
+    }
+
+    state = state.copyWith(groups: updatedGroups);
+
+    // Only save if we have connection_method loaded (not empty state)
+    if (updatedGroups.containsKey(SettingsGroupId.connectionMethod)) {
+      _saveSettings();
+    }
+  }
+
+  // ============== Group Creation ==============
+
+  SettingsGroup _createTrafficControlGroup() {
+    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+
+    return SettingsFactory.createTrafficControlGroup(
+      splitTunnelEnabled: SettingsFactory.getSavedItemState(
+        savedGroup?.items,
+        SettingsItemId.splitTunnel,
+      ),
+      killSwitchEnabled: SettingsFactory.getSavedItemState(
+        savedGroup?.items,
+        SettingsItemId.killSwitch,
+      ),
+    );
+  }
+
+  SettingsGroup _createDefaultConnectionMethodGroup(List<dynamic> flowline) {
+    final connectionItems = SettingsFactory.flowlineToItems(flowline);
+    return SettingsFactory.createConnectionMethodGroup(
+      connectionItems: connectionItems,
+    );
+  }
+
+  // ============== Connection Method Sync ==============
+
+  Future<void> _updateConnectionMethodFromFlowLine() async {
+    try {
+      // Load flowline
+      final flowline = await _loadFlowLine();
+      if (flowline.isEmpty) {
+        _updateGroup(_createDefaultConnectionMethodGroup([]));
+        return;
+      }
+
+      // Load saved settings
+      final settingsJson =
+          await _secureStorage?.read(SettingsStorageKey.appSettings);
+      // debugPrint('Loaded settings: $settingsJson');
+      if (settingsJson == null) {
+        _updateGroup(_createDefaultConnectionMethodGroup(flowline));
+        return;
+      }
+
+      // Parse saved settings
+      final Map<String, dynamic> savedData = jsonDecode(settingsJson);
+      if (!savedData.containsKey(SettingsGroupId.connectionMethod)) {
+        _updateGroup(_createDefaultConnectionMethodGroup(flowline));
+        return;
+      }
+
+      // Get saved items - these contain user's drag order (sortOrder)
+      final List<dynamic> savedItems = List<dynamic>.from(
+          savedData[SettingsGroupId.connectionMethod]['items'] ?? []);
+
+      // Get enabled flowline items
+      final filteredFlowline =
+          flowline.where((f) => f['enabled'] == true).toList();
+
+      // Filter saved items - keep items that exist in flowline OR are navigation items
+      // This preserves user's sortOrder!
+      final List<dynamic> mergedItems = savedItems.where((settingItem) {
+        if (settingItem['itemType'] == 'navigation') return true;
+        return filteredFlowline
+            .any((flowItem) => flowItem['label'] == settingItem['id']);
+      }).toList();
+
+      // Find max sortOrder from existing items
+      int maxSortOrder = 0;
+      for (var item in mergedItems) {
+        final order = item['sortOrder'] as int? ?? 0;
+        if (order > maxSortOrder) maxSortOrder = order;
+      }
+
+      // New items go to the end (after user's ordered items)
+      for (var flowItem in filteredFlowline) {
+        final label = flowItem['label'] as String;
+        final existsInSaved = mergedItems.any((settingItem) =>
+            settingItem['id'] == label ||
+            settingItem['itemType'] == 'navigation');
+
+        if (!existsInSaved) {
+          maxSortOrder++;
+          final newItem = SettingsFactory.createFlowlineItem(
+            label: label,
+            description: flowItem['description'] ?? '',
+            sortOrder: maxSortOrder,
+            isEnabled: true,
+          );
+          mergedItems.add(newItem.toJson());
+        }
+      }
+
+      // Ensure destination item exists
+      if (!mergedItems
+          .any((item) => item['id'] == SettingsItemId.destination)) {
+        mergedItems.add(SettingsFactory.createDestinationItem().toJson());
+      }
+
+      // Rebuild group with merged items (preserving user's sortOrder)
+      final updatedGroupData = Map<String, dynamic>.from(
+          savedData[SettingsGroupId.connectionMethod]);
+      updatedGroupData['items'] = mergedItems;
+
+      final updatedGroup = SettingsGroup.fromJson(updatedGroupData);
+      _updateGroup(updatedGroup);
+    } catch (e) {
+      debugPrint('Error updating connection method: $e');
+      final flowline = await _loadFlowLine();
+      _updateGroup(_createDefaultConnectionMethodGroup(flowline));
+    }
+  }
+
+  // ============== Public Actions ==============
 
   void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
     final group = state.groups[groupId];
@@ -264,35 +229,19 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       return item;
     }).toList();
 
-    if (groupId == connectionMethodGroupId &&
+    // Prevent disabling all connection methods
+    if (groupId == SettingsGroupId.connectionMethod &&
         updatedItems.every((item) => !item.isEnabled)) {
-      SettingsToastMessage.show('At least one core must remain enabled');
+      SettingsToastMessage.show(SettingsMessage.atLeastOneCoreRequired);
       return;
     }
 
-    final updatedGroup = group.copyWith(items: updatedItems);
-    _updateGroup(updatedGroup);
+    _updateGroup(group.copyWith(items: updatedItems));
     _saveSettings();
-  }
-
-  Future<void> resetToDefault() async {
-    final flowline = await _loadFlowLine();
-    final defaultConnectionMethod =
-        _createDefaultConnectionMethodGroup(flowline);
-    _updateGroup(defaultConnectionMethod);
-    _saveSettings();
-  }
-
-  Future<void> resetGroupToDefault(String groupId) async {
-    if (groupId == connectionMethodGroupId) {
-      final flowline = await _loadFlowLine();
-      final defaultGroup = _createDefaultConnectionMethodGroup(flowline);
-      _updateGroup(defaultGroup);
-      _saveSettings();
-    }
   }
 
   void reorderItems(String groupId, int oldIndex, int newIndex) {
+    // debugPrint('reorderItems called: oldIndex=$oldIndex, newIndex=$newIndex');
     final group = state.groups[groupId];
     if (group == null || !group.isDraggable) return;
 
@@ -305,49 +254,66 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         .where((item) => item.itemType == SettingsItemType.navigation)
         .toList();
 
-    if (newIndex > oldIndex) {
-      newIndex -= 1;
+    if (newIndex > oldIndex) newIndex -= 1;
+
+    if (oldIndex < 0 ||
+        oldIndex >= draggableItems.length ||
+        newIndex < 0 ||
+        newIndex >= draggableItems.length) {
+      return;
     }
 
-    if (oldIndex >= 0 &&
-        oldIndex < draggableItems.length &&
-        newIndex >= 0 &&
-        newIndex < draggableItems.length) {
-      final item = draggableItems.removeAt(oldIndex);
-      draggableItems.insert(newIndex, item);
+    final item = draggableItems.removeAt(oldIndex);
+    draggableItems.insert(newIndex, item);
 
-      final updatedDraggableItems = draggableItems
-          .asMap()
-          .entries
-          .map((entry) => entry.value.copyWith(sortOrder: entry.key))
-          .toList();
+    final updatedDraggableItems = draggableItems
+        .asMap()
+        .entries
+        .map((entry) => entry.value.copyWith(sortOrder: entry.key))
+        .toList();
 
-      final allItems = [...updatedDraggableItems, ...navigationItems];
-      final updatedGroup = group.copyWith(items: allItems);
-      _updateGroup(updatedGroup);
-      _saveSettings();
-    }
+    // debugPrint(
+    //     'Updated items order: ${updatedDraggableItems.map((e) => "${e.id}:${e.sortOrder}").join(", ")}');
+
+    _updateGroup(
+        group.copyWith(items: [...updatedDraggableItems, ...navigationItems]));
+    _saveSettings();
   }
 
+  // ============== Query Methods ==============
+
   String getConnectionMethodPattern() {
-    final group = state.groups[connectionMethodGroupId];
+    final group = state.groups[SettingsGroupId.connectionMethod];
     if (group == null) return '';
 
     final items = group.items
         .where((item) =>
             item.isEnabled && item.itemType != SettingsItemType.navigation)
-        .toList();
-    items.sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+        .toList()
+      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+
     return items.map((item) => item.id).join(',');
   }
 
-  String getPattern() {
-    return getConnectionMethodPattern();
+  String getPattern() => getConnectionMethodPattern();
+
+  // ============== Reset Methods ==============
+
+  Future<void> resetToDefault() async {
+    final flowline = await _loadFlowLine();
+    _updateGroup(_createDefaultConnectionMethodGroup(flowline));
+    _saveSettings();
   }
 
-  Future<void> saveState() async {
-    await _saveSettings();
+  Future<void> resetGroupToDefault(String groupId) async {
+    if (groupId == SettingsGroupId.connectionMethod) {
+      await resetToDefault();
+    }
   }
+
+  // ============== Refresh Methods ==============
+
+  Future<void> saveState() async => await _saveSettings();
 
   Future<void> updateSettingsBasedOnFlowLine() async {
     await _updateConnectionMethodFromFlowLine();

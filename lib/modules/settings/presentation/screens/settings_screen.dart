@@ -4,6 +4,7 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import '../../constants/settings_constants.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/settings_group_widget.dart';
 
@@ -225,7 +226,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           group.id, oldIndex, newIndex);
                     }
                   : null,
-              onReset: group.id == SettingsNotifier.connectionMethodGroupId
+              onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
                       settingsNotifier.resetGroupToDefault(group.id);
                     }
