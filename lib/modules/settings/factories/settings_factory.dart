@@ -2,9 +2,30 @@ import '../models/settings_item.dart';
 import '../models/settings_group.dart';
 import '../constants/settings_constants.dart';
 
-/// Factory class for creating predefined settings items and groups
+class SettingsConfig {
+  final bool showDestination;
+  final bool showSplitTunnel;
+  final bool showKillSwitch;
+  final List<SettingsItem> customItems;
+
+  const SettingsConfig({
+    this.showDestination = true,
+    this.showSplitTunnel = true,
+    this.showKillSwitch = true,
+    this.customItems = const [],
+  });
+
+  static const defaultConfig = SettingsConfig();
+}
+
 class SettingsFactory {
-  const SettingsFactory._();
+  static SettingsConfig _config = SettingsConfig.defaultConfig;
+
+  static void configure(SettingsConfig config) {
+    _config = config;
+  }
+
+  static SettingsConfig get config => _config;
 
   // ============== Item Factories ==============
 
@@ -72,11 +93,21 @@ class SettingsFactory {
   static SettingsGroup createConnectionMethodGroup({
     required List<SettingsItem> connectionItems,
   }) {
+    final List<SettingsItem> items = [...connectionItems];
+
+    if (_config.showDestination) {
+      items.add(createDestinationItem());
+    }
+
+    items.addAll(_config.customItems.where(
+      (item) => item.id.startsWith('connection_'),
+    ));
+
     return SettingsGroup(
       id: SettingsGroupId.connectionMethod,
       title: SettingsGroupTitle.connectionMethod,
       isDraggable: true,
-      items: [...connectionItems, createDestinationItem()],
+      items: items,
     );
   }
 
@@ -85,14 +116,25 @@ class SettingsFactory {
     bool splitTunnelEnabled = false,
     bool killSwitchEnabled = false,
   }) {
+    final List<SettingsItem> items = [];
+
+    if (_config.showSplitTunnel) {
+      items.add(createSplitTunnelItem(isEnabled: splitTunnelEnabled));
+    }
+
+    if (_config.showKillSwitch) {
+      items.add(createKillSwitchItem(isEnabled: killSwitchEnabled));
+    }
+
+    items.addAll(_config.customItems.where(
+      (item) => item.id.startsWith('traffic_'),
+    ));
+
     return SettingsGroup(
       id: SettingsGroupId.trafficControl,
       title: SettingsGroupTitle.trafficControl,
       isDraggable: false,
-      items: [
-        createSplitTunnelItem(isEnabled: splitTunnelEnabled),
-        createKillSwitchItem(isEnabled: killSwitchEnabled),
-      ],
+      items: items,
     );
   }
 
@@ -118,5 +160,30 @@ class SettingsFactory {
   ) {
     return savedItems?.where((i) => i.id == itemId).firstOrNull?.isEnabled ??
         false;
+  }
+
+  static SettingsItem createCustomItem({
+    required String id,
+    required String title,
+    bool isEnabled = false,
+    int sortOrder = 0,
+    String? description,
+    String? subtitle,
+    SettingsItemType itemType = SettingsItemType.toggle,
+    String? navigationRoute,
+    bool showLeftIcon = false,
+  }) {
+    return SettingsItem(
+      id: id,
+      title: title,
+      isEnabled: isEnabled,
+      isAccessible: true,
+      sortOrder: sortOrder,
+      description: description,
+      subtitle: subtitle,
+      itemType: itemType,
+      navigationRoute: navigationRoute,
+      showLeftIcon: showLeftIcon,
+    );
   }
 }

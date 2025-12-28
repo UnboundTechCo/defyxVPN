@@ -196,10 +196,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         }
       }
 
-      // Ensure destination item exists
-      if (!mergedItems
-          .any((item) => item['id'] == SettingsItemId.destination)) {
-        mergedItems.add(SettingsFactory.createDestinationItem().toJson());
+      if (SettingsFactory.config.showDestination) {
+        if (!mergedItems
+            .any((item) => item['id'] == SettingsItemId.destination)) {
+          mergedItems.add(SettingsFactory.createDestinationItem().toJson());
+        }
+      } else {
+        mergedItems
+            .removeWhere((item) => item['id'] == SettingsItemId.destination);
       }
 
       // Rebuild group with merged items (preserving user's sortOrder)
