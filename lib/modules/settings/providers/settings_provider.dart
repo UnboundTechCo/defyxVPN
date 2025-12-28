@@ -154,7 +154,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         return;
       }
 
-      // Get saved items - these contain user's drag order (sortOrder)
+      // Get saved items - these contain user's drag order(sortOrder)
       final List<dynamic> savedItems = List<dynamic>.from(
           savedData[SettingsGroupId.connectionMethod]['items'] ?? []);
 
