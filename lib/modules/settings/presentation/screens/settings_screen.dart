@@ -205,30 +205,36 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildSettingsContent(WidgetRef ref, BuildContext context) {
-    final settings = ref.watch(settingsProvider);
+    final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
+    final groups = settingsState.groupList;
 
     return Column(
-      children: settings
-          .map((group) => SettingsGroupWidget(
-                key: ValueKey(group.id),
-                group: group,
-                showSeparators: group.id == 'connection_method',
-                onToggle: (groupId, itemId) {
-                  settingsNotifier.toggleSetting(groupId, itemId, context);
-                },
-                onReorder: group.id == 'connection_method'
-                    ? (oldIndex, newIndex) {
-                        settingsNotifier.reorderConnectionMethodItems(
-                            oldIndex, newIndex);
-                      }
-                    : null,
-                onReset: group.id == 'connection_method'
-                    ? () {
-                        settingsNotifier.resetConnectionMethodToDefault();
-                      }
-                    : null,
-              ))
+      children: groups
+          .map(
+            (group) => SettingsGroupWidget(
+              key: ValueKey(group.id),
+              group: group,
+              showSeparators: true,
+              onToggle: (groupId, itemId) {
+                settingsNotifier.toggleSetting(groupId, itemId, context);
+              },
+              onReorder: group.isDraggable
+                  ? (oldIndex, newIndex) {
+                      settingsNotifier.reorderItems(
+                          group.id, oldIndex, newIndex);
+                    }
+                  : null,
+              onReset: group.id == SettingsNotifier.connectionMethodGroupId
+                  ? () {
+                      settingsNotifier.resetGroupToDefault(group.id);
+                    }
+                  : null,
+              onNavigate: (route) {
+                Navigator.pushNamed(context, route);
+              },
+            ),
+          )
           .toList(),
     );
   }
