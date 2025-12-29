@@ -11,6 +11,7 @@ class VpnPlugin: VpnStatusDelegate {
     private var flutterResult: FlutterResult?
     private var eventSink: FlutterEventSink?
     private var connectionMethod: String?
+    private let goQueue = DispatchQueue(label: "go.runtime.queue", qos: .userInitiated)
 
     init() {
         VpnService.shared.statusDelegate = self
@@ -179,8 +180,12 @@ class VpnPlugin: VpnStatusDelegate {
 
     // MARK: - Measure Ping
     private func measurePing(_ result: @escaping FlutterResult) {
-        let ping = IosMeasurePing()
-        result(ping)
+
+        goQueue.async {
+            let ping = IosMeasurePing()
+            DispatchQueue.main.async { result(ping) }
+        }
+
     }
 
     private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -223,14 +228,17 @@ class VpnPlugin: VpnStatusDelegate {
     }
     // MARK: - Get Flag
     private func getFlag(_ result: @escaping FlutterResult) {
-        DispatchQueue.global(qos: .userInitiated).async {
+
+        goQueue.async {
             let flag = IosGetFlag()
-            result(flag)  // ← Call result directly, no DispatchQueue.main.async
+            DispatchQueue.main.async { result(flag) }
         }
     }
     private func setAsnName(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "SET_ASN_NAME"]) { response in
-            result(response)
+
+        goQueue.async {
+            IosSetAsnName()
+            DispatchQueue.main.async { result("flowline") }
         }
     }
     private func setTimezone(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -247,34 +255,32 @@ class VpnPlugin: VpnStatusDelegate {
         IosSetTimeZone(timezoneFloat)
     }
 
-private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-    guard let args = arguments,
-          let isTest = args["isTest"] as? String
-    else {
-        result(
-            FlutterError(
-                code: "INVALID_ARGUMENTS",
-                message: "Missing required parameters",
-                   details: nil
+    private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let isTest = args["isTest"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
             )
-        )
-        return
+            return
+        }
+
+        let isTestBool = Bool(isTest) ?? false
+
+        goQueue.async {
+            let flowline = IosGetFlowLine(isTestBool)
+            DispatchQueue.main.async { result(flowline) }
+        }
     }
 
-    let isTestBool = Bool(isTest) ?? false
-
-    let callback = FlowLineCallbackHandler(result)
-    IosGetFlowLineAsync(isTestBool, callback)
-}
-
-
     private func getCachedFlowLine(_ result: @escaping FlutterResult) {
-
-        DispatchQueue.global(qos: .userInitiated).async {
-            let flowLine = IosGetCachedFlowLine()
-            DispatchQueue.main.async {
-                result(flowLine)
-            }
+        goQueue.async {
+            let flowline = IosGetCachedFlowLine()
+            DispatchQueue.main.async { result(flowline) }
         }
     }
     private func isTunnelRunning(_ result: @escaping FlutterResult) {
@@ -332,28 +338,6 @@ class ProgressStreamHandlerIOS: NSObject, IosProgressListenerProtocol {
             logs.append(msg ?? "")
             defaults.set(logs, forKey: "vpn_logs")
             defaults.synchronize()
-        }
-    }
-}
-
-class FlowLineCallbackHandler: NSObject, IosFlowLineCallback {
-    let flutterResult: FlutterResult
-
-    init(_ flutterResult: @escaping FlutterResult) {
-        self.flutterResult = flutterResult
-    }
-
-    func onResult(_ result: String) {
-        DispatchQueue.main.async {
-            self.flutterResult(result)
-        }
-    }
-
-    func onError(_ err: String) {
-        DispatchQueue.main.async {
-            self.flutterResult(
-                FlutterError(code: "GO_ERROR", message: err, details: nil)
-            )
         }
     }
 }
