@@ -10,8 +10,6 @@ final vpnDataProvider = FutureProvider<IVPNData>((ref) async {
   return VPNData._(isEnabled, prefs);
 });
 
-
-
 final class VPNData implements IVPNData {
   bool _isVPNEnabled;
   final SharedPreferences _prefs;

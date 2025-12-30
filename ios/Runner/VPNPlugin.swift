@@ -271,10 +271,25 @@ class VpnPlugin: VpnStatusDelegate {
 
         let isTestBool = Bool(isTest) ?? false
 
-        goQueue.async {
-            let flowline = IosGetFlowLine(isTestBool)
-            DispatchQueue.main.async { result(flowline) }
+        let tuunel = getIsTunnelRunning()
+
+        if tuunel {
+
+            print("Fuck VPN is Prepared ")
+            VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
+                response in
+                result(response)
+            }
+        } else {
+
+            print("Fuck VPN is not Prepared:")
+            self.goQueue.async {
+                let flowline = IosGetFlowLine(isTestBool)
+                DispatchQueue.main.async { result(flowline) }
+            }
+            return
         }
+
     }
 
     private func getCachedFlowLine(_ result: @escaping FlutterResult) {
@@ -289,7 +304,6 @@ class VpnPlugin: VpnStatusDelegate {
         } else {
             if let status = VpnService.shared.manager?.connection.status {
                 var statusBool = false
-
                 switch status {
                 case .connected: statusBool = true
                 case .connecting: statusBool = true
@@ -303,6 +317,28 @@ class VpnPlugin: VpnStatusDelegate {
             } else {
                 result(false)
             }
+        }
+    }
+
+    private func getIsTunnelRunning() -> Bool {
+        guard let manager = VpnService.shared.manager else {
+            return false
+        }
+
+        let status = manager.connection.status
+        switch status {
+        case .connected,
+            .connecting,
+            .disconnecting,
+            .reasserting:
+            return true
+
+        case .disconnected,
+            .invalid:
+            return false
+
+        @unknown default:
+            return false
         }
     }
 

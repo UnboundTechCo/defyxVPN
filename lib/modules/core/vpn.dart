@@ -336,12 +336,13 @@ class VPN {
   }
 
   Future<void> getVPNStatus() async {
+    final status = await _vpnBridge.getVpnStatus();
+    log.addLog("VPN status: $status");
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
-    if (isTunnelRunning) {
+    if (status=="connected") {
       connectionNotifier?.setConnected();
-      refreshPing();
+      await refreshPing();
     } else {
       connectionNotifier?.setDisconnected();
     }
