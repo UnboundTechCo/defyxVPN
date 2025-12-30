@@ -65,7 +65,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final jsonMap =
         state.groups.map((key, group) => MapEntry(key, group.toJson()));
     final jsonString = jsonEncode(jsonMap);
-    // debugPrint('Saving settings: $jsonString');
     await _secureStorage?.write(SettingsStorageKey.appSettings, jsonString);
   }
 
@@ -142,7 +141,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       // Load saved settings
       final settingsJson =
           await _secureStorage?.read(SettingsStorageKey.appSettings);
-      // debugPrint('Loaded settings: $settingsJson');
+
       if (settingsJson == null) {
         _updateGroup(_createDefaultConnectionMethodGroup(flowline));
         return;
@@ -246,7 +245,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   void reorderItems(String groupId, int oldIndex, int newIndex) {
-    // debugPrint('reorderItems called: oldIndex=$oldIndex, newIndex=$newIndex');
     final group = state.groups[groupId];
     if (group == null || !group.isDraggable) return;
 
@@ -276,9 +274,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         .entries
         .map((entry) => entry.value.copyWith(sortOrder: entry.key))
         .toList();
-
-    // debugPrint(
-    //     'Updated items order: ${updatedDraggableItems.map((e) => "${e.id}:${e.sortOrder}").join(", ")}');
 
     _updateGroup(
         group.copyWith(items: [...updatedDraggableItems, ...navigationItems]));
