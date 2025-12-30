@@ -29,7 +29,8 @@ class SettingsState {
     );
   }
 
-  List<SettingsGroup> get groupList => groups.values.toList();
+  List<SettingsGroup> get groupList =>
+      groups.values.where((group) => group.items.isNotEmpty).toList();
 
   SettingsGroup? getGroup(String id) => groups[id];
 }

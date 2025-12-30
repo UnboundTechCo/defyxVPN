@@ -9,9 +9,9 @@ class SettingsConfig {
   final List<SettingsItem> customItems;
 
   const SettingsConfig({
-    this.showDestination = true,
-    this.showSplitTunnel = true,
-    this.showKillSwitch = true,
+    this.showDestination = false,
+    this.showSplitTunnel = false,
+    this.showKillSwitch = false,
     this.customItems = const [],
   });
 
