@@ -107,7 +107,7 @@ class ConnectionStatusText extends ConsumerWidget {
       case ConnectionStatus.analyzing:
         return 'is';
       case ConnectionStatus.error:
-        return 'is failed.';
+        return 'failed.';
       case ConnectionStatus.noInternet:
         return 'has';
       case ConnectionStatus.disconnecting:
