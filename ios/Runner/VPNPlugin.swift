@@ -275,14 +275,14 @@ class VpnPlugin: VpnStatusDelegate {
 
         if tuunel {
 
-            print("Fuck VPN is Prepared ")
+            print("VPN is Prepared ")
             VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
                 response in
                 result(response)
             }
         } else {
 
-            print("Fuck VPN is not Prepared:")
+            print("VPN is not Prepared ")
             self.goQueue.async {
                 let flowline = IosGetFlowLine(isTestBool)
                 DispatchQueue.main.async { result(flowline) }
