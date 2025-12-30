@@ -11,5 +11,14 @@ final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   const MacOsOptions macOSOptions = MacOsOptions(
     accessibility: KeychainAccessibility.first_unlock,
   );
-  return FlutterSecureStorage(aOptions: androidOptions, iOptions: iosOptions,mOptions: macOSOptions);
+  const WindowsOptions windowsOptions = WindowsOptions(
+    useBackwardCompatibility: false,
+  );
+
+  return FlutterSecureStorage(
+    aOptions: androidOptions,
+    iOptions: iosOptions,
+    mOptions: macOSOptions,
+    wOptions: windowsOptions,
+  );
 });

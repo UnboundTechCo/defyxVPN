@@ -1,9 +1,9 @@
-import 'package:defyx_vpn/modules/settings/models/settings_item.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/settings_group.dart';
+import '../../models/settings_item.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
@@ -13,8 +13,8 @@ class SettingsGroupWidget extends StatefulWidget {
   final Function(String, String)? onToggle;
   final VoidCallback? onReset;
   final ReorderCallback? onReorder;
-  final bool
-      showSeparators; // Controls whether separators are shown between items
+  final Function(String)? onNavigate;
+  final bool showSeparators;
 
   const SettingsGroupWidget({
     super.key,
@@ -22,6 +22,7 @@ class SettingsGroupWidget extends StatefulWidget {
     this.onToggle,
     this.onReset,
     this.onReorder,
+    this.onNavigate,
     this.showSeparators = false,
   });
 
@@ -70,105 +71,129 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   }
 
   Widget _buildDraggableItems() {
-    final List<SettingsItem> allItems = List.from(widget.group.items)
+    final draggableItems = widget.group.items
+        .where((item) => item.itemType != SettingsItemType.navigation)
+        .toList()
       ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
-    return ReorderableListView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      onReorder: (oldIndex, newIndex) {
-        HapticFeedback.lightImpact();
-        widget.onReorder?.call(oldIndex, newIndex);
-      },
-      onReorderStart: (index) {
-        setState(() {
-          _draggingIndex = index;
-        });
-      },
-      onReorderEnd: (index) {
-        setState(() {
-          _draggingIndex = null;
-        });
-      },
-      itemCount: allItems.length,
-      buildDefaultDragHandles: false,
-      proxyDecorator: (Widget child, int index, Animation<double> animation) {
-        final item = allItems[index];
+    final navigationItems = widget.group.items
+        .where((item) => item.itemType == SettingsItemType.navigation)
+        .toList();
 
-        return AnimatedBuilder(
-          animation: animation,
-          builder: (BuildContext context, Widget? child) {
-            return Material(
-              elevation: 8.0,
-              color: Colors.transparent,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: const Color.fromRGBO(29, 29, 29, 1),
-                  borderRadius: BorderRadius.circular(12.r),
-                ),
-                child: Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                  margin: EdgeInsets.symmetric(vertical: 2.h),
-                  child: Row(
-                    children: [
-                      // Drag handle
-                      Container(
-                        width: 24.w,
-                        height: 24.h,
-                        margin: EdgeInsets.only(right: 12.w),
-                        child: SvgPicture.asset(
-                          'assets/icons/draggable_setting_indicator.svg',
-                          width: 24.w,
-                          height: 24.h,
-                          colorFilter: ColorFilter.mode(
-                            Colors.grey[400]!,
-                            BlendMode.srcIn,
+    return Column(
+      children: [
+        ReorderableListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          onReorder: (oldIndex, newIndex) {
+            HapticFeedback.lightImpact();
+            widget.onReorder?.call(oldIndex, newIndex);
+          },
+          onReorderStart: (index) {
+            setState(() {
+              _draggingIndex = index;
+            });
+          },
+          onReorderEnd: (index) {
+            setState(() {
+              _draggingIndex = null;
+            });
+          },
+          itemCount: draggableItems.length,
+          buildDefaultDragHandles: false,
+          proxyDecorator:
+              (Widget child, int index, Animation<double> animation) {
+            final item = draggableItems[index];
+
+            return AnimatedBuilder(
+              animation: animation,
+              builder: (BuildContext context, Widget? child) {
+                return Material(
+                  elevation: 8.0,
+                  color: Colors.transparent,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: const Color.fromRGBO(29, 29, 29, 1),
+                      borderRadius: BorderRadius.circular(12.r),
+                    ),
+                    child: Container(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                      margin: EdgeInsets.symmetric(vertical: 2.h),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 24.w,
+                            height: 24.h,
+                            margin: EdgeInsets.only(right: 12.w),
+                            child: SvgPicture.asset(
+                              'assets/icons/draggable_setting_indicator.svg',
+                              width: 24.w,
+                              height: 24.h,
+                              colorFilter: ColorFilter.mode(
+                                Colors.grey[400]!,
+                                BlendMode.srcIn,
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      // Title
-                      Expanded(
-                        child: Text(
-                          item.title.toString().toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 17.sp,
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.w400,
-                            color: Colors.white,
+                          Expanded(
+                            child: Text(
+                              item.title.toString().toUpperCase(),
+                              style: TextStyle(
+                                fontSize: 17.sp,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w400,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
+                          DefyxSwitch(
+                            value: item.isEnabled,
+                            onChanged: (value) =>
+                                widget.onToggle?.call(widget.group.id, item.id),
+                            enabled: item.isAccessible,
+                          ),
+                        ],
                       ),
-                      // Switch
-                      DefyxSwitch(
-                        value: item.isEnabled,
-                        onChanged: (value) =>
-                            widget.onToggle?.call(widget.group.id, item.id),
-                        enabled: item.isAccessible,
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
+              child: child,
             );
           },
-          child: child,
-        );
-      },
-      itemBuilder: (context, index) {
-        final item = allItems[index];
+          itemBuilder: (context, index) {
+            final item = draggableItems[index];
+            final isLastDraggable = index == draggableItems.length - 1;
 
-        return SettingsItemWidget(
-          key: ValueKey('${widget.group.id}_${item.id}_$index'),
-          item: item,
-          onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
-          isDraggable: item.isAccessible,
-          isLastItem: index == allItems.length - 1,
-          showDragHandle: true,
-          dragIndex: index,
-          showSeparator: true,
-        );
-      },
+            return SettingsItemWidget(
+              key: ValueKey('${widget.group.id}_${item.id}_$index'),
+              item: item,
+              onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
+              onNavigate: widget.onNavigate,
+              isDraggable: item.isAccessible,
+              isLastItem: isLastDraggable && navigationItems.isEmpty,
+              showDragHandle: true,
+              dragIndex: index,
+              showSeparator: true,
+            );
+          },
+        ),
+        ...navigationItems.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          return SettingsItemWidget(
+            key: ValueKey('${widget.group.id}_nav_${item.id}'),
+            item: item,
+            onToggle: () {},
+            onNavigate: widget.onNavigate,
+            isDraggable: false,
+            isLastItem: index == navigationItems.length - 1,
+            showDragHandle: false,
+            showSeparator: index < navigationItems.length - 1,
+          );
+        }),
+      ],
     );
   }
 
@@ -184,6 +209,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
           key: ValueKey('${widget.group.id}_${item.id}_$index'),
           item: item,
           onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
+          onNavigate: widget.onNavigate,
           isDraggable: false,
           isLastItem: index == sortedItems.length - 1,
           showDragHandle: false,
@@ -230,15 +256,14 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
             child: AnimatedContainer(
               duration: _animationService
                   .adjustDuration(const Duration(milliseconds: 200)),
-              child: widget.group.id == 'connection_method'
+              child: widget.group.isDraggable
                   ? _buildDraggableItems()
                   : _buildStaticItems(),
             ),
           ),
 
           // Reset button for connection method
-          if (widget.group.id == ('connection_method') &&
-              widget.onReset != null)
+          if (widget.group.isDraggable && widget.onReset != null)
             Padding(
               padding: EdgeInsets.only(top: 12.h),
               child: Row(
