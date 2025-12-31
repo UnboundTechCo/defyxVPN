@@ -1,3 +1,8 @@
+enum SettingsItemType {
+  toggle,
+  navigation,
+}
+
 class SettingsItem {
   final String id;
   final String title;
@@ -6,7 +11,10 @@ class SettingsItem {
   final String? icon;
   final int? sortOrder;
   final String? description;
-
+  final SettingsItemType itemType;
+  final String? navigationRoute;
+  final String? subtitle;
+  final bool showLeftIcon;
 
   const SettingsItem({
     required this.id,
@@ -15,7 +23,11 @@ class SettingsItem {
     required this.isAccessible,
     this.icon,
     this.sortOrder,
-    this.description
+    this.description,
+    this.itemType = SettingsItemType.toggle,
+    this.navigationRoute,
+    this.subtitle,
+    this.showLeftIcon = false,
   });
 
   SettingsItem copyWith({
@@ -25,7 +37,11 @@ class SettingsItem {
     bool? isAccessible,
     String? icon,
     int? sortOrder,
-    String? description
+    String? description,
+    SettingsItemType? itemType,
+    String? navigationRoute,
+    String? subtitle,
+    bool? showLeftIcon,
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -34,7 +50,11 @@ class SettingsItem {
       isAccessible: isAccessible ?? this.isAccessible,
       icon: icon ?? this.icon,
       sortOrder: sortOrder ?? this.sortOrder,
-      description: description ?? this.description
+      description: description ?? this.description,
+      itemType: itemType ?? this.itemType,
+      navigationRoute: navigationRoute ?? this.navigationRoute,
+      subtitle: subtitle ?? this.subtitle,
+      showLeftIcon: showLeftIcon ?? this.showLeftIcon,
     );
   }
 
@@ -46,7 +66,14 @@ class SettingsItem {
       isAccessible: json['isAccessible'] as bool,
       icon: json['icon'] as String?,
       sortOrder: json['sortOrder'] as int?,
-      description: json['description'] as String?
+      description: json['description'] as String?,
+      itemType: SettingsItemType.values.firstWhere(
+        (e) => e.name == (json['itemType'] as String?),
+        orElse: () => SettingsItemType.toggle,
+      ),
+      navigationRoute: json['navigationRoute'] as String?,
+      subtitle: json['subtitle'] as String?,
+      showLeftIcon: json['showLeftIcon'] as bool? ?? false,
     );
   }
 
@@ -58,7 +85,11 @@ class SettingsItem {
       'isAccessible': isAccessible,
       'icon': icon,
       'sortOrder': sortOrder,
-      'description': description
+      'description': description,
+      'itemType': itemType.name,
+      'navigationRoute': navigationRoute,
+      'subtitle': subtitle,
+      'showLeftIcon': showLeftIcon,
     };
   }
 }

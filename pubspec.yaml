@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app"
 publish_to: "none"
-version: 3.3.13+222
+version: 3.4.0+223
 
 environment:
   sdk: ^3.5.3
@@ -48,6 +48,7 @@ dependencies:
   audioplayers: ^6.5.1
   path_provider: ^2.1.1
   msix: ^3.16.12
+  flutter_native_splash: ^2.4.7
 
 dev_dependencies:
   flutter_test:
@@ -70,7 +71,6 @@ flutter:
     - assets/lottie/
     - assets/flags/
     - assets/sounds/
-    - assets/settings/config.json
     - .env
 
   fonts:
@@ -86,11 +86,21 @@ flutter:
         - asset: assets/fonts/Lato-Black.ttf
           weight: 900
 
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/images/splash-light-logo.png
+  color_dark: "#000000"
+  image_dark: assets/images/splash-dark-logo.png
+
+  android: true
+  ios: true
+  web: false
+
 msix_config:
   display_name: Defyx VPN
   publisher_display_name: UnboundTech UG
   identity_name: UnboundTechUG.6065AEC5A207
-  msix_version: 1.0.5.0
+  msix_version: 1.0.7.0
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
   capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,unvirtualizedResources
@@ -99,3 +109,4 @@ msix_config:
   languages: en-us
   install_certificate: false
   enable_at_startup: false
+
