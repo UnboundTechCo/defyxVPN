@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app"
 publish_to: "none"
-version: 4.0.14+234
+version: 4.0.18+238
 
 environment:
   sdk: ^3.5.3
@@ -88,7 +88,9 @@ flutter:
 
 flutter_native_splash:
   color: "#ffffff"
-  image: assets/images/logo-before-splash.png
+  image: assets/images/splash-light-logo.png
+  color_dark: "#000000"
+  image_dark: assets/images/splash-dark-logo.png
 
   android: true
   ios: true
