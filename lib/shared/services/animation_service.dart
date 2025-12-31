@@ -8,7 +8,7 @@ class AnimationService {
 
   final Battery _battery = Battery();
   int _batteryLevel = 100;
-  static const int _lowBatteryThreshold = 20;
+  static const int _lowBatteryThreshold = 10;
 
   Future<void> init() async {
     try {

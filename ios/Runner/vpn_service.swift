@@ -51,6 +51,7 @@ class VpnService {
                     try await vpnManager?.loadFromPreferences()
                     observeVPNStatus(vpnManager!)
                     completion(.success(()))
+                    return
                 }
                 completion(.failure(NSError(domain: "DefyxVPN", code: 0, userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])))
 

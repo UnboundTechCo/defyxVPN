@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -23,28 +22,25 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToMain() async {
+    await WidgetsBinding.instance.endOfFrame;
     Future.delayed(Duration(seconds: 3), () {
       _onNavigate();
       return;
     });
-    final vpnData = await ref.read(vpnDataProvider.future);
+    // final vpnData = await ref.read(vpnDataProvider.future);
+    final vpnStatus = await VpnBridge().getVpnStatus();
 
-    final vpnBridge = VpnBridge();
-    if (vpnData.isVPNEnabled) {
+    if (vpnStatus == "connected") {
       _onNavigate();
       return;
     }
 
-    final vpnIsPrepared = await vpnBridge.isVPNPrepared();
-
-    if (ref.context.mounted && vpnIsPrepared) {
+    if (ref.context.mounted) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.initVPN();
       _onNavigate();
       return;
-    }
-
-    if (!vpnIsPrepared) {
+    } else {
       await Future.delayed(const Duration(seconds: 3));
     }
     _onNavigate();
@@ -154,7 +150,8 @@ class AlwaysSpinningIndicator extends StatefulWidget {
   const AlwaysSpinningIndicator({super.key});
 
   @override
-  State<AlwaysSpinningIndicator> createState() => _AlwaysSpinningIndicatorState();
+  State<AlwaysSpinningIndicator> createState() =>
+      _AlwaysSpinningIndicatorState();
 }
 
 class _AlwaysSpinningIndicatorState extends State<AlwaysSpinningIndicator>
