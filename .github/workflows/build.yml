@@ -7,7 +7,6 @@ on:
   push:
     branches: 
       - release
-      - add-ios-build
 
   workflow_dispatch:
     inputs:
