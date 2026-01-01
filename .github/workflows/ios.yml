@@ -80,6 +80,7 @@ jobs:
             CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
 
       - name: Upload IPA to TestFlight
+        if: false
         uses: apple-actions/upload-testflight-build@v1
         with:
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
