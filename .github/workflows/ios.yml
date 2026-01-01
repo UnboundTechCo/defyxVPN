@@ -74,7 +74,7 @@ jobs:
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \
             -configuration Release \
-            -allowProvisioningUpdates \
+            -destination 'generic/platform=iOS' \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
 
