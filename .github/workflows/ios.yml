@@ -50,9 +50,9 @@ jobs:
       - name: Import iOS certificates
         uses: apple-actions/import-codesign-certs@v3
         with:
-          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
-          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          p12-file-base64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.IOS_GITHUB_KEYCHAIN_PASSWORD }}
 
       - name: Install provisioning profiles
         run: |
