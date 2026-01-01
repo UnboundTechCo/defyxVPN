@@ -69,24 +69,6 @@ jobs:
           4
           EOF
 
-      - name: Fix Signing (Apply identity + team)
-        if: false
-        run: |
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -destination 'generic/platform=iOS' \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
-
-      - name: Upload IPA to TestFlight
-        uses: apple-actions/upload-testflight-build@v1
-        with:
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          app-path: build/ios/ipa/defyx.ipa
-
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

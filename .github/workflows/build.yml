@@ -56,17 +56,14 @@ on:
 
 jobs:
   android:
-    if: false
     uses: ./.github/workflows/android.yml
     secrets: inherit
 
   ios:
-    # if: false
     uses: ./.github/workflows/ios.yml
     secrets: inherit
 
   windows:
-    if: false
     uses: ./.github/workflows/windows.yml
     secrets: inherit
   
@@ -76,13 +73,11 @@ jobs:
     secrets: inherit
   
   release-to-telegram:
-    if: false
-    needs: [android, windows]
+    needs: [android, windows, ios]
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    if: false
-    needs: [android, windows]
+    needs: [android, windows, ios]
     uses: ./.github/workflows/release.yml
     secrets: inherit
