@@ -70,6 +70,7 @@ jobs:
           EOF
 
       - name: Fix Signing (Apply identity + team)
+        if: false
         run: |
           xcodebuild -workspace ios/Runner.xcworkspace \
             -scheme Runner \

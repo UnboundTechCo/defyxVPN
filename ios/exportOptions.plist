@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>method</key>
+  <string>app-store</string>
+
+  <key>signingStyle</key>
+  <string>manual</string>
+
+  <key>teamID</key>
+  <string>RTUZ6NNG47</string>
+
+  <key>provisioningProfiles</key>
+  <dict>
+    <key>de.unboundtech.defyxvpn</key>
+    <string>DefyxVPN Deployment Profile</string>
+
+    <key>de.unboundtech.defyxvpn.PacketTunnel</key>
+    <string>PacketTunnel Deployment Profile</string>
+  </dict>
+</dict>
+</plist>
