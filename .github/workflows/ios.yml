@@ -82,7 +82,7 @@ jobs:
         uses: apple-actions/upload-testflight-build@v1
         with:
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
           app-path: build/ios/ipa/*.ipa
 
