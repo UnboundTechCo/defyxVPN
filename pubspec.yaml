@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "A new Vpn app"
 publish_to: "none"
-version: 3.4.0+223
+version: 3.4.2+225
 
 environment:
   sdk: ^3.5.3
@@ -100,7 +100,11 @@ msix_config:
   display_name: Defyx VPN
   publisher_display_name: UnboundTech UG
   identity_name: UnboundTechUG.6065AEC5A207
+<<<<<<< HEAD
+  msix_version: 1.0.7.0
+=======
   msix_version: 3.4.0.223
+>>>>>>> dev
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
   capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,unvirtualizedResources
