@@ -158,15 +158,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final List<dynamic> savedItems = List<dynamic>.from(
           savedData[SettingsGroupId.connectionMethod]['items'] ?? []);
 
-      // Get enabled flowline items
-      final filteredFlowline =
-          flowline.where((f) => f['enabled'] == true).toList();
+      final allFlowlineItems = flowline.toList();
 
       // Filter saved items - keep items that exist in flowline OR are navigation items
       // This preserves user's sortOrder!
       final List<dynamic> mergedItems = savedItems.where((settingItem) {
         if (settingItem['itemType'] == 'navigation') return true;
-        return filteredFlowline
+        return allFlowlineItems
             .any((flowItem) => flowItem['label'] == settingItem['id']);
       }).toList();
 
@@ -178,7 +176,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       }
 
       // New items go to the end (after user's ordered items)
-      for (var flowItem in filteredFlowline) {
+      for (var flowItem in allFlowlineItems) {
         final label = flowItem['label'] as String;
         final existsInSaved = mergedItems.any((settingItem) =>
             settingItem['id'] == label ||
@@ -190,7 +188,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
             label: label,
             description: flowItem['description'] ?? '',
             sortOrder: maxSortOrder,
-            isEnabled: true,
+            isEnabled: flowItem['enabled'] ?? false,
           );
           mergedItems.add(newItem.toJson());
         }
