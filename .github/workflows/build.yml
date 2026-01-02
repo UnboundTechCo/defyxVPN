@@ -59,7 +59,6 @@ jobs:
     secrets: inherit
 
   ios:
-    if: false
     uses: ./.github/workflows/ios.yml
     secrets: inherit
 
@@ -73,11 +72,11 @@ jobs:
     secrets: inherit
   
   release-to-telegram:
-    needs: [android, windows]
+    needs: [android, windows, ios]
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    needs: [android, windows]
+    needs: [android, windows, ios]
     uses: ./.github/workflows/release.yml
     secrets: inherit

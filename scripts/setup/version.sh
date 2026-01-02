@@ -56,12 +56,18 @@ update_version() {
         return 1
     fi
     
+    # Convert Flutter version (X.Y.Z+B) to MSIX version (X.Y.Z.B)
+    local msix_version=$(echo "$version" | sed 's/+/\./')
+    
     if [[ "$(uname)" == "Darwin" ]]; then
         sed -i '' "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+        sed -i '' "s/^  msix_version: .*/  msix_version: $msix_version/" "$PUBSPEC_FILE"
     else
         sed -i "s/^version: .*/version: $version/" "$PUBSPEC_FILE"
+        sed -i "s/^  msix_version: .*/  msix_version: $msix_version/" "$PUBSPEC_FILE"
     fi
     echo -e "${GREEN}✅ Version updated to: $version${NC}"
+    echo -e "${GREEN}✅ MSIX version updated to: $msix_version${NC}"
 }
 
 select_version_increment() {
