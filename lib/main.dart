@@ -19,6 +19,20 @@ void main() async {
     );
   }
 
-  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  // Only lock orientation on mobile devices, not on Android TV
+  if (Platform.isAndroid || Platform.isIOS) {
+    // Check if running on Android TV by checking screen size will be done in app
+    // For now, we'll set orientation based on platform detection
+    try {
+      await SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    } catch (e) {
+      debugPrint('Could not set orientations: $e');
+    }
+  }
+  
   runApp(const ProviderScope(child: App()));
 }
