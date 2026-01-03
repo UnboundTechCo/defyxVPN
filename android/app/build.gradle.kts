@@ -73,6 +73,9 @@ dependencies {
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.android.ump:user-messaging-platform:3.1.0")
 
+    // Android TV support
+    implementation("androidx.leanback:leanback:1.0.0")
+
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(files("libs/DXcore.aar"))
 
