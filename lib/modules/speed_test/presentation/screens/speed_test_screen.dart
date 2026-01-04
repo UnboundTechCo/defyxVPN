@@ -96,27 +96,22 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     return MainScreenBackground(
       connectionStatus: connectionState.status,
       child: SafeArea(
+        bottom: false,
         child: Align(
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: 393.w),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: 24.w),
-              child: Stack(
-                alignment: Alignment.center,
+              child: Column(
                 children: [
-                  Column(
-                    children: [
-                      SizedBox(height: 45.h),
-                      SpeedTestHeader(step: speedTestState.step),
-                    ],
-                  ),
-                  Positioned(
-                    top: 130.h,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _buildContent(speedTestState, connectionState.status),
+                  SizedBox(height: 45.h),
+                  SpeedTestHeader(step: speedTestState.step),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(top: 30.h, bottom: 20.h),
+                      child: _buildContent(speedTestState, connectionState.status),
+                    ),
                   ),
                 ],
               ),

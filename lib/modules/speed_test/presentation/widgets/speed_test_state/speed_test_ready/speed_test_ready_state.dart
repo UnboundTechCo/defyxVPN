@@ -33,42 +33,44 @@ class SpeedTestReadyState extends ConsumerWidget {
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: 30.h),
-        SpeedTestProgressIndicator(
-          progress: 0.0,
-          color: Colors.green,
-          showButton: true,
-          result: state.result,
-          connectionStatus: connectionState.status,
-          button: state.testCompleted
-              ? SpeedTestStartButton(
-                  currentStep: SpeedTestStep.ready,
-                  isEnabled: true,
-                  onTap: onRetry,
-                  previousStep: SpeedTestStep.download,
-                )
-              : InkWell(
-                  onTap: handleStartTest,
-                  child: Column(
-                    spacing: 8.h,
-                    children: [
-                      Text(
-                        "TAP HERE",
-                        style: TextStyle(
-                          color: const Color(0xFFABABAB),
-                          fontSize: 12.sp,
-                          fontWeight: FontWeight.w600,
+        Flexible(
+          child: SpeedTestProgressIndicator(
+            progress: 0.0,
+            color: Colors.green,
+            showButton: true,
+            result: state.result,
+            connectionStatus: connectionState.status,
+            button: state.testCompleted
+                ? SpeedTestStartButton(
+                    currentStep: SpeedTestStep.ready,
+                    isEnabled: true,
+                    onTap: onRetry,
+                    previousStep: SpeedTestStep.download,
+                  )
+                : InkWell(
+                    onTap: handleStartTest,
+                    child: Column(
+                      spacing: 8.h,
+                      children: [
+                        Text(
+                          "TAP HERE",
+                          style: TextStyle(
+                            color: const Color(0xFFABABAB),
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                      ),
-                      SpeedTestStartButton(
-                        currentStep: SpeedTestStep.ready,
-                        isEnabled: true,
-                        onTap: handleStartTest,
-                      ),
-                    ],
+                        SpeedTestStartButton(
+                          currentStep: SpeedTestStep.ready,
+                          isEnabled: true,
+                          onTap: handleStartTest,
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+          ),
         ),
       ],
     );

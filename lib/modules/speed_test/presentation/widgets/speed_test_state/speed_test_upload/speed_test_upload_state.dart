@@ -5,7 +5,6 @@ import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SpeedTestUploadState extends ConsumerWidget {
   final SpeedTestState state;
@@ -25,19 +24,21 @@ class SpeedTestUploadState extends ConsumerWidget {
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(height: 30.h),
-        SpeedTestProgressIndicator(
-          progress: combinedProgress,
-          color: AppColors.uploadColor,
-          showButton: false,
-          centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
-          centerUnit: 'Mbps',
-          subtitle: 'UPLOAD',
-          result: state.result,
-          currentStep: SpeedTestStep.upload,
-          connectionStatus: connectionState.status,
-          onStop: onStop,
+        Flexible(
+          child: SpeedTestProgressIndicator(
+            progress: combinedProgress,
+            color: AppColors.uploadColor,
+            showButton: false,
+            centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
+            centerUnit: 'Mbps',
+            subtitle: 'UPLOAD',
+            result: state.result,
+            currentStep: SpeedTestStep.upload,
+            connectionStatus: connectionState.status,
+            onStop: onStop,
+          ),
         ),
       ],
     );
