@@ -3,7 +3,7 @@ on:
   
 jobs:
   release:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -51,6 +51,7 @@ jobs:
           path: windows-release/
       
       - name: Download iOS artifacts
+        if: false
         uses: actions/download-artifact@v4
         with:
           name: ios-release
@@ -101,11 +102,11 @@ jobs:
           track: internal
           status: draft
 
-      - name: Upload IPA to TestFlight
-        if: steps.create_tag.outputs.created == 'true'
-        uses: apple-actions/upload-testflight-build@v1
+      - name: Upload to TestFlight
+        if: false
+        uses: apple-actions/upload-testflight-build@v3
         with:
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          app-path: ios-release/defyx.ipa
+          app-path: build/ios/ipa/Runner.ipa
+          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+          api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}

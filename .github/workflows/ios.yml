@@ -50,9 +50,9 @@ jobs:
       - name: Import iOS certificates
         uses: apple-actions/import-codesign-certs@v3
         with:
-          p12-file-base64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
-          p12-password: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
-          keychain-password: ${{ secrets.IOS_GITHUB_KEYCHAIN_PASSWORD }}
+          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
+          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
 
       - name: Install provisioning profiles
         run: |
@@ -68,6 +68,23 @@ jobs:
           2
           4
           EOF
+
+      - name: Fix Signing (Apply identity + team)
+        run: |
+          xcodebuild -workspace ios/Runner.xcworkspace \
+            -scheme Runner \
+            -configuration Release \
+            -allowProvisioningUpdates \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
+
+      - name: Upload IPA to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          app-path: build/ios/ipa/*.ipa
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
