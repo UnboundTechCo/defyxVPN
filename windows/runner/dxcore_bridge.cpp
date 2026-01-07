@@ -93,11 +93,13 @@ std::string DXCoreBridge::GetFlag() {
 
 void DXCoreBridge::StartVPN(const std::string& cache_dir,
                             const std::string& flow_line,
-                            const std::string& pattern) {
-  if (pStartVPN_) pStartVPN_(cache_dir.c_str(), flow_line.c_str(), pattern.c_str());
+                            const std::string& pattern,
+                          const bool deepScan) {
+  if (pStartVPN_) pStartVPN_(cache_dir.c_str(), flow_line.c_str(), pattern.c_str(), deepScan);
 }
 
-int DXCoreBridge::StopVPN() { return pStopVPN_ ? pStopVPN_() : 0; }
+int DXCoreBridge::StopVPN() { return 
+  pStopVPN_ ? pStopVPN_() : 0; }
 
 void DXCoreBridge::SetAsnName() {
   if (pSetAsnName_) pSetAsnName_();

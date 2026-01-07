@@ -94,7 +94,8 @@ class MainActivity : FlutterActivity() {
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
                 "getCachedFlowLine" -> getCachedFlowLine(result)
-                "setConnectionMethod" -> setConnectionMethod(call.arguments as? Map<String, Any>, result)
+                "setConnectionMethod" ->
+                        setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -223,6 +224,8 @@ class MainActivity : FlutterActivity() {
             try {
                 val flowLine = args?.get("flowLine") as? String
                 val pattern = args?.get("pattern") as? String
+                val deepScan = args?.get("deepScan") as? String
+                val boolDeepScan = deepScan.toBoolean()
                 if (flowLine.isNullOrEmpty() || pattern.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
                         result.error(
@@ -233,7 +236,8 @@ class MainActivity : FlutterActivity() {
                     }
                     return@launch
                 }
-                DefyxVpnService.getInstance().connectVPN(cacheDir.absolutePath, flowLine, pattern)
+                DefyxVpnService.getInstance()
+                        .connectVPN(cacheDir.absolutePath, flowLine, pattern, boolDeepScan)
                 result.success(true)
             } catch (e: Exception) {
                 Log.e("Start VPN", "Start VPN failed: ${e.message}", e)
@@ -359,7 +363,11 @@ class MainActivity : FlutterActivity() {
             } catch (e: Exception) {
                 Log.e("Set Connection Method", "Set Connection Method failed: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    result.error("PING_ERROR", "Failed to Set Connection Method", e.localizedMessage)
+                    result.error(
+                            "PING_ERROR",
+                            "Failed to Set Connection Method",
+                            e.localizedMessage
+                    )
                 }
             }
         }

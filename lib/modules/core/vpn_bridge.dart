@@ -36,7 +36,7 @@ class VpnBridge {
 
   Future<void> startVPN(String flowline, String pattern) async =>
       await _methodChannel
-          .invokeMethod("startVPN", {"flowLine": flowline, "pattern": pattern});
+          .invokeMethod("startVPN", {"flowLine": flowline, "pattern": pattern,"deepScan": "false"});
 
   Future<void> startTun2socks() =>
       _methodChannel.invokeMethod("startTun2socks");
