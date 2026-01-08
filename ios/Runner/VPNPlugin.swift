@@ -205,7 +205,8 @@ class VpnPlugin: VpnStatusDelegate {
         let dir = URL(fileURLWithPath: getSharedDirectory())
         guard let args = arguments,
             let flowLine = args["flowLine"] as? String,
-            let pattern = args["pattern"] as? String
+            let pattern = args["pattern"] as? String,
+            let deepScan = args["deepScan"] as? String
         else {
             result(
                 FlutterError(
@@ -214,7 +215,7 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,
+            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan
         ]) {
             response in
             result(response)

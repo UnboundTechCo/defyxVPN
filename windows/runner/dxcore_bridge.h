@@ -21,7 +21,7 @@ class DXCoreBridge {
   int MeasurePing();
   std::string GetFlag();
   void StartVPN(const std::string& cache_dir, const std::string& flow_line,
-                const std::string& pattern);
+                const std::string& pattern, const bool deepScan);
   int StopVPN();
   void SetAsnName();
   int SetTimeZone(float tz);
@@ -41,7 +41,7 @@ class DXCoreBridge {
   using WinStop_t = int (*)();
   using WinMeasurePing_t = int (*)();
   using WinGetFlag_t = const char* (*)();
-  using WinStartVPN_t = void (*)(const char*, const char*, const char*);
+  using WinStartVPN_t = void (*)(const char*, const char*, const char*, int);
   using WinStopVPN_t = int (*)();
   using WinSetAsnName_t = void (*)();
   using WinSetTimeZone_t = int (*)(float);
