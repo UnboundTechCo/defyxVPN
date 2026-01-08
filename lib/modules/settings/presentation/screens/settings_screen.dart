@@ -139,7 +139,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _buildHeaderSection(),
                               SizedBox(height: 60.h),
                               _buildSettingsContent(ref, context),
-                              SizedBox(height: 100.h),
+                              SizedBox(height: 130.h),
                             ],
                           ),
                         ),

@@ -7,7 +7,7 @@ abstract class SettingsGroupId {
 // Group Titles
 abstract class SettingsGroupTitle {
   static const connectionMethod = 'CONNECTION METHOD';
-  static const trafficControl = 'TRAFFIC CONTROL';
+  static const trafficControl = 'ESCAPE MODE';
 }
 
 // Item IDs
@@ -15,6 +15,7 @@ abstract class SettingsItemId {
   static const destination = 'destination';
   static const splitTunnel = 'split_tunnel';
   static const killSwitch = 'kill_switch';
+  static const deepScan = 'deep_scan';
 }
 
 // Item Titles
@@ -22,6 +23,7 @@ abstract class SettingsItemTitle {
   static const destination = 'DESTINATION';
   static const splitTunnel = 'SPLIT TUNNEL';
   static const killSwitch = 'KILL SWITCH';
+  static const deepScan = 'DEEP SCAN';
 }
 
 // Navigation Routes

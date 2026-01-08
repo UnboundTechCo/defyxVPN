@@ -255,7 +255,6 @@ class DefyxVpnService : VpnService() {
                             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(NOTIFICATION_ID)
                 }
-
             } catch (e: Exception) {
                 log("Error stopping VPN: ${e.message}")
             }
@@ -283,10 +282,10 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    fun connectVPN(cacheDir: String, flowLine: String, pattern: String) {
+    fun connectVPN(cacheDir: String, flowLine: String, pattern: String, deepScan: Boolean) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                Android.startVPN(cacheDir, flowLine, pattern)
+                Android.startVPN(cacheDir, flowLine, pattern, deepScan)
             } catch (e: Exception) {
                 log("Start VPN failed: ${e.message}")
             }
