@@ -7,7 +7,7 @@ abstract class SettingsGroupId {
 // Group Titles
 abstract class SettingsGroupTitle {
   static const connectionMethod = 'CONNECTION METHOD';
-  static const trafficControl = 'TRAFFIC CONTROL';
+  static const trafficControl = 'ESCAPE MODE';
 }
 
 // Item IDs
