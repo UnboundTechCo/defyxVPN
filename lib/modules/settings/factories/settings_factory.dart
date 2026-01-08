@@ -5,6 +5,7 @@ import '../constants/settings_constants.dart';
 class SettingsConfig {
   final bool showDestination;
   final bool showSplitTunnel;
+  final bool showDeepScan;
   final bool showKillSwitch;
   final List<SettingsItem> customItems;
 
@@ -12,6 +13,7 @@ class SettingsConfig {
     this.showDestination = false,
     this.showSplitTunnel = false,
     this.showKillSwitch = false,
+    this.showDeepScan = true,
     this.customItems = const [],
   });
 
@@ -70,8 +72,19 @@ class SettingsFactory {
       isAccessible: true,
       sortOrder: 0,
       itemType: SettingsItemType.navigation,
-      navigationRoute: SettingsRoute.splitTunnel,
       subtitle: SettingsSubtitle.splitTunnelIncluded,
+    );
+  }
+
+  static SettingsItem createDeepScanItem({bool isEnabled = false}) {
+    return SettingsItem(
+      id: SettingsItemId.deepScan,
+      title: SettingsItemTitle.deepScan,
+      isEnabled: isEnabled,
+      isAccessible: true,
+      sortOrder: 0,
+      itemType: SettingsItemType.toggle,
+  
     );
   }
 
@@ -115,11 +128,16 @@ class SettingsFactory {
   static SettingsGroup createTrafficControlGroup({
     bool splitTunnelEnabled = false,
     bool killSwitchEnabled = false,
+    bool deepScanEnabled = false,
   }) {
     final List<SettingsItem> items = [];
 
     if (_config.showSplitTunnel) {
       items.add(createSplitTunnelItem(isEnabled: splitTunnelEnabled));
+    }
+
+    if (_config.showDeepScan) {
+      items.add(createDeepScanItem(isEnabled: deepScanEnabled));
     }
 
     if (_config.showKillSwitch) {

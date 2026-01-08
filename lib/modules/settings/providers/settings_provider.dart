@@ -119,6 +119,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       ),
     );
   }
+  bool isDeepScanEnabled() {
+    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+    return SettingsFactory.getSavedItemState(
+      savedGroup?.items,
+      SettingsItemId.deepScan,
+    );
+  }
 
   SettingsGroup _createDefaultConnectionMethodGroup(List<dynamic> flowline) {
     final connectionItems = SettingsFactory.flowlineToItems(flowline);
