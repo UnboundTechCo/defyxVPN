@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -126,7 +127,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Widget _buildSubtitle() {
     return Text(
-      "Crafted for secure internet access,\ndesigned for everyone, everywhere",
+      AppLocalizations.of(context)!.splashSubtitle,
       textAlign: TextAlign.center,
       style: TextStyle(
         fontFamily: 'Lato',

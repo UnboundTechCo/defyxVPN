@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class DefyxNavBar extends ConsumerWidget {
   const DefyxNavBar({super.key});
@@ -115,11 +116,12 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     ref.read(currentScreenProvider.notifier).state = AppScreen.share;
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
-      barrierLabel: 'Quick Menu',
+      barrierLabel: l10n.quickMenu,
       barrierColor: Colors.black.withValues(alpha: 0.5),
       transitionDuration: const Duration(milliseconds: 250),
       pageBuilder: (context, animation, secondaryAnimation) {

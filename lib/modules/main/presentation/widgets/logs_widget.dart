@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 // State class for logs
 class LogsState {
@@ -378,7 +379,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -386,9 +387,9 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     ClipboardData(text: logsState.logs.join('\n')),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Logs copied to clipboard'),
-                      backgroundColor: Color(0xFF2A2A2A),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.logsCopied),
+                      backgroundColor: const Color(0xFF2A2A2A),
                     ),
                   );
                 },
@@ -399,7 +400,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Copy Logs'),
+                child: Text(AppLocalizations.of(context)!.copyLogs),
               ),
             ],
           ),

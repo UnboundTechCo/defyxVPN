@@ -1,0 +1,203 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "Defyx VPN",
+  "@appTitle": {
+    "description": "The application title"
+  },
+
+  "splashSubtitle": "Crafted for secure internet access,\ndesigned for everyone, everywhere",
+  "@splashSubtitle": {
+    "description": "Subtitle shown on splash screen"
+  },
+
+  "connect": "Connect",
+  "@connect": {
+    "description": "Connect button text"
+  },
+
+  "disconnect": "Disconnect",
+  "@disconnect": {
+    "description": "Disconnect button text"
+  },
+
+  "connected": "Connected",
+  "@connected": {
+    "description": "Connected status text"
+  },
+
+  "disconnected": "Disconnected",
+  "@disconnected": {
+    "description": "Disconnected status text"
+  },
+
+  "connecting": "Connecting",
+  "@connecting": {
+    "description": "Connecting status text"
+  },
+
+  "speedTest": "Speed Test",
+  "@speedTest": {
+    "description": "Speed test feature label"
+  },
+
+  "download": "DOWNLOAD",
+  "@download": {
+    "description": "Download speed label"
+  },
+
+  "upload": "UPLOAD",
+  "@upload": {
+    "description": "Upload speed label"
+  },
+
+  "ping": "PING",
+  "@ping": {
+    "description": "Ping label"
+  },
+
+  "latency": "LATENCY",
+  "@latency": {
+    "description": "Latency label"
+  },
+
+  "jitter": "JITTER",
+  "@jitter": {
+    "description": "Jitter label"
+  },
+
+  "packetLoss": "P.LOSS",
+  "@packetLoss": {
+    "description": "Packet loss label"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings menu label"
+  },
+
+  "introduction": "Introduction",
+  "@introduction": {
+    "description": "Introduction menu item"
+  },
+
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy menu item"
+  },
+
+  "termsAndConditions": "Terms & Conditions",
+  "@termsAndConditions": {
+    "description": "Terms and conditions menu item"
+  },
+
+  "ourWebsite": "Our Website",
+  "@ourWebsite": {
+    "description": "Our website menu item"
+  },
+
+  "sourceCode": "Source code",
+  "@sourceCode": {
+    "description": "Source code link"
+  },
+
+  "openSourceLicenses": "Open source licenses",
+  "@openSourceLicenses": {
+    "description": "Open source licenses link"
+  },
+
+  "betaCommunity": "Beta Community",
+  "@betaCommunity": {
+    "description": "Beta community link"
+  },
+
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+
+  "copyLogs": "Copy Logs",
+  "@copyLogs": {
+    "description": "Copy logs button text"
+  },
+
+  "logsCopied": "Logs copied to clipboard",
+  "@logsCopied": {
+    "description": "Message shown when logs are copied"
+  },
+
+  "quickMenu": "Quick Menu",
+  "@quickMenu": {
+    "description": "Quick menu label"
+  },
+
+  "noInternet": "No Internet",
+  "@noInternet": {
+    "description": "No internet connection status"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error status"
+  },
+
+  "loading": "Loading",
+  "@loading": {
+    "description": "Loading status"
+  },
+
+  "analyzing": "Analyzing",
+  "@analyzing": {
+    "description": "Analyzing status"
+  },
+
+  "mbps": "Mbps",
+  "@mbps": {
+    "description": "Megabits per second unit"
+  },
+
+  "ms": "ms",
+  "@ms": {
+    "description": "Milliseconds unit"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Language setting label"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language name"
+  },
+
+  "persian": "فارسی (Persian)",
+  "@persian": {
+    "description": "Persian/Farsi language name"
+  },
+
+  "chinese": "中文 (Chinese)",
+  "@chinese": {
+    "description": "Chinese language name"
+  },
+
+  "russian": "Русский (Russian)",
+  "@russian": {
+    "description": "Russian language name"
+  },
+
+  "gotIt": "Got it",
+  "@gotIt": {
+    "description": "Got it button text"
+  },
+
+  "learnMore": "LEARN MORE",
+  "@learnMore": {
+    "description": "Learn more section title"
+  },
+
+  "defyxGoal": "The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.",
+  "@defyxGoal": {
+    "description": "Description of Defyx goal"
+  }
+}
