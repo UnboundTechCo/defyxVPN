@@ -5,7 +5,6 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
-import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -16,58 +15,20 @@ import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:toastification/toastification.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class App extends ConsumerStatefulWidget {
+class App extends ConsumerWidget {
   const App({super.key});
 
   @override
-  ConsumerState<App> createState() => _AppState();
-}
-
-class _AppState extends ConsumerState<App> {
-  LanguageNotifier? _languageNotifier;
-
-  @override
-  void initState() {
-    super.initState();
-    _initLanguage();
-  }
-
-  Future<void> _initLanguage() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _languageNotifier = LanguageNotifier(prefs);
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_languageNotifier == null) {
-      return const MaterialApp(
-        home: Scaffold(
-          body: Center(child: CircularProgressIndicator()),
-        ),
-      );
-    }
-
-    return ProviderScope(
-      overrides: [
-        languageProvider.overrideWith((ref) => _languageNotifier!),
-      ],
-      child: Consumer(
-        builder: (context, ref, child) {
-          return FutureBuilder<bool>(
-            future: _initializeApp(ref),
-            builder: (context, snapshot) {
-              _handleAdConfiguration(snapshot);
-              return _buildApp(context, ref);
-            },
-          );
-        },
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return FutureBuilder<bool>(
+      future: _initializeApp(ref),
+      builder: (context, snapshot) {
+        _handleAdConfiguration(snapshot);
+        return _buildApp(context, ref);
+      },
     );
   }
 
@@ -101,7 +62,6 @@ class _AppState extends ConsumerState<App> {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-    final languageState = ref.watch(languageProvider);
 
     final designSize = _getDesignSize(context);
 
@@ -124,7 +84,6 @@ class _AppState extends ConsumerState<App> {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
-              locale: languageState.language.locale,
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
