@@ -240,42 +240,75 @@ class VPN {
   Future<void> _stopVPN(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
-    await _vpnBridge.stopVPN();
+    
     _clearData(ref);
+    
+    _vpnBridge.stopVPN().catchError((e) {
+      debugPrint('Error stopping VPN: $e');
+    });
+    
     connectionNotifier.setDisconnected();
   }
 
   Future<void> _disconnect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
-    final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier.setDisconnecting();
-    await _vpnBridge.disconnectVpn();
+    
     _clearData(ref);
-    await vpnData?.disableVPN();
+    
+    unawaited(Future.wait([
+      _vpnBridge.disconnectVpn().catchError((e) {
+        debugPrint('Error disconnecting VPN: $e');
+      }),
+      _container?.read(vpnDataProvider.future).then((vpnData) {
+        vpnData?.disableVPN();
+      }).catchError((e) {
+        debugPrint('Error disabling VPN data: $e');
+      }) ?? Future.value(),
+    ]));
+    
     connectionNotifier.setDisconnected();
-    analyticsService.logVpnDisconnected();
+    
+    unawaited(Future.microtask(() => analyticsService.logVpnDisconnected()));
   }
 
   Future<void> _closeTunnel() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier?.setDisconnecting();
-    if (Platform.isIOS) {
-      await _vpnBridge.disconnectVpn();
-    }
-    await vpnData?.disableVPN();
+    
+    unawaited(Future.wait([
+      if (Platform.isIOS)
+        _vpnBridge.disconnectVpn().catchError((e) {
+          debugPrint('Error disconnecting VPN: $e');
+        }),
+      _container?.read(vpnDataProvider.future).then((vpnData) {
+        vpnData?.disableVPN();
+      }).catchError((e) {
+        debugPrint('Error disabling VPN data: $e');
+      }) ?? Future.value(),
+    ]));
+    
     connectionNotifier?.setDisconnected();
-    analyticsService.logVpnDisconnected();
+    unawaited(Future.microtask(() => analyticsService.logVpnDisconnected()));
   }
 
   Future<void> _onTunnelClosed() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
     connectionNotifier?.setDisconnecting();
-    final vpnData = await _container?.read(vpnDataProvider.future);
-    await _vpnBridge.stopVPN();
-    await vpnData?.disableVPN();
+    
+    unawaited(Future.wait([
+      _vpnBridge.stopVPN().catchError((e) {
+        debugPrint('Error stopping VPN: $e');
+      }),
+      _container?.read(vpnDataProvider.future).then((vpnData) {
+        vpnData?.disableVPN();
+      }).catchError((e) {
+        debugPrint('Error disabling VPN data: $e');
+      }) ?? Future.value(),
+    ]));
+    
     connectionNotifier?.setDisconnected();
   }
 
