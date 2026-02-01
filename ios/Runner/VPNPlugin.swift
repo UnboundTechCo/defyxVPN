@@ -1,6 +1,7 @@
 import Combine
 import Flutter
 import Foundation
+import IosDXcore
 import NetworkExtension
 import os.log
 
@@ -10,9 +11,12 @@ class VpnPlugin: VpnStatusDelegate {
     private var flutterResult: FlutterResult?
     private var eventSink: FlutterEventSink?
     private var connectionMethod: String?
+    private let goQueue = DispatchQueue(label: "go.runtime.queue", qos: .userInitiated)
 
     init() {
         VpnService.shared.statusDelegate = self
+        let progressStream = ProgressStreamHandlerIOS()
+        IosSetProgressListener(progressStream)
     }
 
     // MARK: - Event Sink
@@ -176,10 +180,14 @@ class VpnPlugin: VpnStatusDelegate {
 
     // MARK: - Measure Ping
     private func measurePing(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "MEASURE_PING"]) { response in
-            result(response)
+
+        goQueue.async {
+            let ping = IosMeasurePing()
+            DispatchQueue.main.async { result(ping) }
         }
+
     }
+
     private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
         let primaryPath = URL(fileURLWithPath: getSharedDirectory()).appendingPathComponent(
             "primary")
@@ -197,7 +205,8 @@ class VpnPlugin: VpnStatusDelegate {
         let dir = URL(fileURLWithPath: getSharedDirectory())
         guard let args = arguments,
             let flowLine = args["flowLine"] as? String,
-            let pattern = args["pattern"] as? String
+            let pattern = args["pattern"] as? String,
+            let deepScan = args["deepScan"] as? String
         else {
             result(
                 FlutterError(
@@ -206,7 +215,7 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,
+            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan
         ]) {
             response in
             result(response)
@@ -220,13 +229,17 @@ class VpnPlugin: VpnStatusDelegate {
     }
     // MARK: - Get Flag
     private func getFlag(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "GET_FLAG"]) { response in
-            result(response)
+
+        goQueue.async {
+            let flag = IosGetFlag()
+            DispatchQueue.main.async { result(flag) }
         }
     }
     private func setAsnName(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "SET_ASN_NAME"]) { response in
-            result(response)
+
+        goQueue.async {
+            IosSetAsnName()
+            DispatchQueue.main.async { result("flowline") }
         }
     }
     private func setTimezone(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -239,13 +252,8 @@ class VpnPlugin: VpnStatusDelegate {
             )
             return
         }
-
-        VpnService.shared.sendTunnelMessage([
-            "command": "SET_TIMEZONE",
-            "timezone": timezone,
-        ]) { response in
-            result(response)
-        }
+        let timezoneFloat = Float(timezone) ?? 0
+        IosSetTimeZone(timezoneFloat)
     }
 
     private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -254,20 +262,41 @@ class VpnPlugin: VpnStatusDelegate {
         else {
             result(
                 FlutterError(
-                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
             )
             return
         }
 
-        VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
-            response in
-            result(response)
+        let isTestBool = Bool(isTest) ?? false
+
+        let tuunel = getIsTunnelRunning()
+
+        if tuunel {
+
+            print("VPN is Prepared ")
+            VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
+                response in
+                result(response)
+            }
+        } else {
+
+            print("VPN is not Prepared ")
+            self.goQueue.async {
+                let flowline = IosGetFlowLine(isTestBool)
+                DispatchQueue.main.async { result(flowline) }
+            }
+            return
         }
+
     }
 
     private func getCachedFlowLine(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "GET_CACHED_FLOW_LINE"]) { response in
-            result(response)
+        goQueue.async {
+            let flowline = IosGetCachedFlowLine()
+            DispatchQueue.main.async { result(flowline) }
         }
     }
     private func isTunnelRunning(_ result: @escaping FlutterResult) {
@@ -276,20 +305,41 @@ class VpnPlugin: VpnStatusDelegate {
         } else {
             if let status = VpnService.shared.manager?.connection.status {
                 var statusBool = false
-
                 switch status {
                 case .connected: statusBool = true
                 case .connecting: statusBool = true
                 case .disconnected: statusBool = false
                 case .disconnecting: statusBool = true
-                case .invalid: statusBool = false  
+                case .invalid: statusBool = false
                 case .reasserting: statusBool = true
-                @unknown default: statusBool = false 
+                @unknown default: statusBool = false
                 }
                 result(statusBool)
             } else {
                 result(false)
             }
+        }
+    }
+
+    private func getIsTunnelRunning() -> Bool {
+        guard let manager = VpnService.shared.manager else {
+            return false
+        }
+
+        let status = manager.connection.status
+        switch status {
+        case .connected,
+            .connecting,
+            .disconnecting,
+            .reasserting:
+            return true
+
+        case .disconnected,
+            .invalid:
+            return false
+
+        @unknown default:
+            return false
         }
     }
 
@@ -306,7 +356,7 @@ class VpnPlugin: VpnStatusDelegate {
     }
 
     private func isVPNPrepared(_ result: @escaping FlutterResult) {
-            VpnService.shared.isVPNPrepared { prepareResult in
+        VpnService.shared.isVPNPrepared { prepareResult in
             switch prepareResult {
             case .success:
                 result(true)
@@ -317,4 +367,14 @@ class VpnPlugin: VpnStatusDelegate {
         }
     }
 
+}
+class ProgressStreamHandlerIOS: NSObject, IosProgressListenerProtocol {
+    func onProgress(_ msg: String?) {
+        if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {
+            var logs = defaults.stringArray(forKey: "vpn_logs") ?? []
+            logs.append(msg ?? "")
+            defaults.set(logs, forKey: "vpn_logs")
+            defaults.synchronize()
+        }
+    }
 }

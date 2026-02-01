@@ -7,4 +7,5 @@ class GlobalVars {
   static String get testFlight => dotenv.env['LINK_TEST_FLIGHT'] ?? '';
   static String get github => dotenv.env['LINK_GITHUB'] ?? '';
   static String get googlePlay => dotenv.env['LINK_GOOGLE_PLAY'] ?? '';
+  static String get microsoftStore => dotenv.env['LINK_MICROSOFT_STORE'] ?? '';
 }

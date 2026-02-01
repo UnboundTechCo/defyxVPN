@@ -154,6 +154,7 @@ class VPN {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       connectionNotifier?.setLoading();
+      loggerNotifier?.setLoading();
     });
 
     alertService.heartbeat();
@@ -175,12 +176,14 @@ class VPN {
         await _container?.read(secureStorageProvider).read('flowLine') ?? "";
     final pattern = settings?.getPattern() ?? "";
 
+    final isDeep =
+        _container?.read(settingsProvider.notifier).isDeepScanEnabled() ??
+            false;
     _connectionStartTime = DateTime.now();
     analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
 
-    await _vpnBridge.startVPN(flowLineStorage, pattern);
+    await _vpnBridge.startVPN(flowLineStorage, pattern, isDeep);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      loggerNotifier?.setLoading();
       connectionNotifier?.setAnalyzing();
     });
   }
@@ -336,12 +339,13 @@ class VPN {
   }
 
   Future<void> getVPNStatus() async {
+    final status = await _vpnBridge.getVpnStatus();
+    log.addLog("VPN status: $status");
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
-    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
-    if (isTunnelRunning) {
+    if (status == "connected") {
       connectionNotifier?.setConnected();
-      refreshPing();
+      await refreshPing();
     } else {
       connectionNotifier?.setDisconnected();
     }

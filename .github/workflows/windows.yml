@@ -61,7 +61,14 @@ jobs:
         run: flutter config --enable-windows-desktop
 
       - name: Build Windows Release
-        run: flutter build windows --release
+        shell: bash
+        run: |
+          chmod +x scripts/build_release.sh
+          bash scripts/build_release.sh <<EOF
+          2
+          6
+          4
+          EOF
 
       - name: Zip Windows Release Output
         shell: pwsh

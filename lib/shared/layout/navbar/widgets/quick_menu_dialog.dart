@@ -124,8 +124,8 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                             ),
                             SocialIconButton(
                               iconPath: AppIcons.facebookPath,
-                              url: 'https://fb.com/defyxvpn',
-                              enable: false,
+                              url: 'https://www.facebook.com/profile.php?id=61584237212686',
+                              enable: true,
                             ),
                             SocialIconButton(
                               iconPath: AppIcons.linkedinPath,

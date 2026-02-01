@@ -9,6 +9,7 @@ import '../../../../shared/widgets/defyx_switch.dart';
 class SettingsItemWidget extends StatelessWidget {
   final SettingsItem item;
   final VoidCallback? onToggle;
+  final Function(String)? onNavigate;
   final bool isDraggable;
   final bool isLastItem;
   final bool showDragHandle;
@@ -19,6 +20,7 @@ class SettingsItemWidget extends StatelessWidget {
     super.key,
     required this.item,
     this.onToggle,
+    this.onNavigate,
     this.isDraggable = false,
     this.isLastItem = false,
     this.showDragHandle = false,
@@ -52,6 +54,21 @@ class SettingsItemWidget extends StatelessWidget {
               ),
             ),
           ),
+        ] else if (item.showLeftIcon) ...[
+          Container(
+            width: 24.w,
+            height: 24.h,
+            margin: EdgeInsets.only(right: 12.w),
+            child: SvgPicture.asset(
+              'assets/icons/draggable_setting_indicator.svg',
+              width: 24.w,
+              height: 24.h,
+              colorFilter: ColorFilter.mode(
+                Colors.grey[400]!,
+                BlendMode.srcIn,
+              ),
+            ),
+          ),
         ],
         Expanded(
           child: Row(
@@ -76,20 +93,17 @@ class SettingsItemWidget extends StatelessWidget {
                       BlendMode.srcIn,
                     ),
                   ),
-                  onTap: () => SettingsToastMessage.show(context,item.description ?? ""),
+                  onTap: () =>
+                      SettingsToastMessage.show(item.description ?? ""),
                 )
             ],
           ),
         ),
-        DefyxSwitch(
-          value: item.isEnabled,
-          onChanged: item.isAccessible ? (_) => onToggle?.call() : null,
-          enabled: item.isAccessible,
-        ),
+        _buildTrailingWidget(),
       ],
     );
 
-    return Column(
+    Widget content = Column(
       children: [
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
@@ -114,6 +128,49 @@ class SettingsItemWidget extends StatelessWidget {
             margin: EdgeInsets.symmetric(vertical: 2.h),
           ),
       ],
+    );
+
+    if (item.itemType == SettingsItemType.navigation &&
+        item.navigationRoute != null) {
+      return GestureDetector(
+        onTap: () => onNavigate?.call(item.navigationRoute!),
+        behavior: HitTestBehavior.opaque,
+        child: content,
+      );
+    }
+
+    return content;
+  }
+
+  Widget _buildTrailingWidget() {
+    if (item.itemType == SettingsItemType.navigation) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (item.subtitle != null)
+            Text(
+              item.subtitle!,
+              style: TextStyle(
+                fontSize: 14.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[500],
+              ),
+            ),
+          if (item.subtitle != null) SizedBox(width: 8.w),
+          Icon(
+            Icons.chevron_right,
+            color: Colors.grey[400],
+            size: 24.sp,
+          ),
+        ],
+      );
+    }
+
+    return DefyxSwitch(
+      value: item.isEnabled,
+      onChanged: item.isAccessible ? (_) => onToggle?.call() : null,
+      enabled: item.isAccessible,
     );
   }
 }

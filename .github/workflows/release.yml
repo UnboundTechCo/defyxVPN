@@ -35,7 +35,8 @@ jobs:
       - name: Prepare Release Message
         if: steps.create_tag.outputs.created == 'true'
         run: |
-          sed "s|RELEASE_TAG|${{ github.ref_name }}|g" .github/release_message.md >> release.md
+          sed "s|RELEASE_TAG|v${{ steps.get_version.outputs.version }}|g" \
+            .github/release_message.md >> release.md
 
       - name: Download Android artifacts
         uses: actions/download-artifact@v4

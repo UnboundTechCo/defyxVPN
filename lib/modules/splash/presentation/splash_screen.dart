@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -5,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -22,32 +22,36 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _navigateToMain() async {
-    final router = GoRouter.of(context);
+    await WidgetsBinding.instance.endOfFrame;
     Future.delayed(Duration(seconds: 3), () {
-      router.go('/main');
+      _onNavigate();
       return;
     });
-    final vpnData = await ref.read(vpnDataProvider.future);
+    // final vpnData = await ref.read(vpnDataProvider.future);
+    final vpnStatus = await VpnBridge().getVpnStatus();
 
-    final vpnBridge = VpnBridge();
-    if (vpnData.isVPNEnabled) {
-      router.go('/main');
+    if (vpnStatus == "connected") {
+      _onNavigate();
       return;
     }
 
-    final vpnIsPrepared = await vpnBridge.isVPNPrepared();
-
-    if (ref.context.mounted && vpnIsPrepared) {
+    if (ref.context.mounted) {
       final vpn = VPN(ProviderScope.containerOf(ref.context));
       await vpn.initVPN();
-      router.go('/main');
+      _onNavigate();
       return;
-    }
-
-    if (!vpnIsPrepared) {
+    } else {
       await Future.delayed(const Duration(seconds: 3));
     }
-    router.go('/main');
+    _onNavigate();
+  }
+
+  void _onNavigate() {
+    if (!ref.context.mounted) return;
+    final currentRoute = ref.read(currentRouteProvider);
+    if (currentRoute == DefyxVPNRoutes.splash.route) {
+      context.go('/main');
+    }
   }
 
   @override
@@ -137,6 +141,42 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     return SizedBox(
       width: 28.w,
       height: 28.w,
+      child: const AlwaysSpinningIndicator(),
+    );
+  }
+}
+
+class AlwaysSpinningIndicator extends StatefulWidget {
+  const AlwaysSpinningIndicator({super.key});
+
+  @override
+  State<AlwaysSpinningIndicator> createState() =>
+      _AlwaysSpinningIndicatorState();
+}
+
+class _AlwaysSpinningIndicatorState extends State<AlwaysSpinningIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return RotationTransition(
+      turns: _controller,
       child: const CircularProgressIndicator(
         strokeCap: StrokeCap.round,
         color: Colors.white,
