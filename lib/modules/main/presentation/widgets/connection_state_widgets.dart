@@ -243,15 +243,17 @@ class AnalyzingContent extends ConsumerWidget {
           final deepScanEnabled =
               ref.read(settingsProvider.notifier).isDeepScanEnabled();
           if (deepScanEnabled) {
-            return Text(
-              "∞",
-              style: TextStyle(
-                color: const Color(0xFFA7A7A7),
-                fontSize: 24.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w400,
-              ),
-            );
+            return Container(
+                margin: const EdgeInsets.only(bottom: 3.0),
+                child: Text(
+                  "∞",
+                  style: TextStyle(
+                    color: const Color(0xFFA7A7A7),
+                    fontSize: 24.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ));
           }
 
           final flowLineState = ref.watch(flowLineStepProvider);
