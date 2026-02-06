@@ -33,6 +33,7 @@ class FlowlineService implements IFlowlineService {
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
   @override
+
   Future<void> saveFlowline(bool offlineMode) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
