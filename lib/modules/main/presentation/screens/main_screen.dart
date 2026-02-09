@@ -136,8 +136,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _secretTapHandler.handleSecretTap(context);
   }
 
-  void _showPrivacyNoticeDialog() {
-    PrivacyNoticeDialog.show(
+  Future<void> _showPrivacyNoticeDialog() {
+    return PrivacyNoticeDialog.show(
       context,
       () async {
         if (ref.context.mounted) {
