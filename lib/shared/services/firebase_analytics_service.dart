@@ -100,6 +100,15 @@ class FirebaseAnalyticsService {
     }
   }
 
+  Future<void> logCoreData(String event, Map<String, String> parameters) async {
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(name: event, parameters: parameters);
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
+  }
+
   Future<void> setUserProperty(String name, String? value) async {
     if (_isDesktopPlatform) return;
     try {
