@@ -2,11 +2,13 @@
 
 part of 'speed_test_api.dart';
 
+// dart format off
+
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
 
-// ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter
+// ignore_for_file: unnecessary_brace_in_string_interps,no_leading_underscores_for_local_identifiers,unused_element,unnecessary_string_interpolations,unused_element_parameter,avoid_unused_constructor_parameters,unreachable_from_main
 
 class _SpeedTestApi implements SpeedTestApi {
   _SpeedTestApi(this._dio, {this.baseUrl, this.errorLogger}) {
@@ -38,11 +40,11 @@ class _SpeedTestApi implements SpeedTestApi {
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<HttpResponse<List<int>>>(
       Options(
-        method: 'GET',
-        headers: _headers,
-        extra: _extra,
-        responseType: ResponseType.bytes,
-      )
+            method: 'GET',
+            headers: _headers,
+            extra: _extra,
+            responseType: ResponseType.bytes,
+          )
           .compose(
             _dio.options,
             '/__down',
@@ -58,7 +60,7 @@ class _SpeedTestApi implements SpeedTestApi {
     try {
       _value = _result.data!.cast<int>();
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     final httpResponse = HttpResponse(_value, _result);
@@ -89,11 +91,11 @@ class _SpeedTestApi implements SpeedTestApi {
     final _data = data;
     final _options = _setStreamType<HttpResponse<dynamic>>(
       Options(
-        method: 'POST',
-        headers: _headers,
-        extra: _extra,
-        contentType: contentType,
-      )
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: contentType,
+          )
           .compose(
             _dio.options,
             '/__up',
@@ -206,7 +208,7 @@ class _SpeedTestApi implements SpeedTestApi {
     try {
       _value = _result.data!;
     } on Object catch (e, s) {
-      errorLogger?.logError(e, s, _options);
+      errorLogger?.logError(e, s, _options, response: _result);
       rethrow;
     }
     final httpResponse = HttpResponse(_value, _result);
@@ -240,3 +242,5 @@ class _SpeedTestApi implements SpeedTestApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
+
+// dart format on

@@ -165,9 +165,18 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-final routeInformationProvider =
-    ChangeNotifierProvider<GoRouteInformationProvider>(
-        (ref) => ref.watch(routerProvider).routeInformationProvider);
+class RouteInformationNotifier extends Notifier<GoRouteInformationProvider> {
+  @override
+  GoRouteInformationProvider build() {
+    return ref.watch(routerProvider).routeInformationProvider;
+  }
+}
 
-final currentRouteProvider =
-    Provider((ref) => ref.watch(routeInformationProvider).value.uri.toString());
+final routeInformationProvider =
+NotifierProvider<RouteInformationNotifier, GoRouteInformationProvider>(
+  RouteInformationNotifier.new,
+);
+
+final currentRouteProvider = Provider(
+      (ref) => ref.watch(routeInformationProvider).value.uri.toString(),
+);

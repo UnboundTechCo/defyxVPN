@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/services.dart';
-import 'dart:async';
 
 enum ConnectionStatus {
   disconnecting,
@@ -36,11 +37,11 @@ class ConnectionState {
 }
 
 final connectionStateProvider =
-    StateNotifierProvider<ConnectionStateNotifier, ConnectionState>((ref) {
-      return ConnectionStateNotifier();
-    });
+    NotifierProvider<ConnectionStateNotifier, ConnectionState>(
+      ConnectionStateNotifier.new,
+    );
 
-class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
+class ConnectionStateNotifier extends Notifier<ConnectionState> {
   static const String _connectionStatusKey = 'connection_status';
 
   // Method channel for receiving events from iOS
@@ -50,9 +51,12 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
 
   StreamSubscription? _eventSubscription;
 
-  ConnectionStateNotifier() : super(const ConnectionState()) {
+  @override
+  ConnectionState build() {
+    ref.onDispose(() => _eventSubscription?.cancel());
     // Initialize VPN status listener first, then load saved state
     _initVpnStatusListener();
+    return const ConnectionState();
   }
 
   // Initialize the listener for VPN status events from native side
@@ -144,12 +148,5 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   void setAnalyzing() {
     state = state.copyWith(status: ConnectionStatus.analyzing);
     _saveState();
-  }
-
-  @override
-  void dispose() {
-    // Cancel the subscription when the notifier is disposed
-    _eventSubscription?.cancel();
-    super.dispose();
   }
 }

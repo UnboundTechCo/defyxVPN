@@ -6,8 +6,8 @@ part of 'app_api_response.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_$AppApiResponseImpl _$$AppApiResponseImplFromJson(Map<String, dynamic> json) =>
-    _$AppApiResponseImpl(
+_AppApiResponse _$AppApiResponseFromJson(Map<String, dynamic> json) =>
+    _AppApiResponse(
       version: Version.fromJson(json['version'] as Map<String, dynamic>),
       forceUpdate: Map<String, bool>.from(json['forceUpdate'] as Map),
       changeLog: (json['changeLog'] as Map<String, dynamic>).map(
@@ -15,13 +15,14 @@ _$AppApiResponseImpl _$$AppApiResponseImplFromJson(Map<String, dynamic> json) =>
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       ),
       flowLine: AppApiResponseFlowLine.fromJson(
-          json['flowLine'] as Map<String, dynamic>),
-      testUrls:
-          (json['testUrls'] as List<dynamic>).map((e) => e as String).toList(),
+        json['flowLine'] as Map<String, dynamic>,
+      ),
+      testUrls: (json['testUrls'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
     );
 
-Map<String, dynamic> _$$AppApiResponseImplToJson(
-        _$AppApiResponseImpl instance) =>
+Map<String, dynamic> _$AppApiResponseToJson(_AppApiResponse instance) =>
     <String, dynamic>{
       'version': instance.version,
       'forceUpdate': instance.forceUpdate,
@@ -30,25 +31,24 @@ Map<String, dynamic> _$$AppApiResponseImplToJson(
       'testUrls': instance.testUrls,
     };
 
-_$AppApiResponseFlowLineImpl _$$AppApiResponseFlowLineImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AppApiResponseFlowLineImpl(
-      startLine: (json['startLine'] as num).toInt(),
-      flowLine: (json['flowLine'] as List<dynamic>)
-          .map((e) => FlowLineElement.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+_AppApiResponseFlowLine _$AppApiResponseFlowLineFromJson(
+  Map<String, dynamic> json,
+) => _AppApiResponseFlowLine(
+  startLine: (json['startLine'] as num).toInt(),
+  flowLine: (json['flowLine'] as List<dynamic>)
+      .map((e) => FlowLineElement.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
-Map<String, dynamic> _$$AppApiResponseFlowLineImplToJson(
-        _$AppApiResponseFlowLineImpl instance) =>
-    <String, dynamic>{
-      'startLine': instance.startLine,
-      'flowLine': instance.flowLine,
-    };
+Map<String, dynamic> _$AppApiResponseFlowLineToJson(
+  _AppApiResponseFlowLine instance,
+) => <String, dynamic>{
+  'startLine': instance.startLine,
+  'flowLine': instance.flowLine,
+};
 
-_$FlowLineElementImpl _$$FlowLineElementImplFromJson(
-        Map<String, dynamic> json) =>
-    _$FlowLineElementImpl(
+_FlowLineElement _$FlowLineElementFromJson(Map<String, dynamic> json) =>
+    _FlowLineElement(
       enabled: json['enabled'] as bool,
       type: json['type'] as String,
       provider: json['provider'] as String,
@@ -63,8 +63,7 @@ _$FlowLineElementImpl _$$FlowLineElementImplFromJson(
       url: json['url'] as String?,
     );
 
-Map<String, dynamic> _$$FlowLineElementImplToJson(
-        _$FlowLineElementImpl instance) =>
+Map<String, dynamic> _$FlowLineElementToJson(_FlowLineElement instance) =>
     <String, dynamic>{
       'enabled': instance.enabled,
       'type': instance.type,
@@ -80,20 +79,18 @@ Map<String, dynamic> _$$FlowLineElementImplToJson(
       'url': instance.url,
     };
 
-_$VersionImpl _$$VersionImplFromJson(Map<String, dynamic> json) =>
-    _$VersionImpl(
-      github: json['github'] as String,
-      testFlight: json['testFlight'] as String,
-      appleStore: json['appleStore'] as String,
-      googlePlay: json['googlePlay'] as String,
-      microsoftStore: json['microsoftStore'] as String,
-    );
+_Version _$VersionFromJson(Map<String, dynamic> json) => _Version(
+  github: json['github'] as String,
+  testFlight: json['testFlight'] as String,
+  appleStore: json['appleStore'] as String,
+  googlePlay: json['googlePlay'] as String,
+  microsoftStore: json['microsoftStore'] as String,
+);
 
-Map<String, dynamic> _$$VersionImplToJson(_$VersionImpl instance) =>
-    <String, dynamic>{
-      'github': instance.github,
-      'testFlight': instance.testFlight,
-      'appleStore': instance.appleStore,
-      'googlePlay': instance.googlePlay,
-      'microsoftStore': instance.microsoftStore,
-    };
+Map<String, dynamic> _$VersionToJson(_Version instance) => <String, dynamic>{
+  'github': instance.github,
+  'testFlight': instance.testFlight,
+  'appleStore': instance.appleStore,
+  'googlePlay': instance.googlePlay,
+  'microsoftStore': instance.microsoftStore,
+};

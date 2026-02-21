@@ -50,7 +50,7 @@ class FirebaseAnalyticsService {
         parameters: {
           'connection_method': connectionMethod,
           'connection_duration_seconds': durationSeconds,
-          if (server != null) 'server': server,
+          'server': ?server,
         },
       );
     } catch (e) {

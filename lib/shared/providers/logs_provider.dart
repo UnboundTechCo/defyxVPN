@@ -12,13 +12,13 @@ class LoggerState {
   }
 }
 
-final loggerStateProvider =
-    StateNotifierProvider<LoggerStateNotifier, LoggerState>((ref) {
-      return LoggerStateNotifier();
-    });
+final loggerStateProvider = NotifierProvider<LoggerStateNotifier, LoggerState>(
+  LoggerStateNotifier.new,
+);
 
-class LoggerStateNotifier extends StateNotifier<LoggerState> {
-  LoggerStateNotifier() : super(const LoggerState());
+class LoggerStateNotifier extends Notifier<LoggerState> {
+  @override
+  LoggerState build() => const LoggerState();
 
   void setLoading() {
     state = LoggerState(status: LoggerStatus.loading);

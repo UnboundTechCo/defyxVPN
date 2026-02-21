@@ -10,13 +10,13 @@ class GroupState {
   }
 }
 
-final groupStateProvider =
-    StateNotifierProvider<GroupStateNotifier, GroupState>((ref) {
-  return GroupStateNotifier();
-});
+final groupStateProvider = NotifierProvider<GroupStateNotifier, GroupState>(
+  GroupStateNotifier.new,
+);
 
-class GroupStateNotifier extends StateNotifier<GroupState> {
-  GroupStateNotifier() : super(const GroupState());
+class GroupStateNotifier extends Notifier<GroupState> {
+  @override
+  GroupState build() => const GroupState();
 
   void setGroupName(String name) {
     state = state.copyWith(groupName: name.toUpperCase());

@@ -208,7 +208,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildSettingsContent(WidgetRef ref, BuildContext context) {
     final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
-    final groups = settingsState.groupList;
+    final groups = settingsState.value?.groupList ?? [];
 
     return Column(
       children: groups

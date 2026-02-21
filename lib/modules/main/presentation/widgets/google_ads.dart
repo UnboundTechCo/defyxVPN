@@ -48,9 +48,13 @@ class GoogleAdsState {
   }
 }
 
-class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
-  GoogleAdsNotifier() : super(const GoogleAdsState());
+class GoogleAdsNotifier extends Notifier<GoogleAdsState> {
   Timer? _countdownTimer;
+  @override
+  GoogleAdsState build() {
+    ref.onDispose(() =>  _countdownTimer?.cancel());
+    return const GoogleAdsState();
+  }
 
   void startCountdownTimer() {
     if (_countdownTimer != null && _countdownTimer!.isActive) {
@@ -104,24 +108,32 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
   void resetState() {
     state = const GoogleAdsState();
   }
-
-  @override
-  void dispose() {
-    _countdownTimer?.cancel();
-    super.dispose();
-  }
 }
 
-final googleAdsProvider =
-    StateNotifierProvider<GoogleAdsNotifier, GoogleAdsState>((ref) {
-  return GoogleAdsNotifier();
-});
+class AdsLoadTriggerNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void increment() => state++;
+}
 
-final adsLoadTriggerProvider = StateProvider<int>((ref) => 0);
+class ShouldShowGoogleAdsNotifier extends Notifier<bool?> {
+  @override
+  bool? build() => null;
+  void set(bool? value) => state = value;
+}
 
-final shouldShowGoogleAdsProvider = StateProvider<bool?>((ref) => null);
+final googleAdsProvider = NotifierProvider<GoogleAdsNotifier, GoogleAdsState>(GoogleAdsNotifier.new);
 
-final customAdDataProvider = StateProvider<Map<String, String>?>((ref) => null);
+final adsLoadTriggerProvider = NotifierProvider<AdsLoadTriggerNotifier, int>(AdsLoadTriggerNotifier.new);
+
+final shouldShowGoogleAdsProvider = NotifierProvider<ShouldShowGoogleAdsNotifier, bool?>(ShouldShowGoogleAdsNotifier.new);
+
+class CustomAdDataNotifier extends Notifier<Map<String, String>?> {
+  @override
+  Map<String, String>? build() => null;
+  void set(Map<String, String>? value) => state = value;
+}
+final customAdDataProvider = NotifierProvider<CustomAdDataNotifier, Map<String, String>?>(CustomAdDataNotifier.new);
 
 class GoogleAds extends ConsumerStatefulWidget {
   final Color backgroundColor;
@@ -181,8 +193,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       if (!(Platform.isAndroid || Platform.isIOS)) {
         final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
         if (!_isDisposed) {
-          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
-          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(shouldShowGoogleAdsProvider.notifier).set(false);
+          ref.read(customAdDataProvider.notifier).set(customAdData);
           ref.read(googleAdsProvider.notifier).setAdLoaded(true);
         }
         return;
@@ -192,7 +204,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
       if (_isDisposed) return;
 
-      ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
+      ref.read(shouldShowGoogleAdsProvider.notifier).set(shouldShowGoogle);
 
       if (shouldShowGoogle) {
         _loadGoogleAd();
@@ -201,7 +213,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
       final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
       if (!_isDisposed) {
-        ref.read(customAdDataProvider.notifier).state = customAdData;
+        ref.read(customAdDataProvider.notifier).set(customAdData);
         ref.read(googleAdsProvider.notifier).setAdLoaded(true);
       }
     } catch (e) {
@@ -228,8 +240,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         // No ad unit id available for this platform; fall back to custom ads.
         final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
         if (!_isDisposed) {
-          ref.read(shouldShowGoogleAdsProvider.notifier).state = false;
-          ref.read(customAdDataProvider.notifier).state = customAdData;
+          ref.read(shouldShowGoogleAdsProvider.notifier).set(false);
+          ref.read(customAdDataProvider.notifier).set(customAdData);
           ref.read(googleAdsProvider.notifier).setAdLoaded(true);
         }
         return;
@@ -309,8 +321,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   void _retryLoadAd() {
     _hasInitialized = false;
     ref.read(googleAdsProvider.notifier).resetState();
-    ref.read(shouldShowGoogleAdsProvider.notifier).state = null;
-    ref.read(customAdDataProvider.notifier).state = null;
+    ref.read(shouldShowGoogleAdsProvider.notifier).set(null);
+    ref.read(customAdDataProvider.notifier).set(null);
     _initializeAds();
   }
 

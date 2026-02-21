@@ -152,9 +152,7 @@ class PingIndicator extends ConsumerWidget {
         child: Consumer(
           builder: (context, ref, child) {
             final ping = ref.watch(pingProvider);
-            final pingLoading = ref.watch(pingLoadingProvider);
-            final isLoading = pingLoading || ping.isEmpty || ping == "0";
-            if (isLoading) {
+            if (ping.isLoading || ping.hasError || ping.value == '0') {
               return _pingLoading();
             }
 
@@ -162,7 +160,7 @@ class PingIndicator extends ConsumerWidget {
               children: [
                 SizedBox(width: 10.w),
                 Text(
-                  ping,
+                  ping.requireValue,
                   style: TextStyle(
                     fontSize: 16.sp,
                     fontFamily: 'Lato',

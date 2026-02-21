@@ -6,32 +6,36 @@ class FlowLineState {
   final int step;
   final int totalSteps;
 
-  const FlowLineState({this.step = 0,this.totalSteps = 0});
+  const FlowLineState({this.step = 0, this.totalSteps = 0});
 
   FlowLineState copyWith({int? step, int? totalSteps}) {
-    return FlowLineState(step: step ?? this.step, totalSteps: totalSteps ?? this.totalSteps);
+    return FlowLineState(
+      step: step ?? this.step,
+      totalSteps: totalSteps ?? this.totalSteps,
+    );
   }
 }
 
 final flowLineStepProvider =
-    StateNotifierProvider<FlowLineStepNotifier, FlowLineState>((ref) {
-      return FlowLineStepNotifier();
-    });
+    NotifierProvider<FlowLineStepNotifier, FlowLineState>(
+      FlowLineStepNotifier.new,
+    );
 
-class FlowLineStepNotifier extends StateNotifier<FlowLineState> {
+class FlowLineStepNotifier extends Notifier<FlowLineState> {
   static const String _flowLineStepKey = 'flow_line_step';
 
-  FlowLineStepNotifier() : super(const FlowLineState()) {
+  @override
+  FlowLineState build() {
     _loadSavedStep();
+    return const FlowLineState();
   }
 
   Future<void> _loadSavedStep() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedStep = prefs.getInt(_flowLineStepKey);
-
       if (savedStep != null) {
-        state = FlowLineState(step: savedStep);
+        state = state.copyWith(step: savedStep);
       }
     } catch (e) {
       debugPrint('Error loading saved flow line step: $e');

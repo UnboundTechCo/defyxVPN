@@ -9,22 +9,36 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:version/version.dart';
 
-final pingLoadingProvider = StateProvider<bool>((ref) => false);
-final flagLoadingProvider = StateProvider<bool>((ref) => false);
+class PingNotifier extends AsyncNotifier<String> {
+  @override
+  String build() => '0';
 
-final pingProvider = StateProvider<String>((ref) => '0');
+  Future<void> getPing(NetworkStatus network) async {
+    state = const AsyncValue.loading();
+    try {
+      final ping = await network.getPing();
+      state = AsyncValue.data(ping);
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+}
+final pingProvider = AsyncNotifierProvider<PingNotifier, String>(PingNotifier.new);
 
-final flagProvider = FutureProvider<String>((ref) async {
-  final isLoading = ref.watch(flagLoadingProvider);
-  final network = NetworkStatus();
+final flagProvider = AsyncNotifierProvider<FlagAsyncNotifier, String>(FlagAsyncNotifier.new);
 
-  if (isLoading) {
+class FlagAsyncNotifier extends AsyncNotifier<String> {
+  @override
+  Future<String> build() async {
+    final network = NetworkStatus();
     final flag = await network.getFlag();
-    ref.read(flagLoadingProvider.notifier).state = false;
     return flag.toLowerCase();
   }
-  return (await network.getFlag()).toLowerCase();
-});
+
+  void invalidate() {
+    ref.invalidateSelf(asReload: true);
+  }
+}
 
 class MainScreenLogic {
   final WidgetRef ref;

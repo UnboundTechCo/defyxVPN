@@ -10,14 +10,14 @@ class AdvertiseDirector {
   AdvertiseDirector(this.ref);
 
   static Future<bool> shouldUseInternalAds(WidgetRef ref) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    final currentTimeZone = await FlutterTimezone.getLocalTimezone();
 
     final adversies =
         await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
 
     if (adversies['api_advertise'] != null) {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      return advertiseMap.containsKey(currentTimeZone);
+      return advertiseMap.containsKey(currentTimeZone.identifier);
     }
 
     return false;
@@ -34,15 +34,15 @@ class AdvertiseDirector {
   }
 
   static Future<Map<String, String>> getRandomCustomAd(WidgetRef ref) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    final currentTimeZone = await FlutterTimezone.getLocalTimezone();
 
     final adversies =
         await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
 
     if (adversies['api_advertise'] != null) {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      if (advertiseMap.containsKey(currentTimeZone)) {
-        final adsData = advertiseMap[currentTimeZone] as List<dynamic>;
+      if (advertiseMap.containsKey(currentTimeZone.identifier)) {
+        final adsData = advertiseMap[currentTimeZone.identifier] as List<dynamic>;
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);

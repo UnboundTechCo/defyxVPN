@@ -1,12 +1,12 @@
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
-import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/defyx_nav_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_dialog.dart';
+import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 class DefyxNavBar extends ConsumerWidget {
@@ -16,7 +16,7 @@ class DefyxNavBar extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final location = GoRouterState.of(context).uri.path;
     final currentScreen = _getCurrentScreenFromLocation(location);
-    final settingsLoading = ref.watch(settingsLoadingProvider);
+    final settings = ref.watch(settingsProvider);
 
     return SafeArea(
         child: Padding(
@@ -52,7 +52,7 @@ class DefyxNavBar extends ConsumerWidget {
                 DefyxNavItem(
                   screen: AppScreen.settings,
                   icon: "settings",
-                  isLoading: settingsLoading,
+                  isLoading: settings.isLoading,
                   current: currentScreen,
                   onTap: () => _navigateToSettings(context),
                 ),
@@ -115,7 +115,7 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
-    ref.read(currentScreenProvider.notifier).state = AppScreen.share;
+    ref.read(currentScreenProvider.notifier).setScreen(AppScreen.share);
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -142,7 +142,7 @@ class DefyxNavBar extends ConsumerWidget {
         );
       },
     ).then((_) {
-      ref.read(currentScreenProvider.notifier).state = AppScreen.home;
+      ref.read(currentScreenProvider.notifier).setScreen(AppScreen.home);
     });
   }
 }

@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:defyx_vpn/core/network/http_client.dart';
-import 'package:defyx_vpn/core/network/http_client_interface.dart';
 import 'package:defyx_vpn/modules/speed_test/data/api/speed_test_api.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -64,14 +63,29 @@ class SpeedTestState {
   }
 }
 
-final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
-  final httpClient = ref.read(httpClientProvider);
-  return SpeedTestNotifier(httpClient, ref);
-});
+final speedTestProvider = NotifierProvider<SpeedTestNotifier, SpeedTestState>(SpeedTestNotifier.new);
 
-class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
-  final IHttpClient _httpClient;
-  final Ref _ref;
+class SpeedTestNotifier extends Notifier<SpeedTestState> {
+  @override
+  SpeedTestState build() {
+    ref.onDispose(() {
+      _stopTestOnly();
+      _stopConnectionMonitoring();
+    });
+    final httpClient = ref.read(httpClientProvider);
+    final dio = (httpClient as HttpClient).dio;
+
+    dio.options.connectTimeout = SpeedMeasurementConfig.connectTimeout;
+    dio.options.receiveTimeout = SpeedMeasurementConfig.receiveTimeout;
+    dio.options.sendTimeout = SpeedMeasurementConfig.sendTimeout;
+    dio.options.headers['User-Agent'] = 'Defyx VPN Speed Test';
+
+    _api = SpeedTestApi(dio);
+    _logger = CloudflareLoggerService(_api);
+    _alertService = AlertService();
+    _alertService.init();
+    return const SpeedTestState();
+  }
   late final SpeedTestApi _api;
   late final CloudflareLoggerService _logger;
   late final AlertService _alertService;
@@ -86,29 +100,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final List<double> _uploadSpeeds = [];
   final List<int> _latencies = [];
 
-  SpeedTestNotifier(this._httpClient, this._ref) : super(const SpeedTestState()) {
-    final dio = (_httpClient as HttpClient).dio;
-
-    dio.options.connectTimeout = SpeedMeasurementConfig.connectTimeout;
-    dio.options.receiveTimeout = SpeedMeasurementConfig.receiveTimeout;
-    dio.options.sendTimeout = SpeedMeasurementConfig.sendTimeout;
-    dio.options.headers['User-Agent'] = 'Defyx VPN Speed Test';
-
-    _api = SpeedTestApi(dio);
-    _logger = CloudflareLoggerService(_api);
-    _alertService = AlertService();
-    _alertService.init();
-  }
-
   String _generateMeasurementId() {
     return (Random().nextDouble() * 1e16).round().toString();
-  }
-
-  @override
-  void dispose() {
-    _stopTestOnly();
-    _stopConnectionMonitoring();
-    super.dispose();
   }
 
   void stopAndResetTest() {
@@ -204,7 +197,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
   void _startConnectionMonitoring() {
     _connectionSubscription?.close();
-    _connectionSubscription = _ref.listen<ConnectionState>(
+    _connectionSubscription = ref.listen<ConnectionState>(
       connectionStateProvider,
       (previous, next) {
         final status = next.status;

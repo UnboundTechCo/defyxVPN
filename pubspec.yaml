@@ -4,33 +4,33 @@ publish_to: "none"
 version: 3.8.2+234
 
 environment:
-  sdk: ^3.5.3
+  sdk: ^3.8.0
 
 dependencies:
   flutter:
     sdk: flutter
 
   # Backend Packages
-  flutter_riverpod: ^2.5.1
-  go_router: ^14.3.1
+  flutter_riverpod: ^3.1.0
+  go_router: ^17.0.1
   shared_preferences: ^2.2.2
   dio: ^5.7.0
   dio_http_formatter: ^3.2.1
   shimmer: ^3.0.0
   shake: ^3.0.0
   vibration: ^3.1.3
-  google_mobile_ads: ^6.0.0
+  google_mobile_ads: ^7.0.0
   url_launcher: ^6.3.1
   flame: ^1.29.0
   webview_flutter: ^4.13.0
   async: ^2.12.0
-  flutter_secure_storage: ^9.2.4
-  freezed_annotation: ^2.4.4
-  retrofit: ^4.9.0
+  flutter_secure_storage: ^10.0.0
+  freezed_annotation: ^3.1.0
+  retrofit: ^4.9.1
   json_annotation: ^4.9.0
-  package_info_plus: ^8.3.0
+  package_info_plus: ^9.0.0
   version: ^3.0.2
-  flutter_timezone: ^4.1.1
+  flutter_timezone: ^5.0.1
   connectivity_plus: ^7.0.0
 
   # Frontend Packages
@@ -39,7 +39,7 @@ dependencies:
   lottie: ^3.3.1
   toastification: ^3.0.3
   path_drawing: ^1.0.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
   firebase_core: ^4.2.0
@@ -54,12 +54,12 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
 
-  flutter_lints: ^5.0.0
-  build_runner: ^2.4.13
-  retrofit_generator: ^9.1.2
+  flutter_lints: ^6.0.0
+  build_runner: ^2.7.1
+  retrofit_generator: ^10.2.0
   json_serializable: ^6.8.0
-  freezed: ^2.5.7
-  riverpod_generator: ^2.4.3
+  freezed: ^3.2.3
+  riverpod_generator: ^4.0.0+1
 
 flutter:
   uses-material-design: true

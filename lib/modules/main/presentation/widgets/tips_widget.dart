@@ -5,7 +5,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-final tipsCurrentPageProvider = StateProvider<int>((ref) => 0);
+class TipsCurrentPageNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+  void setPage(int value) => state = value;
+}
+
+final tipsCurrentPageProvider =
+    NotifierProvider<TipsCurrentPageNotifier, int>(TipsCurrentPageNotifier.new);
 
 final tipsPageControllerProvider = Provider<PageController>((ref) {
   final controller = PageController();
@@ -34,7 +41,7 @@ final tipsTimerProvider = Provider<Timer?>((ref) {
     if (pageController.hasClients) {
       final currentPage = ref.read(tipsCurrentPageProvider);
       final nextPage = (currentPage + 1) % tips.length;
-      currentPageNotifier.state = nextPage;
+      currentPageNotifier.setPage(nextPage);
       pageController.animateToPage(
         nextPage,
         duration: const Duration(milliseconds: 500),
@@ -177,7 +184,7 @@ class TipsSlider extends ConsumerWidget {
                       controller: pageController,
                       itemCount: tips.length,
                       onPageChanged: (page) {
-                        ref.read(tipsCurrentPageProvider.notifier).state = page;
+                        ref.read(tipsCurrentPageProvider.notifier).setPage(page);
                       },
                       itemBuilder: (context, index) {
                         return Column(

@@ -31,8 +31,8 @@ A modern, relatively smart, secure, and open-source VPN application built with F
 
 ### Prerequisites
 
-- Flutter SDK ≥ 3.7.0
-- Dart SDK ≥ 3.0.0
+- Flutter SDK ≥ 3.32.0
+- Dart SDK ≥ 3.8.0
 - Xcode for iOS/macOS development
 
 ### 🧑‍💻 How to Set Up

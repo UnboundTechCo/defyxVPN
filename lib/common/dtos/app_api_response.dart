@@ -4,7 +4,7 @@ part 'app_api_response.freezed.dart';
 part 'app_api_response.g.dart';
 
 @freezed
-class AppApiResponse with _$AppApiResponse {
+abstract class AppApiResponse with _$AppApiResponse {
   const factory AppApiResponse({
     @JsonKey(name: "version") required Version version,
     @JsonKey(name: "forceUpdate") required Map<String, bool> forceUpdate,
@@ -18,7 +18,7 @@ class AppApiResponse with _$AppApiResponse {
 }
 
 @freezed
-class AppApiResponseFlowLine with _$AppApiResponseFlowLine {
+abstract class AppApiResponseFlowLine with _$AppApiResponseFlowLine {
   const factory AppApiResponseFlowLine({
     @JsonKey(name: "startLine") required int startLine,
     @JsonKey(name: "flowLine") required List<FlowLineElement> flowLine,
@@ -29,7 +29,7 @@ class AppApiResponseFlowLine with _$AppApiResponseFlowLine {
 }
 
 @freezed
-class FlowLineElement with _$FlowLineElement {
+abstract class FlowLineElement with _$FlowLineElement {
   const factory FlowLineElement({
     @JsonKey(name: "enabled") required bool enabled,
     @JsonKey(name: "type") required String type,
@@ -50,7 +50,7 @@ class FlowLineElement with _$FlowLineElement {
 }
 
 @freezed
-class Version with _$Version {
+abstract class Version with _$Version {
   const factory Version({
     @JsonKey(name: "github") required String github,
     @JsonKey(name: "testFlight") required String testFlight,

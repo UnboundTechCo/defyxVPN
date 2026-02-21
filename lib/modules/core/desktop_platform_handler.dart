@@ -9,7 +9,17 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 
-final trayConnectionToggleTriggerProvider = StateProvider<int>((ref) => 0);
+final trayConnectionToggleTriggerProvider =
+    NotifierProvider<TrayConnectionToggleTriggerNotifier, int>(
+      TrayConnectionToggleTriggerNotifier.new,
+    );
+
+class TrayConnectionToggleTriggerNotifier extends Notifier<int> {
+  @override
+  int build() => 0;
+
+  void increment() => state++;
+}
 
 class DesktopPlatformHandler {
   static const MethodChannel _channel = MethodChannel('com.defyx.vpn');
@@ -162,7 +172,9 @@ class DesktopPlatformHandler {
       debugPrint('DesktopPlatformHandler: Triggering VPN toggle');
 
       try {
-        container.read(trayConnectionToggleTriggerProvider.notifier).state++;
+        container
+            .read(trayConnectionToggleTriggerProvider.notifier)
+            .increment();
       } catch (e) {
         debugPrint('DesktopPlatformHandler: Error triggering toggle - $e');
       }

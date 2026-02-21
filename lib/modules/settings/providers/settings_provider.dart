@@ -35,35 +35,35 @@ class SettingsState {
   SettingsGroup? getGroup(String id) => groups[id];
 }
 
-class SettingsNotifier extends StateNotifier<SettingsState> {
-  final Ref<SettingsState> ref;
+class SettingsNotifier extends AsyncNotifier<SettingsState> {
   ISecureStorage? _secureStorage;
-  bool _isInitialized = false;
 
-  SettingsNotifier(this.ref) : super(const SettingsState(groups: {})) {
+  @override
+  Future<SettingsState> build() async {
     _secureStorage = ref.read(secureStorageProvider);
-    _initializeSettings();
+    state = const AsyncValue.loading();
+    final groups = await _initializeSettings();
+    return SettingsState(groups: groups);
   }
 
   // ============== Initialization ==============
 
-  Future<void> _initializeSettings() async {
+  Future<Map<String, SettingsGroup>> _initializeSettings() async {
     await _updateConnectionMethodFromFlowLine();
     _ensureStaticGroups();
-    _isInitialized = true;
     debugPrint('Settings initialized');
+    return state.value?.groups ?? {};
   }
 
   // ============== Storage Operations ==============
 
   Future<void> _saveSettings() async {
-    if (!_isInitialized && state.groups.isEmpty) {
+    final groups = state.value?.groups ?? {};
+    if (groups.isEmpty) {
       debugPrint('Skipping save - not initialized yet');
       return;
     }
-
-    final jsonMap =
-        state.groups.map((key, group) => MapEntry(key, group.toJson()));
+    final jsonMap = groups.map((key, group) => MapEntry(key, group.toJson()));
     final jsonString = jsonEncode(jsonMap);
     await _secureStorage?.write(SettingsStorageKey.appSettings, jsonString);
   }
@@ -81,21 +81,19 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Group Management ==============
 
   void _updateGroup(SettingsGroup group) {
-    final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
+    final updatedGroups = Map<String, SettingsGroup>.from(state.value?.groups ?? {});
     updatedGroups[group.id] = group;
-    state = state.copyWith(groups: updatedGroups);
+    state = AsyncValue.data(state.value?.copyWith(groups: updatedGroups) ?? SettingsState(groups: updatedGroups));
   }
 
   void _ensureStaticGroups() {
-    final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
-
+    final updatedGroups = Map<String, SettingsGroup>.from(state.value?.groups ?? {});
     // Only add traffic control if it doesn't exist
     if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
       updatedGroups[SettingsGroupId.trafficControl] =
           _createTrafficControlGroup();
     }
-
-    state = state.copyWith(groups: updatedGroups);
+    state = AsyncValue.data(state.value?.copyWith(groups: updatedGroups) ?? SettingsState(groups: updatedGroups));
 
     // Only save if we have connection_method loaded (not empty state)
     if (updatedGroups.containsKey(SettingsGroupId.connectionMethod)) {
@@ -106,7 +104,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Group Creation ==============
 
   SettingsGroup _createTrafficControlGroup() {
-    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+    final savedGroup = state.value?.groups[SettingsGroupId.trafficControl];
 
     return SettingsFactory.createTrafficControlGroup(
       splitTunnelEnabled: SettingsFactory.getSavedItemState(
@@ -120,7 +118,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     );
   }
   bool isDeepScanEnabled() {
-    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+    final savedGroup = state.value?.groups[SettingsGroupId.trafficControl];
     return SettingsFactory.getSavedItemState(
       savedGroup?.items,
       SettingsItemId.deepScan,
@@ -228,7 +226,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Public Actions ==============
 
   void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
-    final group = state.groups[groupId];
+    final group = state.value?.groups[groupId];
     if (group == null) return;
 
     final updatedItems = group.items.map((item) {
@@ -250,7 +248,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   void reorderItems(String groupId, int oldIndex, int newIndex) {
-    final group = state.groups[groupId];
+    final group = state.value?.groups[groupId];
     if (group == null || !group.isDraggable) return;
 
     final draggableItems = group.items
@@ -280,15 +278,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         .map((entry) => entry.value.copyWith(sortOrder: entry.key))
         .toList();
 
-    _updateGroup(
-        group.copyWith(items: [...updatedDraggableItems, ...navigationItems]));
+    _updateGroup(group.copyWith(items: [...updatedDraggableItems, ...navigationItems]));
     _saveSettings();
   }
 
   // ============== Query Methods ==============
 
   String getConnectionMethodPattern() {
-    final group = state.groups[SettingsGroupId.connectionMethod];
+    final group = state.value?.groups[SettingsGroupId.connectionMethod];
     if (group == null) return '';
 
     final items = group.items
@@ -331,8 +328,4 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 }
 
-final settingsProvider = StateNotifierProvider<SettingsNotifier, SettingsState>(
-  (ref) => SettingsNotifier(ref),
-);
-
-final settingsLoadingProvider = StateProvider<bool>((ref) => false);
+final settingsProvider = AsyncNotifierProvider<SettingsNotifier, SettingsState>(SettingsNotifier.new);

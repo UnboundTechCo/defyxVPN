@@ -230,11 +230,8 @@ class VPN {
   }
 
   Future<void> refreshPing() async {
-    _container?.read(flagLoadingProvider.notifier).state = true;
-    _container?.read(pingLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state =
-        await _networkStatus.getPing();
-    _container?.read(pingLoadingProvider.notifier).state = false;
+    _container?.read(flagProvider.notifier).invalidate();
+    _container?.read(pingProvider.notifier).getPing(_networkStatus);
   }
 
   Future<void> _stopVPN(WidgetRef ref) async {
@@ -352,11 +349,9 @@ class VPN {
   }
 
   Future<void> initVPN() async {
-    _container?.read(settingsLoadingProvider.notifier).state = true;
     await _container?.read(flowlineServiceProvider).saveFlowline(true);
     await _vpnBridge.setAsnName();
     await _container?.read(flowlineServiceProvider).saveFlowline(false);
-    _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 
   Future<void> _updatePing() async {
@@ -365,7 +360,6 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state =
-        await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).getPing(_networkStatus);
   }
 }
