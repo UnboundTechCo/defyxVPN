@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'speed_test_metric_item.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class SpeedTestMetricsDisplay extends StatelessWidget {
   final double downloadSpeed;

@@ -12,7 +12,8 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appTitle => 'دیفکس وی‌پی‌ان';
 
   @override
-  String get splashSubtitle => 'برای دسترسی امن به اینترنت طراحی شده،\nبرای همه، در همه جا';
+  String get splashSubtitle =>
+      'برای دسترسی امن به اینترنت طراحی شده،\nبرای همه، در همه جا';
 
   @override
   String get connect => 'اتصال';
@@ -49,6 +50,9 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get packetLoss => 'از دست دادن بسته';
+
+  @override
+  String get tapHere => 'اینجا ضربه بزنید';
 
   @override
   String get settings => 'تنظیمات';
@@ -126,5 +130,102 @@ class AppLocalizationsFa extends AppLocalizations {
   String get learnMore => 'بیشتر بدانید';
 
   @override
-  String get defyxGoal => 'هدف دیفکس اطمینان از دسترسی امن به اطلاعات عمومی و ارائه تجربه مرور رایگان است.';
+  String get defyxGoal =>
+      'هدف دیفکس اطمینان از دسترسی امن به اطلاعات عمومی و ارائه تجربه مرور رایگان است.';
+
+  @override
+  String get statusIsChilling => 'در حال استراحت است.';
+
+  @override
+  String get statusIs => 'است';
+
+  @override
+  String get statusFailed => 'ناموفق بود.';
+
+  @override
+  String get statusHas => 'دارد';
+
+  @override
+  String get statusIsReturning => 'در حال بازگشت است';
+
+  @override
+  String get statusToStandbyMode => 'به حالت آماده باش.';
+
+  @override
+  String get statusPluggingIn => 'در حال اتصال ...';
+
+  @override
+  String get statusPoweredUp => 'روشن شد';
+
+  @override
+  String get statusDoingScience => 'در حال انجام کار ...';
+
+  @override
+  String get statusExitedMatrix => 'از ماتریکس خارج شد';
+
+  @override
+  String get statusSorry => 'متاسفیم :(';
+
+  @override
+  String get statusConnectAlready => 'الان متصل شوید';
+
+  @override
+  String get statusTestingSpeed => 'تست سرعت در جریان است ...';
+
+  @override
+  String get statusIsReady => 'آماده است';
+
+  @override
+  String get statusToSpeedTest => 'برای تست سرعت';
+
+  @override
+  String get statusYoursToShape => 'برای شما طراحی شده';
+
+  @override
+  String get settingsConnectionMethod => 'روش اتصال';
+
+  @override
+  String get settingsEscapeMode => 'حالت فرار';
+
+  @override
+  String get settingsDestination => 'مقصد';
+
+  @override
+  String get settingsSplitTunnel => 'تونل تقسیم شده';
+
+  @override
+  String get settingsKillSwitch => 'کلید قطع';
+
+  @override
+  String get settingsDeepScan => 'اسکن عمیق';
+
+  @override
+  String get settingsIncluded => 'شامل شده';
+
+  @override
+  String get settingsAtLeastOneCoreRequired =>
+      'حداقل یک هسته باید فعال باقی بماند';
+
+  @override
+  String get settingsResetToDefault => 'بازگشت به پیش‌فرض';
+
+  @override
+  String get updateAvailable => 'به‌روزرسانی موجود است';
+
+  @override
+  String get updateRequired => 'به‌روزرسانی الزامی است';
+
+  @override
+  String get updateOptionalMessage =>
+      'برای استفاده بهتر از برنامه و لذت بردن از آخرین بهبودها، لطفاً به جدیدترین نسخه به‌روزرسانی کنید.';
+
+  @override
+  String get updateRequiredMessage =>
+      'برای ادامه استفاده از Defyx، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
+
+  @override
+  String get updateNow => 'اکنون به‌روزرسانی کنید';
+
+  @override
+  String get notNow => 'الان نه';
 }

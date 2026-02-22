@@ -5,7 +5,7 @@ import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class SpeedTestUploadState extends ConsumerWidget {
   final SpeedTestState state;

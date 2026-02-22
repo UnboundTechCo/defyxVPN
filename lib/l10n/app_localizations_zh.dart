@@ -51,6 +51,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get packetLoss => '丢包';
 
   @override
+  String get tapHere => '点击这里';
+
+  @override
   String get settings => '设置';
 
   @override
@@ -127,4 +130,98 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get defyxGoal => 'Defyx的目标是确保安全访问公共信息，并提供免费的浏览体验。';
+
+  @override
+  String get statusIsChilling => '正在休息。';
+
+  @override
+  String get statusIs => '是';
+
+  @override
+  String get statusFailed => '失败了。';
+
+  @override
+  String get statusHas => '有';
+
+  @override
+  String get statusIsReturning => '正在返回';
+
+  @override
+  String get statusToStandbyMode => '到待机模式。';
+
+  @override
+  String get statusPluggingIn => '连接中 ...';
+
+  @override
+  String get statusPoweredUp => '已启动';
+
+  @override
+  String get statusDoingScience => '正在工作 ...';
+
+  @override
+  String get statusExitedMatrix => '已退出矩阵';
+
+  @override
+  String get statusSorry => '我们很抱歉 :(';
+
+  @override
+  String get statusConnectAlready => '立即连接';
+
+  @override
+  String get statusTestingSpeed => '测试速度中 ...';
+
+  @override
+  String get statusIsReady => '已准备好';
+
+  @override
+  String get statusToSpeedTest => '进行速度测试';
+
+  @override
+  String get statusYoursToShape => '由您塑造';
+
+  @override
+  String get settingsConnectionMethod => '连接方式';
+
+  @override
+  String get settingsEscapeMode => '逃逸模式';
+
+  @override
+  String get settingsDestination => '目的地';
+
+  @override
+  String get settingsSplitTunnel => '分离隧道';
+
+  @override
+  String get settingsKillSwitch => '终止开关';
+
+  @override
+  String get settingsDeepScan => '深度扫描';
+
+  @override
+  String get settingsIncluded => '已包含';
+
+  @override
+  String get settingsAtLeastOneCoreRequired => '至少需要保留一个核心';
+
+  @override
+  String get settingsResetToDefault => '恢复默认';
+
+  @override
+  String get updateAvailable => '可用更新';
+
+  @override
+  String get updateRequired => '需要更新';
+
+  @override
+  String get updateOptionalMessage => '为了充分利用应用程序并享受最新改进，请更新到最新版本。';
+
+  @override
+  String get updateRequiredMessage =>
+      '要继续使用 Defyx，请更新到最新版本。此更新包含关键改进，对应用功能必不可少。';
+
+  @override
+  String get updateNow => '立即更新';
+
+  @override
+  String get notNow => '暂不更新';
 }

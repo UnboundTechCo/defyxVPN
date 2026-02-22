@@ -4,12 +4,6 @@ abstract class SettingsGroupId {
   static const trafficControl = 'traffic_control';
 }
 
-// Group Titles
-abstract class SettingsGroupTitle {
-  static const connectionMethod = 'CONNECTION METHOD';
-  static const trafficControl = 'ESCAPE MODE';
-}
-
 // Item IDs
 abstract class SettingsItemId {
   static const destination = 'destination';
@@ -18,28 +12,10 @@ abstract class SettingsItemId {
   static const deepScan = 'deep_scan';
 }
 
-// Item Titles
-abstract class SettingsItemTitle {
-  static const destination = 'DESTINATION';
-  static const splitTunnel = 'SPLIT TUNNEL';
-  static const killSwitch = 'KILL SWITCH';
-  static const deepScan = 'DEEP SCAN';
-}
-
 // Navigation Routes
 abstract class SettingsRoute {
   static const destination = '/settings/destination';
   static const splitTunnel = '/settings/split_tunnel';
-}
-
-// Subtitles
-abstract class SettingsSubtitle {
-  static const splitTunnelIncluded = 'INCLUDED';
-}
-
-// Messages
-abstract class SettingsMessage {
-  static const atLeastOneCoreRequired = 'At least one core must remain enabled';
 }
 
 // Storage Keys

@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
@@ -55,7 +56,8 @@ class SpeedTestReadyState extends ConsumerWidget {
                       spacing: 8.h,
                       children: [
                         Text(
-                          "TAP HERE",
+                          AppLocalizations.of(context).tapHere,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             color: const Color(0xFFABABAB),
                             fontSize: 12.sp,

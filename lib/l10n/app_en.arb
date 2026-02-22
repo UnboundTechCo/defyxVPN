@@ -71,6 +71,11 @@
     "description": "Packet loss label"
   },
 
+  "tapHere": "TAP HERE",
+  "@tapHere": {
+    "description": "Instruction to tap to start speed test"
+  },
+
   "settings": "Settings",
   "@settings": {
     "description": "Settings menu label"
@@ -199,5 +204,160 @@
   "defyxGoal": "The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.",
   "@defyxGoal": {
     "description": "Description of Defyx goal"
+  },
+
+  "statusIsChilling": "is chilling.",
+  "@statusIsChilling": {
+    "description": "Status message - chilling state"
+  },
+
+  "statusIs": "is",
+  "@statusIs": {
+    "description": "Status connector word"
+  },
+
+  "statusFailed": "failed.",
+  "@statusFailed": {
+    "description": "Status message - failed state"
+  },
+
+  "statusHas": "has",
+  "@statusHas": {
+    "description": "Status connector word"
+  },
+
+  "statusIsReturning": "is returning",
+  "@statusIsReturning": {
+    "description": "Status message - returning state"
+  },
+
+  "statusToStandbyMode": "to standby mode.",
+  "@statusToStandbyMode": {
+    "description": "Status message - standby mode text"
+  },
+
+  "statusPluggingIn": "plugging in ...",
+  "@statusPluggingIn": {
+    "description": "Status message - plugging in state"
+  },
+
+  "statusPoweredUp": "powered up",
+  "@statusPoweredUp": {
+    "description": "Status message - powered up state"
+  },
+
+  "statusDoingScience": "doing science ...",
+  "@statusDoingScience": {
+    "description": "Status message - working state"
+  },
+
+  "statusExitedMatrix": "exited the matrix",
+  "@statusExitedMatrix": {
+    "description": "Status message - disconnected state"
+  },
+
+  "statusSorry": "we're sorry :(",
+  "@statusSorry": {
+    "description": "Status message - apology"
+  },
+
+  "statusConnectAlready": "Connect already",
+  "@statusConnectAlready": {
+    "description": "Status message - connect prompt"
+  },
+
+  "statusTestingSpeed": "testing speed ...",
+  "@statusTestingSpeed": {
+    "description": "Status message - speed test in progress"
+  },
+
+  "statusIsReady": "is ready",
+  "@statusIsReady": {
+    "description": "Status message - ready state"
+  },
+
+  "statusToSpeedTest": "to speed test",
+  "@statusToSpeedTest": {
+    "description": "Status message - ready for speed test"
+  },
+
+  "statusYoursToShape": "yours to shape",
+  "@statusYoursToShape": {
+    "description": "Settings status message"
+  },
+
+  "settingsConnectionMethod": "CONNECTION METHOD",
+  "@settingsConnectionMethod": {
+    "description": "Settings section - connection method"
+  },
+
+  "settingsEscapeMode": "ESCAPE MODE",
+  "@settingsEscapeMode": {
+    "description": "Settings section - escape mode"
+  },
+
+  "settingsDestination": "DESTINATION",
+  "@settingsDestination": {
+    "description": "Settings section - destination"
+  },
+
+  "settingsSplitTunnel": "SPLIT TUNNEL",
+  "@settingsSplitTunnel": {
+    "description": "Settings section - split tunnel"
+  },
+
+  "settingsKillSwitch": "KILL SWITCH",
+  "@settingsKillSwitch": {
+    "description": "Settings section - kill switch"
+  },
+
+  "settingsDeepScan": "DEEP SCAN",
+  "@settingsDeepScan": {
+    "description": "Settings section - deep scan"
+  },
+
+  "settingsIncluded": "INCLUDED",
+  "@settingsIncluded": {
+    "description": "Settings label - included items"
+  },
+
+  "settingsAtLeastOneCoreRequired": "At least one core must remain enabled",
+  "@settingsAtLeastOneCoreRequired": {
+    "description": "Settings error message - core requirement"
+  },
+
+  "settingsResetToDefault": "RESET TO DEFAULT",
+  "@settingsResetToDefault": {
+    "description": "Settings button - reset to default"
+  },
+
+  "updateAvailable": "Update available",
+  "@updateAvailable": {
+    "description": "Update dialog title - optional update"
+  },
+
+  "updateRequired": "Update required",
+  "@updateRequired": {
+    "description": "Update dialog title - mandatory update"
+  },
+
+  "updateOptionalMessage": "To get the most out of the app and enjoy the latest improvements, please update to the newest version.",
+  "@updateOptionalMessage": {
+    "description": "Update dialog message - optional update"
+  },
+
+  "updateRequiredMessage": "To continue using Defyx, please update to the latest version. This update includes critical improvements and is required for app functionality.",
+  "@updateRequiredMessage": {
+    "description": "Update dialog message - mandatory update"
+  },
+
+  "updateNow": "Update now",
+  "@updateNow": {
+    "description": "Update dialog button - update action"
+  },
+
+  "notNow": "Not now",
+  "@notNow": {
+    "description": "Update dialog button - dismiss action"
   }
 }

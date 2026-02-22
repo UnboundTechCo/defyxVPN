@@ -12,7 +12,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
-  String get splashSubtitle => 'Crafted for secure internet access,\ndesigned for everyone, everywhere';
+  String get splashSubtitle =>
+      'Crafted for secure internet access,\ndesigned for everyone, everywhere';
 
   @override
   String get connect => 'Connect';
@@ -49,6 +50,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get packetLoss => 'P.LOSS';
+
+  @override
+  String get tapHere => 'TAP HERE';
 
   @override
   String get settings => 'Settings';
@@ -126,5 +130,102 @@ class AppLocalizationsEn extends AppLocalizations {
   String get learnMore => 'LEARN MORE';
 
   @override
-  String get defyxGoal => 'The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.';
+  String get defyxGoal =>
+      'The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.';
+
+  @override
+  String get statusIsChilling => 'is chilling.';
+
+  @override
+  String get statusIs => 'is';
+
+  @override
+  String get statusFailed => 'failed.';
+
+  @override
+  String get statusHas => 'has';
+
+  @override
+  String get statusIsReturning => 'is returning';
+
+  @override
+  String get statusToStandbyMode => 'to standby mode.';
+
+  @override
+  String get statusPluggingIn => 'plugging in ...';
+
+  @override
+  String get statusPoweredUp => 'powered up';
+
+  @override
+  String get statusDoingScience => 'doing science ...';
+
+  @override
+  String get statusExitedMatrix => 'exited the matrix';
+
+  @override
+  String get statusSorry => 'we\'re sorry :(';
+
+  @override
+  String get statusConnectAlready => 'Connect already';
+
+  @override
+  String get statusTestingSpeed => 'testing speed ...';
+
+  @override
+  String get statusIsReady => 'is ready';
+
+  @override
+  String get statusToSpeedTest => 'to speed test';
+
+  @override
+  String get statusYoursToShape => 'yours to shape';
+
+  @override
+  String get settingsConnectionMethod => 'CONNECTION METHOD';
+
+  @override
+  String get settingsEscapeMode => 'ESCAPE MODE';
+
+  @override
+  String get settingsDestination => 'DESTINATION';
+
+  @override
+  String get settingsSplitTunnel => 'SPLIT TUNNEL';
+
+  @override
+  String get settingsKillSwitch => 'KILL SWITCH';
+
+  @override
+  String get settingsDeepScan => 'DEEP SCAN';
+
+  @override
+  String get settingsIncluded => 'INCLUDED';
+
+  @override
+  String get settingsAtLeastOneCoreRequired =>
+      'At least one core must remain enabled';
+
+  @override
+  String get settingsResetToDefault => 'RESET TO DEFAULT';
+
+  @override
+  String get updateAvailable => 'Update available';
+
+  @override
+  String get updateRequired => 'Update required';
+
+  @override
+  String get updateOptionalMessage =>
+      'To get the most out of the app and enjoy the latest improvements, please update to the newest version.';
+
+  @override
+  String get updateRequiredMessage =>
+      'To continue using Defyx, please update to the latest version. This update includes critical improvements and is required for app functionality.';
+
+  @override
+  String get updateNow => 'Update now';
+
+  @override
+  String get notNow => 'Not now';
 }
