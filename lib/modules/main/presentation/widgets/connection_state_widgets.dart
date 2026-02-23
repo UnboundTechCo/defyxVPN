@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
@@ -251,6 +252,22 @@ class AnalyzingContent extends ConsumerWidget {
     return Row(
       children: [
         Consumer(builder: (context, ref, child) {
+          final deepScanEnabled =
+              ref.read(settingsProvider.notifier).isDeepScanEnabled();
+          if (deepScanEnabled) {
+            return Container(
+                margin: const EdgeInsets.only(bottom: 3.0),
+                child: Text(
+                  "∞",
+                  style: TextStyle(
+                    color: const Color(0xFFA7A7A7),
+                    fontSize: 24.sp,
+                    fontFamily: 'Lato',
+                    fontWeight: FontWeight.w400,
+                  ),
+                ));
+          }
+
           final flowLineState = ref.watch(flowLineStepProvider);
           final currentStep = flowLineState.step;
           final totalSteps = flowLineState.totalSteps;

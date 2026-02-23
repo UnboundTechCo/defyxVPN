@@ -49,6 +49,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Initialization ==============
 
   Future<void> _initializeSettings() async {
+    await _loadSettingsFromStorage();  
     await _updateConnectionMethodFromFlowLine();
     _ensureStaticGroups();
     _isInitialized = true;
@@ -141,8 +142,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         savedGroup?.items,
         SettingsItemId.killSwitch,
       ),
-    );
+      deepScanEnabled: SettingsFactory.getSavedItemState(
+        savedGroup?.items,
+        SettingsItemId.deepScan,
+      ));
   }
+
   bool isDeepScanEnabled() {
     final savedGroup = state.groups[SettingsGroupId.trafficControl];
     return SettingsFactory.getSavedItemState(
@@ -277,9 +282,33 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     }
   }
 
+  Future<void> _loadSettingsFromStorage() async {
+    final jsonString =
+        await _secureStorage?.read(SettingsStorageKey.appSettings);
+
+    if (jsonString == null) return;
+
+    try {
+      final Map<String, dynamic> decoded = jsonDecode(jsonString);
+
+      final groups = decoded.map(
+        (key, value) => MapEntry(
+          key,
+          SettingsGroup.fromJson(value),
+        ),
+      );
+
+      state = state.copyWith(groups: groups);
+      debugPrint('Settings loaded from storage');
+    } catch (e) {
+      debugPrint('Failed to load settings: $e');
+    }
+  }
+
   // ============== Public Actions ==============
 
   void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
+    print('Toggling setting: $groupId - $itemId');
     final group = state.groups[groupId];
     if (group == null) return;
 

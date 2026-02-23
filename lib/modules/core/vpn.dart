@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:defyx_vpn/app/router/app_router.dart';
@@ -109,6 +110,11 @@ class VPN {
       if (step > 1) {
         alertService.heartbeat();
       }
+    }
+
+    if (msg.startsWith("Data: Firebase ")) {
+      final message = msg.replaceAll("Data: Firebase ", "");
+      return _sendCoreFirebaseMessage(message);
     }
 
     if (msg.startsWith("Data: VPN connected")) {
@@ -367,5 +373,14 @@ class VPN {
 
     _container?.read(pingProvider.notifier).state =
         await _networkStatus.getPing();
+  }
+
+  void _sendCoreFirebaseMessage(String message) {
+    Map<String, dynamic> jsonData = jsonDecode(message);
+    final title = jsonData["title"] ?? "Unknown";
+    jsonData.remove("title");
+    final Map<String, String> stringMap =
+    jsonData.map((key, value) => MapEntry(key, value.toString()));
+    analyticsService.logCoreData(title, stringMap);
   }
 }
