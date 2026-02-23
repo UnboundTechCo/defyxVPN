@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'speed_test_metric_item.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class SpeedTestMetricsDisplay extends StatelessWidget {
   final double downloadSpeed;
@@ -29,6 +30,8 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -42,15 +45,15 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
               SizedBox(
                 height: 65.h,
                 child: MetricItemCompact(
-                  label: 'DOWNLOAD',
+                  label: l10n.download,
                   value: downloadSpeed,
                   connectionStatus: connectionStatus,
                 ),
               ),
             MetricItemCompact(
-              label: 'PING',
+              label: l10n.ping,
               value: ping,
-              unit: 'ms',
+              unit: l10n.ms,
               connectionStatus: connectionStatus,
             ),
           ],
@@ -64,7 +67,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
               SizedBox(
                 height: 65.h,
                 child: MetricItemCompact(
-                  label: 'UPLOAD',
+                  label: l10n.upload,
                   value: uploadSpeed,
                   connectionStatus: connectionStatus,
                 ),
@@ -74,21 +77,21 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 MetricItemHorizontal(
-                  label: 'LATENCY',
+                  label: l10n.latency,
                   value: latency,
-                  unit: 'ms',
+                  unit: l10n.ms,
                   connectionStatus: connectionStatus,
                 ),
                 MetricItemHorizontal(
-                  label: 'P.LOSS',
+                  label: l10n.packetLoss,
                   value: packetLoss,
                   unit: '%',
                   connectionStatus: connectionStatus,
                 ),
                 MetricItemHorizontal(
-                  label: 'JITTER',
+                  label: l10n.jitter,
                   value: jitter,
-                  unit: 'ms',
+                  unit: l10n.ms,
                   connectionStatus: connectionStatus,
                 ),
               ],
