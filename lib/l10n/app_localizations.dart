@@ -324,6 +324,12 @@ abstract class AppLocalizations {
   /// **'Language'**
   String get language;
 
+  /// Tips section header
+  ///
+  /// In en, this message translates to:
+  /// **'TIPS'**
+  String get tips;
+
   /// English language name
   ///
   /// In en, this message translates to:

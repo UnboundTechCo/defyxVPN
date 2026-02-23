@@ -120,6 +120,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get language => '语言';
 
   @override
+  String get tips => '提示';
+
+  @override
   String get english => 'English (英语)';
 
   @override

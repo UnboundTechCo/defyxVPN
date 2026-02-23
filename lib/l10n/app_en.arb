@@ -186,6 +186,11 @@
     "description": "Language setting label"
   },
 
+  "tips": "TIPS",
+  "@tips": {
+    "description": "Tips section header"
+  },
+
   "english": "English",
   "@english": {
     "description": "English language name"

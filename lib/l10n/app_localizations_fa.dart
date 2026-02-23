@@ -121,6 +121,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get language => 'زبان';
 
   @override
+  String get tips => 'نکات';
+
+  @override
   String get english => 'English (انگلیسی)';
 
   @override

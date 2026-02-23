@@ -84,6 +84,8 @@ class App extends ConsumerWidget {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
+              // Force English locale (comment out to enable device language detection)
+              locale: const Locale('en'),
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
