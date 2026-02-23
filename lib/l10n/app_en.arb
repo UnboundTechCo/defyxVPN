@@ -131,6 +131,21 @@
     "description": "Message shown when logs are copied"
   },
 
+  "appLogs": "App Logs",
+  "@appLogs": {
+    "description": "App logs panel title"
+  },
+
+  "autoRefresh": "Auto-refresh",
+  "@autoRefresh": {
+    "description": "Auto-refresh toggle label"
+  },
+
+  "clear": "Clear",
+  "@clear": {
+    "description": "Clear logs button text"
+  },
+
   "quickMenu": "Quick Menu",
   "@quickMenu": {
     "description": "Quick menu label"

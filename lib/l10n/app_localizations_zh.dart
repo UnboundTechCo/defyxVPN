@@ -87,6 +87,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logsCopied => '日志已复制到剪贴板';
 
   @override
+  String get appLogs => '应用日志';
+
+  @override
+  String get autoRefresh => '自动刷新';
+
+  @override
+  String get clear => '清除';
+
+  @override
   String get quickMenu => '快速菜单';
 
   @override

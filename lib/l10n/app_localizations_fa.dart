@@ -88,6 +88,15 @@ class AppLocalizationsFa extends AppLocalizations {
   String get logsCopied => 'گزارش‌ها در کلیپ‌بورد کپی شدند';
 
   @override
+  String get appLogs => 'گزارش‌های برنامه';
+
+  @override
+  String get autoRefresh => 'به‌روزرسانی خودکار';
+
+  @override
+  String get clear => 'پاک کردن';
+
+  @override
   String get quickMenu => 'منوی سریع';
 
   @override

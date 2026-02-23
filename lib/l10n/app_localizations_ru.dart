@@ -88,6 +88,15 @@ class AppLocalizationsRu extends AppLocalizations {
   String get logsCopied => 'Логи скопированы в буфер обмена';
 
   @override
+  String get appLogs => 'Логи приложения';
+
+  @override
+  String get autoRefresh => 'Автообновление';
+
+  @override
+  String get clear => 'Очистить';
+
+  @override
   String get quickMenu => 'Быстрое меню';
 
   @override

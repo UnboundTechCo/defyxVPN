@@ -88,6 +88,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logsCopied => 'Logs copied to clipboard';
 
   @override
+  String get appLogs => 'App Logs';
+
+  @override
+  String get autoRefresh => 'Auto-refresh';
+
+  @override
+  String get clear => 'Clear';
+
+  @override
   String get quickMenu => 'Quick Menu';
 
   @override

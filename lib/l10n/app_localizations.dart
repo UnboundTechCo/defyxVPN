@@ -258,6 +258,24 @@ abstract class AppLocalizations {
   /// **'Logs copied to clipboard'**
   String get logsCopied;
 
+  /// App logs panel title
+  ///
+  /// In en, this message translates to:
+  /// **'App Logs'**
+  String get appLogs;
+
+  /// Auto-refresh toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Auto-refresh'**
+  String get autoRefresh;
+
+  /// Clear logs button text
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get clear;
+
   /// Quick menu label
   ///
   /// In en, this message translates to:

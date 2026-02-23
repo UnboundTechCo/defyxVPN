@@ -225,9 +225,9 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'App Logs',
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context).appLogs,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -247,9 +247,9 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Text(
-                    'Auto-refresh',
-                    style: TextStyle(
+                  Text(
+                    AppLocalizations.of(context).autoRefresh,
+                    style: const TextStyle(
                       color: Colors.white70,
                       fontSize: 12,
                       fontFamily: 'Lato',
@@ -340,18 +340,18 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                         color: Colors.black38,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.clear_all,
                             color: Colors.white70,
                             size: 14,
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            'Clear',
-                            style: TextStyle(
+                            AppLocalizations.of(context).clear,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 10,
                             ),
