@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -42,8 +43,8 @@ class CustomUpdateDialog {
                     children: [
                       Text(
                         updateType == UpdateType.optional
-                            ? 'Update available'
-                            : 'Update required',
+                            ? AppLocalizations.of(context).updateAvailable
+                            : AppLocalizations.of(context).updateRequired,
                         style: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w700,
@@ -54,7 +55,7 @@ class CustomUpdateDialog {
                       if (updateType == UpdateType.optional) ...[
                         Text(
                           description ??
-                              'To get the most out of the app and enjoy the latest improvements, please update to the newest version.',
+                              AppLocalizations.of(context).updateOptionalMessage,
                           style: TextStyle(
                             fontSize: 14.sp,
                             color: Colors.grey,
@@ -71,7 +72,7 @@ class CustomUpdateDialog {
                               height: 1.4,
                             ),
                             text: description ??
-                                'To continue using Defyx, please update to the latest version. This update includes critical improvements and is required for app functionality.',
+                                AppLocalizations.of(context).updateRequiredMessage,
                           ),
                         ),
                       ],
@@ -126,7 +127,7 @@ class CustomUpdateDialog {
                             ),
                           ),
                           child: Text(
-                            'Update now',
+                            AppLocalizations.of(context).updateNow,
                             style: TextStyle(
                               fontSize: 14.sp,
                               fontWeight: FontWeight.w600,
@@ -149,7 +150,7 @@ class CustomUpdateDialog {
                               ),
                             ),
                             child: Text(
-                              'Not now',
+                              AppLocalizations.of(context).notNow,
                               style: TextStyle(
                                 fontSize: 14.sp,
                                 fontWeight: FontWeight.w500,
@@ -221,8 +222,8 @@ class CustomUpdateDialogAlternative {
               children: [
                 Text(
                   updateType == UpdateType.optional
-                      ? 'Update available'
-                      : 'Update required',
+                      ? AppLocalizations.of(context).updateAvailable
+                      : AppLocalizations.of(context).updateRequired,
                   style: TextStyle(
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w700,

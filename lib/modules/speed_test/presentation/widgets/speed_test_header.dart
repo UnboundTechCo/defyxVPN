@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/speed_test_result.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class SpeedTestHeader extends StatelessWidget {
   final SpeedTestStep step;
@@ -12,6 +13,7 @@ class SpeedTestHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     String upperText;
     String bottomText;
 
@@ -19,12 +21,12 @@ class SpeedTestHeader extends StatelessWidget {
       case SpeedTestStep.loading:
       case SpeedTestStep.download:
       case SpeedTestStep.upload:
-        upperText = 'is';
-        bottomText = 'testing speed ...';
+        upperText = l10n.statusIs;
+        bottomText = l10n.statusTestingSpeed;
         break;
       case SpeedTestStep.ready:
-        upperText = 'is ready';
-        bottomText = 'to speed test';
+        upperText = l10n.statusIsReady;
+        bottomText = l10n.statusToSpeedTest;
         break;
     }
 
@@ -33,38 +35,56 @@ class SpeedTestHeader extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'D',
-              style: TextStyle(
-                fontSize: 35.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFFFFC927),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'D',
+                      style: TextStyle(
+                        fontSize: 35.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFFFC927),
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'efyx ',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFFFC927),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              'efyx ',
-              style: TextStyle(
-                fontSize: 32.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFFFFC927),
-              ),
-            ),
-            Text(
-              upperText,
-              style: TextStyle(
-                fontSize: 32.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w400,
-                color: Colors.white,
+            Flexible(
+              child: Text(
+                upperText,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  fontSize: 32.sp,
+                  fontFamily: 'Lato',
+                  fontWeight: FontWeight.w400,
+                  color: Colors.white,
+                ),
               ),
             ),
           ],
         ),
         Text(
           bottomText,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.start,
           style: TextStyle(
             fontSize: 32.sp,
             fontFamily: 'Lato',

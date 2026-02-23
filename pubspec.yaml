@@ -9,6 +9,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
 
   # Backend Packages
   flutter_riverpod: ^2.5.1
@@ -39,7 +41,7 @@ dependencies:
   lottie: ^3.3.1
   toastification: ^3.0.3
   path_drawing: ^1.0.1
-  intl: ^0.19.0
+  intl: ^0.20.2
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
   firebase_core: ^4.2.0
@@ -62,6 +64,7 @@ dev_dependencies:
   riverpod_generator: ^2.4.3
 
 flutter:
+  generate: true
   uses-material-design: true
 
   assets:
