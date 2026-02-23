@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
-import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
@@ -90,23 +89,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   void _ensureStaticGroups({BuildContext? context}) {
     final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
+    final text = SettingsText(context);
 
     // Only add traffic control if it doesn't exist
     if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
-      if (context != null) {
-        final l10n = AppLocalizations.of(context);
-        updatedGroups[SettingsGroupId.trafficControl] =
-            _createTrafficControlGroup(
-          title: l10n.settingsEscapeMode,
-          splitTunnelTitle: l10n.settingsSplitTunnel,
-          splitTunnelSubtitle: l10n.settingsIncluded,
-          deepScanTitle: l10n.settingsDeepScan,
-          killSwitchTitle: l10n.settingsKillSwitch,
-        );
-      } else {
-        updatedGroups[SettingsGroupId.trafficControl] =
-            _createTrafficControlGroup();
-      }
+      updatedGroups[SettingsGroupId.trafficControl] =
+          _createTrafficControlGroup(text);
     }
 
     state = state.copyWith(groups: updatedGroups);
@@ -119,21 +107,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   // ============== Group Creation ==============
 
-  SettingsGroup _createTrafficControlGroup({
-    String title = 'ESCAPE MODE',
-    String splitTunnelTitle = 'SPLIT TUNNEL',
-    String splitTunnelSubtitle = 'INCLUDED',
-    String deepScanTitle = 'DEEP SCAN',
-    String killSwitchTitle = 'KILL SWITCH',
-  }) {
+  SettingsGroup _createTrafficControlGroup(SettingsText text) {
     final savedGroup = state.groups[SettingsGroupId.trafficControl];
 
     return SettingsFactory.createTrafficControlGroup(
-      title: title,
-      splitTunnelTitle: splitTunnelTitle,
-      splitTunnelSubtitle: splitTunnelSubtitle,
-      deepScanTitle: deepScanTitle,
-      killSwitchTitle: killSwitchTitle,
+      title: text.escapeModeTitle,
+      splitTunnelTitle: text.splitTunnelTitle,
+      splitTunnelSubtitle: text.splitTunnelSubtitle,
+      deepScanTitle: text.deepScanTitle,
+      killSwitchTitle: text.killSwitchTitle,
       splitTunnelEnabled: SettingsFactory.getSavedItemState(
         savedGroup?.items,
         SettingsItemId.splitTunnel,
@@ -157,15 +139,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   SettingsGroup _createDefaultConnectionMethodGroup(
-    List<dynamic> flowline, {
-    String title = 'CONNECTION METHOD',
-    String destinationTitle = 'DESTINATION',
-  }) {
+    List<dynamic> flowline,
+    SettingsText text,
+  ) {
     final connectionItems = SettingsFactory.flowlineToItems(flowline);
     return SettingsFactory.createConnectionMethodGroup(
-      title: title,
+      title: text.connectionMethodTitle,
       connectionItems: connectionItems,
-      destinationTitle: destinationTitle,
+      destinationTitle: text.destinationTitle,
     );
   }
 
@@ -173,15 +154,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   Future<void> _updateConnectionMethodFromFlowLine({BuildContext? context}) async {
     try {
-      final l10n = context != null ? AppLocalizations.of(context) : null;
+      final text = SettingsText(context);
       // Load flowline
       final flowline = await _loadFlowLine();
       if (flowline.isEmpty) {
-        _updateGroup(_createDefaultConnectionMethodGroup(
-          [],
-          title: l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD',
-          destinationTitle: l10n?.settingsDestination ?? 'DESTINATION',
-        ));
+        _updateGroup(_createDefaultConnectionMethodGroup([], text));
         return;
       }
 
@@ -190,22 +167,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           await _secureStorage?.read(SettingsStorageKey.appSettings);
 
       if (settingsJson == null) {
-        _updateGroup(_createDefaultConnectionMethodGroup(
-          flowline,
-          title: l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD',
-          destinationTitle: l10n?.settingsDestination ?? 'DESTINATION',
-        ));
+        _updateGroup(_createDefaultConnectionMethodGroup(flowline, text));
         return;
       }
 
       // Parse saved settings
       final Map<String, dynamic> savedData = jsonDecode(settingsJson);
       if (!savedData.containsKey(SettingsGroupId.connectionMethod)) {
-        _updateGroup(_createDefaultConnectionMethodGroup(
-          flowline,
-          title: l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD',
-          destinationTitle: l10n?.settingsDestination ?? 'DESTINATION',
-        ));
+        _updateGroup(_createDefaultConnectionMethodGroup(flowline, text));
         return;
       }
 
@@ -252,9 +221,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       if (SettingsFactory.config.showDestination) {
         if (!mergedItems
             .any((item) => item['id'] == SettingsItemId.destination)) {
-          final destinationTitle = l10n?.settingsDestination ?? 'DESTINATION';
           mergedItems.add(SettingsFactory.createDestinationItem(
-            title: destinationTitle,
+            title: text.destinationTitle,
           ).toJson());
         }
       } else {
@@ -266,19 +234,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final updatedGroupData = Map<String, dynamic>.from(
           savedData[SettingsGroupId.connectionMethod]);
       updatedGroupData['items'] = mergedItems;
-      updatedGroupData['title'] = l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD';
+      updatedGroupData['title'] = text.connectionMethodTitle;
 
       final updatedGroup = SettingsGroup.fromJson(updatedGroupData);
       _updateGroup(updatedGroup);
     } catch (e) {
       debugPrint('Error updating connection method: $e');
       final flowline = await _loadFlowLine();
-      final l10n = context != null ? AppLocalizations.of(context) : null;
-      _updateGroup(_createDefaultConnectionMethodGroup(
-        flowline,
-        title: l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD',
-        destinationTitle: l10n?.settingsDestination ?? 'DESTINATION',
-      ));
+      final text = SettingsText(context);
+      _updateGroup(_createDefaultConnectionMethodGroup(flowline, text));
     }
   }
 
@@ -324,10 +288,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         updatedItems.every((item) => !item.isEnabled)) {
       // Show error message if context is available
       if (context != null) {
-        final l10n = AppLocalizations.of(context);
-        SettingsToastMessage.show(
-          l10n.settingsAtLeastOneCoreRequired,
-        );
+        final text = SettingsText(context);
+        SettingsToastMessage.show(text.atLeastOneCoreRequired);
       }
       return;
     }
@@ -393,12 +355,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   Future<void> resetToDefault({BuildContext? context}) async {
     final flowline = await _loadFlowLine();
-    final l10n = context != null ? AppLocalizations.of(context) : null;
-    _updateGroup(_createDefaultConnectionMethodGroup(
-      flowline,
-      title: l10n?.settingsConnectionMethod ?? 'CONNECTION METHOD',
-      destinationTitle: l10n?.settingsDestination ?? 'DESTINATION',
-    ));
+    final text = SettingsText(context);
+    _updateGroup(_createDefaultConnectionMethodGroup(flowline, text));
     _saveSettings();
   }
 
@@ -413,7 +371,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   Future<void> saveState() async => await _saveSettings();
 
   void applyLocalization(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
+    final text = SettingsText(context);
     final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
     
     // Update connection method group title and items if it exists
@@ -421,19 +379,19 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     if (connectionGroup != null) {
       // Update the group title
       updatedGroups[SettingsGroupId.connectionMethod] = 
-          connectionGroup.copyWith(title: l10n.settingsConnectionMethod);
+          connectionGroup.copyWith(title: text.connectionMethodTitle);
       
       // Update destination item title if it exists
       final updatedItems = connectionGroup.items.map((item) {
         if (item.id == SettingsItemId.destination) {
-          return item.copyWith(title: l10n.settingsDestination);
+          return item.copyWith(title: text.destinationTitle);
         }
         return item;
       }).toList();
       
       updatedGroups[SettingsGroupId.connectionMethod] = 
           connectionGroup.copyWith(
-            title: l10n.settingsConnectionMethod,
+            title: text.connectionMethodTitle,
             items: updatedItems,
           );
     }
@@ -445,13 +403,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         switch (item.id) {
           case SettingsItemId.splitTunnel:
             return item.copyWith(
-              title: l10n.settingsSplitTunnel,
-              subtitle: l10n.settingsIncluded,
+              title: text.splitTunnelTitle,
+              subtitle: text.splitTunnelSubtitle,
             );
           case SettingsItemId.deepScan:
-            return item.copyWith(title: l10n.settingsDeepScan);
+            return item.copyWith(title: text.deepScanTitle);
           case SettingsItemId.killSwitch:
-            return item.copyWith(title: l10n.settingsKillSwitch);
+            return item.copyWith(title: text.killSwitchTitle);
           default:
             return item;
         }
@@ -459,7 +417,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       
       updatedGroups[SettingsGroupId.trafficControl] = 
           trafficGroup.copyWith(
-            title: l10n.settingsEscapeMode,
+            title: text.escapeModeTitle,
             items: updatedItems,
           );
     }

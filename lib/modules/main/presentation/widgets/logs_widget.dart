@@ -226,6 +226,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Flexible(
+                flex: 2,
                 child: Text(
                   AppLocalizations.of(context).appLogs,
                   maxLines: 1,
@@ -240,6 +241,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
               ),
               const SizedBox(width: 8),
               Flexible(
+                flex: 3,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -266,9 +268,12 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     IconButton(
                       icon: const Icon(Icons.refresh, color: Colors.white),
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                       onPressed: () => ref.read(logsProvider.notifier).fetchLogs(),
                     ),
                   ],
