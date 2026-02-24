@@ -16,6 +16,12 @@ increment_version() {
     local minor=$(echo "$semver" | cut -d'.' -f2)
     local patch=$(echo "$semver" | cut -d'.' -f3)
     
+    # Force base-10 to avoid octal interpretation
+    major=$((10#$major))
+    minor=$((10#$minor))
+    patch=$((10#$patch))
+    build=$((10#$build))
+    
     case $increment_type in
         "major")
             major=$((major + 1))
@@ -31,14 +37,7 @@ increment_version() {
             ;;
     esac
     
-    # Always increment build number
-    local new_build=$((build + 1))
-    
-    echo "${major}.${minor}.${patch}+${new_build}"
-}
-
-increment_build_number() {
-    increment_version "$1" "patch"
+    echo "${major}.${minor}.${patch}+${build}"
 }
 
 validate_version() {
