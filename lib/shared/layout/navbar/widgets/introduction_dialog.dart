@@ -2,12 +2,15 @@ import 'package:defyx_vpn/shared/layout/navbar/widgets/copyable_link.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/intro_link_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class IntroductionDialog extends StatelessWidget {
   const IntroductionDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       backgroundColor: Colors.white,
@@ -20,7 +23,7 @@ class IntroductionDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Introduction',
+              l10n.introduction,
               style: TextStyle(
                 fontSize: 18.sp,
                 fontWeight: FontWeight.bold,
@@ -29,7 +32,7 @@ class IntroductionDialog extends StatelessWidget {
             ),
             SizedBox(height: 15.h),
             Text(
-              'The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.',
+              l10n.defyxGoal,
               style: TextStyle(
                 fontSize: 15.sp,
                 color: Colors.grey,
@@ -37,7 +40,7 @@ class IntroductionDialog extends StatelessWidget {
             ),
             SizedBox(height: 10.h),
             Text(
-              'LEARN MORE',
+              l10n.learnMore,
               style: TextStyle(
                 fontSize: 13.sp,
                 fontWeight: FontWeight.bold,
@@ -46,12 +49,12 @@ class IntroductionDialog extends StatelessWidget {
             ),
             SizedBox(height: 15.h),
             IntroLinkItem(
-              title: 'Source code',
+              title: l10n.sourceCode,
               url: 'https://github.com/UnboundTechCo/defyxVPN',
             ),
             SizedBox(height: 10.h),
             IntroLinkItem(
-              title: 'Open source licenses',
+              title: l10n.openSourceLicenses,
               url:
                   'https://github.com/UnboundTechCo/DXcore?tab=readme-ov-file#third-party-licenses',
             ),
@@ -59,7 +62,7 @@ class IntroductionDialog extends StatelessWidget {
             CopyableLink(text: 'defyxvpn.com'),
             SizedBox(height: 10.h),
             IntroLinkItem(
-              title: 'Beta Community',
+              title: l10n.betaCommunity,
               url: 'https://t.me/+KuigyCHadIpiNDhi',
             ),
             SizedBox(height: 20.h),
@@ -78,7 +81,7 @@ class IntroductionDialog extends StatelessWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  'Got it',
+                  l10n.gotIt,
                   style: TextStyle(
                     fontSize: 14.sp,
                     fontWeight: FontWeight.bold,

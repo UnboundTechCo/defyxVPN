@@ -50,10 +50,10 @@ class SettingsFactory {
   }
 
   /// Creates the destination navigation item
-  static SettingsItem createDestinationItem() {
-    return const SettingsItem(
+  static SettingsItem createDestinationItem({required String title}) {
+    return SettingsItem(
       id: SettingsItemId.destination,
-      title: SettingsItemTitle.destination,
+      title: title,
       isEnabled: false,
       isAccessible: true,
       sortOrder: 9999,
@@ -64,22 +64,29 @@ class SettingsFactory {
   }
 
   /// Creates the split tunnel navigation item
-  static SettingsItem createSplitTunnelItem({bool isEnabled = false}) {
+  static SettingsItem createSplitTunnelItem({
+    required String title,
+    required String subtitle,
+    bool isEnabled = false,
+  }) {
     return SettingsItem(
       id: SettingsItemId.splitTunnel,
-      title: SettingsItemTitle.splitTunnel,
+      title: title,
       isEnabled: isEnabled,
       isAccessible: true,
       sortOrder: 0,
       itemType: SettingsItemType.navigation,
-      subtitle: SettingsSubtitle.splitTunnelIncluded,
+      subtitle: subtitle,
     );
   }
 
-  static SettingsItem createDeepScanItem({bool isEnabled = false}) {
+  static SettingsItem createDeepScanItem({
+    required String title,
+    bool isEnabled = false,
+  }) {
     return SettingsItem(
       id: SettingsItemId.deepScan,
-      title: SettingsItemTitle.deepScan,
+      title: title,
       isEnabled: isEnabled,
       isAccessible: true,
       sortOrder: 0,
@@ -89,10 +96,13 @@ class SettingsFactory {
   }
 
   /// Creates the kill switch toggle item
-  static SettingsItem createKillSwitchItem({bool isEnabled = false}) {
+  static SettingsItem createKillSwitchItem({
+    required String title,
+    bool isEnabled = false,
+  }) {
     return SettingsItem(
       id: SettingsItemId.killSwitch,
-      title: SettingsItemTitle.killSwitch,
+      title: title,
       isEnabled: isEnabled,
       isAccessible: true,
       sortOrder: 1,
@@ -104,12 +114,14 @@ class SettingsFactory {
 
   /// Creates the connection method group with flowline items
   static SettingsGroup createConnectionMethodGroup({
+    required String title,
     required List<SettingsItem> connectionItems,
+    String? destinationTitle,
   }) {
     final List<SettingsItem> items = [...connectionItems];
 
-    if (_config.showDestination) {
-      items.add(createDestinationItem());
+    if (_config.showDestination && destinationTitle != null) {
+      items.add(createDestinationItem(title: destinationTitle));
     }
 
     items.addAll(_config.customItems.where(
@@ -118,7 +130,7 @@ class SettingsFactory {
 
     return SettingsGroup(
       id: SettingsGroupId.connectionMethod,
-      title: SettingsGroupTitle.connectionMethod,
+      title: title,
       isDraggable: true,
       items: items,
     );
@@ -126,22 +138,37 @@ class SettingsFactory {
 
   /// Creates the traffic control group
   static SettingsGroup createTrafficControlGroup({
+    required String title,
+    String? splitTunnelTitle,
+    String? splitTunnelSubtitle,
+    String? deepScanTitle,
+    String? killSwitchTitle,
     bool splitTunnelEnabled = false,
     bool killSwitchEnabled = false,
     bool deepScanEnabled = false,
   }) {
     final List<SettingsItem> items = [];
 
-    if (_config.showSplitTunnel) {
-      items.add(createSplitTunnelItem(isEnabled: splitTunnelEnabled));
+    if (_config.showSplitTunnel && splitTunnelTitle != null && splitTunnelSubtitle != null) {
+      items.add(createSplitTunnelItem(
+        title: splitTunnelTitle,
+        subtitle: splitTunnelSubtitle,
+        isEnabled: splitTunnelEnabled,
+      ));
     }
 
-    if (_config.showDeepScan) {
-      items.add(createDeepScanItem(isEnabled: deepScanEnabled));
+    if (_config.showDeepScan && deepScanTitle != null) {
+      items.add(createDeepScanItem(
+        title: deepScanTitle,
+        isEnabled: deepScanEnabled,
+      ));
     }
 
-    if (_config.showKillSwitch) {
-      items.add(createKillSwitchItem(isEnabled: killSwitchEnabled));
+    if (_config.showKillSwitch && killSwitchTitle != null) {
+      items.add(createKillSwitchItem(
+        title: killSwitchTitle,
+        isEnabled: killSwitchEnabled,
+      ));
     }
 
     items.addAll(_config.customItems.where(
@@ -150,7 +177,7 @@ class SettingsFactory {
 
     return SettingsGroup(
       id: SettingsGroupId.trafficControl,
-      title: SettingsGroupTitle.trafficControl,
+      title: title,
       isDraggable: false,
       items: items,
     );

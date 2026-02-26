@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +76,10 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
         timer.cancel();
       }
     });
+  }
+
+  void resestCountDown() {
+    state = state.copyWith(countdown: _countdownDuration);
   }
 
   void setAdLoaded(bool isLoaded) {
@@ -155,6 +160,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   bool _isLoading = false;
   bool _isDisposed = false;
   bool _hasInitialized = false;
+  static bool _globalAdInitialized = false;
 
   final _adUnitId = AdHelper.adUnitId;
 
@@ -163,12 +169,18 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     super.initState();
     debugPrint('GoogleAds widget initState called');
 
-    // Reset state when widget is created
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isDisposed) {
-        debugPrint('Resetting Google ads state...');
+      if (!_isDisposed && !_globalAdInitialized) {
+        debugPrint('First time initializing ads...');
+        _globalAdInitialized = true;
         ref.read(googleAdsProvider.notifier).resetState();
         _initializeAds();
+      } else if (!_isDisposed && _globalAdInitialized) {
+        debugPrint('Ads already initialized, skipping...');
+        final adsState = ref.read(googleAdsProvider);
+        if (!adsState.nativeAdIsLoaded && !adsState.adLoadFailed) {
+          _initializeAds();
+        }
       }
     });
   }
@@ -317,7 +329,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   @override
   void dispose() {
     _isDisposed = true;
-    _nativeAd?.dispose();
     super.dispose();
   }
 
@@ -327,15 +338,22 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
 
-    // Listen for disposal requests
-    ref.listen(googleAdsProvider, (previous, next) {
-      if (next.shouldDisposeAd && !_isDisposed) {
-        _nativeAd?.dispose();
-        _nativeAd = null;
-        setState(() {
-          _isLoading = false;
-        });
+    ref.listen(connectionStateProvider, (previous, next) {
+      if (next.status == ConnectionStatus.disconnected && !_isDisposed) {
+        if (_nativeAd != null) {
+          _nativeAd?.dispose();
+          _nativeAd = null;
+        }
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
         ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
+        _globalAdInitialized = false;
+      }
+      if (next.status == ConnectionStatus.connected) {
+        ref.read(googleAdsProvider.notifier).resestCountDown();
       }
     });
     return SizedBox(
