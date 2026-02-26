@@ -1,0 +1,383 @@
+{
+  "@@locale": "en",
+  
+  "appTitle": "Defyx VPN",
+  "@appTitle": {
+    "description": "The application title"
+  },
+
+  "splashSubtitle": "Crafted for secure internet access,\ndesigned for everyone, everywhere",
+  "@splashSubtitle": {
+    "description": "Subtitle shown on splash screen"
+  },
+
+  "connect": "Connect",
+  "@connect": {
+    "description": "Connect button text"
+  },
+
+  "disconnect": "Disconnect",
+  "@disconnect": {
+    "description": "Disconnect button text"
+  },
+
+  "connected": "Connected",
+  "@connected": {
+    "description": "Connected status text"
+  },
+
+  "disconnected": "Disconnected",
+  "@disconnected": {
+    "description": "Disconnected status text"
+  },
+
+  "connecting": "Connecting",
+  "@connecting": {
+    "description": "Connecting status text"
+  },
+
+  "speedTest": "Speed Test",
+  "@speedTest": {
+    "description": "Speed test feature label"
+  },
+
+  "download": "DOWNLOAD",
+  "@download": {
+    "description": "Download speed label"
+  },
+
+  "upload": "UPLOAD",
+  "@upload": {
+    "description": "Upload speed label"
+  },
+
+  "ping": "PING",
+  "@ping": {
+    "description": "Ping label"
+  },
+
+  "latency": "LATENCY",
+  "@latency": {
+    "description": "Latency label"
+  },
+
+  "jitter": "JITTER",
+  "@jitter": {
+    "description": "Jitter label"
+  },
+
+  "packetLoss": "P.LOSS",
+  "@packetLoss": {
+    "description": "Packet loss label"
+  },
+
+  "tapHere": "TAP HERE",
+  "@tapHere": {
+    "description": "Instruction to tap to start speed test"
+  },
+
+  "settings": "Settings",
+  "@settings": {
+    "description": "Settings menu label"
+  },
+
+  "introduction": "Introduction",
+  "@introduction": {
+    "description": "Introduction menu item"
+  },
+
+  "privacyPolicy": "Privacy Policy",
+  "@privacyPolicy": {
+    "description": "Privacy policy menu item"
+  },
+
+  "termsAndConditions": "Terms & Conditions",
+  "@termsAndConditions": {
+    "description": "Terms and conditions menu item"
+  },
+
+  "ourWebsite": "Our Website",
+  "@ourWebsite": {
+    "description": "Our website menu item"
+  },
+
+  "sourceCode": "Source code",
+  "@sourceCode": {
+    "description": "Source code link"
+  },
+
+  "openSourceLicenses": "Open source licenses",
+  "@openSourceLicenses": {
+    "description": "Open source licenses link"
+  },
+
+  "betaCommunity": "Beta Community",
+  "@betaCommunity": {
+    "description": "Beta community link"
+  },
+
+  "close": "Close",
+  "@close": {
+    "description": "Close button text"
+  },
+
+  "copyLogs": "Copy Logs",
+  "@copyLogs": {
+    "description": "Copy logs button text"
+  },
+
+  "logsCopied": "Logs copied to clipboard",
+  "@logsCopied": {
+    "description": "Message shown when logs are copied"
+  },
+
+  "appLogs": "App Logs",
+  "@appLogs": {
+    "description": "App logs panel title"
+  },
+
+  "autoRefresh": "Auto-refresh",
+  "@autoRefresh": {
+    "description": "Auto-refresh toggle label"
+  },
+
+  "clear": "Clear",
+  "@clear": {
+    "description": "Clear logs button text"
+  },
+
+  "quickMenu": "Quick Menu",
+  "@quickMenu": {
+    "description": "Quick menu label"
+  },
+
+  "noInternet": "No Internet",
+  "@noInternet": {
+    "description": "No internet connection status"
+  },
+
+  "error": "Error",
+  "@error": {
+    "description": "Error status"
+  },
+
+  "loading": "Loading",
+  "@loading": {
+    "description": "Loading status"
+  },
+
+  "analyzing": "Analyzing",
+  "@analyzing": {
+    "description": "Analyzing status"
+  },
+
+  "mbps": "Mbps",
+  "@mbps": {
+    "description": "Megabits per second unit"
+  },
+
+  "ms": "ms",
+  "@ms": {
+    "description": "Milliseconds unit"
+  },
+
+  "language": "Language",
+  "@language": {
+    "description": "Language setting label"
+  },
+
+  "tips": "TIPS",
+  "@tips": {
+    "description": "Tips section header"
+  },
+
+  "english": "English",
+  "@english": {
+    "description": "English language name"
+  },
+
+  "persian": "فارسی (Persian)",
+  "@persian": {
+    "description": "Persian/Farsi language name"
+  },
+
+  "chinese": "中文 (Chinese)",
+  "@chinese": {
+    "description": "Chinese language name"
+  },
+
+  "russian": "Русский (Russian)",
+  "@russian": {
+    "description": "Russian language name"
+  },
+
+  "gotIt": "Got it",
+  "@gotIt": {
+    "description": "Got it button text"
+  },
+
+  "learnMore": "LEARN MORE",
+  "@learnMore": {
+    "description": "Learn more section title"
+  },
+
+  "defyxGoal": "The goal of Defyx is to ensure secure access to public information and provide a free browsing experience.",
+  "@defyxGoal": {
+    "description": "Description of Defyx goal"
+  },
+
+  "statusIsChilling": "is chilling.",
+  "@statusIsChilling": {
+    "description": "Status message - chilling state"
+  },
+
+  "statusIs": "is",
+  "@statusIs": {
+    "description": "Status connector word"
+  },
+
+  "statusFailed": "failed.",
+  "@statusFailed": {
+    "description": "Status message - failed state"
+  },
+
+  "statusHas": "has",
+  "@statusHas": {
+    "description": "Status connector word"
+  },
+
+  "statusIsReturning": "is returning",
+  "@statusIsReturning": {
+    "description": "Status message - returning state"
+  },
+
+  "statusToStandbyMode": "to standby mode.",
+  "@statusToStandbyMode": {
+    "description": "Status message - standby mode text"
+  },
+
+  "statusPluggingIn": "plugging in ...",
+  "@statusPluggingIn": {
+    "description": "Status message - plugging in state"
+  },
+
+  "statusPoweredUp": "powered up",
+  "@statusPoweredUp": {
+    "description": "Status message - powered up state"
+  },
+
+  "statusDoingScience": "doing science ...",
+  "@statusDoingScience": {
+    "description": "Status message - working state"
+  },
+
+  "statusExitedMatrix": "exited the matrix",
+  "@statusExitedMatrix": {
+    "description": "Status message - disconnected state"
+  },
+
+  "statusSorry": "we're sorry :(",
+  "@statusSorry": {
+    "description": "Status message - apology"
+  },
+
+  "statusConnectAlready": "Connect already",
+  "@statusConnectAlready": {
+    "description": "Status message - connect prompt"
+  },
+
+  "statusTestingSpeed": "testing speed ...",
+  "@statusTestingSpeed": {
+    "description": "Status message - speed test in progress"
+  },
+
+  "statusIsReady": "is ready",
+  "@statusIsReady": {
+    "description": "Status message - ready state"
+  },
+
+  "statusToSpeedTest": "to speed test",
+  "@statusToSpeedTest": {
+    "description": "Status message - ready for speed test"
+  },
+
+  "statusYoursToShape": "yours to shape",
+  "@statusYoursToShape": {
+    "description": "Settings status message"
+  },
+
+  "settingsConnectionMethod": "CONNECTION METHOD",
+  "@settingsConnectionMethod": {
+    "description": "Settings section - connection method"
+  },
+
+  "settingsEscapeMode": "ESCAPE MODE",
+  "@settingsEscapeMode": {
+    "description": "Settings section - escape mode"
+  },
+
+  "settingsDestination": "DESTINATION",
+  "@settingsDestination": {
+    "description": "Settings section - destination"
+  },
+
+  "settingsSplitTunnel": "SPLIT TUNNEL",
+  "@settingsSplitTunnel": {
+    "description": "Settings section - split tunnel"
+  },
+
+  "settingsKillSwitch": "KILL SWITCH",
+  "@settingsKillSwitch": {
+    "description": "Settings section - kill switch"
+  },
+
+  "settingsDeepScan": "DEEP SCAN",
+  "@settingsDeepScan": {
+    "description": "Settings section - deep scan"
+  },
+
+  "settingsIncluded": "INCLUDED",
+  "@settingsIncluded": {
+    "description": "Settings label - included items"
+  },
+
+  "settingsAtLeastOneCoreRequired": "At least one core must remain enabled",
+  "@settingsAtLeastOneCoreRequired": {
+    "description": "Settings error message - core requirement"
+  },
+
+  "settingsResetToDefault": "RESET TO DEFAULT",
+  "@settingsResetToDefault": {
+    "description": "Settings button - reset to default"
+  },
+
+  "updateAvailable": "Update available",
+  "@updateAvailable": {
+    "description": "Update dialog title - optional update"
+  },
+
+  "updateRequired": "Update required",
+  "@updateRequired": {
+    "description": "Update dialog title - mandatory update"
+  },
+
+  "updateOptionalMessage": "To get the most out of the app and enjoy the latest improvements, please update to the newest version.",
+  "@updateOptionalMessage": {
+    "description": "Update dialog message - optional update"
+  },
+
+  "updateRequiredMessage": "To continue using Defyx, please update to the latest version. This update includes critical improvements and is required for app functionality.",
+  "@updateRequiredMessage": {
+    "description": "Update dialog message - mandatory update"
+  },
+
+  "updateNow": "Update now",
+  "@updateNow": {
+    "description": "Update dialog button - update action"
+  },
+
+  "notNow": "Not now",
+  "@notNow": {
+    "description": "Update dialog button - dismiss action"
+  }
+}

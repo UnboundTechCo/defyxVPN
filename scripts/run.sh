@@ -20,10 +20,21 @@ android_ad_app_id=$(grep '^ANDROID_AD_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
 ios_ad_app_id=$(grep '^IOS_AD_APP_ID=' "$ENV_FILE" | cut -d'=' -f2-)
 orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 
+# Cleanup function that always runs
+cleanup() {
+    echo -e "\n${YELLOW}🧹 Running cleanup...${NC}"
+    restore_firebase_ios
+    restore_firebase_android
+    update_ad_id "$orig_ad_id" "$orig_ad_id"
+    echo -e "${GREEN}✅ Cleanup complete${NC}"
+}
+
+# Set trap to ensure cleanup runs on exit, interrupt, or termination
+trap cleanup EXIT INT TERM
+
 update_ad_id "$android_ad_app_id" "$ios_ad_app_id"
 if ! validate_ad_id "$android_ad_app_id" "$ios_ad_app_id"; then
     echo -e "${RED}❌ Ad ID validation failed. Build aborted.${NC}"
-    update_ad_id "$orig_ad_id" "$orig_ad_id"
     exit 1
 fi  
 
@@ -32,9 +43,4 @@ inject_firebase_ios
 inject_firebase_android
 
 flutter run "$@"
-
-
-restore_firebase_ios
-restore_firebase_android
-update_ad_id "$orig_ad_id" "$orig_ad_id"
 

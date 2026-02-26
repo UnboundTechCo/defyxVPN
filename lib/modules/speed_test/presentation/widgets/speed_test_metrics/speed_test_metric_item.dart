@@ -174,13 +174,14 @@ class MetricItemHorizontal extends StatelessWidget {
       width: 115.w,
       height: 20.h,
       child: Stack(
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         children: [
           Positioned(
             top: 5.h,
             left: 0,
             child: Text(
               label,
+              textAlign: TextAlign.start,
               style: TextStyle(
                 fontSize: 12.sp,
                 fontFamily: 'Lato',

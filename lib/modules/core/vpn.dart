@@ -132,6 +132,9 @@ class VPN {
     if (msg.startsWith("Data: VPN stopped")) {
       _closeTunnel();
     }
+    if (msg.startsWith("Data: VPN connecting")) {
+      _onLoading();
+    }
     if (msg.startsWith("Data: Config label: ")) {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
       _vpnBridge.setConnectionMethod(configLabel);
@@ -212,7 +215,10 @@ class VPN {
       return;
     }
 
-    await _createTunnel();
+    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
+    if (!isTunnelRunning) {
+      await _createTunnel();
+    }
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
@@ -233,6 +239,18 @@ class VPN {
         pattern, groupState?.groupName, connectionDuration);
 
     await _container?.read(flowlineServiceProvider).saveFlowline(false);
+  }
+
+  Future<void> _onLoading() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final loggerNotifier = _container?.read(loggerStateProvider.notifier);
+
+    final vpnData = await _container?.read(vpnDataProvider.future);
+
+    loggerNotifier?.setLoading();
+    connectionNotifier?.setAnalyzing();
+    await vpnData?.disableVPN();
   }
 
   Future<void> refreshPing() async {
@@ -380,7 +398,7 @@ class VPN {
     final title = jsonData["title"] ?? "Unknown";
     jsonData.remove("title");
     final Map<String, String> stringMap =
-    jsonData.map((key, value) => MapEntry(key, value.toString()));
+        jsonData.map((key, value) => MapEntry(key, value.toString()));
     analyticsService.logCoreData(title, stringMap);
   }
 }

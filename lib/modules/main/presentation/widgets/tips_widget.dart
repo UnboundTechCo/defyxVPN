@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -47,7 +48,7 @@ final tipsTimerProvider = Provider<Timer?>((ref) {
   return timer;
 });
 
-// Tips data provider
+// Tips data provider - dynamic content that should not be translated
 final tipsDataProvider = Provider<List<Map<String, String?>>>(
   (ref) => [
     {
@@ -105,6 +106,7 @@ class TipsSlider extends ConsumerWidget {
     final pageController = ref.watch(tipsPageControllerProvider);
     final tips = ref.watch(tipsDataProvider);
     final currentPage = ref.watch(tipsCurrentPageProvider);
+    final l10n = AppLocalizations.of(context);
 
     // Initialize timer when widget is built
     //ref.watch(tipsTimerProvider);
@@ -148,7 +150,8 @@ class TipsSlider extends ConsumerWidget {
               ),
               SizedBox(width: 12.w),
               Text(
-                'TIPS',
+                l10n.tips,
+                textAlign: TextAlign.start,
                 style: TextStyle(
                   fontFamily: 'Lato',
                   color: Colors.white,
@@ -188,6 +191,7 @@ class TipsSlider extends ConsumerWidget {
                                 tips[index]['title']!.isNotEmpty)
                               Text(
                                 tips[index]['title']!,
+                                textAlign: TextAlign.start,
                                 style: TextStyle(
                                   fontFamily: 'Lato',
                                   color: Colors.white,
@@ -202,6 +206,7 @@ class TipsSlider extends ConsumerWidget {
                               child: SingleChildScrollView(
                                 child: Text(
                                   tips[index]['message']!,
+                                  textAlign: TextAlign.start,
                                   style: TextStyle(
                                     fontFamily: 'Lato',
                                     color: Colors.white70,
@@ -221,14 +226,14 @@ class TipsSlider extends ConsumerWidget {
             ),
           ),
           // Dot indicators at top right
-          Positioned(
+          PositionedDirectional(
             top: 15.h,
-            right: 0,
+            end: 0,
             child: Row(
               children: List.generate(
                 tips.length,
                 (index) => Container(
-                  margin: EdgeInsets.only(left: 4.w),
+                  margin: EdgeInsetsDirectional.only(start: 4.w),
                   width: index == currentPage ? 16.w : 6.w,
                   height: 6.h,
                   decoration: BoxDecoration(
