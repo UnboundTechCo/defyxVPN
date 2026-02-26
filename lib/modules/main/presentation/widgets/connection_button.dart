@@ -224,11 +224,18 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void _handleTimerState(vpn.ConnectionStatus status) {
     switch (status) {
       case vpn.ConnectionStatus.connected:
-        if (_timer == null) _startTimer();
+        if (_timer == null || !_timer!.isActive) {
+          _startTimer();
+        }
         _shieldLoadingController.stop();
         break;
       case vpn.ConnectionStatus.disconnected:
-        if (_seconds > 0) _resetTimer();
+        if (_timer != null && _timer!.isActive) {
+          _stopTimer();
+        }
+        if (_seconds > 0) {
+          _resetTimer();
+        }
         _shieldLoadingController.stop();
         break;
       case vpn.ConnectionStatus.loading:
@@ -238,10 +245,15 @@ class _ConnectionButtonState extends State<ConnectionButton>
         _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       case vpn.ConnectionStatus.disconnecting:
+        if (_timer != null && _timer!.isActive) {
+          _stopTimer();
+        }
         _animationService.conditionalRepeat(_shieldLoadingController);
         break;
       default:
-        if (_timer != null) _stopTimer();
+        if (_timer != null && _timer!.isActive) {
+          _stopTimer();
+        }
         _shieldLoadingController.stop();
     }
   }
