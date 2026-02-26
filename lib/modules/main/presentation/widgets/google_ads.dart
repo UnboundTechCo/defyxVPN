@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -75,6 +76,10 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
         timer.cancel();
       }
     });
+  }
+
+  void resestCountDown() {
+    state = state.copyWith(countdown: _countdownDuration);
   }
 
   void setAdLoaded(bool isLoaded) {
@@ -333,8 +338,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
 
-    ref.listen(googleAdsProvider, (previous, next) {
-      if (next.shouldDisposeAd && !_isDisposed) {
+    ref.listen(connectionStateProvider, (previous, next) {
+      if (next.status == ConnectionStatus.disconnected && !_isDisposed) {
         if (_nativeAd != null) {
           _nativeAd?.dispose();
           _nativeAd = null;
@@ -346,6 +351,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         }
         ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
         _globalAdInitialized = false;
+      }
+      if (next.status == ConnectionStatus.connected) {
+        ref.read(googleAdsProvider.notifier).resestCountDown();
       }
     });
     return SizedBox(
