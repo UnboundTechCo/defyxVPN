@@ -26,6 +26,7 @@ class VPN {
   final log = Log();
   final analyticsService = FirebaseAnalyticsService();
   final alertService = AlertService();
+  bool _isReconnectMode = false;
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -215,8 +216,7 @@ class VPN {
       return;
     }
 
-    final isTunnelRunning = await _vpnBridge.isTunnelRunning();
-    if (!isTunnelRunning) {
+    if (!_isReconnectMode) {
       await _createTunnel();
     }
     connectionNotifier?.setConnected();
@@ -251,6 +251,7 @@ class VPN {
     loggerNotifier?.setLoading();
     connectionNotifier?.setAnalyzing();
     await vpnData?.disableVPN();
+    _isReconnectMode = true;
   }
 
   Future<void> refreshPing() async {
@@ -267,6 +268,7 @@ class VPN {
     await _vpnBridge.stopVPN();
     _clearData(ref);
     connectionNotifier.setDisconnected();
+    _isReconnectMode = false;
   }
 
   Future<void> _disconnect(WidgetRef ref) async {
