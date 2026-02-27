@@ -254,23 +254,10 @@ class AnalyzingContent extends ConsumerWidget {
         Consumer(builder: (context, ref, child) {
           final deepScanEnabled =
               ref.read(settingsProvider.notifier).isDeepScanEnabled();
-          if (deepScanEnabled) {
-            return Container(
-                margin: const EdgeInsets.only(bottom: 3.0),
-                child: Text(
-                  "∞",
-                  style: TextStyle(
-                    color: const Color(0xFFA7A7A7),
-                    fontSize: 24.sp,
-                    fontFamily: 'Lato',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ));
-          }
 
           final flowLineState = ref.watch(flowLineStepProvider);
           final currentStep = flowLineState.step;
-          final totalSteps = flowLineState.totalSteps;
+          final totalSteps = deepScanEnabled ? "∞" : flowLineState.totalSteps;
 
           if (totalSteps == 0 || currentStep == 0) {
             return Shimmer.fromColors(
@@ -281,16 +268,28 @@ class AnalyzingContent extends ConsumerWidget {
             );
           }
 
-          return Text(
-            "$currentStep/$totalSteps",
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              color: const Color(0xFFA7A7A7),
-              fontSize: 16.sp,
-              fontFamily: 'Lato',
-              fontWeight: FontWeight.w300,
+          return Row(children: [
+            Text(
+              "$currentStep/",
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                color: const Color(0xFFA7A7A7),
+                fontSize: 16.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w300,
+              ),
             ),
-          );
+            Text(
+              "$totalSteps",
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                color: const Color(0xFFA7A7A7),
+                fontSize: deepScanEnabled ? 24.sp : 16.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ]);
         }),
         SizedBox(width: 10.w),
         AppIcons.arrowLeft(width: 14.w, height: 14.h),
