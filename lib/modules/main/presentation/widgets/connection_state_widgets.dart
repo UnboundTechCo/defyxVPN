@@ -30,17 +30,23 @@ class NoInternetWidget extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.start,
       children: [
-        Text(
-          text,
-          key: ValueKey<String>(text),
-          style: TextStyle(
-            fontSize: fontSize,
-            fontFamily: 'Lato',
-            fontWeight: FontWeight.w500,
-            color: textColor,
-            height: 0,
+        Flexible(
+          child: Text(
+            text,
+            key: ValueKey<String>(text),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.start,
+            style: TextStyle(
+              fontSize: fontSize,
+              fontFamily: 'Lato',
+              fontWeight: FontWeight.w500,
+              color: textColor,
+              height: 1.1,
+            ),
           ),
         ),
+        SizedBox(width: 8.w),
         AppIcons.noWifi(width: 20.w, height: 20.h),
       ],
     );
@@ -70,12 +76,15 @@ class ConnectedWidget extends StatelessWidget {
         Text(
           text,
           key: ValueKey<String>(text),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.start,
           style: TextStyle(
             fontSize: fontSize,
             fontFamily: 'Lato',
             fontWeight: FontWeight.w400,
             color: textColor,
-            height: 0,
+            height: 1.1,
           ),
         ),
         Padding(
@@ -218,6 +227,9 @@ class DefaultStateWidget extends StatelessWidget {
     return Text(
       text,
       key: ValueKey<String>(text),
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.start,
       style: TextStyle(
         fontSize: fontSize,
         fontFamily: 'Lato',
@@ -225,7 +237,7 @@ class DefaultStateWidget extends StatelessWidget {
             ? FontWeight.w300
             : FontWeight.w400,
         color: textColor,
-        height: 0,
+        height: 1.1,
       ),
     );
   }
@@ -242,23 +254,10 @@ class AnalyzingContent extends ConsumerWidget {
         Consumer(builder: (context, ref, child) {
           final deepScanEnabled =
               ref.read(settingsProvider.notifier).isDeepScanEnabled();
-          if (deepScanEnabled) {
-            return Container(
-                margin: const EdgeInsets.only(bottom: 3.0),
-                child: Text(
-                  "∞",
-                  style: TextStyle(
-                    color: const Color(0xFFA7A7A7),
-                    fontSize: 24.sp,
-                    fontFamily: 'Lato',
-                    fontWeight: FontWeight.w400,
-                  ),
-                ));
-          }
 
           final flowLineState = ref.watch(flowLineStepProvider);
           final currentStep = flowLineState.step;
-          final totalSteps = flowLineState.totalSteps;
+          final totalSteps = deepScanEnabled ? "∞" : flowLineState.totalSteps;
 
           if (totalSteps == 0 || currentStep == 0) {
             return Shimmer.fromColors(
@@ -269,15 +268,28 @@ class AnalyzingContent extends ConsumerWidget {
             );
           }
 
-          return Text(
-            "$currentStep/$totalSteps",
-            style: TextStyle(
-              color: const Color(0xFFA7A7A7),
-              fontSize: 16.sp,
-              fontFamily: 'Lato',
-              fontWeight: FontWeight.w300,
+          return Row(children: [
+            Text(
+              "$currentStep/",
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                color: const Color(0xFFA7A7A7),
+                fontSize: 16.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w300,
+              ),
             ),
-          );
+            Text(
+              "$totalSteps",
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                color: const Color(0xFFA7A7A7),
+                fontSize: deepScanEnabled ? 24.sp : 16.sp,
+                fontFamily: 'Lato',
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ]);
         }),
         SizedBox(width: 10.w),
         AppIcons.arrowLeft(width: 14.w, height: 14.h),
@@ -303,7 +315,7 @@ class LoggerStatusWidget extends ConsumerWidget {
       duration:
           animationService.adjustDuration(const Duration(milliseconds: 300)),
       curve: Curves.easeInOut,
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
         duration:
@@ -323,9 +335,12 @@ class LoggerStatusWidget extends ConsumerWidget {
             opacity: value,
             child: Transform.scale(
               scale: 0.95 + (0.05 * value),
-              alignment: Alignment.centerLeft,
+              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 statusInfo.text,
+                textAlign: TextAlign.start,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: statusInfo.color,

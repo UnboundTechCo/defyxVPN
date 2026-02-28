@@ -13,6 +13,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:toastification/toastification.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -82,6 +84,20 @@ class App extends ConsumerWidget {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
+              // Force English locale (comment out to enable device language detection)
+              locale: const Locale('en'),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en'),
+                Locale('fa'),
+                Locale('zh'),
+                Locale('ru'),
+              ],
             );
           },
         ));

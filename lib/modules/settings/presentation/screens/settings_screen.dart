@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,11 +23,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   double _lastTouchPosition = 0;
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
+  bool _hasAppliedLocalization = false;
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Apply localization once when context is available
+    if (!_hasAppliedLocalization && mounted) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(settingsProvider.notifier).applyLocalization(context);
+          _hasAppliedLocalization = true;
+        }
+      });
+    }
   }
 
   @override
@@ -161,45 +177,73 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'D',
-              style: TextStyle(
-                fontSize: 35.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w700,
-                color: const Color(0xFFFFC927),
+            Directionality(
+              textDirection: TextDirection.ltr,
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'D',
+                      style: TextStyle(
+                        fontSize: 35.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFFFFC927),
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'efyx ',
+                      style: TextStyle(
+                        fontSize: 32.sp,
+                        fontFamily: 'Lato',
+                        fontWeight: FontWeight.w400,
+                        color: const Color(0xFFFFC927),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-            Text(
-              'efyx ',
-              style: TextStyle(
-                fontSize: 32.sp,
-                fontFamily: 'Lato',
-                fontWeight: FontWeight.w400,
-                color: const Color(0xFFFFC927),
+            Flexible(
+              child: Builder(
+                builder: (context) {
+                  final l10n = AppLocalizations.of(context);
+                  return Text(
+                    l10n.statusIs,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.start,
+                    style: TextStyle(
+                      fontSize: 32.sp,
+                      fontFamily: 'Lato',
+                      fontWeight: FontWeight.w400,
+                      color: Colors.white,
+                    ),
+                  );
+                },
               ),
             ),
-            Text(
-              'is',
+          ],
+        ),
+        Builder(
+          builder: (context) {
+            final l10n = AppLocalizations.of(context);
+            return Text(
+              l10n.statusYoursToShape,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.start,
               style: TextStyle(
                 fontSize: 32.sp,
                 fontFamily: 'Lato',
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
+                height: 1.1,
               ),
-            ),
-          ],
-        ),
-        Text(
-          'yours to shape',
-          style: TextStyle(
-            fontSize: 32.sp,
-            fontFamily: 'Lato',
-            fontWeight: FontWeight.w400,
-            color: Colors.white,
-            height: 0,
-          ),
+            );
+          },
         ),
       ],
     );

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -102,31 +103,47 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Widget _buildTitle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _titlePart('D', FontWeight.w700),
-        _titlePart('efyx ', FontWeight.w400),
-        _titlePart('VPN', FontWeight.w400, color: Colors.white),
-      ],
-    );
-  }
-
-  Widget _titlePart(String text, FontWeight weight, {Color? color}) {
-    return Text(
-      text,
-      style: TextStyle(
-        fontFamily: 'Lato',
-        fontSize: 34.sp,
-        color: color ?? const Color(0xFFFFC927),
-        fontWeight: weight,
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: RichText(
+        text: TextSpan(
+          children: [
+            TextSpan(
+              text: 'D',
+              style: TextStyle(
+                fontFamily: 'Lato',
+                fontSize: 34.sp,
+                color: const Color(0xFFFFC927),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            TextSpan(
+              text: 'efyx ',
+              style: TextStyle(
+                fontFamily: 'Lato',
+                fontSize: 34.sp,
+                color: const Color(0xFFFFC927),
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+            TextSpan(
+              text: 'VPN',
+              style: TextStyle(
+                fontFamily: 'Lato',
+                fontSize: 34.sp,
+                color: Colors.white,
+                fontWeight: FontWeight.w400,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildSubtitle() {
     return Text(
-      "Crafted for secure internet access,\ndesigned for everyone, everywhere",
+      AppLocalizations.of(context).splashSubtitle,
       textAlign: TextAlign.center,
       style: TextStyle(
         fontFamily: 'Lato',
