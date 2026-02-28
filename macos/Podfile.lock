@@ -1,15 +1,20 @@
 PODS:
+  - audioplayers_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - battery_plus (0.0.1):
+    - FlutterMacOS
+  - connectivity_plus (0.0.1):
     - FlutterMacOS
   - device_info_plus (0.0.1):
     - FlutterMacOS
   - Firebase/CoreOnly (12.4.0):
     - FirebaseCore (~> 12.4.0)
-  - firebase_analytics (12.0.3):
+  - firebase_analytics (12.0.4):
     - firebase_core
     - FirebaseAnalytics (= 12.4.0)
     - FlutterMacOS
-  - firebase_core (4.2.0):
+  - firebase_core (4.2.1):
     - Firebase/CoreOnly (~> 12.4.0)
     - FlutterMacOS
   - FirebaseAnalytics (12.4.0):
@@ -116,7 +121,9 @@ PODS:
     - FlutterMacOS
 
 DEPENDENCIES:
+  - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin`)
   - battery_plus (from `Flutter/ephemeral/.symlinks/plugins/battery_plus/macos`)
+  - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
   - device_info_plus (from `Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos`)
   - firebase_analytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
@@ -142,8 +149,12 @@ SPEC REPOS:
     - PromisesObjC
 
 EXTERNAL SOURCES:
+  audioplayers_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin
   battery_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/battery_plus/macos
+  connectivity_plus:
+    :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
   device_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/device_info_plus/macos
   firebase_analytics:
@@ -168,11 +179,13 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
 
 SPEC CHECKSUMS:
+  audioplayers_darwin: 4f9ca89d92d3d21cec7ec580e78ca888e5fb68bd
   battery_plus: f51ad29136e025b714b96f7d096f44f604615da7
+  connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
   device_info_plus: 4fb280989f669696856f8b129e4a5e3cd6c48f76
   Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
-  firebase_analytics: d876586269c1d8d2b3dcac085bc2d97c62abc9df
-  firebase_core: d81d1a44df95699ce074ae63d8cb43e9df21e142
+  firebase_analytics: 09241c4796c1c42a02349ef8bf30025f5b640f0e
+  firebase_core: e054894ab56033ef9bcbe2d9eac9395e5306e2fc
   FirebaseAnalytics: 0fc2b20091f0ddd21bf73397cf8f0eb5346dc24f
   FirebaseCore: bb595f3114953664e3c1dc032f008a244147cfd3
   FirebaseCoreInternal: d7f5a043c2cd01a08103ab586587c1468047bca6

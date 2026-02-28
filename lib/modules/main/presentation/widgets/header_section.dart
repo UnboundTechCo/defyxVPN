@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_state_widgets.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class HeaderSection extends ConsumerWidget {
   final VoidCallback onSecretTap;
@@ -23,32 +24,41 @@ class HeaderSection extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  onTap: onSecretTap,
-                  child: Text(
-                    'D',
-                    style: TextStyle(
-                      fontSize: 35.sp,
-                      fontFamily: 'Lato',
-                      fontWeight: FontWeight.w700,
-                      color: const Color(0xFFFFC927),
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: GestureDetector(
+                    onTap: onSecretTap,
+                    child: RichText(
+                      text: TextSpan(
+                        children: [
+                          TextSpan(
+                            text: 'D',
+                            style: TextStyle(
+                              fontSize: 35.sp,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFFC927),
+                            ),
+                          ),
+                          TextSpan(
+                            text: 'efyx ',
+                            style: TextStyle(
+                              fontSize: 32.sp,
+                              fontFamily: 'Lato',
+                              fontWeight: FontWeight.w400,
+                              color: const Color(0xFFFFC927),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-                GestureDetector(
-                  onTap: onSecretTap,
-                  child: Text(
-                    'efyx ',
-                    style: TextStyle(
-                      fontSize: 32.sp,
-                      fontFamily: 'Lato',
-                      fontWeight: FontWeight.w400,
-                      color: const Color(0xFFFFC927),
-                    ),
-                  ),
+                Flexible(
+                  child: ConnectionStatusText(),
                 ),
-                ConnectionStatusText(),
               ],
             ),
             ConnectionStateWidget(onPingRefresh: onPingRefresh),
@@ -67,12 +77,11 @@ class ConnectionStatusText extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final connectionState = ref.watch(connectionStateProvider);
-    final text = _getStatusText(connectionState.status);
+    final text = _getStatusText(context, connectionState.status);
 
     return AnimatedSize(
       duration: const Duration(milliseconds: 250),
       curve: Curves.easeInOut,
-      alignment: Alignment.centerLeft,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(text),
         duration: const Duration(milliseconds: 300),
@@ -83,9 +92,11 @@ class ConnectionStatusText extends ConsumerWidget {
             opacity: value,
             child: Transform.scale(
               scale: 0.9 + (0.1 * value),
-              alignment: Alignment.centerLeft,
               child: Text(
                 text,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.start,
                 style: TextStyle(
                   fontSize: 32.sp,
                   fontFamily: 'Lato',
@@ -100,20 +111,21 @@ class ConnectionStatusText extends ConsumerWidget {
     );
   }
 
-  String _getStatusText(ConnectionStatus status) {
+  String _getStatusText(BuildContext context, ConnectionStatus status) {
+    final l10n = AppLocalizations.of(context);
     switch (status) {
       case ConnectionStatus.loading:
       case ConnectionStatus.connected:
       case ConnectionStatus.analyzing:
-        return 'is';
+        return l10n.statusIs;
       case ConnectionStatus.error:
-        return 'failed.';
+        return l10n.statusFailed;
       case ConnectionStatus.noInternet:
-        return 'has';
+        return l10n.statusHas;
       case ConnectionStatus.disconnecting:
-        return 'is returning';
+        return l10n.statusIsReturning;
       default:
-        return 'is chilling.';
+        return l10n.statusIsChilling;
     }
   }
 }
@@ -126,7 +138,7 @@ class ConnectionStateWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final connectionState = ref.watch(connectionStateProvider);
-    final stateInfo = _getConnectionStateInfo(connectionState.status);
+    final stateInfo = _getConnectionStateInfo(context, connectionState.status);
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
@@ -146,7 +158,7 @@ class ConnectionStateWidget extends ConsumerWidget {
       },
       child: Container(
         key: ValueKey<String>(connectionState.status.name),
-        alignment: Alignment.centerLeft,
+        alignment: AlignmentDirectional.centerStart,
         child: StateSpecificWidget(
           status: connectionState.status,
           text: stateInfo.text,
@@ -159,23 +171,25 @@ class ConnectionStateWidget extends ConsumerWidget {
   }
 
   ({String text, Color color}) _getConnectionStateInfo(
+    BuildContext context,
     ConnectionStatus status,
   ) {
+    final l10n = AppLocalizations.of(context);
     switch (status) {
       case ConnectionStatus.disconnecting:
-        return (text: 'to standby mode.', color: Colors.white);
+        return (text: l10n.statusToStandbyMode, color: Colors.white);
       case ConnectionStatus.loading:
-        return (text: 'plugging in ...', color: Colors.white);
+        return (text: l10n.statusPluggingIn, color: Colors.white);
       case ConnectionStatus.connected:
-        return (text: 'powered up', color: const Color(0xFFB2FFB9));
+        return (text: l10n.statusPoweredUp, color: const Color(0xFFB2FFB9));
       case ConnectionStatus.analyzing:
-        return (text: 'doing science ...', color: Colors.white);
+        return (text: l10n.statusDoingScience, color: Colors.white);
       case ConnectionStatus.noInternet:
-        return (text: 'exited the matrix', color: const Color(0xFFFFC0C0));
+        return (text: l10n.statusExitedMatrix, color: const Color(0xFFFFC0C0));
       case ConnectionStatus.error:
-        return (text: "we're sorry :(", color: Colors.white);
+        return (text: l10n.statusSorry, color: Colors.white);
       default:
-        return (text: 'Connect already', color: Colors.white);
+        return (text: l10n.statusConnectAlready, color: Colors.white);
     }
   }
 }
@@ -234,7 +248,7 @@ class AnalyzingStatus extends ConsumerWidget {
     return AnimatedSize(
       duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: AnimatedOpacity(
         duration: const Duration(milliseconds: 300),
         opacity: isAnalyzing ? 1.0 : 0.0,

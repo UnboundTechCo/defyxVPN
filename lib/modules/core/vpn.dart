@@ -26,6 +26,7 @@ class VPN {
   final log = Log();
   final analyticsService = FirebaseAnalyticsService();
   final alertService = AlertService();
+  bool _isReconnectMode = false;
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -132,6 +133,9 @@ class VPN {
     if (msg.startsWith("Data: VPN stopped")) {
       _closeTunnel();
     }
+    if (msg.startsWith("Data: VPN connecting")) {
+      _onLoading();
+    }
     if (msg.startsWith("Data: Config label: ")) {
       final configLabel = msg.replaceAll("Data: Config label: ", "");
       _vpnBridge.setConnectionMethod(configLabel);
@@ -212,7 +216,9 @@ class VPN {
       return;
     }
 
-    await _createTunnel();
+    if (!_isReconnectMode) {
+      await _createTunnel();
+    }
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
@@ -235,6 +241,19 @@ class VPN {
     await _container?.read(flowlineServiceProvider).saveFlowline(false);
   }
 
+  Future<void> _onLoading() async {
+    final connectionNotifier =
+        _container?.read(connectionStateProvider.notifier);
+    final loggerNotifier = _container?.read(loggerStateProvider.notifier);
+
+    final vpnData = await _container?.read(vpnDataProvider.future);
+
+    loggerNotifier?.setLoading();
+    connectionNotifier?.setAnalyzing();
+    await vpnData?.disableVPN();
+    _isReconnectMode = true;
+  }
+
   Future<void> refreshPing() async {
     _container?.read(flagLoadingProvider.notifier).state = true;
     _container?.read(pingLoadingProvider.notifier).state = true;
@@ -249,6 +268,7 @@ class VPN {
     await _vpnBridge.stopVPN();
     _clearData(ref);
     connectionNotifier.setDisconnected();
+    _isReconnectMode = false;
   }
 
   Future<void> _disconnect(WidgetRef ref) async {
@@ -380,7 +400,7 @@ class VPN {
     final title = jsonData["title"] ?? "Unknown";
     jsonData.remove("title");
     final Map<String, String> stringMap =
-    jsonData.map((key, value) => MapEntry(key, value.toString()));
+        jsonData.map((key, value) => MapEntry(key, value.toString()));
     analyticsService.logCoreData(title, stringMap);
   }
 }

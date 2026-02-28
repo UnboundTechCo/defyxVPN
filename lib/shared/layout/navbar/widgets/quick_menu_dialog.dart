@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class QuickMenuDialog extends StatefulWidget {
   const QuickMenuDialog({super.key});
@@ -33,6 +34,8 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(bottom: 20.h),
@@ -58,7 +61,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                     children: [
                       QuickMenuItem(
                         topBorderRadius: true,
-                        title: 'Introduction',
+                        title: l10n.introduction,
                         onTap: () {
                           Navigator.of(context).pop();
                           showCupertinoDialog(
@@ -70,14 +73,14 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Privacy Policy',
+                        title: l10n.privacyPolicy,
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const CustomWebViewScreen(
+                              builder: (context) => CustomWebViewScreen(
                                 url: 'https://defyxvpn.com/privacy-policy',
-                                title: 'Privacy Policy',
+                                title: l10n.privacyPolicy,
                               ),
                             ),
                           );
@@ -85,14 +88,14 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Terms & Conditions',
+                        title: l10n.termsAndConditions,
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const CustomWebViewScreen(
+                              builder: (context) => CustomWebViewScreen(
                                 url: 'https://defyxvpn.com/terms-and-conditions',
-                                title: 'Terms & Conditions',
+                                title: l10n.termsAndConditions,
                               ),
                             ),
                           );
@@ -136,14 +139,14 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: 'Our Website',
+                        title: l10n.ourWebsite,
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => const CustomWebViewScreen(
+                              builder: (context) => CustomWebViewScreen(
                                 url: 'https://defyxvpn.com/contact',
-                                title: 'Our Website',
+                                title: l10n.ourWebsite,
                               ),
                             ),
                           );

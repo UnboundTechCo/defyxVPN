@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'dart:async';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 // State class for logs
 class LogsState {
@@ -224,42 +225,59 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'App Logs',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'Lato',
+              Flexible(
+                flex: 2,
+                child: Text(
+                  AppLocalizations.of(context).appLogs,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Lato',
+                  ),
                 ),
               ),
-              Row(
-                children: [
-                  Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: ref.read(logsProvider.notifier).isRefreshing()
-                          ? Colors.green
-                          : Colors.red,
+              const SizedBox(width: 8),
+              Flexible(
+                flex: 3,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: ref.read(logsProvider.notifier).isRefreshing()
+                            ? Colors.green
+                            : Colors.red,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Text(
-                    'Auto-refresh',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                      fontFamily: 'Lato',
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        AppLocalizations.of(context).autoRefresh,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontFamily: 'Lato',
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white),
-                    onPressed: () => ref.read(logsProvider.notifier).fetchLogs(),
-                  ),
-                ],
+                    const SizedBox(width: 4),
+                    IconButton(
+                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      iconSize: 20,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      onPressed: () => ref.read(logsProvider.notifier).fetchLogs(),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -339,18 +357,18 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                         color: Colors.black38,
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.clear_all,
                             color: Colors.white70,
                             size: 14,
                           ),
-                          SizedBox(width: 4),
+                          const SizedBox(width: 4),
                           Text(
-                            'Clear',
-                            style: TextStyle(
+                            AppLocalizations.of(context).clear,
+                            style: const TextStyle(
                               color: Colors.white70,
                               fontSize: 10,
                             ),
@@ -378,7 +396,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Close'),
+                child: Text(AppLocalizations.of(context)!.close),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -386,9 +404,9 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     ClipboardData(text: logsState.logs.join('\n')),
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Logs copied to clipboard'),
-                      backgroundColor: Color(0xFF2A2A2A),
+                    SnackBar(
+                      content: Text(AppLocalizations.of(context)!.logsCopied),
+                      backgroundColor: const Color(0xFF2A2A2A),
                     ),
                   );
                 },
@@ -399,7 +417,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text('Copy Logs'),
+                child: Text(AppLocalizations.of(context)!.copyLogs),
               ),
             ],
           ),
