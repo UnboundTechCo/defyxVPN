@@ -27,7 +27,7 @@ class App extends ConsumerWidget {
     return FutureBuilder<bool>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
-        _handleAdConfiguration(snapshot);
+        _handleAdConfiguration(snapshot, ref);
         return _buildApp(context, ref);
       },
     );
@@ -40,22 +40,25 @@ class App extends ConsumerWidget {
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
-  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot) {
+  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot, WidgetRef ref) {
     if (!snapshot.hasData) return;
 
     final shouldUseInternalAds = snapshot.data!;
     if (shouldUseInternalAds) {
       debugPrint('Using internal ads');
     } else {
-      _initializeMobileAdsWithConsent();
+      _initializeMobileAdsWithConsent(ref);
     }
   }
 
-  Future<void> _initializeMobileAdsWithConsent() async {
+  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        // Request UMP consent first (required for GDPR compliance)
-        UmpService.requestConsent(
+        // Get UMP service with cache integration
+        final umpService = ref.read(umpServiceProvider);
+        
+        // Request UMP consent (checks cache first)
+        await umpService.requestConsent(
           onDone: () async {
             // Initialize Mobile Ads after consent flow completes
             await MobileAds.instance.initialize();
