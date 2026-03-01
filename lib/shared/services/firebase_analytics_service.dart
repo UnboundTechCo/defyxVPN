@@ -117,4 +117,17 @@ class FirebaseAnalyticsService {
       debugPrint('Analytics error: $e');
     }
   }
+
+  // Generic event logging for services
+  Future<void> logEvent({
+    required String name,
+    Map<String, String>? parameters,
+  }) async {
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(name: name, parameters: parameters);
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
+  }
 }

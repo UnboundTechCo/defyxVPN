@@ -15,7 +15,7 @@ final tipsPageControllerProvider = Provider<PageController>((ref) {
 });
 
 // Timer for auto-advancing tips
-final tipsAutoAdvanceTimerProvider = Provider.autoDispose<Timer?>((ref) {
+final tipsAutoAdvanceTimerProvider = Provider<Timer?>((ref) {
   final pageController = ref.watch(tipsPageControllerProvider);
   final tipsAsync = ref.watch(selectedHintsProvider);
   
