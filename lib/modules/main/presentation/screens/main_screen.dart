@@ -34,7 +34,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   final AnimationService _animationService = AnimationService();
   bool _showHeaderShadow = false;
   ConnectionStatus? _previousConnectionStatus;
-  bool? _previousShowCountdown;
   late MainScreenLogic _logic;
   late final GoogleAds _googleAds;
   late ScrollManager _scrollManager;
@@ -109,10 +108,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     });
   }
 
-  void _handleAdsStateChange(bool showCountdown) {
-    _scrollManager.handleAdsStateChange(showCountdown);
-  }
-
   void _checkInitialConnectionState() {
     Future.delayed(const Duration(milliseconds: 1000), () {
       if (!mounted) return;
@@ -178,15 +173,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         _previousConnectionStatus = connectionState.status;
         _handleConnectionStateChange(connectionState.status);
       }
-
-      if (mounted &&
-          _previousShowCountdown != null &&
-          _previousShowCountdown != adsState.showCountdown &&
-          _previousShowCountdown! &&
-          !adsState.showCountdown) {
-        _handleAdsStateChange(adsState.showCountdown);
-      }
-      _previousShowCountdown = adsState.showCountdown;
     });
 
     return MainScreenBackground(
@@ -240,7 +226,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                             ),
                             _buildContentSection(
                                 connectionState.status, adsState),
-                            SizedBox(height: 0.15.sh),
+                            SizedBox(
+                              height: connectionState.status ==
+                                          ConnectionStatus.connected &&
+                                      adsState.showCountdown
+                                  ? 140.h
+                                  : 0.15.sh,
+                            ),
                           ],
                         ),
                       ],
@@ -299,8 +291,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        final shouldShowAd =
-            status == ConnectionStatus.connected && adsState.showCountdown;
+        // Show ads only when connected to VPN
+        final shouldShowAd = status == ConnectionStatus.connected && adsState.showCountdown;
 
         return SizedBox(
           height: 280.h,
