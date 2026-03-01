@@ -5,6 +5,7 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -46,14 +47,21 @@ class App extends ConsumerWidget {
     if (shouldUseInternalAds) {
       debugPrint('Using internal ads');
     } else {
-      _initializeMobileAds();
+      _initializeMobileAdsWithConsent();
     }
   }
 
-  Future<void> _initializeMobileAds() async {
+  Future<void> _initializeMobileAdsWithConsent() async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        await MobileAds.instance.initialize();
+        // Request UMP consent first (required for GDPR compliance)
+        UmpService.requestConsent(
+          onDone: () async {
+            // Initialize Mobile Ads after consent flow completes
+            await MobileAds.instance.initialize();
+            debugPrint('Google AdMob initialized with UMP consent');
+          },
+        );
       }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
