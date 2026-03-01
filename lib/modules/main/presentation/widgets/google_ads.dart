@@ -19,32 +19,28 @@ Future<bool> _shouldShowGoogleAds(WidgetRef ref) async {
 
 class GoogleAdsState {
   final bool nativeAdIsLoaded;
+  final bool adLoadFailed;
   final int countdown;
   final bool showCountdown;
-  final bool shouldDisposeAd;
-  final bool adLoadFailed;
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
+    this.adLoadFailed = false,
     this.countdown = _countdownDuration,
     this.showCountdown = true,
-    this.shouldDisposeAd = false,
-    this.adLoadFailed = false,
   });
 
   GoogleAdsState copyWith({
     bool? nativeAdIsLoaded,
+    bool? adLoadFailed,
     int? countdown,
     bool? showCountdown,
-    bool? shouldDisposeAd,
-    bool? adLoadFailed,
   }) {
     return GoogleAdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
+      adLoadFailed: adLoadFailed ?? this.adLoadFailed,
       countdown: countdown ?? this.countdown,
       showCountdown: showCountdown ?? this.showCountdown,
-      shouldDisposeAd: shouldDisposeAd ?? this.shouldDisposeAd,
-      adLoadFailed: adLoadFailed ?? this.adLoadFailed,
     );
   }
 }
@@ -62,7 +58,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
     state = state.copyWith(
       countdown: _countdownDuration,
       showCountdown: true,
-      shouldDisposeAd: false,
     );
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
@@ -70,16 +65,11 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       } else {
         state = state.copyWith(
           showCountdown: false,
-          shouldDisposeAd: true,
-          nativeAdIsLoaded: false,
+          // Keep nativeAdIsLoaded true - ad stays loaded, just hidden
         );
         timer.cancel();
       }
     });
-  }
-
-  void resestCountDown() {
-    state = state.copyWith(countdown: _countdownDuration);
   }
 
   void setAdLoaded(bool isLoaded) {
@@ -88,9 +78,7 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
     );
-    if (isLoaded &&
-        state.showCountdown &&
-        state.countdown == _countdownDuration) {
+    if (isLoaded && state.showCountdown && state.countdown == _countdownDuration) {
       startCountdownTimer();
     }
   }
@@ -100,10 +88,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       adLoadFailed: true,
       nativeAdIsLoaded: false,
     );
-  }
-
-  void acknowledgeDisposal() {
-    state = state.copyWith(shouldDisposeAd: false);
   }
 
   void resetState() {
@@ -187,6 +171,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
 
   void _initializeAds() async {
     if (_isDisposed || _hasInitialized) return;
+
+    _hasInitialized = true;
 
     try {
       // Disable Google Ads on non-mobile platforms.
@@ -329,6 +315,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   @override
   void dispose() {
     _isDisposed = true;
+    _nativeAd?.dispose();
+    _nativeAd = null;
+    _globalAdInitialized = false;
     super.dispose();
   }
 
@@ -338,24 +327,17 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
 
+    // Restart countdown on new connection for fresh 60-second impressions
+    // Ad stays loaded through disconnect/reconnect - no disposal
     ref.listen(connectionStateProvider, (previous, next) {
-      if (next.status == ConnectionStatus.disconnected && !_isDisposed) {
-        if (_nativeAd != null) {
-          _nativeAd?.dispose();
-          _nativeAd = null;
-        }
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
-        _globalAdInitialized = false;
-      }
-      if (next.status == ConnectionStatus.connected) {
-        ref.read(googleAdsProvider.notifier).resestCountDown();
+      if (next.status == ConnectionStatus.connected && 
+          previous?.status != ConnectionStatus.connected &&
+          adsState.nativeAdIsLoaded &&
+          !_isDisposed) {
+        ref.read(googleAdsProvider.notifier).startCountdownTimer();
       }
     });
+
     return SizedBox(
       height: 280.h,
       width: 336.w,
