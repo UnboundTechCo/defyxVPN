@@ -20,7 +20,7 @@ class AdRetryConfig {
 
   const AdRetryConfig({
     this.maxAttempts = 3,
-    this.baseDelay = const Duration(seconds: 2),
+    this.baseDelay = const Duration(seconds: 5),  // Increased from 2s to 5s for better rate limit compliance
     this.backoffMultiplier = 2.0,
     this.maxDelay = const Duration(seconds: 30),
   });
@@ -87,13 +87,17 @@ abstract interface class IAdService {
     required NativeAdListener listener,
     required NativeTemplateStyle templateStyle,
     int? maxRetries,
+    bool bypassRateLimit = false,
   });
   
   /// Log ad event to analytics
   Future<void> logAdEvent(String eventName, Map<String, dynamic> parameters);
   
   /// Check rate limiting
-  bool canMakeRequest();
+  bool canMakeRequest({bool bypassRateLimit = false});
+  
+  /// Get time until rate limit reset
+  Duration? getTimeUntilRateLimitReset();
   
   /// Get circuit breaker status
   Map<String, dynamic> getCircuitBreakerStatus();
@@ -179,7 +183,7 @@ class AdService implements IAdService {
   }
 
   @override
-  bool canMakeRequest() {
+  bool canMakeRequest({bool bypassRateLimit = false}) {
     final now = DateTime.now();
     
     // Check circuit breaker first
@@ -190,6 +194,12 @@ class AdService implements IAdService {
         'Too many consecutive failures',
         resetTime: resetTime ?? now.add(const Duration(minutes: 2)),
       );
+    }
+    
+    // Skip rate limiting for manual retries
+    if (bypassRateLimit) {
+      debugPrint('⚡ Bypassing rate limit (manual retry)');
+      return true;
     }
     
     // Check minimum interval since last request (60s)
@@ -221,6 +231,20 @@ class AdService implements IAdService {
   }
   
   @override
+  Duration? getTimeUntilRateLimitReset() {
+    if (_lastAdRequest == null) return null;
+    
+    final now = DateTime.now();
+    final timeSinceLastRequest = now.difference(_lastAdRequest!);
+    
+    if (timeSinceLastRequest >= _minRequestInterval) {
+      return null; // No rate limit active
+    }
+    
+    return _minRequestInterval - timeSinceLastRequest;
+  }
+  
+  @override
   Map<String, dynamic> getCircuitBreakerStatus() {
     return _circuitBreaker.getStatus();
   }
@@ -244,6 +268,7 @@ class AdService implements IAdService {
     required NativeAdListener listener,
     required NativeTemplateStyle templateStyle,
     int? maxRetries,
+    bool bypassRateLimit = false,
   }) async {
     final maxAttempts = maxRetries ?? _retryConfig.maxAttempts;
     final startTime = DateTime.now();
@@ -281,23 +306,38 @@ class AdService implements IAdService {
       
       // Check rate limiting and circuit breaker
       try {
-        canMakeRequest();
+        canMakeRequest(bypassRateLimit: bypassRateLimit);
       } on AdRateLimitException catch (e) {
         _performanceService?.recordRateLimitHit();
         
-        await logAdEvent('ad_load_attempt_failed', {
-          'attempt': attempt,
-          'reason': 'rate_limited',
+        debugPrint('⏱️ Rate limit hit - ${e.waitTime.inSeconds}s cooldown');
+        await logAdEvent('ad_rate_limit_hit', {
+          'wait_time': e.waitTime.inSeconds,
+          'bypass': bypassRateLimit,
         });
         
+        // If bypassed but still hit (shouldn't happen), fail immediately
+        if (bypassRateLimit) {
+          final duration = DateTime.now().difference(startTime);
+          return AdLoadResult(
+            success: false,
+            errorCode: 'RATE_LIMIT',
+            errorMessage: 'Rate limit active (${e.waitTime.inSeconds}s remaining)',
+            attemptCount: attempt,
+            loadDuration: duration,
+          );
+        }
+        
+        // For automatic retries, wait and retry
         if (attempt < maxAttempts) {
+          debugPrint('⏳ Auto-waiting ${e.waitTime.inSeconds}s before retry...');
           await Future.delayed(e.waitTime);
           continue;
         } else {
           final duration = DateTime.now().difference(startTime);
           return AdLoadResult(
             success: false,
-            errorCode: '1',
+            errorCode: 'RATE_LIMIT',
             errorMessage: e.message,
             attemptCount: attempt,
             loadDuration: duration,
@@ -394,6 +434,7 @@ class AdService implements IAdService {
               _cacheService.recordError(
                 error.code.toString(),
                 error.message,
+                adUnitId: adUnitId,
               );
             }
             
@@ -444,8 +485,20 @@ class AdService implements IAdService {
       // If failed and not last attempt, wait and retry
       if (attempt < maxAttempts) {
         final delay = _retryConfig.getDelay(attempt);
-        debugPrint('⏳ Waiting ${delay.inSeconds}s before retry (attempt ${attempt + 1}/$maxAttempts)...');
-        await Future.delayed(delay);
+        
+        // Check if we need to wait longer due to rate limit
+        final rateLimitWait = getTimeUntilRateLimitReset();
+        final actualDelay = rateLimitWait != null && rateLimitWait > delay
+            ? rateLimitWait
+            : delay;
+        
+        if (rateLimitWait != null && rateLimitWait > delay) {
+          debugPrint('⏳ Waiting ${actualDelay.inSeconds}s for rate limit cooldown (attempt ${attempt + 1}/$maxAttempts)...');
+        } else {
+          debugPrint('⏳ Waiting ${actualDelay.inSeconds}s before retry (attempt ${attempt + 1}/$maxAttempts)...');
+        }
+        
+        await Future.delayed(actualDelay);
       } else {
         return result;
       }
