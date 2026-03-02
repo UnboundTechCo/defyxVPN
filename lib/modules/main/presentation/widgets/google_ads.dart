@@ -234,16 +234,26 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         return;
       }
       
-      // Load fresh ad if none exists or previous was invalid
+      // CRITICAL: Only load fresh ad if VPN is DISCONNECTED (real IP guaranteed)
       if (!_hasInitialized) {
-        // Check cache metadata to decide whether to load immediately or delay
-        _checkCacheAndLoad();
+        final connectionState = ref.read(connectionStateProvider);
+        
+        if (connectionState.status == ConnectionStatus.connected) {
+          // VPN is connected - user's real IP is masked!
+          // Don't load ad now - wait for disconnect to ensure proper geographic targeting
+          debugPrint('🚫 VPN connected on app start - waiting for disconnect to load ad with real IP');
+          debugPrint('⚠️ Loading ads with VPN IP would cause wrong geographic targeting and lower eCPM');
+          // Ad will load automatically when user disconnects (connection listener below)
+        } else {
+          // VPN disconnected - real IP visible - safe to load with proper targeting
+          debugPrint('✅ VPN disconnected - loading ad with real IP for accurate targeting');
+          _checkCacheAndLoad();
+        }
       }
     });
 
     // Smart ad refresh & countdown management
     ref.listenManual(connectionStateProvider, (previous, next) {
-      final adsState = ref.read(googleAdsProvider);
       final refreshStrategy = ref.read(adRefreshStrategyProvider);
       
       // Record connection for activity tracking
@@ -252,45 +262,73 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         refreshStrategy.recordConnection();
       }
       
-      // When disconnected, check if ad needs refresh using adaptive strategy
+      // When disconnected, load ad with real IP if we don't have one yet
       if (next.status == ConnectionStatus.disconnected && 
-          previous?.status == ConnectionStatus.connected &&
-          adsState.nativeAdIsLoaded &&
-          refreshStrategy.shouldRefreshAd() &&
+          previous?.status == ConnectionStatus.connected) {
+        debugPrint('🔌 Disconnected - hiding ad');
+        
+        // CRITICAL: If no ad loaded yet (app opened while connected), load one now with real IP
+        if (_nativeAd == null && !_hasInitialized && !_isDisposed) {
+          debugPrint('📱 No ad loaded yet - loading now with real IP for proper targeting');
+          _checkCacheAndLoad();
+        } else if (_nativeAd != null) {
+          debugPrint('💾 Keeping existing ad in memory for reuse');
+        }
+        return;
+      }
+      
+      // When connecting, check if we need to refresh the ad BEFORE showing it
+      if (next.status == ConnectionStatus.connected && 
+          previous?.status != ConnectionStatus.connected &&
           !_isDisposed) {
         
-        // Check 60s throttle to comply with AdMob policy
-        final now = DateTime.now();
-        if (_lastAdRequest != null) {
-          final timeSinceLastRequest = now.difference(_lastAdRequest!);
-          if (timeSinceLastRequest.inSeconds < 60) {
-            debugPrint('⏱️ Skipping ad refresh - only ${timeSinceLastRequest.inSeconds}s since last request');
+        final adsState = ref.read(googleAdsProvider);
+        
+        // CRITICAL: Don't show ad or refresh if no ad loaded (user needs to disconnect first)
+        if (!adsState.nativeAdIsLoaded) {
+          debugPrint('⚠️ No ad available - user needs to disconnect VPN first to load with real IP');
+          return;
+        }
+        
+        // Check if ad needs refresh based on adaptive strategy
+        if (adsState.nativeAdIsLoaded && refreshStrategy.shouldRefreshAd()) {
+          // Check 60s throttle to comply with AdMob policy
+          final now = DateTime.now();
+          if (_lastAdRequest != null) {
+            final timeSinceLastRequest = now.difference(_lastAdRequest!);
+            if (timeSinceLastRequest.inSeconds < 60) {
+              debugPrint('⏱️ Ad needs refresh but rate limit active - reusing existing ad');
+            } else {
+              debugPrint('🔄 Ad refresh triggered before showing (adaptive strategy)');
+              _lastAdRequest = now;
+              _hasInitialized = false;
+              _initializeAds();
+              return;
+            }
+          } else {
+            debugPrint('🔄 Ad refresh triggered before showing (adaptive strategy)');
+            _lastAdRequest = DateTime.now();
+            _hasInitialized = false;
+            _initializeAds();
             return;
           }
         }
         
-        debugPrint('🔄 Ad refresh triggered by adaptive strategy');
-        _lastAdRequest = now;
-        _hasInitialized = false;
-        _initializeAds();
-        return;
-      }
-      
-      // Start countdown when connected (reuse existing ad)
-      if (next.status == ConnectionStatus.connected && 
-          previous?.status != ConnectionStatus.connected &&
-          adsState.nativeAdIsLoaded &&
-          !_isDisposed) {
-        debugPrint('▶️ Starting 60s countdown for ad impression');
-        ref.read(googleAdsProvider.notifier).startCountdownTimer();
+        // Start countdown for existing ad
+        if (adsState.nativeAdIsLoaded) {
+          debugPrint('▶️ Starting 60s countdown for ad impression');
+          ref.read(googleAdsProvider.notifier).startCountdownTimer();
+        }
       }
     });
   }
 
+  /// Initialize ads based on platform and user location
+  /// 
+  /// [bypassRateLimit] - Reserved for future manual refresh feature.
+  /// Currently unused as all refreshes are automatic and respect rate limits.
   void _initializeAds({bool bypassRateLimit = false}) async {
     if (_isDisposed || _hasInitialized) return;
-
-    _hasInitialized = true;
 
     try {
       // Disable Google Ads on non-mobile platforms.
@@ -311,24 +349,21 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
 
       if (shouldShowGoogle) {
-        // Check if static ad already exists and is still valid
-        final adsState = ref.read(googleAdsProvider);
-        if (_nativeAd != null && adsState.nativeAdIsLoaded && !adsState.needsRefresh) {
-          // Verify ad is actually valid before reusing
-          try {
-            // ignore: unnecessary_null_checks
-            final _ = _nativeAd!.hashCode;
-            debugPrint('♻️ Reusing existing loaded ad (age: ${DateTime.now().difference(adsState.adLoadedAt!).inMinutes}min)');
-            return;
-          } catch (e) {
-            debugPrint('⚠️ Existing ad became invalid - loading fresh ad');
-            _nativeAd = null;
-            ref.read(googleAdsProvider.notifier).resetState();
-          }
+        // Consolidated ad validation - check if we need to load a new ad
+        if (!_shouldLoadNewAd()) {
+          debugPrint('✅ Using existing valid ad');
+          _hasInitialized = true;
+          return;
         }
+        
+        // Mark as initialized before starting load process
+        _hasInitialized = true;
         _loadGoogleAd(bypassRateLimit: bypassRateLimit);
         return;
       }
+      
+      // Mark as initialized for non-Google ads too
+      _hasInitialized = true;
 
       final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
       if (!_isDisposed) {
@@ -493,6 +528,40 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     }
   }
 
+  /// Consolidated check: Should we load a new ad?
+  /// Returns false if existing ad is valid and doesn't need refresh
+  bool _shouldLoadNewAd() {
+    // No existing ad - need to load
+    if (_nativeAd == null) return true;
+    
+    final adsState = ref.read(googleAdsProvider);
+    
+    // Ad not loaded in state - need to load
+    if (!adsState.nativeAdIsLoaded) return true;
+    
+    // Verify ad is actually valid (not disposed)
+    try {
+      // ignore: unnecessary_null_checks
+      final _ = _nativeAd!.hashCode;
+    } catch (e) {
+      debugPrint('⚠️ Existing ad became invalid - need fresh ad');
+      _nativeAd = null;
+      ref.read(googleAdsProvider.notifier).resetState();
+      return true;
+    }
+    
+    // Ad exists and is valid - check if it needs refresh due to age
+    if (adsState.needsRefresh) {
+      debugPrint('📅 Ad is stale (>15 min) - need fresh ad');
+      return true;
+    }
+    
+    // Ad is valid and fresh - reuse it
+    final ageMinutes = DateTime.now().difference(adsState.adLoadedAt!).inMinutes;
+    debugPrint('♻️ Existing ad is valid (age: ${ageMinutes}min) - reusing');
+    return false;
+  }
+
   Future<void> _checkCacheAndLoad() async {
     if (_isDisposed) return;
     
@@ -505,12 +574,18 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         final timeSinceError = DateTime.now().difference(metadata.loadedAt);
         
         // If we recently had a "no fill" error (code 3), delay the next attempt
+        // Linear decay: 2 minutes delay if error just happened, 0 delay after 5 minutes
         if (metadata.lastErrorCode == '3' && timeSinceError.inSeconds < 300) {
-          // Had no-fill error less than 5 minutes ago - delay loading
-          final delaySeconds = 120 - timeSinceError.inSeconds;
-          if (delaySeconds > 0) {
-            debugPrint('📊 Cache shows recent no-fill error - delaying load by ${delaySeconds}s');
-            await Future.delayed(Duration(seconds: delaySeconds));
+          const maxDelaySeconds = 120; // 2 minutes max
+          const errorWindowSeconds = 300; // 5 minute window
+          
+          // Calculate remaining delay: decreases linearly from 120s to 0s over 5 minutes
+          final elapsedSeconds = timeSinceError.inSeconds;
+          final remainingDelay = ((errorWindowSeconds - elapsedSeconds) / errorWindowSeconds * maxDelaySeconds).round();
+          
+          if (remainingDelay > 0) {
+            debugPrint('📊 Recent no-fill error (${timeSinceError.inMinutes}m ago) - waiting ${remainingDelay}s before retry');
+            await Future.delayed(Duration(seconds: remainingDelay));
           }
         }
       }
@@ -702,6 +777,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       // Silent auto-retry in background - just show loading state
       debugPrint('🔄 Ad failed - auto-retry running in background');
       return _buildLoadingWidget("Loading ads...");
+    } else if (!_hasInitialized && ref.read(connectionStateProvider).status == ConnectionStatus.connected) {
+      // App opened while VPN connected - waiting for disconnect to load with real IP
+      return _buildLoadingWidget("Disconnect VPN to load ads...");
     } else {
       // Initial load state
       return _buildLoadingWidget("Preparing ads...");
