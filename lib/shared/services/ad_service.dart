@@ -82,6 +82,11 @@ abstract interface class IAdService {
   Future<bool> canLoadAd();
   
   /// Load ad with retry logic
+  /// 
+  /// [bypassRateLimit] - Reserved for future manual retry feature.
+  /// When true, allows skipping the 60s rate limit for user-initiated retries.
+  /// Currently unused as all retries are automatic and respect rate limits.
+  /// Keep this parameter for potential Settings screen "Force Refresh" feature.
   Future<AdLoadResult> loadAdWithRetry({
     required String adUnitId,
     required NativeAdListener listener,
@@ -94,6 +99,9 @@ abstract interface class IAdService {
   Future<void> logAdEvent(String eventName, Map<String, dynamic> parameters);
   
   /// Check rate limiting
+  /// 
+  /// [bypassRateLimit] - When true, skip rate limit check.
+  /// Used for manual user-initiated ad refresh (future feature).
   bool canMakeRequest({bool bypassRateLimit = false});
   
   /// Get time until rate limit reset
