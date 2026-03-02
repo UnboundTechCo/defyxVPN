@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -54,6 +55,19 @@ class App extends ConsumerWidget {
   Future<void> _initializeMobileAdsWithConsent(WidgetRef ref) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
+        // Request App Tracking Transparency (iOS only)
+        if (Platform.isIOS) {
+          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+          if (status == TrackingStatus.notDetermined) {
+            // Small delay to ensure UI is ready
+            await Future.delayed(const Duration(milliseconds: 500));
+            final result = await AppTrackingTransparency.requestTrackingAuthorization();
+            debugPrint('📱 ATT Authorization: $result');
+          } else {
+            debugPrint('📱 ATT Status: $status');
+          }
+        }
+        
         // Get UMP service with cache integration
         final umpService = ref.read(umpServiceProvider);
         

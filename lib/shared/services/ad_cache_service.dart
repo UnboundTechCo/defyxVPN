@@ -162,18 +162,31 @@ class AdCacheService {
   }
 
   /// Record ad error
-  Future<void> recordError(String errorCode, String errorMessage) async {
+  Future<void> recordError(String errorCode, String errorMessage, {String? adUnitId}) async {
     try {
       final metadata = await loadMetadata();
+      
+      final AdMetadata updated;
       if (metadata == null) {
-        debugPrint('⚠️ Cannot record error - no cached metadata');
-        return;
+        // Create new metadata for first error
+        if (adUnitId == null) {
+          debugPrint('⚠️ Cannot record error - no cached metadata and no adUnitId provided');
+          return;
+        }
+        updated = AdMetadata(
+          adUnitId: adUnitId,
+          loadedAt: DateTime.now(),
+          loadAttempts: 1,
+          lastErrorCode: errorCode,
+          lastErrorMessage: errorMessage,
+        );
+        debugPrint('💾 Creating metadata for error: $errorCode - $errorMessage');
+      } else {
+        updated = metadata.copyWith(
+          lastErrorCode: errorCode,
+          lastErrorMessage: errorMessage,
+        );
       }
-
-      final updated = metadata.copyWith(
-        lastErrorCode: errorCode,
-        lastErrorMessage: errorMessage,
-      );
 
       await saveMetadata(updated);
       debugPrint('❌ Error recorded: $errorCode - $errorMessage');
