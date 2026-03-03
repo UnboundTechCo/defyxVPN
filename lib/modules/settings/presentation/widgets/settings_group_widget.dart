@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/shared/layout/navbar/widgets/sync_menu_dropdown.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -291,7 +292,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
                         ),
                         SizedBox(width: 8.w),
                         Text(
-                          'RESET TO DEFAULT',
+                          AppLocalizations.of(context).settingsResetToDefault,
                           style: TextStyle(
                             fontSize: 12.sp,
                             fontFamily: 'Lato',

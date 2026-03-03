@@ -235,7 +235,7 @@ class DefyxVpnService : VpnService() {
                     updateNotification("DefyxVPN", "Disconnecting...")
                 }
 
-                Android.stop()
+                Android.stopVPN()
 
                 try {
                     vpnInterface?.close()

@@ -50,6 +50,12 @@ class FlowlineService implements IFlowlineService {
 
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
+      
+      debugPrint('Flowline decoded, checking for tips...');
+      debugPrint('Tips field exists: ${decoded['tips'] != null}');
+      if (decoded['tips'] != null) {
+        debugPrint('Tips data: ${decoded['tips']}');
+      }
 
       final appBuildType = GlobalVars.appBuildType;
       final version = decoded['version'][appBuildType];
@@ -58,6 +64,15 @@ class FlowlineService implements IFlowlineService {
         'api_advertise': decoded['advertise'],
       };
       await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+
+      // Save tips if available
+      if (decoded['tips'] != null) {
+        final tipsJson = json.encode(decoded['tips']);
+        await _secureStorage.write(apiTipsKey, tipsJson);
+        debugPrint('Tips saved to storage: $tipsJson');
+      } else {
+        debugPrint('No tips field in flowline response');
+      }
 
       final versionStorageMap = {
         'api_app_version': version,

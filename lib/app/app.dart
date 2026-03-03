@@ -1,10 +1,12 @@
 import 'dart:io';
 
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -13,6 +15,8 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:toastification/toastification.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
@@ -24,7 +28,7 @@ class App extends ConsumerWidget {
     return FutureBuilder<bool>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
-        _handleAdConfiguration(snapshot);
+        _handleAdConfiguration(snapshot, ref);
         return _buildApp(context, ref);
       },
     );
@@ -37,21 +41,44 @@ class App extends ConsumerWidget {
     return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
-  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot) {
+  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot, WidgetRef ref) {
     if (!snapshot.hasData) return;
 
     final shouldUseInternalAds = snapshot.data!;
     if (shouldUseInternalAds) {
       debugPrint('Using internal ads');
     } else {
-      _initializeMobileAds();
+      _initializeMobileAdsWithConsent(ref);
     }
   }
 
-  Future<void> _initializeMobileAds() async {
+  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref) async {
     try {
       if (Platform.isAndroid || Platform.isIOS) {
-        await MobileAds.instance.initialize();
+        // Request App Tracking Transparency (iOS only)
+        if (Platform.isIOS) {
+          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+          if (status == TrackingStatus.notDetermined) {
+            // Small delay to ensure UI is ready
+            await Future.delayed(const Duration(milliseconds: 500));
+            final result = await AppTrackingTransparency.requestTrackingAuthorization();
+            debugPrint('📱 ATT Authorization: $result');
+          } else {
+            debugPrint('📱 ATT Status: $status');
+          }
+        }
+        
+        // Get UMP service with cache integration
+        final umpService = ref.read(umpServiceProvider);
+        
+        // Request UMP consent (checks cache first)
+        await umpService.requestConsent(
+          onDone: () async {
+            // Initialize Mobile Ads after consent flow completes
+            await MobileAds.instance.initialize();
+            debugPrint('Google AdMob initialized with UMP consent');
+          },
+        );
       }
     } catch (error) {
       debugPrint('Error initializing Google AdMob: $error');
@@ -82,6 +109,20 @@ class App extends ConsumerWidget {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
+              // Force English locale (comment out to enable device language detection)
+              locale: const Locale('en'),
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [
+                Locale('en'),
+                Locale('fa'),
+                Locale('zh'),
+                Locale('ru'),
+              ],
             );
           },
         ));

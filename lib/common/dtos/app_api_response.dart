@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'hint.dart';
 
 part 'app_api_response.freezed.dart';
 part 'app_api_response.g.dart';
@@ -11,6 +12,7 @@ class AppApiResponse with _$AppApiResponse {
     @JsonKey(name: "changeLog") required Map<String, List<String>> changeLog,
     @JsonKey(name: "flowLine") required AppApiResponseFlowLine flowLine,
     @JsonKey(name: "testUrls") required List<String> testUrls,
+    @JsonKey(name: "tips") List<Hint>? tips,
   }) = _AppApiResponse;
 
   factory AppApiResponse.fromJson(Map<String, dynamic> json) =>

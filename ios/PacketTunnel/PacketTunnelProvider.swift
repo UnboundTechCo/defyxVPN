@@ -74,7 +74,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         os_log("⏹ VPN stopped with reason: %d", reason.rawValue)
         os_log("⏹ Stopping VPN tunnel...")
         Socks5Tunnel.quit()
-        IosStop()
+        IosStopVPN()
         os_log("✅ Tunnel stopped successfully.")
         completionHandler()
     }
