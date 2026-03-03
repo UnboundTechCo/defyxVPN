@@ -291,8 +291,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        // Show ads only when connected to VPN
-        final shouldShowAd = status == ConnectionStatus.connected && adsState.showCountdown;
+        // Show ads only when connected to VPN and ad is loaded
+        final shouldShowAd = status == ConnectionStatus.connected && 
+                             adsState.showCountdown && 
+                             adsState.nativeAdIsLoaded;
 
         return SizedBox(
           height: 280.h,
