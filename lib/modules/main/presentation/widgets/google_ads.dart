@@ -188,6 +188,7 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   bool _isDisposed = false;
   bool _hasInitialized = false;
   Timer? _autoRetryTimer;
+  Timer? _cacheCleanupTimer;
 
   final _adUnitId = AdHelper.adUnitId;
 
@@ -321,6 +322,9 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         }
       }
     });
+    
+    // Start cache cleanup timer - clears ad cache after 1 minute to force fresh ads
+    _startCacheCleanupTimer();
   }
 
   /// Initialize ads based on platform and user location
@@ -561,6 +565,26 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     debugPrint('♻️ Existing ad is valid (age: ${ageMinutes}min) - reusing');
     return false;
   }
+  
+  /// Start timer to clear ad cache after 1 minute
+  /// This forces fresh ads on next load for better revenue
+  void _startCacheCleanupTimer() {
+    _cacheCleanupTimer?.cancel();
+    
+    _cacheCleanupTimer = Timer(const Duration(minutes: 1), () async {
+      if (_isDisposed) return;
+      
+      try {
+        final cacheService = ref.read(adCacheServiceProvider);
+        await cacheService.clearMetadata();
+        debugPrint('🗑️ Ad cache cleared after 1 minute - fresh ad will load on next request');
+      } catch (e) {
+        debugPrint('⚠️ Failed to clear ad cache: $e');
+      }
+    });
+    
+    debugPrint('⏰ Cache cleanup timer started - will clear in 1 minute');
+  }
 
   Future<void> _checkCacheAndLoad() async {
     if (_isDisposed) return;
@@ -652,6 +676,8 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
   void dispose() {
     _isDisposed = true;
     _autoRetryTimer?.cancel();
+    _cacheCleanupTimer?.cancel();
+    debugPrint('🧹 GoogleAds widget disposed - timers cleaned up');
     // Keep static _nativeAd alive across navigation for ad reuse
     super.dispose();
   }
