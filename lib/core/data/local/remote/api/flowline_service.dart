@@ -33,8 +33,7 @@ class FlowlineService implements IFlowlineService {
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
   @override
-
-  Future<void> saveFlowline(bool offlineMode) async {
+  Future<void> saveFlowline({required bool loadFromCache, String? flowLine}) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
@@ -43,11 +42,10 @@ class FlowlineService implements IFlowlineService {
     if (!shouldUpdate) {
       return;
     }
-    String flowLine = "";
-    if (offlineMode) {
+    if (loadFromCache) {
       flowLine = await getCachedFlowLine();
     } else {
-      flowLine = await getFlowline();
+      flowLine ??= await getFlowline();
     }
 
     if (flowLine.isNotEmpty) {
@@ -87,7 +85,7 @@ class FlowlineService implements IFlowlineService {
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
       final settings = _container.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
-      if (!offlineMode) {
+      if (!loadFromCache) {
         prefs.setInt(
             lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);
       }

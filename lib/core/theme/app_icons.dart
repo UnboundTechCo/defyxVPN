@@ -27,6 +27,8 @@ class AppIcons {
   static const String facebookPath = 'assets/icons/facebook.svg';
   static const String linkedinPath = 'assets/icons/linkedin.svg';
 
+  static const String importAPIPath = 'assets/icons/Icon_Import_Api.svg';
+
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
   }
@@ -109,6 +111,10 @@ class AppIcons {
 
   static SvgPicture linkedin({double? width, double? height}) {
     return SvgPicture.asset(linkedinPath, width: width, height: height);
+  }
+
+  static SvgPicture importAPI({double? width, double? height}) {
+    return SvgPicture.asset(importAPIPath, width: width, height: height);
   }
 
   static Widget shieldAnime({
