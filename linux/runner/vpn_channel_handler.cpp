@@ -596,6 +596,29 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
             }
             FinishWithString(method_call, flowLine);
         }
+        else if (strcmp(method, "getCachedFlowLine") == 0)
+        {
+            std::string flowLine = defyx_core::GetCachedFlowLine();
+            if (flowLine.empty())
+            {
+                flowLine = "{}";
+            }
+            FinishWithString(method_call, flowLine);
+        }
+        else if (strcmp(method, "decodeAndVerifyFlowline") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string flowLine = LookupString(args, "flowLine");
+            if (!flowLine.empty())
+            {
+                std::string decodedFlowLine = defyx_core::DecodeAndVerifyFlowline(flowLine);
+                FinishWithString(method_call, decodedFlowLine);
+            }
+            else
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "flowLine parameter missing");
+            }
+        }
         else if (strcmp(method, "setConnectionMethod") == 0)
         {
             FlValue *args = fl_method_call_get_args(method_call);
@@ -610,13 +633,31 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
                 FinishWithError(method_call, "INVALID_ARGUMENT", "method parameter missing");
             }
         }
+        else if (strcmp(method, "setCacheDir") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string cache_dir = LookupString(args, "cacheDir");
+            if (!cache_dir.empty())
+            {
+                defyx_core::SetCacheDir(cache_dir);
+                FinishWithBool(method_call, true);
+            }
+            else
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "cacheDir parameter missing");
+            }
+        }
+        else if (strcmp(method, "getSharedDirectory") == 0)
+        {
+            FinishWithString(method_call, "/tmp/defyx");
+        }
         else if (strcmp(method, "startVPN") == 0)
         {
             FlValue *args = fl_method_call_get_args(method_call);
             std::string flow = LookupString(args, "flowLine");
             std::string pattern = LookupString(args, "pattern");
 
-            std::string cache_dir = "/tmp/defyx/cache";
+            std::string cache_dir = "/tmp/defyx";
             std::error_code ec;
             std::filesystem::create_directories(cache_dir, ec);
 

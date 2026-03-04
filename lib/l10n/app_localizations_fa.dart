@@ -219,7 +219,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'حداقل یک هسته باید فعال باقی بماند';
 
   @override
-  String get settingsResetToDefault => 'بازگشت به پیش‌فرض';
+  String get settingsResetToDefault => 'بازنشانی';
 
   @override
   String get updateAvailable => 'به‌روزرسانی موجود است';
@@ -240,4 +240,13 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get notNow => 'الان نه';
+
+  @override
+  String get updateMethods => 'به‌روزرسانی روش‌ها';
+
+  @override
+  String get importAPI => 'وارد کردن API';
+
+  @override
+  String get synchronization => 'همگام‌سازی';
 }
