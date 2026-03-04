@@ -16,6 +16,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.File
 import java.net.*
 import kotlinx.coroutines.*
 
@@ -94,6 +95,9 @@ class MainActivity : FlutterActivity() {
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
                 "getCachedFlowLine" -> getCachedFlowLine(result)
+                "decodeAndVerifyFlowline" -> decodeAndVerifyFlowline(call.arguments as? Map<String, Any>, result)
+                "setCacheDir" -> setCacheDir(call.arguments as? Map<String, Any>, result)
+                "getSharedDirectory" -> result.success("${cacheDir.absolutePath}/defyx")
                 "setConnectionMethod" ->
                         setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
@@ -236,8 +240,13 @@ class MainActivity : FlutterActivity() {
                     }
                     return@launch
                 }
+                val vpnCacheDir = "${cacheDir.absolutePath}/defyx"
+                val cacheDirectory = File(vpnCacheDir)
+                if (!cacheDirectory.exists()) {
+                    cacheDirectory.mkdirs()
+                }
                 DefyxVpnService.getInstance()
-                        .connectVPN(cacheDir.absolutePath, flowLine, pattern, boolDeepScan)
+                        .connectVPN(vpnCacheDir, flowLine, pattern, boolDeepScan)
                 result.success(true)
             } catch (e: Exception) {
                 Log.e("Start VPN", "Start VPN failed: ${e.message}", e)
@@ -348,6 +357,32 @@ class MainActivity : FlutterActivity() {
             }
         }
     }
+
+    private fun decodeAndVerifyFlowline(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val flowLine = args?.get("flowLine") as? String
+                if (flowLine.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error("INVALID_ARGUMENT", "flowLine is missing or empty", null)
+                    }
+                    return@launch
+                }
+                val decodedFlowLine = DefyxVpnService.getInstance().decodeAndVerifyFlowline(flowLine)
+                result.success(decodedFlowLine)
+            } catch (e: Exception) {
+                Log.e("Decode And Verify Flowline", "Decode And Verify Flowline failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error(
+                            "DECODE_VERIFY_FLOWLINE_ERROR",
+                            "Failed to decode and verify flowline",
+                            e.localizedMessage
+                    )
+                }
+            }
+        }
+    }
+
     private fun setConnectionMethod(args: Map<String, Any>?, result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -366,6 +401,31 @@ class MainActivity : FlutterActivity() {
                     result.error(
                             "PING_ERROR",
                             "Failed to Set Connection Method",
+                            e.localizedMessage
+                    )
+                }
+            }
+        }
+    }
+
+    private fun setCacheDir(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val cacheDir = args?.get("cacheDir") as? String
+                if (cacheDir.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error("INVALID_ARGUMENT", "cacheDir is missing or empty", null)
+                    }
+                    return@launch
+                }
+                DefyxVpnService.getInstance().setCacheDir(cacheDir)
+                result.success(true)
+            } catch (e: Exception) {
+                Log.e("Set Cache Dir", "Set Cache Dir failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error(
+                            "SET_CACHE_DIR_ERROR",
+                            "Failed to Set Cache Dir",
                             e.localizedMessage
                     )
                 }

@@ -79,6 +79,12 @@ class VpnPlugin: VpnStatusDelegate {
             getFlowLine(call.arguments as? [String: Any], result)
         case "getCachedFlowLine":
             getCachedFlowLine(result)
+        case "decodeAndVerifyFlowline":
+            decodeAndVerifyFlowline(call.arguments as? [String: Any], result)
+        case "setCacheDir":
+            setCacheDir(call.arguments as? [String: Any], result)
+        case "getSharedDirectory":
+            result("\(getSharedDirectory())/defyx")
         case "setConnectionMethod":
             print("setConnectionMethod")
         case "isTunnelRunning":
@@ -189,8 +195,9 @@ class VpnPlugin: VpnStatusDelegate {
     }
 
     private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        let primaryPath = URL(fileURLWithPath: getSharedDirectory()).appendingPathComponent(
-            "primary")
+        let sharedDir = getSharedDirectory()
+        let defyxDir = URL(fileURLWithPath: sharedDir).appendingPathComponent("defyx")
+        let primaryPath = defyxDir.appendingPathComponent("primary")
         do {
             try FileManager.default.createDirectory(
                 at: primaryPath, withIntermediateDirectories: true)
@@ -202,7 +209,6 @@ class VpnPlugin: VpnStatusDelegate {
                     details: error.localizedDescription))
             return
         }
-        let dir = URL(fileURLWithPath: getSharedDirectory())
         guard let args = arguments,
             let flowLine = args["flowLine"] as? String,
             let pattern = args["pattern"] as? String,
@@ -215,7 +221,7 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan
+            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan
         ]) {
             response in
             result(response)
@@ -299,6 +305,60 @@ class VpnPlugin: VpnStatusDelegate {
             DispatchQueue.main.async { result(flowline) }
         }
     }
+
+    private func decodeAndVerifyFlowline(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let flowLine = args["flowLine"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
+            )
+            return
+        }
+
+        goQueue.async {
+            let decodedFlowline = IosDecodeAndVerifyFlowline(flowLine)
+            DispatchQueue.main.async { result(decodedFlowline) }
+        }
+    }
+
+    private func setCacheDir(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let cacheDir = args["cacheDir"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
+            )
+            return
+        }
+
+        // Create directory if it doesn't exist
+        let cacheDirURL = URL(fileURLWithPath: cacheDir)
+        do {
+            try FileManager.default.createDirectory(
+                at: cacheDirURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            os_log("Created cache directory")
+        } catch {
+            os_log("Failed to create cache directory: %@", error.localizedDescription)
+        }
+
+        goQueue.async {
+            IosSetCacheDir(cacheDir)
+            DispatchQueue.main.async { result(nil) }
+        }
+    }
+
     private func isTunnelRunning(_ result: @escaping FlutterResult) {
         if VpnService.shared.manager == nil {
             result(false)
@@ -366,8 +426,8 @@ class VpnPlugin: VpnStatusDelegate {
             }
         }
     }
-
 }
+
 class ProgressStreamHandlerIOS: NSObject, IosProgressListenerProtocol {
     func onProgress(_ msg: String?) {
         if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {

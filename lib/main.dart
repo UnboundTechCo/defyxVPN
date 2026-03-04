@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:defyx_vpn/firebase_options.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -10,6 +11,15 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
+  
+  // Initialize cache directory for VPN core
+  try {
+    final String vpnCacheDir = await VpnBridge().getSharedDirectory();
+    await VpnBridge().setCacheDir(vpnCacheDir);
+    debugPrint('VPN cache directory set to: $vpnCacheDir');
+  } catch (e) {
+    debugPrint('Failed to set cache directory: $e');
+  }
   
   // Initialize Firebase only on supported platforms (not Windows)
   if (!Platform.isWindows && !Platform.isLinux) {

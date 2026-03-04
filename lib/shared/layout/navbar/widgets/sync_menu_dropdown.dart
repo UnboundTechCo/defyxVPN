@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
@@ -66,7 +67,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
             children: [
               QuickMenuItem(
                 topBorderRadius: true,
-                title: 'Update Methods',
+                title: AppLocalizations.of(context).updateMethods,
                 titleStyle: TextStyle(
                   fontSize: 16.sp,
                   color: Colors.black,
@@ -84,7 +85,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                       _rotationController.reset();
                     });
                   }
-                  await ref.read(flowlineServiceProvider).saveFlowline(loadFromCache: false);
+                  await ref.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
                   ref
                       .read(settingsProvider.notifier)
                       .updateSettingsBasedOnFlowLine();
@@ -96,7 +97,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                 color: const Color(0x8080808C),
               ),
               QuickMenuItem(
-                title: 'Import API',
+                title: AppLocalizations.of(context).importAPI,
                 titleStyle: TextStyle(
                   fontSize: 16.sp,
                   color: Colors.black,
@@ -107,7 +108,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                   FilePicker.platform
                       .pickFiles(
                         type: FileType.custom,
-                        allowedExtensions: ['json'],
+                        allowedExtensions: ['dfx'],
                       )
                       .then((result) async {
                         if (result != null &&
@@ -115,7 +116,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                           ref
                               .read(flowlineServiceProvider)
                               .saveFlowline(
-                                loadFromCache: false,
+                                offlineMode: true,
                                 flowLine: await result.xFiles.first
                                     .readAsString(),
                               );
@@ -158,7 +159,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
           ),
           SizedBox(width: 8.w),
           Text(
-            'Synchronization'.toUpperCase(),
+            AppLocalizations.of(context).synchronization.toUpperCase(),
             style: TextStyle(
               fontSize: 12.sp,
               fontFamily: 'Lato',

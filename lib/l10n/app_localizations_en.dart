@@ -219,7 +219,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'At least one core must remain enabled';
 
   @override
-  String get settingsResetToDefault => 'RESET TO DEFAULT';
+  String get settingsResetToDefault => 'RESET';
 
   @override
   String get updateAvailable => 'Update available';
@@ -240,4 +240,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notNow => 'Not now';
+
+  @override
+  String get updateMethods => 'Update Methods';
+
+  @override
+  String get importAPI => 'Import API';
+
+  @override
+  String get synchronization => 'Synchronization';
 }

@@ -27,6 +27,8 @@ class DXCoreBridge {
   int SetTimeZone(float tz);
   std::string GetFlowLine(bool is_test);
   std::string GetCachedFlowLine();
+  std::string DecodeAndVerifyFlowline(const std::string& flow_line);
+  void SetCacheDir(const std::string& cache_dir);
   void SetConnectionMethod(const std::string& method);
   int SetSystemProxy();
   int ResetSystemProxy();
@@ -47,6 +49,8 @@ class DXCoreBridge {
   using WinSetTimeZone_t = int (*)(float);
   using WinGetFlowLine_t = const char* (*)(int);
   using WinGetCachedFlowLine_t = const char* (*)();
+  using WinDecodeAndVerifyFlowline_t = const char* (*)(const char*);
+  using WinSetCacheDir_t = void (*)(const char*);
   // using WinSetConnectionMethod_t = void (*)(const char*);
   using WinFreeString_t = void (*)(char*);
   using WinSetSystemProxy_t = int (*)();
@@ -62,6 +66,8 @@ class DXCoreBridge {
   WinSetTimeZone_t pSetTimeZone_ = nullptr;
   WinGetFlowLine_t pGetFlowLine_ = nullptr;
   WinGetCachedFlowLine_t pGetCachedFlowLine_ = nullptr;
+  WinDecodeAndVerifyFlowline_t pDecodeAndVerifyFlowline_ = nullptr;
+  WinSetCacheDir_t pSetCacheDir_ = nullptr;
   // WinSetConnectionMethod_t pSetConnectionMethod_ = nullptr;
   WinFreeString_t pFreeString_ = nullptr;
   WinSetSystemProxy_t pSetSystemProxy_ = nullptr;

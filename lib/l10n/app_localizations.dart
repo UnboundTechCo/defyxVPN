@@ -65,7 +65,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -88,18 +88,18 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-    delegate,
-    GlobalMaterialLocalizations.delegate,
-    GlobalCupertinoLocalizations.delegate,
-    GlobalWidgetsLocalizations.delegate,
-  ];
+        delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+      ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
     Locale('fa'),
     Locale('ru'),
-    Locale('zh')
+    Locale('zh'),
   ];
 
   /// The application title
@@ -519,7 +519,7 @@ abstract class AppLocalizations {
   /// Settings button - reset to default
   ///
   /// In en, this message translates to:
-  /// **'RESET TO DEFAULT'**
+  /// **'RESET'**
   String get settingsResetToDefault;
 
   /// Update dialog title - optional update
@@ -557,6 +557,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get notNow;
+
+  /// Sync menu - update methods option
+  ///
+  /// In en, this message translates to:
+  /// **'Update Methods'**
+  String get updateMethods;
+
+  /// Sync menu - import API option
+  ///
+  /// In en, this message translates to:
+  /// **'Import API'**
+  String get importAPI;
+
+  /// Sync menu label
+  ///
+  /// In en, this message translates to:
+  /// **'Synchronization'**
+  String get synchronization;
 }
 
 class _AppLocalizationsDelegate
@@ -590,8 +608,9 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   }
 
   throw FlutterError(
-      'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
-      'an issue with the localizations generation tool. Please file an issue '
-      'on GitHub with a reproducible sample app and the gen-l10n configuration '
-      'that was used.');
+    'AppLocalizations.delegate failed to load unsupported locale "$locale". This is likely '
+    'an issue with the localizations generation tool. Please file an issue '
+    'on GitHub with a reproducible sample app and the gen-l10n configuration '
+    'that was used.',
+  );
 }

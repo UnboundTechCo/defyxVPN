@@ -33,19 +33,33 @@ class FlowlineService implements IFlowlineService {
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
   @override
-  Future<void> saveFlowline({required bool loadFromCache, String? flowLine}) async {
+  Future<String> decodeAndVerifyFlowline(String flowLine) => _vpnBridge.decodeAndVerifyFlowline(flowLine);
+
+  @override
+  Future<void> saveFlowline({required bool offlineMode, String? flowLine}) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
         (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
             _updateFlowlinePerios;
-    if (!shouldUpdate) {
+    if (!shouldUpdate && !offlineMode) {
       return;
     }
-    if (loadFromCache) {
-      flowLine = await getCachedFlowLine();
+
+    if (offlineMode) {
+      if (flowLine == null || flowLine.isEmpty) {
+        flowLine = await getCachedFlowLine();
+      } else {
+        // Pass to core for decoding and verification
+        final verifiedFlowLine = await decodeAndVerifyFlowline(flowLine);
+        if (verifiedFlowLine.isEmpty) {
+          debugPrint('Flowline verification failed in core');
+          return;
+        }
+        flowLine = verifiedFlowLine;
+      }
     } else {
-      flowLine ??= await getFlowline();
+      flowLine = await getFlowline();
     }
 
     if (flowLine.isNotEmpty) {
@@ -85,7 +99,7 @@ class FlowlineService implements IFlowlineService {
       await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
       final settings = _container.read(settingsProvider.notifier);
       await settings.updateSettingsBasedOnFlowLine();
-      if (!loadFromCache) {
+      if (!offlineMode) {
         prefs.setInt(
             lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);
       }

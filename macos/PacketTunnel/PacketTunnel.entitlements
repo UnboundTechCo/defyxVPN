@@ -13,7 +13,7 @@
 	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>group.com.defyx.defyx.vpnExtention</string>
+		<string>group.de.unboundtech.defyxvpn</string>
 	</array>
 </dict>
 </plist>

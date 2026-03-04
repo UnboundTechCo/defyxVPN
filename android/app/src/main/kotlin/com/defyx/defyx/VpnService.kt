@@ -11,6 +11,7 @@ import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
+import java.io.File
 import kotlinx.coroutines.*
 
 class DefyxVpnService : VpnService() {
@@ -342,6 +343,15 @@ class DefyxVpnService : VpnService() {
         }
     }
 
+    fun decodeAndVerifyFlowline(flowLine: String): String {
+        return try {
+            Android.decodeAndVerifyFlowline(flowLine)
+        } catch (e: Exception) {
+            log("Decode and Verify Flowline failed: ${e.message}")
+            ""
+        }
+    }
+
     fun log(message: String) {
         try {
             Android.log(message)
@@ -371,5 +381,17 @@ class DefyxVpnService : VpnService() {
     }
     fun setConnectionMethod(method: String) {
         connectionMethod = method
+    }
+
+    fun setCacheDir(cacheDir: String) {
+        try {
+            val directory = File(cacheDir)
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+            Android.setCacheDir(cacheDir)
+        } catch (e: Exception) {
+            log("Set Cache Dir failed: ${e.message}")
+        }
     }
 }

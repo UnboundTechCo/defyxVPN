@@ -238,7 +238,7 @@ class VPN {
     analyticsService.logVpnConnected(
         pattern, groupState?.groupName, connectionDuration);
 
-    await _container?.read(flowlineServiceProvider).saveFlowline(loadFromCache: false);
+    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
   }
 
   Future<void> _onLoading() async {
@@ -379,9 +379,9 @@ class VPN {
 
   Future<void> initVPN() async {
     _container?.read(settingsLoadingProvider.notifier).state = true;
-    await _container?.read(flowlineServiceProvider).saveFlowline(loadFromCache: true);
+    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: true);
     await _vpnBridge.setAsnName();
-    await _container?.read(flowlineServiceProvider).saveFlowline(loadFromCache: false);
+    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
     _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 

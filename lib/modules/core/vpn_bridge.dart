@@ -61,6 +61,21 @@ class VpnBridge {
     return info ?? "";
   }
 
+  Future<String> decodeAndVerifyFlowline(String flowLine) async {
+    final decoded = await _methodChannel.invokeMethod<String>(
+      'decodeAndVerifyFlowline',
+      {"flowLine": flowLine},
+    );
+    return decoded ?? "";
+  }
+
+  Future<void> setCacheDir(String cacheDir) async {
+    await _methodChannel.invokeMethod('setCacheDir', {"cacheDir": cacheDir});
+  }
+
+  Future<String> getSharedDirectory() async =>
+      (await _methodChannel.invokeMethod<String>('getSharedDirectory')) ?? "";
+
   Future<String> getFlag() async =>
       (await _methodChannel.invokeMethod<String>('getFlag') ?? "");
 
