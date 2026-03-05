@@ -33,19 +33,31 @@ class FlowlineService implements IFlowlineService {
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
   @override
+  Future<String> decodeAndVerifyFlowline(String flowLine) => _vpnBridge.decodeAndVerifyFlowline(flowLine);
 
-  Future<void> saveFlowline(bool offlineMode) async {
+  @override
+  Future<void> saveFlowline({required bool offlineMode, String? flowLine}) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
         (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
             _updateFlowlinePerios;
-    if (!shouldUpdate) {
+    if (!shouldUpdate && !offlineMode) {
       return;
     }
-    String flowLine = "";
+
     if (offlineMode) {
-      flowLine = await getCachedFlowLine();
+      if (flowLine == null || flowLine.isEmpty) {
+        flowLine = await getCachedFlowLine();
+      } else {
+        // Pass to core for decoding and verification
+        final verifiedFlowLine = await decodeAndVerifyFlowline(flowLine);
+        if (verifiedFlowLine.isEmpty) {
+          debugPrint('Flowline verification failed in core');
+          return;
+        }
+        flowLine = verifiedFlowLine;
+      }
     } else {
       flowLine = await getFlowline();
     }

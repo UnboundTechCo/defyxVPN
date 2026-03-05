@@ -20,6 +20,7 @@ typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
 typedef char* (*dx_get_flowline_fn)(int);
 typedef char* (*dx_get_cached_flowline_fn)();
+typedef char* (*dx_decode_verify_flowline_fn)(const char*);
 typedef char* (*dx_get_vpn_status_fn)();
 typedef void (*dx_set_asn_name_fn)();
 typedef void (*dx_set_timezone_fn)(float);
@@ -27,6 +28,7 @@ typedef void (*dx_set_progress_callback_fn)(void (*)(char*));
 typedef void (*dx_set_verbose_logging_fn)(int);
 typedef void (*dx_free_string_fn)(char*);
 typedef void (*dx_set_connection_method_fn)(const char*);
+typedef void (*dx_set_cache_dir_fn)(const char*);
 typedef int (*dx_is_tunnel_running_fn)();
 }
 
@@ -44,11 +46,13 @@ static dx_set_asn_name_fn g_set_asn_name = nullptr;
 static dx_set_timezone_fn g_set_timezone = nullptr;
 static dx_get_flowline_fn g_get_flowline = nullptr;
 static dx_get_cached_flowline_fn g_get_cached_flowline = nullptr;
+static dx_decode_verify_flowline_fn g_decode_verify_flowline = nullptr;
 static dx_get_vpn_status_fn g_get_vpn_status = nullptr;
 static dx_set_progress_callback_fn g_set_progress_cb = nullptr;
 static dx_set_verbose_logging_fn g_set_verbose = nullptr;
 static dx_free_string_fn g_free_string = nullptr;
 static dx_set_connection_method_fn g_set_connection_method = nullptr;
+static dx_set_cache_dir_fn g_set_cache_dir = nullptr;
 static dx_is_tunnel_running_fn g_is_tunnel_running = nullptr;
 
 // Helper: get directory of current executable
@@ -154,11 +158,13 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_set_timezone = (dx_set_timezone_fn)dlsym(g_dx_dll, "SetTimeZone");
   g_get_flowline = (dx_get_flowline_fn)dlsym(g_dx_dll, "GetFlowLine");
   g_get_cached_flowline = (dx_get_cached_flowline_fn)dlsym(g_dx_dll, "GetCachedFlowLine");
+  g_decode_verify_flowline = (dx_decode_verify_flowline_fn)dlsym(g_dx_dll, "DecodeAndVerifyFlowline");
   g_get_vpn_status = (dx_get_vpn_status_fn)dlsym(g_dx_dll, "GetVpnStatus");
   g_set_progress_cb = (dx_set_progress_callback_fn)dlsym(g_dx_dll, "SetProgressCallback");
   g_set_verbose = (dx_set_verbose_logging_fn)dlsym(g_dx_dll, "SetVerboseLogging");
   g_free_string = (dx_free_string_fn)dlsym(g_dx_dll, "FreeString");
   g_set_connection_method = (dx_set_connection_method_fn)dlsym(g_dx_dll, "SetConnectionMethod");
+  g_set_cache_dir = (dx_set_cache_dir_fn)dlsym(g_dx_dll, "SetCacheDir");
   g_is_tunnel_running = (dx_is_tunnel_running_fn)dlsym(g_dx_dll, "IsTunnelRunning");
 
   auto check = [](const char* name, auto fn) {
@@ -180,8 +186,10 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("SetTimeZone", g_set_timezone);
   check("GetFlowLine", g_get_flowline);
   check("GetCachedFlowLine", g_get_cached_flowline);
+  check("DecodeAndVerifyFlowline", g_decode_verify_flowline);
   check("GetVpnStatus", g_get_vpn_status);
   check("SetConnectionMethod", g_set_connection_method);
+  check("SetCacheDir", g_set_cache_dir);
   check("IsTunnelRunning", g_is_tunnel_running);
   defyx_core::LogMessage("libDXcore.so loaded and symbol lookup completed");
 
@@ -372,6 +380,20 @@ std::string GetCachedFlowLine() {
   return "";
 }
 
+std::string DecodeAndVerifyFlowline(const std::string& flowLine) {
+  try {
+    defyx_core::LogMessage("DecodeAndVerifyFlowline called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_decode_verify_flowline) {
+      char* decoded = g_decode_verify_flowline(flowLine.c_str());
+      std::string result = decoded ? std::string(decoded) : std::string();
+      if (g_free_string && decoded) g_free_string(decoded);
+      return result;
+    }
+  } catch (...) {}
+  return "";
+}
+
 std::string GetVpnStatus() {
   try {
     defyx_core::LogMessage("GetVpnStatus called");
@@ -392,6 +414,26 @@ void SetConnectionMethod(const std::string& method) {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_set_connection_method) {
       g_set_connection_method(method.c_str());
+    }
+  } catch (...) {}
+}
+
+void SetCacheDir(const std::string& cacheDir) {
+  try {
+    defyx_core::LogMessage("SetCacheDir called cacheDir=" + cacheDir);
+    
+    // Create directory if it doesn't exist
+    std::error_code ec;
+    std::filesystem::create_directories(cacheDir, ec);
+    if (ec) {
+      defyx_core::LogMessage("Failed to create cache directory: " + ec.message());
+    } else {
+      defyx_core::LogMessage("Created cache directory");
+    }
+    
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_set_cache_dir) {
+      g_set_cache_dir(cacheDir.c_str());
     }
   } catch (...) {}
 }

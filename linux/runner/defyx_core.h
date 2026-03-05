@@ -19,8 +19,10 @@ void SetAsnName();
 void SetTimeZone(float tz);
 std::string GetFlowLine(bool isTest = false);
 std::string GetCachedFlowLine();
+std::string DecodeAndVerifyFlowline(const std::string& flowLine);
 std::string GetVpnStatus();
 void SetConnectionMethod(const std::string& method);
+void SetCacheDir(const std::string& cacheDir);
 bool IsTunnelRunning();
 
 // Shared library callback and logging setup

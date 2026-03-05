@@ -65,6 +65,33 @@
 			<true/>
 		</dict>
 		<key>UIStatusBarHidden</key>
-		<false/>
+	<false/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>DefyX Configuration File</string>
+			<key>UTTypeIdentifier</key>
+			<string>de.unboundtech.defyxvpn.dfx</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>dfx</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 	</dict>
 </plist>
