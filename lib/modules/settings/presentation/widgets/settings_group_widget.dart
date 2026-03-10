@@ -1,4 +1,6 @@
+import 'package:defyx_vpn/shared/layout/navbar/widgets/offline_flowline_widget.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/sync_menu_dropdown.dart';
+import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -9,8 +11,9 @@ import '../../models/settings_item.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SettingsGroupWidget extends StatefulWidget {
+class SettingsGroupWidget extends ConsumerStatefulWidget {
   final SettingsGroup group;
   final Function(String, String)? onToggle;
   final VoidCallback? onReset;
@@ -29,10 +32,11 @@ class SettingsGroupWidget extends StatefulWidget {
   });
 
   @override
-  State<SettingsGroupWidget> createState() => _SettingsGroupWidgetState();
+  ConsumerState<SettingsGroupWidget> createState() =>
+      _SettingsGroupWidgetState();
 }
 
-class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
+class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     with SingleTickerProviderStateMixin {
   final AnimationService _animationService = AnimationService();
   late AnimationController _rotationController;
@@ -43,17 +47,14 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   void initState() {
     super.initState();
     _rotationController = AnimationController(
-      duration:
-          _animationService.adjustDuration(const Duration(milliseconds: 500)),
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 500),
+      ),
       vsync: this,
     );
-    _rotationAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _rotationController,
-      curve: Curves.easeInOut,
-    ));
+    _rotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _rotationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -73,10 +74,11 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
   }
 
   Widget _buildDraggableItems() {
-    final draggableItems = widget.group.items
-        .where((item) => item.itemType != SettingsItemType.navigation)
-        .toList()
-      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+    final draggableItems =
+        widget.group.items
+            .where((item) => item.itemType != SettingsItemType.navigation)
+            .toList()
+          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
     final navigationItems = widget.group.items
         .where((item) => item.itemType == SettingsItemType.navigation)
@@ -105,65 +107,69 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
           buildDefaultDragHandles: false,
           proxyDecorator:
               (Widget child, int index, Animation<double> animation) {
-            final item = draggableItems[index];
+                final item = draggableItems[index];
 
-            return AnimatedBuilder(
-              animation: animation,
-              builder: (BuildContext context, Widget? child) {
-                return Material(
-                  elevation: 8.0,
-                  color: Colors.transparent,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: const Color.fromRGBO(29, 29, 29, 1),
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                    child: Container(
-                      padding:
-                          EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-                      margin: EdgeInsets.symmetric(vertical: 2.h),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 24.w,
-                            height: 24.h,
-                            margin: EdgeInsets.only(right: 12.w),
-                            child: SvgPicture.asset(
-                              'assets/icons/draggable_setting_indicator.svg',
-                              width: 24.w,
-                              height: 24.h,
-                              colorFilter: ColorFilter.mode(
-                                Colors.grey[400]!,
-                                BlendMode.srcIn,
+                return AnimatedBuilder(
+                  animation: animation,
+                  builder: (BuildContext context, Widget? child) {
+                    return Material(
+                      elevation: 8.0,
+                      color: Colors.transparent,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color.fromRGBO(29, 29, 29, 1),
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 8.h,
+                          ),
+                          margin: EdgeInsets.symmetric(vertical: 2.h),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24.w,
+                                height: 24.h,
+                                margin: EdgeInsets.only(right: 12.w),
+                                child: SvgPicture.asset(
+                                  'assets/icons/draggable_setting_indicator.svg',
+                                  width: 24.w,
+                                  height: 24.h,
+                                  colorFilter: ColorFilter.mode(
+                                    Colors.grey[400]!,
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              item.title.toString().toUpperCase(),
-                              style: TextStyle(
-                                fontSize: 17.sp,
-                                fontFamily: 'Lato',
-                                fontWeight: FontWeight.w400,
-                                color: Colors.white,
+                              Expanded(
+                                child: Text(
+                                  item.title.toString().toUpperCase(),
+                                  style: TextStyle(
+                                    fontSize: 17.sp,
+                                    fontFamily: 'Lato',
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
-                            ),
+                              DefyxSwitch(
+                                value: item.isEnabled,
+                                onChanged: (value) => widget.onToggle?.call(
+                                  widget.group.id,
+                                  item.id,
+                                ),
+                                enabled: item.isAccessible,
+                              ),
+                            ],
                           ),
-                          DefyxSwitch(
-                            value: item.isEnabled,
-                            onChanged: (value) =>
-                                widget.onToggle?.call(widget.group.id, item.id),
-                            enabled: item.isAccessible,
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
+                  child: child,
                 );
               },
-              child: child,
-            );
-          },
           itemBuilder: (context, index) {
             final item = draggableItems[index];
             final isLastDraggable = index == draggableItems.length - 1;
@@ -223,6 +229,7 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
 
   @override
   Widget build(BuildContext context) {
+    final flowlineData = ref.watch(flowLineProvider);
     return Container(
       margin: EdgeInsets.only(bottom: 16.h),
       child: Column(
@@ -256,8 +263,9 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
             ),
             padding: EdgeInsets.fromLTRB(2.w, 1.h, 2.w, 1.h),
             child: AnimatedContainer(
-              duration: _animationService
-                  .adjustDuration(const Duration(milliseconds: 200)),
+              duration: _animationService.adjustDuration(
+                const Duration(milliseconds: 200),
+              ),
               child: widget.group.isDraggable
                   ? _buildDraggableItems()
                   : _buildStaticItems(),
@@ -271,7 +279,9 @@ class _SettingsGroupWidgetState extends State<SettingsGroupWidget>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  SyncMenuDropdown(),
+                  (flowlineData.mode.isEmpty || flowlineData.mode == "online")
+                      ? SyncMenuDropdown()
+                      : OfflineFlowlineWidget(),
                   Spacer(),
                   GestureDetector(
                     onTap: _handleReset,

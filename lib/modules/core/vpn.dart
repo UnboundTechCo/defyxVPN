@@ -238,6 +238,7 @@ class VPN {
     analyticsService.logVpnConnected(
         pattern, groupState?.groupName, connectionDuration);
 
+
     await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
   }
 
@@ -330,11 +331,11 @@ class VPN {
   }
 
   void _setConnectionStep(int step) {
-    _container?.read(flowLineStepProvider.notifier).setStep(step);
+    _container?.read(flowLineProvider.notifier).setStep(step);
   }
 
   void _setConnectionTotalSteps(int totalSteps) {
-    _container?.read(flowLineStepProvider.notifier).setTotalSteps(totalSteps);
+    _container?.read(flowLineProvider.notifier).setTotalSteps(totalSteps);
   }
 
   void _clearData(WidgetRef ref) {
