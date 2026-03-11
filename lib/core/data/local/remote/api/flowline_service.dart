@@ -50,6 +50,7 @@ class FlowlineService implements IFlowlineService {
     if (!shouldUpdate && !offlineMode) {
       return;
     }
+    final flowlineMode = _container.read(flowLineProvider).mode;
 
     if (offlineMode) {
       if (flowLine == null || flowLine.isEmpty) {
@@ -65,7 +66,11 @@ class FlowlineService implements IFlowlineService {
         flowLine = verifiedFlowLine;
       }
     } else {
-      flowLine = await getFlowline();
+      if (flowlineMode == "offline") {
+        flowLine = "";
+      } else {
+        flowLine = await getFlowline();
+      }
     }
 
     if (flowLine.isNotEmpty) {
