@@ -222,6 +222,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsResetToDefault => 'RESET';
 
   @override
+  String get offlineFlowlineMessage =>
+      'Flowline updates have been paused because the offline version is currently being used.';
+
+  @override
+  String get offlineFlowlineUndo => 'UNDO';
+
+  @override
   String get updateAvailable => 'Update available';
 
   @override

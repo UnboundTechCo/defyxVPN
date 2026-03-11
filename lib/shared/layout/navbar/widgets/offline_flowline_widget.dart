@@ -3,6 +3,7 @@ import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class OfflineFlowlineWidget extends ConsumerStatefulWidget {
   const OfflineFlowlineWidget({super.key});
@@ -18,12 +19,12 @@ class _OfflineFlowlineWidgetState extends ConsumerState<OfflineFlowlineWidget> {
     final flowlineData = ref.watch(flowLineProvider.notifier);
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFFFFEDED),
+        color: const Color(0xFFFFFFFF),
         borderRadius: BorderRadius.circular(10.r),
       ),
       padding: EdgeInsets.all(16.h),
-      color: const Color(0xFFFFFFFF),
       child: Row(
+        mainAxisSize: MainAxisSize.min,
         spacing: 16.h,
         children: [
           Container(
@@ -38,9 +39,11 @@ class _OfflineFlowlineWidgetState extends ConsumerState<OfflineFlowlineWidget> {
               child: AppIcons.vpnCloud(width: 24.w, height: 24.h),
             ),
           ),
-          Text(
-            "Flowline updates have been paused because the offline version is currently being used.",
-            style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+          Flexible(
+            child: Text(
+              AppLocalizations.of(context).offlineFlowlineMessage,
+              style: TextStyle(fontSize: 14.sp, color: Colors.black87),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -50,7 +53,7 @@ class _OfflineFlowlineWidgetState extends ConsumerState<OfflineFlowlineWidget> {
               backgroundColor: const Color(0xFFF2F2F2),
               padding: EdgeInsets.all(10.h),
             ),
-            child: const Text("UNDO"),
+            child: Text(AppLocalizations.of(context).offlineFlowlineUndo),
           ),
         ],
       ),

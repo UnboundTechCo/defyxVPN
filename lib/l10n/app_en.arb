@@ -351,6 +351,16 @@
     "description": "Settings button - reset to default"
   },
 
+  "offlineFlowlineMessage": "Flowline updates have been paused because the offline version is currently being used.",
+  "@offlineFlowlineMessage": {
+    "description": "Offline flowline notification message"
+  },
+
+  "offlineFlowlineUndo": "UNDO",
+  "@offlineFlowlineUndo": {
+    "description": "Offline flowline undo button"
+  },
+
   "updateAvailable": "Update available",
   "@updateAvailable": {
     "description": "Update dialog title - optional update"

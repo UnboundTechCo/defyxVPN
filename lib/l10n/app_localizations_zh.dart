@@ -219,6 +219,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsResetToDefault => '重置';
 
   @override
+  String get offlineFlowlineMessage => '由于当前使用离线版本，Flowline更新已暂停。';
+
+  @override
+  String get offlineFlowlineUndo => '撤销';
+
+  @override
   String get updateAvailable => '可用更新';
 
   @override

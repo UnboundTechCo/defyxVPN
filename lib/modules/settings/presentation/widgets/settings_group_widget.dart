@@ -276,44 +276,53 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
           if (widget.group.isDraggable && widget.onReset != null)
             Padding(
               padding: EdgeInsets.only(top: 12.h),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  (flowlineData.mode.isEmpty || flowlineData.mode == "online")
-                      ? SyncMenuDropdown()
-                      : OfflineFlowlineWidget(),
-                  Spacer(),
-                  GestureDetector(
-                    onTap: _handleReset,
-                    child: Row(
-                      children: [
-                        AnimatedBuilder(
-                          animation: _rotationAnimation,
-                          builder: (context, child) {
-                            return Transform.rotate(
-                              angle: _rotationAnimation.value * 2 * 3.14159,
-                              child: Icon(
-                                Icons.refresh,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      SyncMenuDropdown(),
+                      Spacer(),
+                      GestureDetector(
+                        onTap: _handleReset,
+                        child: Row(
+                          children: [
+                            AnimatedBuilder(
+                              animation: _rotationAnimation,
+                              builder: (context, child) {
+                                return Transform.rotate(
+                                  angle: _rotationAnimation.value * 2 * 3.14159,
+                                  child: Icon(
+                                    Icons.refresh,
+                                    color: const Color(0xFFFF9A9A),
+                                    size: 16.sp,
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(width: 8.w),
+                            Text(
+                              AppLocalizations.of(context).settingsResetToDefault,
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                fontFamily: 'Lato',
+                                fontWeight: FontWeight.w600,
                                 color: const Color(0xFFFF9A9A),
-                                size: 16.sp,
+                                letterSpacing: 0.5,
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 8.w),
-                        Text(
-                          AppLocalizations.of(context).settingsResetToDefault,
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            fontFamily: 'Lato',
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFFF9A9A),
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
+                  if (flowlineData.mode.isNotEmpty &&
+                      flowlineData.mode != "online")
+                    Padding(
+                      padding: EdgeInsets.only(top: 12.h),
+                      child: OfflineFlowlineWidget(),
+                    ),
                 ],
               ),
             ),
