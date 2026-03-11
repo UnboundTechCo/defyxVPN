@@ -222,6 +222,13 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsResetToDefault => 'بازنشانی';
 
   @override
+  String get offlineFlowlineMessage =>
+      'به‌روزرسانی‌های Flowline متوقف شده‌اند زیرا نسخه آفلاین در حال استفاده است.';
+
+  @override
+  String get offlineFlowlineUndo => 'لغو';
+
+  @override
   String get updateAvailable => 'به‌روزرسانی موجود است';
 
   @override

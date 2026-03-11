@@ -71,6 +71,8 @@
   "settingsIncluded": "شامل شده",
   "settingsAtLeastOneCoreRequired": "حداقل یک هسته باید فعال باقی بماند",
   "settingsResetToDefault": "بازنشانی",
+  "offlineFlowlineMessage": "به‌روزرسانی‌های Flowline متوقف شده‌اند زیرا نسخه آفلاین در حال استفاده است.",
+  "offlineFlowlineUndo": "لغو",
   "updateMethods": "به‌روزرسانی روش‌ها",
   "importAPI": "وارد کردن API",
   "synchronization": "همگام‌سازی",

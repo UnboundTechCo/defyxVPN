@@ -71,6 +71,8 @@
   "settingsIncluded": "ВКЛЮЧЕНО",
   "settingsAtLeastOneCoreRequired": "Должен оставаться включенным хотя бы один модуль",
   "settingsResetToDefault": "Сброс",
+  "offlineFlowlineMessage": "Обновления Flowline приостановлены, так как используется автономная версия.",
+  "offlineFlowlineUndo": "ОТМЕНИТЬ",
   "updateMethods": "Обновить методы",
   "importAPI": "Импорт API",
   "synchronization": "Синхронизация",

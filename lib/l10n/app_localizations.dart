@@ -522,6 +522,18 @@ abstract class AppLocalizations {
   /// **'RESET'**
   String get settingsResetToDefault;
 
+  /// Offline flowline notification message
+  ///
+  /// In en, this message translates to:
+  /// **'Flowline updates have been paused because the offline version is currently being used.'**
+  String get offlineFlowlineMessage;
+
+  /// Offline flowline undo button
+  ///
+  /// In en, this message translates to:
+  /// **'UNDO'**
+  String get offlineFlowlineUndo;
+
   /// Update dialog title - optional update
   ///
   /// In en, this message translates to:

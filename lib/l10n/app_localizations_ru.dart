@@ -222,6 +222,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsResetToDefault => 'Сброс';
 
   @override
+  String get offlineFlowlineMessage =>
+      'Обновления Flowline приостановлены, так как используется автономная версия.';
+
+  @override
+  String get offlineFlowlineUndo => 'ОТМЕНИТЬ';
+
+  @override
   String get updateAvailable => 'Доступно обновление';
 
   @override
