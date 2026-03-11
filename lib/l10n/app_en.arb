@@ -346,9 +346,19 @@
     "description": "Settings error message - core requirement"
   },
 
-  "settingsResetToDefault": "RESET TO DEFAULT",
+  "settingsResetToDefault": "RESET",
   "@settingsResetToDefault": {
     "description": "Settings button - reset to default"
+  },
+
+  "offlineFlowlineMessage": "Flowline updates have been paused because the offline version is currently being used.",
+  "@offlineFlowlineMessage": {
+    "description": "Offline flowline notification message"
+  },
+
+  "offlineFlowlineUndo": "UNDO",
+  "@offlineFlowlineUndo": {
+    "description": "Offline flowline undo button"
   },
 
   "updateAvailable": "Update available",
@@ -379,5 +389,20 @@
   "notNow": "Not now",
   "@notNow": {
     "description": "Update dialog button - dismiss action"
+  },
+
+  "updateMethods": "Update Methods",
+  "@updateMethods": {
+    "description": "Sync menu - update methods option"
+  },
+
+  "importAPI": "Import API",
+  "@importAPI": {
+    "description": "Sync menu - import API option"
+  },
+
+  "synchronization": "Synchronization",
+  "@synchronization": {
+    "description": "Sync menu label"
   }
 }

@@ -6,6 +6,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interfac
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
+import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -33,26 +34,48 @@ class FlowlineService implements IFlowlineService {
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
   @override
+  Future<String> decodeAndVerifyFlowline(String flowLine) =>
+      _vpnBridge.decodeAndVerifyFlowline(flowLine);
 
-  Future<void> saveFlowline(bool offlineMode) async {
+  @override
+  Future<void> saveFlowline({
+    required bool offlineMode,
+    String? flowLine,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
         (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
-            _updateFlowlinePerios;
-    if (!shouldUpdate) {
+        _updateFlowlinePerios;
+    if (!shouldUpdate && !offlineMode) {
       return;
     }
-    String flowLine = "";
+    final flowlineMode = _container.read(flowLineProvider).mode;
+
     if (offlineMode) {
-      flowLine = await getCachedFlowLine();
+      if (flowLine == null || flowLine.isEmpty) {
+        flowLine = await getCachedFlowLine();
+      } else {
+        // Pass to core for decoding and verification
+        final verifiedFlowLine = await decodeAndVerifyFlowline(flowLine);
+        if (verifiedFlowLine.isEmpty) {
+          debugPrint('Flowline verification failed in core');
+          return;
+        }
+        _container.read(flowLineProvider.notifier).setMode("offline");
+        flowLine = verifiedFlowLine;
+      }
     } else {
-      flowLine = await getFlowline();
+      if (flowlineMode == "offline") {
+        flowLine = "";
+      } else {
+        flowLine = await getFlowline();
+      }
     }
 
     if (flowLine.isNotEmpty) {
       final decoded = json.decode(flowLine);
-      
+
       debugPrint('Flowline decoded, checking for tips...');
       debugPrint('Tips field exists: ${decoded['tips'] != null}');
       if (decoded['tips'] != null) {
@@ -62,9 +85,7 @@ class FlowlineService implements IFlowlineService {
       final appBuildType = GlobalVars.appBuildType;
       final version = decoded['version'][appBuildType];
 
-      final advertiseStorageMap = {
-        'api_advertise': decoded['advertise'],
-      };
+      final advertiseStorageMap = {'api_advertise': decoded['advertise']};
       await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
 
       // Save tips if available
@@ -89,7 +110,9 @@ class FlowlineService implements IFlowlineService {
       await settings.updateSettingsBasedOnFlowLine();
       if (!offlineMode) {
         prefs.setInt(
-            lastFlowlineUpdateKey, DateTime.now().millisecondsSinceEpoch);
+          lastFlowlineUpdateKey,
+          DateTime.now().millisecondsSinceEpoch,
+        );
       }
     } else {
       debugPrint('Flowline is empty, cannot save');
