@@ -69,6 +69,14 @@ class VpnPlugin: VpnStatusDelegate {
             setTimezone(call.arguments as? [String: Any], result)
         case "getFlowLine":
             getFlowLine(call.arguments as? [String: Any], result)
+        case "getCachedFlowLine":
+            getCachedFlowLine(result)
+        case "decodeAndVerifyFlowline":
+            decodeAndVerifyFlowline(call.arguments as? [String: Any], result)
+        case "setCacheDir":
+            setCacheDir(call.arguments as? [String: Any], result)
+        case "getSharedDirectory":
+            result("\(getSharedDirectory())/defyx")
         case "setConnectionMethod":
             print("setConnectionMethod")
         case "isTunnelRunning":
@@ -180,8 +188,9 @@ class VpnPlugin: VpnStatusDelegate {
         }
     }
     private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        let primaryPath = URL(fileURLWithPath: getSharedDirectory()).appendingPathComponent(
-            "primary")
+        let sharedDir = getSharedDirectory()
+        let defyxDir = URL(fileURLWithPath: sharedDir).appendingPathComponent("defyx")
+        let primaryPath = defyxDir.appendingPathComponent("primary")
         do {
             try FileManager.default.createDirectory(
                 at: primaryPath, withIntermediateDirectories: true)
@@ -193,7 +202,6 @@ class VpnPlugin: VpnStatusDelegate {
                     details: error.localizedDescription))
             return
         }
-        let dir = URL(fileURLWithPath: getSharedDirectory())
         guard let args = arguments,
             let flowLine = args["flowLine"] as? String,
             let pattern = args["pattern"] as? String
@@ -205,7 +213,7 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": dir.path, "flowLine": flowLine, "pattern": pattern,
+            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,
         ]) {
             response in
             result(response)
@@ -262,6 +270,61 @@ class VpnPlugin: VpnStatusDelegate {
             result(response)
         }
     }
+
+    private func getCachedFlowLine(_ result: @escaping FlutterResult) {
+        VpnService.shared.sendTunnelMessage(["command": "GET_CACHED_FLOW_LINE"]) {
+            response in
+            result(response)
+        }
+    }
+
+    private func decodeAndVerifyFlowline(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let flowLine = args["flowLine"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+        VpnService.shared.sendTunnelMessage(["command": "DECODE_VERIFY_FLOWLINE", "flowLine": flowLine]) {
+            response in
+            result(response)
+        }
+    }
+
+    private func setCacheDir(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let cacheDir = args["cacheDir"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+        // Create directory if it doesn't exist
+        let cacheDirURL = URL(fileURLWithPath: cacheDir)
+        do {
+            try FileManager.default.createDirectory(
+                at: cacheDirURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            os_log("Created cache directory")
+        } catch {
+            os_log("Failed to create cache directory: %@", error.localizedDescription)
+        }
+
+        VpnService.shared.sendTunnelMessage(["command": "SET_CACHE_DIR", "cacheDir": cacheDir]) {
+            _ in
+            result(nil)
+        }
+    }
+
     private func isTunnelRunning(_ result: @escaping FlutterResult) {
         if VpnService.shared.manager == nil {
             result(false)
