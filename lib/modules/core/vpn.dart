@@ -218,6 +218,7 @@ class VPN {
 
     if (!_isReconnectMode) {
       await _createTunnel();
+      _isReconnectMode = true;
     }
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
@@ -252,7 +253,6 @@ class VPN {
     loggerNotifier?.setLoading();
     connectionNotifier?.setAnalyzing();
     await vpnData?.disableVPN();
-    _isReconnectMode = true;
   }
 
   Future<void> refreshPing() async {
@@ -269,7 +269,6 @@ class VPN {
     await _vpnBridge.stopVPN();
     _clearData(ref);
     connectionNotifier.setDisconnected();
-    _isReconnectMode = false;
   }
 
   Future<void> _disconnect(WidgetRef ref) async {
@@ -294,6 +293,7 @@ class VPN {
     await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
     analyticsService.logVpnDisconnected();
+    _isReconnectMode = false;
   }
 
   Future<void> _onTunnelClosed() async {
