@@ -30,6 +30,8 @@ mixin _$AppApiResponse {
   AppApiResponseFlowLine get flowLine => throw _privateConstructorUsedError;
   @JsonKey(name: "testUrls")
   List<String> get testUrls => throw _privateConstructorUsedError;
+  @JsonKey(name: "tips")
+  List<Hint>? get tips => throw _privateConstructorUsedError;
 
   /// Serializes this AppApiResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -52,7 +54,8 @@ abstract class $AppApiResponseCopyWith<$Res> {
       @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
       @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
       @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls") List<String> testUrls});
+      @JsonKey(name: "testUrls") List<String> testUrls,
+      @JsonKey(name: "tips") List<Hint>? tips});
 
   $VersionCopyWith<$Res> get version;
   $AppApiResponseFlowLineCopyWith<$Res> get flowLine;
@@ -78,6 +81,7 @@ class _$AppApiResponseCopyWithImpl<$Res, $Val extends AppApiResponse>
     Object? changeLog = null,
     Object? flowLine = null,
     Object? testUrls = null,
+    Object? tips = freezed,
   }) {
     return _then(_value.copyWith(
       version: null == version
@@ -100,6 +104,10 @@ class _$AppApiResponseCopyWithImpl<$Res, $Val extends AppApiResponse>
           ? _value.testUrls
           : testUrls // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      tips: freezed == tips
+          ? _value.tips
+          : tips // ignore: cast_nullable_to_non_nullable
+              as List<Hint>?,
     ) as $Val);
   }
 
@@ -137,7 +145,8 @@ abstract class _$$AppApiResponseImplCopyWith<$Res>
       @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
       @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
       @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls") List<String> testUrls});
+      @JsonKey(name: "testUrls") List<String> testUrls,
+      @JsonKey(name: "tips") List<Hint>? tips});
 
   @override
   $VersionCopyWith<$Res> get version;
@@ -163,6 +172,7 @@ class __$$AppApiResponseImplCopyWithImpl<$Res>
     Object? changeLog = null,
     Object? flowLine = null,
     Object? testUrls = null,
+    Object? tips = freezed,
   }) {
     return _then(_$AppApiResponseImpl(
       version: null == version
@@ -185,6 +195,10 @@ class __$$AppApiResponseImplCopyWithImpl<$Res>
           ? _value._testUrls
           : testUrls // ignore: cast_nullable_to_non_nullable
               as List<String>,
+      tips: freezed == tips
+          ? _value._tips
+          : tips // ignore: cast_nullable_to_non_nullable
+              as List<Hint>?,
     ));
   }
 }
@@ -199,10 +213,12 @@ class _$AppApiResponseImpl implements _AppApiResponse {
       @JsonKey(name: "changeLog")
       required final Map<String, List<String>> changeLog,
       @JsonKey(name: "flowLine") required this.flowLine,
-      @JsonKey(name: "testUrls") required final List<String> testUrls})
+      @JsonKey(name: "testUrls") required final List<String> testUrls,
+      @JsonKey(name: "tips") final List<Hint>? tips})
       : _forceUpdate = forceUpdate,
         _changeLog = changeLog,
-        _testUrls = testUrls;
+        _testUrls = testUrls,
+        _tips = tips;
 
   factory _$AppApiResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppApiResponseImplFromJson(json);
@@ -240,9 +256,20 @@ class _$AppApiResponseImpl implements _AppApiResponse {
     return EqualUnmodifiableListView(_testUrls);
   }
 
+  final List<Hint>? _tips;
+  @override
+  @JsonKey(name: "tips")
+  List<Hint>? get tips {
+    final value = _tips;
+    if (value == null) return null;
+    if (_tips is EqualUnmodifiableListView) return _tips;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(value);
+  }
+
   @override
   String toString() {
-    return 'AppApiResponse(version: $version, forceUpdate: $forceUpdate, changeLog: $changeLog, flowLine: $flowLine, testUrls: $testUrls)';
+    return 'AppApiResponse(version: $version, forceUpdate: $forceUpdate, changeLog: $changeLog, flowLine: $flowLine, testUrls: $testUrls, tips: $tips)';
   }
 
   @override
@@ -257,7 +284,8 @@ class _$AppApiResponseImpl implements _AppApiResponse {
                 .equals(other._changeLog, _changeLog) &&
             (identical(other.flowLine, flowLine) ||
                 other.flowLine == flowLine) &&
-            const DeepCollectionEquality().equals(other._testUrls, _testUrls));
+            const DeepCollectionEquality().equals(other._testUrls, _testUrls) &&
+            const DeepCollectionEquality().equals(other._tips, _tips));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -268,7 +296,8 @@ class _$AppApiResponseImpl implements _AppApiResponse {
       const DeepCollectionEquality().hash(_forceUpdate),
       const DeepCollectionEquality().hash(_changeLog),
       flowLine,
-      const DeepCollectionEquality().hash(_testUrls));
+      const DeepCollectionEquality().hash(_testUrls),
+      const DeepCollectionEquality().hash(_tips));
 
   /// Create a copy of AppApiResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -295,8 +324,8 @@ abstract class _AppApiResponse implements AppApiResponse {
       @JsonKey(name: "changeLog")
       required final Map<String, List<String>> changeLog,
       @JsonKey(name: "flowLine") required final AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls")
-      required final List<String> testUrls}) = _$AppApiResponseImpl;
+      @JsonKey(name: "testUrls") required final List<String> testUrls,
+      @JsonKey(name: "tips") final List<Hint>? tips}) = _$AppApiResponseImpl;
 
   factory _AppApiResponse.fromJson(Map<String, dynamic> json) =
       _$AppApiResponseImpl.fromJson;
@@ -316,6 +345,9 @@ abstract class _AppApiResponse implements AppApiResponse {
   @override
   @JsonKey(name: "testUrls")
   List<String> get testUrls;
+  @override
+  @JsonKey(name: "tips")
+  List<Hint>? get tips;
 
   /// Create a copy of AppApiResponse
   /// with the given fields replaced by the non-null parameter values.

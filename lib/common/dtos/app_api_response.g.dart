@@ -18,6 +18,9 @@ _$AppApiResponseImpl _$$AppApiResponseImplFromJson(Map<String, dynamic> json) =>
           json['flowLine'] as Map<String, dynamic>),
       testUrls:
           (json['testUrls'] as List<dynamic>).map((e) => e as String).toList(),
+      tips: (json['tips'] as List<dynamic>?)
+          ?.map((e) => Hint.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
 
 Map<String, dynamic> _$$AppApiResponseImplToJson(
@@ -28,6 +31,7 @@ Map<String, dynamic> _$$AppApiResponseImplToJson(
       'changeLog': instance.changeLog,
       'flowLine': instance.flowLine,
       'testUrls': instance.testUrls,
+      'tips': instance.tips,
     };
 
 _$AppApiResponseFlowLineImpl _$$AppApiResponseFlowLineImplFromJson(

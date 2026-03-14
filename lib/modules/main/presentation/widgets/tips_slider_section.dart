@@ -15,24 +15,10 @@ class TipsSliderSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDisconnected = status == ConnectionStatus.disconnected;
 
-    return AnimatedSize(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeInOut,
-      alignment: Alignment.topCenter,
-      child: AnimatedSlide(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeOutBack,
-        offset: isDisconnected ? Offset.zero : const Offset(0.0, 0.3),
-        child: AnimatedOpacity(
-          duration: const Duration(milliseconds: 400),
-          opacity: isDisconnected ? 1.0 : 0.0,
-          child: isDisconnected
-              ? Column(
-                  children: [SizedBox(height: 0.05.sh), const TipsSlider()],
-                )
-              : const SizedBox.shrink(),
-        ),
-      ),
-    );
+    return isDisconnected
+        ? Column(
+            children: [SizedBox(height: 0.05.sh), const TipsSlider()],
+          )
+        : const SizedBox.shrink();
   }
 }

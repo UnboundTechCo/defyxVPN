@@ -31,8 +31,8 @@
 		<key>NSDocumentsFolderUsageDescription</key>
 		<string>WARP needs access to store its configuration files</string>
 		<key>NSVPNConfigurationUsageDescription</key>
-		<string>Defyx needs access to VPN configurations to secure your connection.</string>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<string>Defyx needs access to VPN configurations to secure your connection.</string>	<key>NSUserTrackingUsageDescription</key>
+		<string>We show personalized ads to support this free VPN service. Your data stays private and secure.</string>		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
