@@ -2,6 +2,9 @@ import 'dart:io';
 import 'dart:async';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/services/ad_cache_service.dart';
+import 'package:defyx_vpn/shared/services/ad_service.dart';
+import 'package:defyx_vpn/shared/services/ad_refresh_strategy.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -19,33 +22,68 @@ Future<bool> _shouldShowGoogleAds(WidgetRef ref) async {
 
 class GoogleAdsState {
   final bool nativeAdIsLoaded;
+  final bool adLoadFailed;
   final int countdown;
   final bool showCountdown;
-  final bool shouldDisposeAd;
-  final bool adLoadFailed;
+  final DateTime? adLoadedAt;
+  final int retryCount;
+  final String? lastErrorCode;
+  final String? lastErrorMessage;
 
   const GoogleAdsState({
     this.nativeAdIsLoaded = false,
+    this.adLoadFailed = false,
     this.countdown = _countdownDuration,
     this.showCountdown = true,
-    this.shouldDisposeAd = false,
-    this.adLoadFailed = false,
+    this.adLoadedAt,
+    this.retryCount = 0,
+    this.lastErrorCode,
+    this.lastErrorMessage,
   });
 
   GoogleAdsState copyWith({
     bool? nativeAdIsLoaded,
+    bool? adLoadFailed,
     int? countdown,
     bool? showCountdown,
-    bool? shouldDisposeAd,
-    bool? adLoadFailed,
+    DateTime? adLoadedAt,
+    int? retryCount,
+    String? lastErrorCode,
+    String? lastErrorMessage,
   }) {
     return GoogleAdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
+      adLoadFailed: adLoadFailed ?? this.adLoadFailed,
       countdown: countdown ?? this.countdown,
       showCountdown: showCountdown ?? this.showCountdown,
-      shouldDisposeAd: shouldDisposeAd ?? this.shouldDisposeAd,
-      adLoadFailed: adLoadFailed ?? this.adLoadFailed,
+      adLoadedAt: adLoadedAt ?? this.adLoadedAt,
+      retryCount: retryCount ?? this.retryCount,
+      lastErrorCode: lastErrorCode ?? this.lastErrorCode,
+      lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
     );
+  }
+
+  // Check if ad needs refresh (older than 15 minutes)
+  bool get needsRefresh {
+    if (adLoadedAt == null) return true;
+    final age = DateTime.now().difference(adLoadedAt!);
+    return age.inMinutes >= 15;
+  }
+
+  String get errorSolution {
+    if (lastErrorCode == null) return '';
+    switch (lastErrorCode) {
+      case '0':
+        return 'Internal SDK error - will retry automatically';
+      case '1':
+        return 'Invalid ad request - check Ad Unit ID configuration';
+      case '2':
+        return 'Network error - check internet connection';
+      case '3':
+        return 'No ad inventory available - normal occurrence';
+      default:
+        return 'Unknown error - check logs for details';
+    }
   }
 }
 
@@ -62,7 +100,6 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
     state = state.copyWith(
       countdown: _countdownDuration,
       showCountdown: true,
-      shouldDisposeAd: false,
     );
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
@@ -70,40 +107,30 @@ class GoogleAdsNotifier extends StateNotifier<GoogleAdsState> {
       } else {
         state = state.copyWith(
           showCountdown: false,
-          shouldDisposeAd: true,
-          nativeAdIsLoaded: false,
+          // Keep ad loaded - just hide it until next connection
         );
         timer.cancel();
       }
     });
   }
 
-  void resestCountDown() {
-    state = state.copyWith(countdown: _countdownDuration);
-  }
-
   void setAdLoaded(bool isLoaded) {
-    debugPrint('Ad loaded: $isLoaded');
+    debugPrint('✅ Ad loaded: $isLoaded');
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
+      adLoadedAt: isLoaded ? DateTime.now() : null,
     );
-    if (isLoaded &&
-        state.showCountdown &&
-        state.countdown == _countdownDuration) {
-      startCountdownTimer();
-    }
   }
 
-  void setAdLoadFailed() {
+  void setAdLoadFailed({String? errorCode, String? errorMessage, int? retryCount}) {
     state = state.copyWith(
       adLoadFailed: true,
       nativeAdIsLoaded: false,
+      lastErrorCode: errorCode,
+      lastErrorMessage: errorMessage,
+      retryCount: retryCount ?? state.retryCount,
     );
-  }
-
-  void acknowledgeDisposal() {
-    state = state.copyWith(shouldDisposeAd: false);
   }
 
   void resetState() {
@@ -156,36 +183,151 @@ class AdHelper {
 }
 
 class _GoogleAdsState extends ConsumerState<GoogleAds> {
-  NativeAd? _nativeAd;
+  static NativeAd? _nativeAd;
   bool _isLoading = false;
   bool _isDisposed = false;
   bool _hasInitialized = false;
-  static bool _globalAdInitialized = false;
+  Timer? _autoRetryTimer;
 
   final _adUnitId = AdHelper.adUnitId;
+
+  DateTime? _lastAdRequest;
 
   @override
   void initState() {
     super.initState();
     debugPrint('GoogleAds widget initState called');
 
+    // Load initial ad on app start (user's real IP guaranteed)
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!_isDisposed && !_globalAdInitialized) {
-        debugPrint('First time initializing ads...');
-        _globalAdInitialized = true;
-        ref.read(googleAdsProvider.notifier).resetState();
-        _initializeAds();
-      } else if (!_isDisposed && _globalAdInitialized) {
-        debugPrint('Ads already initialized, skipping...');
+      if (_isDisposed) return;
+      
+      // Validate if ad is still valid from previous widget instance
+      final adsState = ref.read(googleAdsProvider);
+      bool isAdValid = false;
+      
+      if (_nativeAd != null) {
+        try {
+          // Try to access ad properties to verify it's not disposed
+          // ignore: unnecessary_null_checks
+          final _ = _nativeAd!.hashCode;
+          isAdValid = true;
+          debugPrint('♻️ Ad from previous session is still valid - reusing');
+          
+          // Sync state to match reality - ad is valid so mark as loaded
+          if (!adsState.nativeAdIsLoaded) {
+            debugPrint('🔄 Syncing state: ad is valid but state was reset');
+            ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+          }
+        } catch (e) {
+          debugPrint('⚠️ Previous ad was disposed during app closure - clearing');
+          _nativeAd = null;
+          // Force complete state reset
+          ref.read(googleAdsProvider.notifier).resetState();
+        }
+      }
+      
+      // If ad is valid, reuse it - don't check state since we just synced it
+      if (isAdValid) {
+        _hasInitialized = true;
+        debugPrint('✅ Reusing valid ad from previous session');
+        return;
+      }
+      
+      // CRITICAL: Only load fresh ad if VPN is DISCONNECTED (real IP guaranteed)
+      if (!_hasInitialized) {
+        final connectionState = ref.read(connectionStateProvider);
+        
+        if (connectionState.status == ConnectionStatus.connected) {
+          // VPN is connected - user's real IP is masked!
+          // Don't load ad now - wait for disconnect to ensure proper geographic targeting
+          debugPrint('🚫 VPN connected on app start - waiting for disconnect to load ad with real IP');
+          debugPrint('⚠️ Loading ads with VPN IP would cause wrong geographic targeting and lower eCPM');
+          // Ad will load automatically when user disconnects (connection listener below)
+        } else {
+          // VPN disconnected - real IP visible - safe to load with proper targeting
+          debugPrint('✅ VPN disconnected - loading ad with real IP for accurate targeting');
+          _checkCacheAndLoad();
+        }
+      }
+    });
+
+    // Smart ad refresh & countdown management
+    ref.listenManual(connectionStateProvider, (previous, next) {
+      final refreshStrategy = ref.read(adRefreshStrategyProvider);
+      
+      // Record connection for activity tracking
+      if (next.status == ConnectionStatus.connected && 
+          previous?.status != ConnectionStatus.connected) {
+        refreshStrategy.recordConnection();
+      }
+      
+      // When disconnected, load ad with real IP if we don't have one yet
+      if (next.status == ConnectionStatus.disconnected && 
+          previous?.status == ConnectionStatus.connected) {
+        debugPrint('🔌 Disconnected - hiding ad');
+        
+        // CRITICAL: If no ad loaded yet (app opened while connected), load one now with real IP
+        if (_nativeAd == null && !_hasInitialized && !_isDisposed) {
+          debugPrint('📱 No ad loaded yet - loading now with real IP for proper targeting');
+          _checkCacheAndLoad();
+        } else if (_nativeAd != null) {
+          debugPrint('💾 Keeping existing ad in memory for reuse');
+        }
+        return;
+      }
+      
+      // When connecting, check if we need to refresh the ad BEFORE showing it
+      if (next.status == ConnectionStatus.connected && 
+          previous?.status != ConnectionStatus.connected &&
+          !_isDisposed) {
+        
         final adsState = ref.read(googleAdsProvider);
-        if (!adsState.nativeAdIsLoaded && !adsState.adLoadFailed) {
-          _initializeAds();
+        
+        // CRITICAL: Don't show ad or refresh if no ad loaded (user needs to disconnect first)
+        if (!adsState.nativeAdIsLoaded) {
+          debugPrint('⚠️ No ad available - user needs to disconnect VPN first to load with real IP');
+          return;
+        }
+        
+        // Check if ad needs refresh based on adaptive strategy
+        if (adsState.nativeAdIsLoaded && refreshStrategy.shouldRefreshAd()) {
+          // Check 60s throttle to comply with AdMob policy
+          final now = DateTime.now();
+          if (_lastAdRequest != null) {
+            final timeSinceLastRequest = now.difference(_lastAdRequest!);
+            if (timeSinceLastRequest.inSeconds < 60) {
+              debugPrint('⏱️ Ad needs refresh but rate limit active - reusing existing ad');
+            } else {
+              debugPrint('🔄 Ad refresh triggered before showing (adaptive strategy)');
+              _lastAdRequest = now;
+              _hasInitialized = false;
+              _initializeAds();
+              return;
+            }
+          } else {
+            debugPrint('🔄 Ad refresh triggered before showing (adaptive strategy)');
+            _lastAdRequest = DateTime.now();
+            _hasInitialized = false;
+            _initializeAds();
+            return;
+          }
+        }
+        
+        // Start countdown for existing ad
+        if (adsState.nativeAdIsLoaded) {
+          debugPrint('▶️ Starting 60s countdown for ad impression');
+          ref.read(googleAdsProvider.notifier).startCountdownTimer();
         }
       }
     });
   }
 
-  void _initializeAds() async {
+  /// Initialize ads based on platform and user location
+  /// 
+  /// [bypassRateLimit] - Reserved for future manual refresh feature.
+  /// Currently unused as all refreshes are automatic and respect rate limits.
+  void _initializeAds({bool bypassRateLimit = false}) async {
     if (_isDisposed || _hasInitialized) return;
 
     try {
@@ -207,9 +349,21 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       ref.read(shouldShowGoogleAdsProvider.notifier).state = shouldShowGoogle;
 
       if (shouldShowGoogle) {
-        _loadGoogleAd();
+        // Consolidated ad validation - check if we need to load a new ad
+        if (!_shouldLoadNewAd()) {
+          debugPrint('✅ Using existing valid ad');
+          _hasInitialized = true;
+          return;
+        }
+        
+        // Mark as initialized before starting load process
+        _hasInitialized = true;
+        _loadGoogleAd(bypassRateLimit: bypassRateLimit);
         return;
       }
+      
+      // Mark as initialized for non-Google ads too
+      _hasInitialized = true;
 
       final customAdData = await AdvertiseDirector.getRandomCustomAd(ref);
       if (!_isDisposed) {
@@ -224,16 +378,31 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     }
   }
 
-  void _loadGoogleAd() async {
+  void _loadGoogleAd({bool bypassRateLimit = false}) async {
     if (_isDisposed) return;
+
+    // Reset ad loaded state BEFORE disposing to prevent showing disposed ad
+    if (_nativeAd != null) {
+      ref.read(googleAdsProvider.notifier).setAdLoaded(false);
+    }
 
     setState(() {
       _isLoading = true;
     });
 
-    // Dispose previous ad
-    _nativeAd?.dispose();
-    _nativeAd = null;
+    // Dispose previous ad only if exists
+    if (_nativeAd != null) {
+      try {
+        _nativeAd!.dispose();
+        debugPrint('🗑️ Disposed previous ad to load fresh ad');
+      } catch (e) {
+        debugPrint('⚠️ Error disposing previous ad: $e');
+      }
+      _nativeAd = null;
+    }
+    
+    // Clear any cached ad data to force fresh ad
+    debugPrint('🔄 Requesting fresh ad from AdMob...');
 
     try {
       if (_adUnitId.isEmpty) {
@@ -247,88 +416,243 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
         return;
       }
 
-      _nativeAd = NativeAd(
-        adUnitId: _adUnitId,
-        listener: NativeAdListener(
-          onAdLoaded: (ad) {
-            if (!_isDisposed && mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-              ref.read(googleAdsProvider.notifier).setAdLoaded(true);
-            }
-          },
-          onAdFailedToLoad: (ad, error) {
-            ad.dispose();
-            if (!_isDisposed && mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-              ref.read(googleAdsProvider.notifier).setAdLoadFailed();
-            }
-          },
-          onAdClicked: (ad) {
-            debugPrint('👆 NativeAd clicked');
-          },
-          onAdImpression: (ad) {
-            debugPrint('👁️ NativeAd impression recorded');
-          },
+      // Use AdService for network checks and retry logic
+      final adService = ref.read(adServiceProvider);
+      
+      // Create template style
+      final templateStyle = NativeTemplateStyle(
+        templateType: TemplateType.medium,
+        mainBackgroundColor: widget.backgroundColor,
+        cornerRadius: widget.cornerRadius,
+        callToActionTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.white,
+          backgroundColor: Colors.blue,
+          style: NativeTemplateFontStyle.bold,
+          size: 16.0,
         ),
-        request: const AdRequest(),
-        nativeTemplateStyle: NativeTemplateStyle(
-          templateType: TemplateType.medium,
-          mainBackgroundColor: widget.backgroundColor,
-          cornerRadius: widget.cornerRadius,
-          callToActionTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.white,
-            backgroundColor: Colors.blue,
-            style: NativeTemplateFontStyle.bold,
-            size: 16.0,
-          ),
-          primaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.black,
-            backgroundColor: Colors.transparent,
-            style: NativeTemplateFontStyle.bold,
-            size: 16.0,
-          ),
-          secondaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.grey,
-            backgroundColor: Colors.transparent,
-            style: NativeTemplateFontStyle.normal,
-            size: 14.0,
-          ),
-          tertiaryTextStyle: NativeTemplateTextStyle(
-            textColor: Colors.grey.shade700,
-            backgroundColor: Colors.transparent,
-            style: NativeTemplateFontStyle.normal,
-            size: 12.0,
-          ),
+        primaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.black,
+          backgroundColor: Colors.transparent,
+          style: NativeTemplateFontStyle.bold,
+          size: 16.0,
+        ),
+        secondaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.grey,
+          backgroundColor: Colors.transparent,
+          style: NativeTemplateFontStyle.normal,
+          size: 14.0,
+        ),
+        tertiaryTextStyle: NativeTemplateTextStyle(
+          textColor: Colors.grey.shade700,
+          backgroundColor: Colors.transparent,
+          style: NativeTemplateFontStyle.normal,
+          size: 12.0,
         ),
       );
 
-      _nativeAd!.load();
+      // Create listener for AdService
+      final listener = NativeAdListener(
+        onAdLoaded: (ad) {
+          if (!_isDisposed && mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            _nativeAd = ad as NativeAd;
+            debugPrint('✅ New ad loaded and cached (hashCode: ${_nativeAd!.hashCode})');
+            ref.read(googleAdsProvider.notifier).setAdLoaded(true);
+            
+            // Record ad load time for adaptive refresh strategy
+            ref.read(adRefreshStrategyProvider).recordAdLoad();
+          }
+        },
+        onAdFailedToLoad: (ad, error) {
+          ad.dispose();
+          if (!_isDisposed && mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            // Error is already logged by AdService
+          }
+        },
+        onAdClicked: (ad) {
+          debugPrint('👆 NativeAd clicked');
+          adService.logAdEvent('clicked', {});
+        },
+        onAdImpression: (ad) {
+          debugPrint('👁️ NativeAd impression recorded');
+          // Already logged by AdService
+        },
+      );
+
+      // Load ad with retry logic via AdService
+      debugPrint('🚀 Loading ad with AdService retry logic...');
+      final result = await adService.loadAdWithRetry(
+        adUnitId: _adUnitId,
+        listener: listener,
+        templateStyle: templateStyle,
+        bypassRateLimit: bypassRateLimit,
+      );
+
+      if (!_isDisposed && mounted) {
+        if (result.success) {
+          debugPrint('✅ Ad loaded successfully after ${result.attemptCount} attempt(s)');
+          _autoRetryTimer?.cancel();
+        } else {
+          debugPrint('❌ Ad failed to load after ${result.attemptCount} attempts: ${result.errorMessage}');
+          setState(() {
+            _isLoading = false;
+          });
+          ref.read(googleAdsProvider.notifier).setAdLoadFailed(
+            errorCode: result.errorCode,
+            errorMessage: result.errorMessage,
+            retryCount: result.attemptCount,
+          );
+          
+          // Auto-retry after cooldown for rate limit or no-fill errors
+          if (result.errorCode == 'RATE_LIMIT' || result.errorCode == '3') {
+            _scheduleAutoRetry();
+          }
+        }
+      }
     } catch (e) {
       debugPrint('❌ Error creating NativeAd: $e');
       if (!_isDisposed && mounted) {
         setState(() {
           _isLoading = false;
         });
-        ref.read(googleAdsProvider.notifier).setAdLoadFailed();
+        ref.read(googleAdsProvider.notifier).setAdLoadFailed(
+          errorCode: '0',
+          errorMessage: e.toString(),
+        );
       }
     }
   }
 
-  void _retryLoadAd() {
+  /// Consolidated check: Should we load a new ad?
+  /// Returns false if existing ad is valid and doesn't need refresh
+  bool _shouldLoadNewAd() {
+    // No existing ad - need to load
+    if (_nativeAd == null) return true;
+    
+    final adsState = ref.read(googleAdsProvider);
+    
+    // Ad not loaded in state - need to load
+    if (!adsState.nativeAdIsLoaded) return true;
+    
+    // Verify ad is actually valid (not disposed)
+    try {
+      // ignore: unnecessary_null_checks
+      final _ = _nativeAd!.hashCode;
+    } catch (e) {
+      debugPrint('⚠️ Existing ad became invalid - need fresh ad');
+      _nativeAd = null;
+      ref.read(googleAdsProvider.notifier).resetState();
+      return true;
+    }
+    
+    // Ad exists and is valid - check if it needs refresh due to age
+    if (adsState.needsRefresh) {
+      debugPrint('📅 Ad is stale (>15 min) - need fresh ad');
+      return true;
+    }
+    
+    // Ad is valid and fresh - reuse it
+    final ageMinutes = DateTime.now().difference(adsState.adLoadedAt!).inMinutes;
+    debugPrint('♻️ Existing ad is valid (age: ${ageMinutes}min) - reusing');
+    return false;
+  }
+
+  Future<void> _checkCacheAndLoad() async {
+    if (_isDisposed) return;
+    
+    try {
+      // Check if we have cached metadata about recent load attempts
+      final cacheService = ref.read(adCacheServiceProvider);
+      final metadata = await cacheService.loadMetadata();
+      
+      if (metadata != null && metadata.lastErrorCode != null) {
+        final timeSinceError = DateTime.now().difference(metadata.loadedAt);
+        
+        // If we recently had a "no fill" error (code 3), delay the next attempt
+        // Linear decay: 2 minutes delay if error just happened, 0 delay after 5 minutes
+        if (metadata.lastErrorCode == '3' && timeSinceError.inSeconds < 300) {
+          const maxDelaySeconds = 120; // 2 minutes max
+          const errorWindowSeconds = 300; // 5 minute window
+          
+          // Calculate remaining delay: decreases linearly from 120s to 0s over 5 minutes
+          final elapsedSeconds = timeSinceError.inSeconds;
+          final remainingDelay = ((errorWindowSeconds - elapsedSeconds) / errorWindowSeconds * maxDelaySeconds).round();
+          
+          if (remainingDelay > 0) {
+            debugPrint('📊 Recent no-fill error (${timeSinceError.inMinutes}m ago) - waiting ${remainingDelay}s before retry');
+            await Future.delayed(Duration(seconds: remainingDelay));
+          }
+        }
+      }
+      
+      // Proceed with normal load
+      debugPrint('📱 Loading fresh ad with real IP...');
+      _initializeAds();
+    } catch (e) {
+      debugPrint('⚠️ Cache check failed, loading immediately: $e');
+      _initializeAds();
+    }
+  }
+
+  void _scheduleAutoRetry() {
+    _autoRetryTimer?.cancel();
+    
+    final adService = ref.read(adServiceProvider);
+    final rateLimitWait = adService.getTimeUntilRateLimitReset();
+    
+    // Always respect the 60-second rate limit for auto-retries
+    Duration waitDuration;
+    
+    if (rateLimitWait != null && rateLimitWait.inSeconds > 0) {
+      // Rate limit is active, wait for it to reset
+      waitDuration = rateLimitWait;
+      debugPrint('⏰ Auto-retry scheduled in ${waitDuration.inSeconds}s (rate limit cooldown)...');
+    } else {
+      // No active rate limit, but still wait 60s minimum to avoid hitting it
+      waitDuration = const Duration(seconds: 60);
+      debugPrint('⏰ Auto-retry scheduled in 60s (respecting rate limit)...');
+    }
+    
+    _autoRetryTimer = Timer(waitDuration, () {
+      if (!_isDisposed && mounted) {
+        debugPrint('⏱️ Auto-retry triggered after ${waitDuration.inSeconds}s wait');
+        _retryLoadAd(isAutoRetry: true);
+      }
+    });
+  }
+
+  void _retryLoadAd({bool isAutoRetry = false}) {
+    debugPrint('🔄 ${isAutoRetry ? "Auto" : "Manual"} retry triggered - clearing all state');
     _hasInitialized = false;
+    _autoRetryTimer?.cancel();
+    
+    // Dispose current ad if exists
+    if (_nativeAd != null) {
+      try {
+        _nativeAd!.dispose();
+        debugPrint('🗑️ Disposed ad before retry');
+      } catch (e) {
+        debugPrint('⚠️ Error disposing ad on retry: $e');
+      }
+      _nativeAd = null;
+    }
+    
     ref.read(googleAdsProvider.notifier).resetState();
     ref.read(shouldShowGoogleAdsProvider.notifier).state = null;
     ref.read(customAdDataProvider.notifier).state = null;
-    _initializeAds();
+    _initializeAds(bypassRateLimit: !isAutoRetry); // Manual retries bypass rate limit
   }
 
   @override
   void dispose() {
     _isDisposed = true;
+    _autoRetryTimer?.cancel();
+    // Keep static _nativeAd alive across navigation for ad reuse
     super.dispose();
   }
 
@@ -338,24 +662,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
     final shouldShowGoogle = ref.watch(shouldShowGoogleAdsProvider);
     final customAdData = ref.watch(customAdDataProvider);
 
-    ref.listen(connectionStateProvider, (previous, next) {
-      if (next.status == ConnectionStatus.disconnected && !_isDisposed) {
-        if (_nativeAd != null) {
-          _nativeAd?.dispose();
-          _nativeAd = null;
-        }
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-        ref.read(googleAdsProvider.notifier).acknowledgeDisposal();
-        _globalAdInitialized = false;
-      }
-      if (next.status == ConnectionStatus.connected) {
-        ref.read(googleAdsProvider.notifier).resestCountDown();
-      }
-    });
     return SizedBox(
       height: 280.h,
       width: 336.w,
@@ -446,17 +752,37 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
       return _buildCustomAdContent(customAdData, adsState);
     }
 
-    // Google ads path
-    if (adsState.nativeAdIsLoaded && _nativeAd != null) {
-      // For Google ads, return ONLY the AdWidget without any overlays
-      return AdWidget(ad: _nativeAd!);
+    // Google ads path - check _nativeAd directly, not state (avoid race condition on restart)
+    if (_nativeAd != null) {
+      // Wrap in try-catch to prevent red error screens from disposed ads
+      try {
+        return AdWidget(ad: _nativeAd!);
+      } catch (e) {
+        // Log error but don't show technical details to users
+        debugPrint('❌ Error rendering AdWidget: $e');
+        // Reset state and show loading instead
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_isDisposed && mounted) {
+            ref.read(googleAdsProvider.notifier).setAdLoaded(false);
+            setState(() {
+              _isLoading = true;
+            });
+          }
+        });
+        return _buildLoadingWidget("Preparing ad...");
+      }
     } else if (_isLoading) {
-      return _buildLoadingWidget("Loading Google ads...");
+      return _buildLoadingWidget("Loading ads...");
     } else if (adsState.adLoadFailed) {
-      return _buildErrorWidget(
-          "Failed to load Google ads", "Tap to retry", _retryLoadAd);
+      // Silent auto-retry in background - just show loading state
+      debugPrint('🔄 Ad failed - auto-retry running in background');
+      return _buildLoadingWidget("Loading ads...");
+    } else if (!_hasInitialized && ref.read(connectionStateProvider).status == ConnectionStatus.connected) {
+      // App opened while VPN connected - waiting for disconnect to load with real IP
+      return _buildLoadingWidget("Disconnect VPN to load ads...");
     } else {
-      return _buildErrorWidget("Tap to load ads", "", _retryLoadAd);
+      // Initial load state
+      return _buildLoadingWidget("Preparing ads...");
     }
   }
 
@@ -502,25 +828,11 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
           },
           errorBuilder: (context, error, stackTrace) {
             debugPrint('Custom ad image load error: $error');
+            // Silent error - just show loading state instead
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.error_outline,
-                    color: Colors.white.withValues(alpha: 0.6),
-                    size: 32.sp,
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    "Failed to load custom ad",
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.6),
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
+              child: CircularProgressIndicator(
+                color: Colors.green,
+                strokeWidth: 2,
               ),
             );
           },
@@ -570,49 +882,6 @@ class _GoogleAdsState extends ConsumerState<GoogleAds> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildErrorWidget(
-      String primaryMessage, String secondaryMessage, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              primaryMessage.contains("Failed")
-                  ? Icons.error_outline
-                  : Icons.refresh,
-              color: primaryMessage.contains("Failed")
-                  ? Colors.orange.withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.6),
-              size: 32.sp,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              primaryMessage,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.6),
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-            if (secondaryMessage.isNotEmpty) ...[
-              SizedBox(height: 4.h),
-              Text(
-                secondaryMessage,
-                style: TextStyle(
-                  color: Colors.blue.withValues(alpha: 0.8),
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w400,
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }
