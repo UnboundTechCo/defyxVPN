@@ -57,6 +57,8 @@ class AdvertiseDirector {
         }
       }
     }
+    
+    // Return empty map - UI will handle showing "No ads available"
     return {'imageUrl': '', 'clickUrl': ''};
   }
 }

@@ -22,14 +22,14 @@ class SpeedTestScreen extends ConsumerStatefulWidget {
 
 class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   // TODO: After fixing ads issue, enable this code to manage ads during speed test
-  // late final GoogleAds _googleAds;
+  // late final AdsWidget _adsWidget;
 
   @override
   void initState() {
     super.initState();
 
     // TODO: After fixing ads issue, enable this code to initialize Google Ads
-    // _googleAds = GoogleAds(
+    // _adsWidget = AdsWidget(
     //   backgroundColor: const Color(0xFF1A1A1A),
     //   cornerRadius: 10.0.r,
     // );
@@ -80,7 +80,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
 
     // TODO: After fixing ads issue, enable this code to complete test after ads
     /*
-    ref.listen(googleAdsProvider, (previous, next) {
+    ref.listen(adsProvider, (previous, next) {
       if (!next.showCountdown &&
           next.shouldDisposeAd &&
           mounted) {
@@ -129,7 +129,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     if (next.step == SpeedTestStep.ads) {
       Future.microtask(() {
         if (mounted) {
-          ref.read(googleAdsProvider.notifier).startCountdownTimer();
+          ref.read(adsProvider.notifier).startCountdownTimer();
         }
       });
     }
@@ -206,7 +206,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
           right: 0,
           bottom: 100.h,
           child: SpeedTestAdsOverlay(
-              googleAds: _googleAds,
+              adsWidget: _adsWidget,
         ),
         */
       ],
