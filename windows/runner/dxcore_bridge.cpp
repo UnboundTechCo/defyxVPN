@@ -51,6 +51,8 @@ bool DXCoreBridge::Load() {
   ok &= load(pSetTimeZone_, "WinSetTimeZone");
   ok &= load(pGetFlowLine_, "WinGetFlowLine");
   ok &= load(pGetCachedFlowLine_, "WinGetCachedFlowLine");
+  ok &= load(pDecodeAndVerifyFlowline_, "WinDecodeAndVerifyFlowline");
+  ok &= load(pSetCacheDir_, "WinSetCacheDir");
   // ok &= load(pSetConnectionMethod_, "WinSetConnectionMethod");
   ok &= load(pFreeString_, "WinFreeString");
   ok &= load(pSetSystemProxy_, "WinSetSystemProxy");
@@ -123,6 +125,26 @@ std::string DXCoreBridge::GetCachedFlowLine() {
   std::string out = s ? std::string(s) : std::string();
   if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
   return out;
+}
+
+std::string DXCoreBridge::DecodeAndVerifyFlowline(const std::string& flow_line) {
+  if (!pDecodeAndVerifyFlowline_) return {};
+  const char* s = pDecodeAndVerifyFlowline_(flow_line.c_str());
+  std::string out = s ? std::string(s) : std::string();
+  if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
+  return out;
+}
+
+void DXCoreBridge::SetCacheDir(const std::string& cache_dir) {
+  // Create directory if it doesn't exist
+  try {
+    std::filesystem::create_directories(cache_dir);
+  } catch (const std::exception& e) {
+    // Log error but continue
+    (void)e;
+  }
+  
+  if (pSetCacheDir_) pSetCacheDir_(cache_dir.c_str());
 }
 
 // void DXCoreBridge::SetConnectionMethod(const std::string& method) {

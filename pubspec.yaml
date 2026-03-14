@@ -1,10 +1,10 @@
 name: defyx_vpn
 description: "A new Vpn app"
 publish_to: "none"
-version: 4.4.4+246
+version: 5.1.0+247
 
 environment:
-  sdk: ^3.5.3
+  sdk: ^3.8.0
 
 dependencies:
   flutter:
@@ -52,6 +52,7 @@ dependencies:
   path_provider: ^2.1.1
   msix: ^3.16.12
   flutter_native_splash: ^2.4.7
+  file_picker: ^10.3.10
 
 dev_dependencies:
   flutter_test:
@@ -104,7 +105,7 @@ msix_config:
   display_name: Defyx VPN
   publisher_display_name: UnboundTech UG
   identity_name: UnboundTechUG.6065AEC5A207
-  msix_version: 4.4.4.0
+  msix_version: 5.0.7.247
   publisher: "CN=62937938-2AE2-4C12-9ED8-4C418C0CADF2"
   logo_path: assets/images/logo.png
   capabilities: runFullTrust,internetClientServer,privateNetworkClientServer,unvirtualizedResources

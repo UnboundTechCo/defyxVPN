@@ -264,6 +264,45 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 completionHandler?(nil)
             }
 
+        case "DECODE_VERIFY_FLOWLINE":
+            do {
+                let flowLine = dict["flowLine"] ?? ""
+                let decodedFlowLine = IosDecodeAndVerifyFlowline(flowLine)
+                let response: String = decodedFlowLine
+
+                if let data = response.data(using: .utf8) {
+                    completionHandler?(data)
+                } else {
+                    throw NSError(
+                        domain: "EncodingError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
+                    )
+                }
+            } catch {
+                print("Error: \(error.localizedDescription)")
+                completionHandler?(nil)
+            }
+
+        case "SET_CACHE_DIR":
+            do {
+                let cacheDir = dict["cacheDir"] ?? ""
+                IosSetCacheDir(cacheDir)
+                
+                if let data = "true".data(using: .utf8) {
+                    completionHandler?(data)
+                } else {
+                    throw NSError(
+                        domain: "EncodingError",
+                        code: -1,
+                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
+                    )
+                }
+            } catch {
+                print("Error: \(error.localizedDescription)")
+                completionHandler?(nil)
+            }
+
         default:
             os_log("⚠️ Unknown command received.")
             completionHandler?(nil)
