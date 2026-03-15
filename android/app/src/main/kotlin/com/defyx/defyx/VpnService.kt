@@ -174,11 +174,14 @@ class DefyxVpnService : VpnService() {
                                 .allowFamily(android.system.OsConstants.AF_INET)
                                 .setMtu(1500)
                                 .setBlocking(true)
-                                .allowBypass()
 
+                // Bypass only Google Play Services to allow ads to work
                 try {
-                    builder.addDisallowedApplication(context.packageName)
-                } catch (_: Exception) {}
+                    builder.addDisallowedApplication("com.google.android.gms")
+                    builder.addDisallowedApplication("com.google.android.gsf")
+                } catch (e: Exception) {
+                    Log.w(TAG, "Failed to exclude Google services: ${e.message}")
+                }
 
                 vpnInterface?.close()
                 vpnInterface = builder.establish()
