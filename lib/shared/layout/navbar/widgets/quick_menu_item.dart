@@ -3,9 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class QuickMenuItem extends StatelessWidget {
   final String title;
+  final TextStyle? titleStyle;
   final VoidCallback onTap;
   final bool? topBorderRadius;
   final bool? bottomBorderRadius;
+  final Widget? icon;
 
   const QuickMenuItem({
     super.key,
@@ -13,6 +15,8 @@ class QuickMenuItem extends StatelessWidget {
     required this.onTap,
     this.topBorderRadius = false,
     this.bottomBorderRadius = false,
+    this.icon,
+    this.titleStyle,
   });
 
   @override
@@ -36,12 +40,13 @@ class QuickMenuItem extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(
+              style: titleStyle ?? TextStyle(
                 fontSize: 17.sp,
                 color: Colors.black,
                 fontWeight: FontWeight.w500,
               ),
             ),
+            ?icon,
           ],
         ),
       ),

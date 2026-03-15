@@ -219,7 +219,14 @@ class AppLocalizationsRu extends AppLocalizations {
       'Должен оставаться включенным хотя бы один модуль';
 
   @override
-  String get settingsResetToDefault => 'СБРОСИТЬ ДО УМОЛЧАНИЙ';
+  String get settingsResetToDefault => 'Сброс';
+
+  @override
+  String get offlineFlowlineMessage =>
+      'Обновления Flowline приостановлены, так как используется автономная версия.';
+
+  @override
+  String get offlineFlowlineUndo => 'ОТМЕНИТЬ';
 
   @override
   String get updateAvailable => 'Доступно обновление';
@@ -240,4 +247,13 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get notNow => 'Не сейчас';
+
+  @override
+  String get updateMethods => 'Обновить методы';
+
+  @override
+  String get importAPI => 'Импорт API';
+
+  @override
+  String get synchronization => 'Синхронизация';
 }
