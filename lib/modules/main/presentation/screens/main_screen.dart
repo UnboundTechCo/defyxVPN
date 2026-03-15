@@ -9,7 +9,8 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/secret_tap_handler.d
 import 'package:defyx_vpn/modules/main/presentation/widgets/privacy_notice_dialog.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/google_ads.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads_widget.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
@@ -35,7 +36,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   bool _showHeaderShadow = false;
   ConnectionStatus? _previousConnectionStatus;
   late MainScreenLogic _logic;
-  late final GoogleAds _googleAds;
+  late final AdsWidget _adsWidget;
   late ScrollManager _scrollManager;
   late SecretTapHandler _secretTapHandler;
 
@@ -48,7 +49,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _scrollManager = ScrollManager(_scrollController);
     _secretTapHandler = SecretTapHandler();
 
-    _googleAds = GoogleAds(
+    _adsWidget = AdsWidget(
       backgroundColor: const Color(0xFF19312F),
       cornerRadius: 10.0.r,
     );
@@ -158,7 +159,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
-    final adsState = ref.watch(googleAdsProvider);
+    final adsState = ref.watch(adsProvider);
 
     if (!(Platform.isAndroid || Platform.isIOS)) {
       ref.listen<int>(trayConnectionToggleTriggerProvider, (previous, next) {
@@ -291,8 +292,10 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        // Show ads only when connected to VPN
-        final shouldShowAd = status == ConnectionStatus.connected && adsState.showCountdown;
+        // Show ads only when connected to VPN and ad is loaded
+        final shouldShowAd = status == ConnectionStatus.connected && 
+                             adsState.showCountdown && 
+                             adsState.nativeAdIsLoaded;
 
         return SizedBox(
           height: 280.h,
@@ -315,7 +318,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   color: const Color(0xFF19312F),
                   borderRadius: BorderRadius.circular(10.r),
                 ),
-                child: _googleAds,
+                child: _adsWidget,
               ),
             ),
           ),

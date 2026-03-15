@@ -31,8 +31,12 @@
 		<key>NSDocumentsFolderUsageDescription</key>
 		<string>WARP needs access to store its configuration files</string>
 		<key>NSVPNConfigurationUsageDescription</key>
-		<string>Defyx needs access to VPN configurations to secure your connection.</string>	<key>NSUserTrackingUsageDescription</key>
-		<string>We show personalized ads to support this free VPN service. Your data stays private and secure.</string>		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<string>Defyx needs access to VPN configurations to secure your connection.</string>
+		<key>NSUserTrackingUsageDescription</key>
+		<string>We show personalized ads to support this free VPN service. Your data stays private and secure.</string>	
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Defyx needs access to your photo library to let you select and share images, such as profile pictures or VPN connection QR codes.</string>		
+		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
@@ -63,6 +67,33 @@
 			<true/>
 		</dict>
 		<key>UIStatusBarHidden</key>
-		<false/>
+	<false/>
+	<key>LSSupportsOpeningDocumentsInPlace</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>DefyX Configuration File</string>
+			<key>UTTypeIdentifier</key>
+			<string>de.unboundtech.defyxvpn.dfx</string>
+			<key>UTTypeTagSpecification</key>
+			<dict>
+				<key>public.filename-extension</key>
+				<array>
+					<string>dfx</string>
+				</array>
+			</dict>
+		</dict>
+	</array>
 	</dict>
 </plist>

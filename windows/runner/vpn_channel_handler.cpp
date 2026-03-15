@@ -344,6 +344,66 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "decodeAndVerifyFlowline") {
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto flow_line = get_string_arg(m, "flowLine");
+            if (!flow_line.empty()) {
+              std::thread([this, flow_line, result = std::move(result)]() mutable {
+                try {
+                  std::string decoded = dxcore_->DecodeAndVerifyFlowline(flow_line);
+                  result->Success(flutter::EncodableValue(decoded));
+                } catch (...) {
+                  result->Error("DECODE_VERIFY_FLOWLINE_ERROR", "Failed to decode and verify flowline");
+                }
+              }).detach();
+            } else {
+              result->Error("INVALID_ARGUMENT", "flowLine is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
+          return;
+        }
+
+        if (method == "setCacheDir") {
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto cache_dir = get_string_arg(m, "cacheDir");
+            if (!cache_dir.empty()) {
+              dxcore_->SetCacheDir(cache_dir);
+              result->Success(flutter::EncodableValue(true));
+            } else {
+              result->Error("INVALID_ARGUMENT", "cacheDir is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
+          return;
+        }
+
+        if (method == "getSharedDirectory") {
+          wchar_t env_buf[32767];
+          DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", env_buf, 32767);
+          std::wstring shared_dir_w;
+          if (n > 0 && n < 32767) {
+            shared_dir_w = std::wstring(env_buf) + L"\\DefyxVPN\\defyx";
+          } else {
+            shared_dir_w = L"C:\\Windows\\Temp\\DefyxVPN\\defyx";
+          }
+          auto WideToUtf8 = [](const std::wstring& w) -> std::string {
+            if (w.empty()) return std::string();
+            int size = WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, nullptr, 0, nullptr, nullptr);
+            if (size <= 0) return std::string();
+            std::string out;
+            out.resize(size - 1);
+            WideCharToMultiByte(CP_UTF8, 0, w.c_str(), -1, out.data(), size - 1, nullptr, nullptr);
+            return out;
+          };
+          result->Success(flutter::EncodableValue(WideToUtf8(shared_dir_w)));
+          return;
+        }
+
         if (method == "setConnectionMethod") {
           if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());
@@ -373,13 +433,13 @@ void VPNChannelHandler::SetupMethodChannel() {
             DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", env_buf, 32767);
             std::wstring cache_dir_w;
             if (n > 0 && n < 32767) {
-              cache_dir_w = std::wstring(env_buf) + L"\\DefyxVPN\\cache";
+              cache_dir_w = std::wstring(env_buf) + L"\\DefyxVPN\\defyx";
               CreateDirectoryW((std::wstring(cache_dir_w.substr(0, cache_dir_w.find_last_of(L"\\")))).c_str(), NULL);
               CreateDirectoryW(cache_dir_w.c_str(), NULL);
             } else {
-              cache_dir_w = L"C:\\Windows\\Temp\\DefyxVPN\\cache";
+              cache_dir_w = L"C:\\Windows\\Temp\\DefyxVPN\\defyx";
               CreateDirectoryW(L"C:\\Windows\\Temp\\DefyxVPN", NULL);
-              CreateDirectoryW(L"C:\\Windows\\Temp\\DefyxVPN\\cache", NULL);
+              CreateDirectoryW(L"C:\\Windows\\Temp\\DefyxVPN\\defyx", NULL);
             }
 
             auto WideToUtf8 = [](const std::wstring& w) -> std::string {

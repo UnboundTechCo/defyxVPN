@@ -255,7 +255,7 @@ class AnalyzingContent extends ConsumerWidget {
           final deepScanEnabled =
               ref.read(settingsProvider.notifier).isDeepScanEnabled();
 
-          final flowLineState = ref.watch(flowLineStepProvider);
+          final flowLineState = ref.watch(flowLineProvider);
           final currentStep = flowLineState.step;
           final totalSteps = deepScanEnabled ? "∞" : flowLineState.totalSteps;
 

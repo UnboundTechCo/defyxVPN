@@ -216,7 +216,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsAtLeastOneCoreRequired => '至少需要保留一个核心';
 
   @override
-  String get settingsResetToDefault => '恢复默认';
+  String get settingsResetToDefault => '重置';
+
+  @override
+  String get offlineFlowlineMessage => '由于当前使用离线版本，Flowline更新已暂停。';
+
+  @override
+  String get offlineFlowlineUndo => '撤销';
 
   @override
   String get updateAvailable => '可用更新';
@@ -236,4 +242,13 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get notNow => '暂不更新';
+
+  @override
+  String get updateMethods => '更新方法';
+
+  @override
+  String get importAPI => '导入API';
+
+  @override
+  String get synchronization => '同步';
 }
