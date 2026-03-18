@@ -27,6 +27,7 @@
         android:label="DefyxVPN"
         android:icon="@mipmap/ic_launcher"
         android:banner="@drawable/tv_banner"
+        android:usesCleartextTraffic="true"
         tools:ignore="ForegroundServicePermission">
 
         <receiver
