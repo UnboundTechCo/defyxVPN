@@ -9,7 +9,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     override init() {
         super.init()
-        let progressStream = ProgressStreamHandler()
+        let progressStream = ProgressStreamHandler(provider: self)
         IosSetProgressListener(progressStream)
     }
 
@@ -353,7 +353,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         }
     }
 
-    private func startTun2socks(completionHandler: @escaping (Bool) -> Void) {
+    func startTun2socks(completionHandler: @escaping (Bool) -> Void) {
 
         let config = """
             tunnel:
@@ -383,16 +383,5 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             NSLog("tunnel started...")
         }
         completionHandler(true)
-    }
-}
-
-class ProgressStreamHandler: NSObject, IosProgressListenerProtocol {
-    func onProgress(_ msg: String?) {
-        if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {
-            var logs = defaults.stringArray(forKey: "vpn_logs") ?? []
-            logs.append(msg ?? "")
-            defaults.set(logs, forKey: "vpn_logs")
-            defaults.synchronize()
-        }
     }
 }

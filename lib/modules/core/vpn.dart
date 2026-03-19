@@ -26,7 +26,6 @@ class VPN {
   final log = Log();
   final analyticsService = FirebaseAnalyticsService();
   final alertService = AlertService();
-  bool _isReconnectMode = false;
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -102,49 +101,70 @@ class VPN {
     final loggerNotifier = ref.read(loggerStateProvider.notifier);
     final groupNotifier = ref.read(groupStateProvider.notifier);
 
-    if (msg.startsWith("Data: Config index: ")) {
-      final configIndex = msg.replaceAll("Data: Config index: ", "");
-      final step = int.parse(configIndex);
-      _setConnectionStep(step);
-      loggerNotifier.setConnecting();
+    // Try to parse as JSON event
+    try {
+      final jsonData = jsonDecode(msg);
+      if (jsonData is Map && jsonData.containsKey('event')) {
+        final event = jsonData['event'] as String;
+        final data = jsonData['data'] as Map<String, dynamic>? ?? {};
 
-      if (step > 1) {
-        alertService.heartbeat();
+        switch (event) {
+          case 'STEP_PROGRESS':
+            final step = data['step'] as int? ?? 0;
+            final total = data['total'] as int? ?? 0;
+            _setConnectionStep(step);
+            if (total > 0) _setConnectionTotalSteps(total);
+            loggerNotifier.setConnecting();
+            if (step > 1) alertService.heartbeat();
+            break;
+
+          case 'CONFIG_INFO':
+            if (data.containsKey('label')) {
+              final configLabel = data['label'] as String;
+              _vpnBridge.setConnectionMethod(configLabel);
+              groupNotifier.setGroupName(configLabel);
+            }
+            if (data.containsKey('totalSteps')) {
+              _setConnectionTotalSteps(data['totalSteps'] as int);
+            }
+            break;
+
+          case 'TUNNEL_CONNECTED':
+            _onSuccessConnect();
+            break;
+
+          case 'TUNNEL_FAILED':
+            _onFailerConnect();
+            break;
+
+          case 'VPN_CANCELLED':
+            _closeTunnel();
+            break;
+
+          case 'GROUP_FAILED':
+            loggerNotifier.setSwitchingMethod();
+            break;
+
+          case 'VPN_STOPPED':
+            _closeTunnel();
+            break;
+
+          case 'VPN_CONNECTING':
+            _onLoading();
+            break;
+        }
+        
+        log.addLog(msg);
+        return;
       }
+    } catch (e) {
+      // Not a JSON event, continue to legacy handling
     }
 
+    // Legacy log message handling (for backward compatibility)
     if (msg.startsWith("Data: Firebase ")) {
       final message = msg.replaceAll("Data: Firebase ", "");
       return _sendCoreFirebaseMessage(message);
-    }
-
-    if (msg.startsWith("Data: VPN connected")) {
-      _onSuccessConnect();
-    }
-    if (msg.startsWith("Data: VPN failed")) {
-      _onFailerConnect();
-    }
-    if (msg.startsWith("Data: VPN cancelled")) {
-      _closeTunnel();
-    }
-    if (msg.startsWith("Data: VPN group failed")) {
-      loggerNotifier.setSwitchingMethod();
-    }
-    if (msg.startsWith("Data: VPN stopped")) {
-      _closeTunnel();
-    }
-    if (msg.startsWith("Data: VPN connecting")) {
-      _onLoading();
-    }
-    if (msg.startsWith("Data: Config label: ")) {
-      final configLabel = msg.replaceAll("Data: Config label: ", "");
-      _vpnBridge.setConnectionMethod(configLabel);
-      groupNotifier.setGroupName(configLabel);
-    }
-
-    if (msg.startsWith("Data: Config Numbers: ")) {
-      final configIndex = msg.replaceAll("Data: Config Numbers: ", "");
-      _setConnectionTotalSteps(int.parse(configIndex));
     }
 
     if (msg.contains("VPN Service Destroyed")) {
@@ -216,10 +236,7 @@ class VPN {
       return;
     }
 
-    if (!_isReconnectMode) {
-      await _createTunnel();
-      _isReconnectMode = true;
-    }
+    // Note: Tunnel creation is now automatic via PROXY_READY event on both iOS and Android
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
@@ -293,7 +310,6 @@ class VPN {
     await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
     analyticsService.logVpnDisconnected();
-    _isReconnectMode = false;
   }
 
   Future<void> _onTunnelClosed() async {
@@ -316,17 +332,6 @@ class VPN {
         return await _vpnBridge.grantVpnPermission();
       default:
         return false;
-    }
-  }
-
-  Future<void> _createTunnel() async {
-    switch (Platform.operatingSystem) {
-      case 'android':
-        await _vpnBridge.connectVpn();
-        break;
-      case "ios":
-        await _vpnBridge.startTun2socks();
-        break;
     }
   }
 

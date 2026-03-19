@@ -40,6 +40,11 @@ class DefyxVpnService : VpnService() {
         super.onCreate()
         instance = this
         createNotificationChannel()
+        
+        // Register progress listener for VPN events
+        val progressHandler = ProgressStreamHandler(this)
+        Android.setProgressListener(progressHandler)
+        Log.d(TAG, "🎯 [INIT] ProgressStreamHandler registered with Go")
     }
 
     override fun onDestroy() {
@@ -195,15 +200,8 @@ class DefyxVpnService : VpnService() {
                         if (fd > 0) {
                             tunnelFd = fd
                             vpnInterface = null
-                            try {
-                                Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
-                                updateNotification("DefyxVPN", "Connected by " + connectionMethod)
-                                notifyVpnStatus("connected")
-                            } catch (e: Exception) {
-                                Log.e(TAG, "T2S failed: ${e.message}", e)
-                                updateNotification("DefyxVPN", "Connection failed")
-                                notifyVpnStatus("disconnected")
-                            }
+                            Log.d(TAG, "✅ [TUNNEL] VPN interface established, waiting for PROXY_READY event...")
+                            // Note: tun2socks will be started automatically by PROXY_READY event handler
                         } else {
                             tunnelFd = -1
                             updateNotification("DefyxVPN", "Connection failed")
@@ -381,6 +379,34 @@ class DefyxVpnService : VpnService() {
     }
     fun setConnectionMethod(method: String) {
         connectionMethod = method
+    }
+
+    /**
+     * Start tun2socks triggered by PROXY_READY event
+     * Called by ProgressStreamHandler when VPN core proxy is ready
+     */
+    fun startTun2socksFromEvent(coreName: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                if (tunnelFd > 0) {
+                    Log.d(TAG, "🔵 [TUN2SOCKS] Starting tun2socks for $coreName proxy...")
+                    Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
+                    withContext(Dispatchers.Main) {
+                        updateNotification("DefyxVPN", "Connected by $connectionMethod")
+                        notifyVpnStatus("connected")
+                    }
+                    Log.d(TAG, "✅ [TUN2SOCKS] Tun2socks connected to $coreName proxy")
+                } else {
+                    Log.e(TAG, "❌ [TUN2SOCKS] Cannot start - tunnelFd not valid: $tunnelFd")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "❌ [TUN2SOCKS] Failed to start: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    updateNotification("DefyxVPN", "Connection failed")
+                    notifyVpnStatus("disconnected")
+                }
+            }
+        }
     }
 
     fun setCacheDir(cacheDir: String) {

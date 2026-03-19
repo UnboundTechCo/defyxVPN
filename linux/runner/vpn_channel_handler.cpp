@@ -387,82 +387,94 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
 
     SendProgress(msg);
 
-    if (msg.find("Data: VPN connected") != std::string::npos)
+    // Try to parse as JSON event
+    if (msg.find("{") != std::string::npos && msg.find("\"event\":") != std::string::npos)
     {
+        auto evtPos = msg.find("\"event\":\"");
+        if (evtPos != std::string::npos)
         {
-            std::lock_guard<std::mutex> lock(status_mutex_);
-            vpn_status_ = "connected";
-        }
-        SendStatus(vpn_status_);
-
-        if (system_tray_)
-        {
-            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
-            system_tray_->UpdateTooltip("DefyxVPN - Connected");
-            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
-        }
-
-        // Apply system proxy if enabled
-        std::thread([this]()
+            auto start = evtPos + 9;
+            auto end = msg.find("\"", start);
+            if (end != std::string::npos)
+            {
+                std::string event = msg.substr(start, end - start);
+                
+                if (event == "TUNNEL_CONNECTED")
+                {
                     {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ProxyConfig config;
-        config.host = "127.0.0.1";
-        config.port = 1080;
-        config.scheme = "socks5";
-        proxy::ApplySystemProxy(config);
-      } })
-            .detach();
-    }
-    else if (msg.find("Data: VPN failed") != std::string::npos)
-    {
-        {
-            std::lock_guard<std::mutex> lock(status_mutex_);
-            vpn_status_ = "disconnected";
-        }
+                        std::lock_guard<std::mutex> lock(status_mutex_);
+                        vpn_status_ = "connected";
+                    }
+                    SendStatus(vpn_status_);
 
-        if (system_tray_)
-        {
-            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
-            system_tray_->UpdateTooltip("DefyxVPN - Error");
-            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
-        }
-
-        std::thread([this]()
+                    if (system_tray_)
                     {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+                        system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
+                        system_tray_->UpdateTooltip("DefyxVPN - Connected");
+                        system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
+                    }
 
-        SendStatus(vpn_status_);
-    }
-    else if (msg.find("Data: VPN stopped") != std::string::npos ||
-             msg.find("Data: VPN cancelled") != std::string::npos)
-    {
-        {
-            std::lock_guard<std::mutex> lock(status_mutex_);
-            vpn_status_ = "disconnected";
-        }
-
-        if (system_tray_)
-        {
-            system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
-            system_tray_->UpdateTooltip("DefyxVPN - Disconnected");
-            system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
-        }
-
-        std::thread([this]()
+                    std::thread([this]()
+                                {
+          if (!is_active_) return;
+          if (system_tray_ && system_tray_->GetSystemProxy()) {
+            proxy::ProxyConfig config;
+            config.host = "127.0.0.1";
+            config.port = 1080;
+            config.scheme = "socks5";
+            proxy::ApplySystemProxy(config);
+          } })
+                        .detach();
+                }
+                else if (event == "TUNNEL_FAILED")
+                {
                     {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+                        std::lock_guard<std::mutex> lock(status_mutex_);
+                        vpn_status_ = "disconnected";
+                    }
 
-        SendStatus(vpn_status_);
+                    if (system_tray_)
+                    {
+                        system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
+                        system_tray_->UpdateTooltip("DefyxVPN - Error");
+                        system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
+                    }
+
+                    std::thread([this]()
+                                {
+          if (!is_active_) return;
+          if (system_tray_ && system_tray_->GetSystemProxy()) {
+            proxy::ResetSystemProxy();
+          } })
+                        .detach();
+
+                    SendStatus(vpn_status_);
+                }
+                else if (event == "VPN_STOPPED" || event == "VPN_CANCELLED")
+                {
+                    {
+                        std::lock_guard<std::mutex> lock(status_mutex_);
+                        vpn_status_ = "disconnected";
+                    }
+
+                    if (system_tray_)
+                {
+                    system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+                    system_tray_->UpdateTooltip("DefyxVPN - Disconnected");
+                    system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
+                }
+
+                std::thread([this]()
+                            {
+          if (!is_active_) return;
+          if (system_tray_ && system_tray_->GetSystemProxy()) {
+            proxy::ResetSystemProxy();
+          } })
+                    .detach();
+
+                SendStatus(vpn_status_);
+            }
+        }
     }
 }
 
