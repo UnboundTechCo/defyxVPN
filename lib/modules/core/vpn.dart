@@ -26,6 +26,7 @@ class VPN {
   final log = Log();
   final analyticsService = FirebaseAnalyticsService();
   final alertService = AlertService();
+  bool _isReconnectMode = false;
 
   factory VPN(ProviderContainer container) {
     _instance._init(container);
@@ -101,67 +102,15 @@ class VPN {
     final loggerNotifier = ref.read(loggerStateProvider.notifier);
     final groupNotifier = ref.read(groupStateProvider.notifier);
 
-    // Try to parse as JSON event
-    try {
-      final jsonData = jsonDecode(msg);
-      if (jsonData is Map && jsonData.containsKey('event')) {
-        final event = jsonData['event'] as String;
-        final data = jsonData['data'] as Map<String, dynamic>? ?? {};
-
-        switch (event) {
-          case 'STEP_PROGRESS':
-            final step = data['step'] as int? ?? 0;
-            final total = data['total'] as int? ?? 0;
-            _setConnectionStep(step);
-            if (total > 0) _setConnectionTotalSteps(total);
-            loggerNotifier.setConnecting();
-            if (step > 1) alertService.heartbeat();
-            break;
-
-          case 'CONFIG_INFO':
-            if (data.containsKey('label')) {
-              final configLabel = data['label'] as String;
-              _vpnBridge.setConnectionMethod(configLabel);
-              groupNotifier.setGroupName(configLabel);
-            }
-            if (data.containsKey('totalSteps')) {
-              _setConnectionTotalSteps(data['totalSteps'] as int);
-            }
-            break;
-
-          case 'TUNNEL_CONNECTED':
-            _onSuccessConnect();
-            break;
-
-          case 'TUNNEL_FAILED':
-            _onFailerConnect();
-            break;
-
-          case 'VPN_CANCELLED':
-            _closeTunnel();
-            break;
-
-          case 'GROUP_FAILED':
-            loggerNotifier.setSwitchingMethod();
-            break;
-
-          case 'VPN_STOPPED':
-            _closeTunnel();
-            break;
-
-          case 'VPN_CONNECTING':
-            _onLoading();
-            break;
-        }
-        
-        log.addLog(msg);
-        return;
-      }
-    } catch (e) {
-      // Not a JSON event, continue to legacy handling
+    // Try to parse as JSON event first
+    final event = _parseVPNEvent(msg);
+    if (event != null) {
+      _handleJSONEvent(event, loggerNotifier, groupNotifier);
+      log.addLog(msg);
+      return;
     }
 
-    // Legacy log message handling (for backward compatibility)
+    // Handle special non-JSON messages
     if (msg.startsWith("Data: Firebase ")) {
       final message = msg.replaceAll("Data: Firebase ", "");
       return _sendCoreFirebaseMessage(message);
@@ -172,6 +121,82 @@ class VPN {
     }
 
     log.addLog(msg);
+  }
+
+  // Parse JSON event from Go core (new event system)
+  Map<String, dynamic>? _parseVPNEvent(String msg) {
+    if (!msg.startsWith('{')) {
+      return null; // Not JSON
+    }
+
+    try {
+      final decoded = jsonDecode(msg) as Map<String, dynamic>;
+      // Verify it's a VPNEvent structure
+      if (decoded.containsKey('event') && decoded.containsKey('core')) {
+        return decoded;
+      }
+    } catch (e) {
+      // Not valid JSON or not a VPNEvent, fall through to legacy parsing
+    }
+    return null;
+  }
+
+  // Handle structured JSON events from Go core
+  void _handleJSONEvent(Map<String, dynamic> event, dynamic loggerNotifier, dynamic groupNotifier) {
+    final eventType = event['event'] as String;
+    final data = event['data'] as Map<String, dynamic>? ?? {};
+
+    switch (eventType) {
+      case 'TUNNEL_CONNECTED':
+        _onSuccessConnect();
+        break;
+      
+      case 'TUNNEL_FAILED':
+        _onFailerConnect();
+        break;
+      
+      case 'VPN_CANCELLED':
+        _closeTunnel();
+        break;
+      
+      case 'VPN_STOPPED':
+        _closeTunnel();
+        break;
+      
+      case 'VPN_CONNECTING':
+        _onLoading();
+        break;
+      
+      case 'GROUP_FAILED':
+        loggerNotifier.setSwitchingMethod();
+        break;
+      
+      case 'STEP_PROGRESS':
+        final step = data['step'] as int?;
+        if (step != null) {
+          _setConnectionStep(step);
+          loggerNotifier.setConnecting();
+          if (step > 1) {
+            alertService.heartbeat();
+          }
+        }
+        break;
+      
+      case 'CONFIG_INFO':
+        if (data.containsKey('label')) {
+          final label = data['label'] as String;
+          _vpnBridge.setConnectionMethod(label);
+          groupNotifier.setGroupName(label);
+        } else if (data.containsKey('totalSteps')) {
+          final total = data['totalSteps'] as int;
+          _setConnectionTotalSteps(total);
+        }
+        break;
+      
+      default:
+        // Unknown event type, ignore
+        break;
+    }
   }
 
   Future<void> _connect() async {
@@ -236,7 +261,10 @@ class VPN {
       return;
     }
 
-    // Note: Tunnel creation is now automatic via PROXY_READY event on both iOS and Android
+    if (!_isReconnectMode) {
+      await _createTunnel();
+      _isReconnectMode = true;
+    }
     connectionNotifier?.setConnected();
     vpnData?.enableVPN();
     await refreshPing();
@@ -310,6 +338,7 @@ class VPN {
     await vpnData?.disableVPN();
     connectionNotifier?.setDisconnected();
     analyticsService.logVpnDisconnected();
+    _isReconnectMode = false;
   }
 
   Future<void> _onTunnelClosed() async {
@@ -332,6 +361,17 @@ class VPN {
         return await _vpnBridge.grantVpnPermission();
       default:
         return false;
+    }
+  }
+
+  Future<void> _createTunnel() async {
+    switch (Platform.operatingSystem) {
+      case 'android':
+        await _vpnBridge.connectVpn();
+        break;
+      case "ios":
+        await _vpnBridge.startTun2socks();
+        break;
     }
   }
 

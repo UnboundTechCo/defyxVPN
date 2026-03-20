@@ -48,6 +48,10 @@ private:
     void SetupProgressChannel();
     void SetupMethodChannel();
 
+    // JSON event parsing helpers
+    bool ParseVPNEvent(const std::string& msg, std::string& event_type);
+    void HandleJSONEvent(const std::string& event_type);
+
     FlBinaryMessenger *messenger_;
     SystemTray *system_tray_;
 

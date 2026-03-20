@@ -76,83 +76,10 @@ void VPNChannelHandler::SetupProgressChannel() {
         PostMessage(parent->window_handle_, WM_PROGRESS_RESULT, 0,
                     reinterpret_cast<LPARAM>(new std::string(msg)));
 
-        // Try to parse as JSON event
-        if (msg.find("{") != std::string::npos && msg.find("\"event\":") != std::string::npos) {
-          auto evtPos = msg.find("\"event\":\"");
-          if (evtPos != std::string::npos) {
-            auto start = evtPos + 9;
-            auto end = msg.find("\"", start);
-            if (end != std::string::npos) {
-              std::string event = msg.substr(start, end - start);
-              
-              if (event == "TUNNEL_CONNECTED") {
-                {
-                  std::lock_guard<std::mutex> lock(parent->status_mutex_);
-                  parent->vpn_status_ = "connected";
-                }
-
-                PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
-                           reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
-
-                if (parent->system_tray_) {
-                  parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
-                  parent->system_tray_->UpdateTooltip(L"DefyxVPN - Connected");
-                  parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
-                }
-
-                std::thread([parent]() {
-                  if (!parent->is_active_) return;
-                  if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
-                    parent->dxcore_->SetSystemProxy();
-                  }
-                }).detach();
-              }
-              else if (event == "TUNNEL_FAILED") {
-                {
-                  std::lock_guard<std::mutex> lock(parent->status_mutex_);
-                  parent->vpn_status_ = "disconnected";
-                }
-
-                if (parent->system_tray_) {
-                  parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
-                  parent->system_tray_->UpdateTooltip(L"DefyxVPN - Error");
-                  parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
-                }
-
-                std::thread([parent]() {
-                  if (!parent->is_active_) return;
-                  if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
-                    parent->dxcore_->ResetSystemProxy();
-                  }
-                }).detach();
-
-                PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
-                           reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
-              }
-              else if (event == "VPN_STOPPED" || event == "VPN_CANCELLED") {
-                {
-                  std::lock_guard<std::mutex> lock(parent->status_mutex_);
-                  parent->vpn_status_ = "disconnected";
-                }
-
-                if (parent->system_tray_) {
-                  parent->system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
-                  parent->system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
-                  parent->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
-                }
-
-                std::thread([parent]() {
-                  if (!parent->is_active_) return;
-                  if (parent->system_tray_ && parent->system_tray_->GetSystemProxy()) {
-                    parent->dxcore_->ResetSystemProxy();
-                  }
-                }).detach();
-
-                PostMessage(parent->window_handle_, WM_STATUS_RESULT, 0,
-                           reinterpret_cast<LPARAM>(new std::string(parent->vpn_status_)));
-              }
-            }
-          }
+        // Parse and handle JSON events
+        std::string event_type;
+        if (parent->ParseVPNEvent(msg, event_type)) {
+          parent->HandleJSONEvent(event_type);
         }
       });
 
@@ -555,5 +482,100 @@ void VPNChannelHandler::HandleStatusResult(const std::string& status) {
     m[flutter::EncodableValue("status")] = flutter::EncodableValue(status);
     status_sink_->Success(flutter::EncodableValue(m));
   }
+}
+
+// Simple JSON parser to extract event type from VPNEvent JSON
+bool VPNChannelHandler::ParseVPNEvent(const std::string& msg, std::string& event_type) {
+  // Check if message starts with '{'
+  if (msg.empty() || msg[0] != '{') {
+    return false;
+  }
+
+  // Find "event":"<EVENT_TYPE>"
+  const std::string event_key = "\"event\":\"";
+  size_t event_pos = msg.find(event_key);
+  if (event_pos == std::string::npos) {
+    return false;
+  }
+
+  size_t start = event_pos + event_key.length();
+  size_t end = msg.find("\"", start);
+  if (end == std::string::npos) {
+    return false;
+  }
+
+  event_type = msg.substr(start, end - start);
+  return true;
+}
+
+// Handle structured JSON events from Go core
+void VPNChannelHandler::HandleJSONEvent(const std::string& event_type) {
+  if (event_type == "TUNNEL_CONNECTED") {
+    {
+      std::lock_guard<std::mutex> lock(status_mutex_);
+      vpn_status_ = "connected";
+    }
+
+    PostMessage(window_handle_, WM_STATUS_RESULT, 0,
+                reinterpret_cast<LPARAM>(new std::string(vpn_status_)));
+
+    if (system_tray_) {
+      system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Connected);
+      system_tray_->UpdateTooltip(L"DefyxVPN - Connected");
+      system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
+    }
+
+    std::thread([this]() {
+      if (!is_active_) return;
+      if (system_tray_ && system_tray_->GetSystemProxy()) {
+        dxcore_->SetSystemProxy();
+      }
+    }).detach();
+  }
+  else if (event_type == "TUNNEL_FAILED") {
+    {
+      std::lock_guard<std::mutex> lock(status_mutex_);
+      vpn_status_ = "disconnected";
+    }
+
+    if (system_tray_) {
+      system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Failed);
+      system_tray_->UpdateTooltip(L"DefyxVPN - Error");
+      system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
+    }
+
+    std::thread([this]() {
+      if (!is_active_) return;
+      if (system_tray_ && system_tray_->GetSystemProxy()) {
+        dxcore_->ResetSystemProxy();
+      }
+    }).detach();
+
+    PostMessage(window_handle_, WM_STATUS_RESULT, 0,
+                reinterpret_cast<LPARAM>(new std::string(vpn_status_)));
+  }
+  else if (event_type == "VPN_STOPPED" || event_type == "VPN_CANCELLED") {
+    {
+      std::lock_guard<std::mutex> lock(status_mutex_);
+      vpn_status_ = "disconnected";
+    }
+
+    if (system_tray_) {
+      system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+      system_tray_->UpdateTooltip(L"DefyxVPN - Disconnected");
+      system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
+    }
+
+    std::thread([this]() {
+      if (!is_active_) return;
+      if (system_tray_ && system_tray_->GetSystemProxy()) {
+        dxcore_->ResetSystemProxy();
+      }
+    }).detach();
+
+    PostMessage(window_handle_, WM_STATUS_RESULT, 0,
+                reinterpret_cast<LPARAM>(new std::string(vpn_status_)));
+  }
+  // Other event types (STEP_PROGRESS, CONFIG_INFO, etc.) are handled by Flutter
 }
 

@@ -39,6 +39,10 @@ class VPNChannelHandler {
 
   void SendStatus();
 
+  // JSON event parsing helpers
+  bool ParseVPNEvent(const std::string& msg, std::string& event_type);
+  void HandleJSONEvent(const std::string& event_type);
+
   flutter::BinaryMessenger* messenger_;
   HWND window_handle_;
   DXCoreBridge* dxcore_;
