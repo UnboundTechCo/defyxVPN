@@ -16,6 +16,12 @@
 /// - Widget (this file): UI rendering, strategy selection, lifecycle management
 /// - Strategies: Ad loading logic, connection state handling, resource cleanup
 /// - State (ads_state.dart): Centralized state shared across all strategies
+/// - MainScreen: Controls when to show/hide ads (single source of truth)
+/// 
+/// **Visibility Control:**
+/// - MainScreen decides when to render AdsWidget (based on connection + countdown)
+/// - AdsWidget trusts MainScreen and renders when called (no duplicate checks)
+/// - This approach works cleanly with Strategy Pattern (both ad types use same state)
 /// 
 /// **UI Features:**
 /// - "ADVERTISEMENT" label (top-right corner)
@@ -79,6 +85,21 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       // Initialize strategy (this also loads the initial ad)
       await _strategy!.initialize(ref);
       
+      // Trigger rebuild to show the ad
+      if (mounted && !_isDisposed) {
+        setState(() {});
+      }
+      
+      // Check current connection state and start countdown if already connected
+      final currentConnectionState = ref.read(connectionStateProvider).status;
+      if (currentConnectionState == ConnectionStatus.connected) {
+        final adsState = ref.read(adsProvider);
+        if (adsState.nativeAdIsLoaded) {
+          debugPrint('⏰ Already connected on init - starting countdown');
+          ref.read(adsProvider.notifier).startCountdownTimer();
+        }
+      }
+      
       // Listen to connection changes and delegate to strategy
       ref.listenManual(connectionStateProvider, (previous, next) {
         if (_strategy == null || _isDisposed) return;
@@ -106,23 +127,18 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
   Widget build(BuildContext context) {
     final adsState = ref.watch(adsProvider);
 
-    // Hide ad panel completely if loading failed (don't show errors to users)
+    // Safety check: Hide if loading failed (MainScreen should already handle this)
     if (adsState.adLoadFailed) {
       return const SizedBox.shrink();
     }
 
-    // For internal ads: Don't show container until we have a valid image URL
-    if (_useInternalAds) {
-      if (adsState.customImageUrl == null || adsState.customImageUrl!.isEmpty) {
-        return const SizedBox.shrink();
-      }
-    }
-
-    // For Google ads: Don't show container until ad is actually loaded
-    if (!_useInternalAds && !adsState.nativeAdIsLoaded) {
+    // Wait for strategy to initialize (happens in postFrameCallback)
+    if (_strategy == null) {
       return const SizedBox.shrink();
     }
 
+    // Render ad container - MainScreen controls visibility via shouldShowAd
+    // No need to check ad loaded state here, MainScreen already does that
     return SizedBox(
       height: 280.h,
       width: 336.w,

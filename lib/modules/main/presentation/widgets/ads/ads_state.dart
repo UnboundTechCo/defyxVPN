@@ -162,13 +162,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
   }
 
   /// Start the countdown timer after ad is loaded and VPN connects
+  /// Always restarts to 60 seconds on each connection
   void startCountdownTimer() async {
-    if (_countdownTimer != null && _countdownTimer!.isActive) {
-      debugPrint('⏱️ Countdown already running, ignoring duplicate start');
-      return;
-    }
-
-    debugPrint('▶️ Starting new countdown timer');
+    debugPrint('▶️ Starting new countdown timer (60 seconds)');
     _countdownTimer?.cancel();
     
     // Clear any old persisted countdown before starting new one
@@ -189,10 +185,14 @@ class AdsNotifier extends StateNotifier<AdsState> {
   void _startCountdownFromValue(int startValue) {
     _countdownTimer?.cancel();
     
+    debugPrint('⏱️ Timer starting from $startValue seconds');
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
-        state = state.copyWith(countdown: state.countdown - 1);
+        final newCount = state.countdown - 1;
+        debugPrint('⏱️ Countdown: $newCount');
+        state = state.copyWith(countdown: newCount);
       } else {
+        debugPrint('⏱️ Countdown finished - hiding ad');
         state = state.copyWith(
           showCountdown: false,
           // Keep ad loaded - just hide it until next connection

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 class CustomWebViewScreen extends StatefulWidget {
   final String url;
@@ -20,7 +22,7 @@ class CustomWebViewScreen extends StatefulWidget {
 }
 
 class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
-  late final WebViewController _controller;
+  WebViewController? _controller;
   bool _isLoading = true;
 
   @override
@@ -32,23 +34,69 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
       return;
     }
 
-    _controller = WebViewController()
+    _initializeWebView();
+  }
+
+  Future<void> _initializeWebView() async {
+    // Clear all cookies before loading to prevent tracking
+    await WebViewCookieManager().clearCookies();
+    
+    // Use platform-specific params for native cookie blocking
+    late final PlatformWebViewControllerCreationParams params;
+    
+    if (Platform.isIOS) {
+      // iOS: Use WKWebView which blocks 3rd-party cookies by default (iOS 14+)
+      params = WebKitWebViewControllerCreationParams(
+        allowsInlineMediaPlayback: true,
+        mediaTypesRequiringUserAction: const {},
+      );
+    } else if (Platform.isAndroid) {
+      // Android: Use native WebView with built-in privacy features
+      params = AndroidWebViewControllerCreationParams();
+    } else {
+      params = const PlatformWebViewControllerCreationParams();
+    }
+    
+    final controller = WebViewController.fromPlatformCreationParams(params)
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
-          onPageStarted: (String url) {
-            setState(() {
-              _isLoading = true;
-            });
+          onNavigationRequest: (NavigationRequest request) {
+            // Clear cookies before every navigation to prevent tracking persistence
+            WebViewCookieManager().clearCookies();
+            debugPrint('🍪 Cookies cleared before navigation to: ${request.url}');
+            return NavigationDecision.navigate;
+          },
+          onPageStarted: (String url) async {
+            // Clear cookies when page starts loading as an additional safeguard
+            await WebViewCookieManager().clearCookies();
+            if (mounted) {
+              setState(() {
+                _isLoading = true;
+              });
+            }
           },
           onPageFinished: (String url) {
-            setState(() {
-              _isLoading = false;
-            });
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+            }
           },
         ),
       )
-      ..loadRequest(Uri.parse(widget.url));
+      ..setUserAgent('Mozilla/5.0 (iPhone; CPU iPhone OS 16_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 DNT/1');
+    
+    // Load the URL
+    await controller.loadRequest(Uri.parse(widget.url));
+    
+    _controller = controller;
+    
+    if (mounted) {
+      setState(() {});
+    }
+    
+    debugPrint('🍪 WebView initialized: Native privacy + continuous cookie blocking');
   }
 
   Future<void> _openInBrowser() async {
@@ -137,7 +185,10 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
       ),
       body: Stack(
         children: [
-          WebViewWidget(controller: _controller),
+          if (_controller != null)
+            WebViewWidget(controller: _controller!)
+          else
+            const SizedBox.shrink(),
           if (_isLoading)
             Center(
               child: CircularProgressIndicator(
