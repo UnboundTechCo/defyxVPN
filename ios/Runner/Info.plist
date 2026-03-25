@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true/>
+		<true />
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -27,17 +27,19 @@
 		<key>GADApplicationIdentifier</key>
 		<string>ca-app-pub-6029472941300558~5225768298</string>
 		<key>LSRequiresIPhoneOS</key>
-		<true/>
+		<true />
 		<key>NSDocumentsFolderUsageDescription</key>
 		<string>WARP needs access to store its configuration files</string>
 		<key>NSVPNConfigurationUsageDescription</key>
 		<string>Defyx needs access to VPN configurations to secure your connection.</string>
 		<key>NSUserTrackingUsageDescription</key>
-		<string>We need permission to show you personalized ads. This helps support our free VPN service. Declining means you'll see generic ads instead.</string>	
+		<string>We need permission to show you personalized ads. This helps support our free VPN
+			service. Declining means you'll see generic ads instead.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Defyx needs access to your photo library to let you select and share images, such as profile pictures or VPN connection QR codes.</string>		
+		<string>Defyx needs access to your photo library to let you select and share images, such as
+			profile pictures or VPN connection QR codes.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
+		<true />
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
@@ -64,36 +66,53 @@
 		<key>NSAppTransportSecurity</key>
 		<dict>
 			<key>NSAllowsArbitraryLoads</key>
-			<true/>
+			<true />
 		</dict>
 		<key>UIStatusBarHidden</key>
-	<false/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>UISupportsDocumentBrowser</key>
-	<true/>
-	<key>UTImportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>DefyX Configuration File</string>
-			<key>UTTypeIdentifier</key>
-			<string>de.unboundtech.defyxvpn.dfx</string>
-			<key>UTTypeTagSpecification</key>
+		<false />
+		<key>LSSupportsOpeningDocumentsInPlace</key>
+		<true />
+		<key>UIFileSharingEnabled</key>
+		<true />
+		<key>UISupportsDocumentBrowser</key>
+		<true />
+		<key>UTImportedTypeDeclarations</key>
+		<array>
 			<dict>
-				<key>public.filename-extension</key>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.data</string>
+					<string>public.content</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>DefyX Configuration File</string>
+				<key>UTTypeIdentifier</key>
+				<string>de.unboundtech.defyxvpn.dfx</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>dfx</string>
+					</array>
+				</dict>
+			</dict>
+		</array>
+		<key>CFBundleDocumentTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeName</key>
+				<string>DFX File</string>
+				<key>LSHandlerRank</key>
+				<string>Alternate</string>
+				<key>CFBundleTypeExtensions</key>
 				<array>
 					<string>dfx</string>
 				</array>
+				<key>LSItemContentTypes</key>
+				<array>
+					<string>public.data</string>
+				</array>
 			</dict>
-		</dict>
-	</array>
+		</array>
 	</dict>
 </plist>

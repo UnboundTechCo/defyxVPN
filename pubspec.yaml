@@ -53,7 +53,9 @@ dependencies:
   msix: ^3.16.12
   flutter_native_splash: ^2.4.7
   file_picker: ^10.3.10
-
+  webview_flutter_android: ^4.10.13
+  receive_sharing_intent: ^1.8.1
+  webview_flutter_wkwebview: ^3.24.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

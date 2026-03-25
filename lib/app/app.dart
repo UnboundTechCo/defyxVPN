@@ -4,6 +4,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/modules/core/file_listener.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
@@ -35,6 +36,7 @@ class App extends ConsumerWidget {
   }
 
   Future<bool> _initializeApp(WidgetRef ref) async {
+    FileListener().init(ProviderScope.containerOf(ref.context));
     await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
@@ -57,20 +59,22 @@ class App extends ConsumerWidget {
       if (Platform.isAndroid || Platform.isIOS) {
         // Request App Tracking Transparency (iOS only)
         if (Platform.isIOS) {
-          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+          final status =
+              await AppTrackingTransparency.trackingAuthorizationStatus;
           if (status == TrackingStatus.notDetermined) {
             // Small delay to ensure UI is ready
             await Future.delayed(const Duration(milliseconds: 500));
-            final result = await AppTrackingTransparency.requestTrackingAuthorization();
+            final result =
+                await AppTrackingTransparency.requestTrackingAuthorization();
             debugPrint('📱 ATT Authorization: $result');
           } else {
             debugPrint('📱 ATT Status: $status');
           }
         }
-        
+
         // Get UMP service with cache integration
         final umpService = ref.read(umpServiceProvider);
-        
+
         // Request UMP consent (checks cache first)
         await umpService.requestConsent(
           onDone: () async {
@@ -91,41 +95,42 @@ class App extends ConsumerWidget {
     final designSize = _getDesignSize(context);
 
     return ToastificationWrapper(
-        config: ToastificationConfig(
-          maxToastLimit: 1,
-          blockBackgroundInteraction: false,
-          applyMediaQueryViewInsets: true,
-        ),
-        child: ScreenUtilInit(
-          designSize: designSize,
-          minTextAdapt: true,
-          splitScreenMode: true,
-          builder: (_, __) {
-            return MaterialApp.router(
-              title: 'Defyx',
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: ThemeMode.light,
-              routerConfig: router,
-              builder: _appBuilder,
-              debugShowCheckedModeBanner: false,
-              // Force English locale (comment out to enable device language detection)
-              locale: const Locale('en'),
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('en'),
-                Locale('fa'),
-                Locale('zh'),
-                Locale('ru'),
-              ],
-            );
-          },
-        ));
+      config: ToastificationConfig(
+        maxToastLimit: 1,
+        blockBackgroundInteraction: false,
+        applyMediaQueryViewInsets: true,
+      ),
+      child: ScreenUtilInit(
+        designSize: designSize,
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (_, __) {
+          return MaterialApp.router(
+            title: 'Defyx',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light,
+            routerConfig: router,
+            builder: _appBuilder,
+            debugShowCheckedModeBanner: false,
+            // Force English locale (comment out to enable device language detection)
+            locale: const Locale('en'),
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('fa'),
+              Locale('zh'),
+              Locale('ru'),
+            ],
+          );
+        },
+      ),
+    );
   }
 
   Size _getDesignSize(BuildContext context) {
