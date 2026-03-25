@@ -53,7 +53,10 @@ class _OfflineFlowlineWidgetState extends ConsumerState<OfflineFlowlineWidget> {
               backgroundColor: const Color(0xFFF2F2F2),
               padding: EdgeInsets.all(10.h),
             ),
-            child: Text(AppLocalizations.of(context).offlineFlowlineUndo),
+            child: Text(
+              AppLocalizations.of(context).offlineFlowlineUndo,
+              style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.w500),
+            ),
           ),
         ],
       ),

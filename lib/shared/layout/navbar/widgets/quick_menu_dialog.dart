@@ -34,7 +34,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     
     return SafeArea(
       child: Padding(

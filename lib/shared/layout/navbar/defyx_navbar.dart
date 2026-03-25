@@ -116,7 +116,7 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     ref.read(currentScreenProvider.notifier).state = AppScreen.share;
     showGeneralDialog(
       context: context,
