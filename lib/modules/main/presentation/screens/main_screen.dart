@@ -292,7 +292,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         );
 
       default:
-        // Show ads only when connected to VPN and ad is loaded
+        // MainScreen controls ad visibility (Strategy Pattern approach)
+        // Works for both GoogleAdStrategy and InternalAdStrategy
+        // - nativeAdIsLoaded: true when ad is ready (Google or Internal)
+        // - showCountdown: true during 60-second display window
+        // - connected: only show when VPN is active
         final shouldShowAd = status == ConnectionStatus.connected && 
                              adsState.showCountdown && 
                              adsState.nativeAdIsLoaded;

@@ -68,10 +68,13 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       // Check if we need to load a new ad
       if (_nativeAd != null) {
         final adsState = ref.read(adsProvider);
+        debugPrint('🔍 Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}');
         if (adsState.nativeAdIsLoaded) {
           debugPrint('✅ Using existing valid ad');
           _hasInitialized = true;
           return;
+        } else {
+          debugPrint('⚠️ Cached ad exists but state says not loaded - will reload');
         }
       }
       
@@ -98,15 +101,19 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       );
     }
     
-    // Reset ad loaded state BEFORE disposing to prevent showing disposed ad
-    if (_nativeAd != null) {
-      ref.read(adsProvider.notifier).setAdLoaded(false);
+    // Check if we already have a valid cached ad
+    final adsState = ref.read(adsProvider);
+    if (_nativeAd != null && adsState.nativeAdIsLoaded && !adsState.needsRefresh) {
+      debugPrint('✅ Reusing cached ad (still fresh)');
+      return AdLoadResult.success();
     }
 
     _isLoading = true;
 
-    // Dispose previous ad if exists
+    // Only dispose if we're reloading (ad is stale or failed)
     if (_nativeAd != null) {
+      debugPrint('🔄 Disposing stale/failed ad before reload');
+      ref.read(adsProvider.notifier).setAdLoaded(false);
       try {
         _nativeAd!.dispose();
         debugPrint('🗑️ Disposed previous ad');
@@ -233,7 +240,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             analytics.logEvent(name: 'ad_impression', parameters: {});
           },
         ),
-        request: const AdRequest(),
+        request: const AdRequest(
+          keywords: ['privacy', 'security', 'technology', 'mobile', 'internet safety', 'data protection'],
+          contentUrl: 'defyxvpn://home',
+        ),
         nativeTemplateStyle: templateStyle,
       );
       
@@ -296,16 +306,17 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       
       final adsState = ref.read(adsProvider);
       
-      // Load ad if we don't have one or previous load failed
-      if (_nativeAd == null || !adsState.nativeAdIsLoaded) {
+      // Check if we need to reload (no ad, failed load, or stale)
+      if (_nativeAd == null || !adsState.nativeAdIsLoaded || adsState.needsRefresh) {
         if (_isLoading) {
           debugPrint('⏳ Ad load already in progress...');
           return;
         }
         
         debugPrint('📱 Loading ad with real IP');
-        _hasInitialized = false;
-        initialize(ref);
+        loadAd(ref: ref);
+      } else {
+        debugPrint('✅ Keeping existing cached ad');
       }
       return;
     }
