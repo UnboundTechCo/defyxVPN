@@ -12,7 +12,8 @@ part of 'app_api_response.dart';
 T _$identity<T>(T value) => value;
 
 final _privateConstructorUsedError = UnsupportedError(
-    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
 
 AppApiResponse _$AppApiResponseFromJson(Map<String, dynamic> json) {
   return _AppApiResponse.fromJson(json);
@@ -46,16 +47,18 @@ mixin _$AppApiResponse {
 /// @nodoc
 abstract class $AppApiResponseCopyWith<$Res> {
   factory $AppApiResponseCopyWith(
-          AppApiResponse value, $Res Function(AppApiResponse) then) =
-      _$AppApiResponseCopyWithImpl<$Res, AppApiResponse>;
+    AppApiResponse value,
+    $Res Function(AppApiResponse) then,
+  ) = _$AppApiResponseCopyWithImpl<$Res, AppApiResponse>;
   @useResult
-  $Res call(
-      {@JsonKey(name: "version") Version version,
-      @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
-      @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
-      @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls") List<String> testUrls,
-      @JsonKey(name: "tips") List<Hint>? tips});
+  $Res call({
+    @JsonKey(name: "version") Version version,
+    @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
+    @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
+    @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
+    @JsonKey(name: "testUrls") List<String> testUrls,
+    @JsonKey(name: "tips") List<Hint>? tips,
+  });
 
   $VersionCopyWith<$Res> get version;
   $AppApiResponseFlowLineCopyWith<$Res> get flowLine;
@@ -83,32 +86,35 @@ class _$AppApiResponseCopyWithImpl<$Res, $Val extends AppApiResponse>
     Object? testUrls = null,
     Object? tips = freezed,
   }) {
-    return _then(_value.copyWith(
-      version: null == version
-          ? _value.version
-          : version // ignore: cast_nullable_to_non_nullable
-              as Version,
-      forceUpdate: null == forceUpdate
-          ? _value.forceUpdate
-          : forceUpdate // ignore: cast_nullable_to_non_nullable
-              as Map<String, bool>,
-      changeLog: null == changeLog
-          ? _value.changeLog
-          : changeLog // ignore: cast_nullable_to_non_nullable
-              as Map<String, List<String>>,
-      flowLine: null == flowLine
-          ? _value.flowLine
-          : flowLine // ignore: cast_nullable_to_non_nullable
-              as AppApiResponseFlowLine,
-      testUrls: null == testUrls
-          ? _value.testUrls
-          : testUrls // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      tips: freezed == tips
-          ? _value.tips
-          : tips // ignore: cast_nullable_to_non_nullable
-              as List<Hint>?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            version: null == version
+                ? _value.version
+                : version // ignore: cast_nullable_to_non_nullable
+                      as Version,
+            forceUpdate: null == forceUpdate
+                ? _value.forceUpdate
+                : forceUpdate // ignore: cast_nullable_to_non_nullable
+                      as Map<String, bool>,
+            changeLog: null == changeLog
+                ? _value.changeLog
+                : changeLog // ignore: cast_nullable_to_non_nullable
+                      as Map<String, List<String>>,
+            flowLine: null == flowLine
+                ? _value.flowLine
+                : flowLine // ignore: cast_nullable_to_non_nullable
+                      as AppApiResponseFlowLine,
+            testUrls: null == testUrls
+                ? _value.testUrls
+                : testUrls // ignore: cast_nullable_to_non_nullable
+                      as List<String>,
+            tips: freezed == tips
+                ? _value.tips
+                : tips // ignore: cast_nullable_to_non_nullable
+                      as List<Hint>?,
+          )
+          as $Val,
+    );
   }
 
   /// Create a copy of AppApiResponse
@@ -135,18 +141,20 @@ class _$AppApiResponseCopyWithImpl<$Res, $Val extends AppApiResponse>
 /// @nodoc
 abstract class _$$AppApiResponseImplCopyWith<$Res>
     implements $AppApiResponseCopyWith<$Res> {
-  factory _$$AppApiResponseImplCopyWith(_$AppApiResponseImpl value,
-          $Res Function(_$AppApiResponseImpl) then) =
-      __$$AppApiResponseImplCopyWithImpl<$Res>;
+  factory _$$AppApiResponseImplCopyWith(
+    _$AppApiResponseImpl value,
+    $Res Function(_$AppApiResponseImpl) then,
+  ) = __$$AppApiResponseImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {@JsonKey(name: "version") Version version,
-      @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
-      @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
-      @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls") List<String> testUrls,
-      @JsonKey(name: "tips") List<Hint>? tips});
+  $Res call({
+    @JsonKey(name: "version") Version version,
+    @JsonKey(name: "forceUpdate") Map<String, bool> forceUpdate,
+    @JsonKey(name: "changeLog") Map<String, List<String>> changeLog,
+    @JsonKey(name: "flowLine") AppApiResponseFlowLine flowLine,
+    @JsonKey(name: "testUrls") List<String> testUrls,
+    @JsonKey(name: "tips") List<Hint>? tips,
+  });
 
   @override
   $VersionCopyWith<$Res> get version;
@@ -159,8 +167,9 @@ class __$$AppApiResponseImplCopyWithImpl<$Res>
     extends _$AppApiResponseCopyWithImpl<$Res, _$AppApiResponseImpl>
     implements _$$AppApiResponseImplCopyWith<$Res> {
   __$$AppApiResponseImplCopyWithImpl(
-      _$AppApiResponseImpl _value, $Res Function(_$AppApiResponseImpl) _then)
-      : super(_value, _then);
+    _$AppApiResponseImpl _value,
+    $Res Function(_$AppApiResponseImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of AppApiResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -174,51 +183,52 @@ class __$$AppApiResponseImplCopyWithImpl<$Res>
     Object? testUrls = null,
     Object? tips = freezed,
   }) {
-    return _then(_$AppApiResponseImpl(
-      version: null == version
-          ? _value.version
-          : version // ignore: cast_nullable_to_non_nullable
-              as Version,
-      forceUpdate: null == forceUpdate
-          ? _value._forceUpdate
-          : forceUpdate // ignore: cast_nullable_to_non_nullable
-              as Map<String, bool>,
-      changeLog: null == changeLog
-          ? _value._changeLog
-          : changeLog // ignore: cast_nullable_to_non_nullable
-              as Map<String, List<String>>,
-      flowLine: null == flowLine
-          ? _value.flowLine
-          : flowLine // ignore: cast_nullable_to_non_nullable
-              as AppApiResponseFlowLine,
-      testUrls: null == testUrls
-          ? _value._testUrls
-          : testUrls // ignore: cast_nullable_to_non_nullable
-              as List<String>,
-      tips: freezed == tips
-          ? _value._tips
-          : tips // ignore: cast_nullable_to_non_nullable
-              as List<Hint>?,
-    ));
+    return _then(
+      _$AppApiResponseImpl(
+        version: null == version
+            ? _value.version
+            : version // ignore: cast_nullable_to_non_nullable
+                  as Version,
+        forceUpdate: null == forceUpdate
+            ? _value._forceUpdate
+            : forceUpdate // ignore: cast_nullable_to_non_nullable
+                  as Map<String, bool>,
+        changeLog: null == changeLog
+            ? _value._changeLog
+            : changeLog // ignore: cast_nullable_to_non_nullable
+                  as Map<String, List<String>>,
+        flowLine: null == flowLine
+            ? _value.flowLine
+            : flowLine // ignore: cast_nullable_to_non_nullable
+                  as AppApiResponseFlowLine,
+        testUrls: null == testUrls
+            ? _value._testUrls
+            : testUrls // ignore: cast_nullable_to_non_nullable
+                  as List<String>,
+        tips: freezed == tips
+            ? _value._tips
+            : tips // ignore: cast_nullable_to_non_nullable
+                  as List<Hint>?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AppApiResponseImpl implements _AppApiResponse {
-  const _$AppApiResponseImpl(
-      {@JsonKey(name: "version") required this.version,
-      @JsonKey(name: "forceUpdate")
-      required final Map<String, bool> forceUpdate,
-      @JsonKey(name: "changeLog")
-      required final Map<String, List<String>> changeLog,
-      @JsonKey(name: "flowLine") required this.flowLine,
-      @JsonKey(name: "testUrls") required final List<String> testUrls,
-      @JsonKey(name: "tips") final List<Hint>? tips})
-      : _forceUpdate = forceUpdate,
-        _changeLog = changeLog,
-        _testUrls = testUrls,
-        _tips = tips;
+  const _$AppApiResponseImpl({
+    @JsonKey(name: "version") required this.version,
+    @JsonKey(name: "forceUpdate") required final Map<String, bool> forceUpdate,
+    @JsonKey(name: "changeLog")
+    required final Map<String, List<String>> changeLog,
+    @JsonKey(name: "flowLine") required this.flowLine,
+    @JsonKey(name: "testUrls") required final List<String> testUrls,
+    @JsonKey(name: "tips") final List<Hint>? tips,
+  }) : _forceUpdate = forceUpdate,
+       _changeLog = changeLog,
+       _testUrls = testUrls,
+       _tips = tips;
 
   factory _$AppApiResponseImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppApiResponseImplFromJson(json);
@@ -278,10 +288,14 @@ class _$AppApiResponseImpl implements _AppApiResponse {
         (other.runtimeType == runtimeType &&
             other is _$AppApiResponseImpl &&
             (identical(other.version, version) || other.version == version) &&
-            const DeepCollectionEquality()
-                .equals(other._forceUpdate, _forceUpdate) &&
-            const DeepCollectionEquality()
-                .equals(other._changeLog, _changeLog) &&
+            const DeepCollectionEquality().equals(
+              other._forceUpdate,
+              _forceUpdate,
+            ) &&
+            const DeepCollectionEquality().equals(
+              other._changeLog,
+              _changeLog,
+            ) &&
             (identical(other.flowLine, flowLine) ||
                 other.flowLine == flowLine) &&
             const DeepCollectionEquality().equals(other._testUrls, _testUrls) &&
@@ -291,13 +305,14 @@ class _$AppApiResponseImpl implements _AppApiResponse {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      version,
-      const DeepCollectionEquality().hash(_forceUpdate),
-      const DeepCollectionEquality().hash(_changeLog),
-      flowLine,
-      const DeepCollectionEquality().hash(_testUrls),
-      const DeepCollectionEquality().hash(_tips));
+    runtimeType,
+    version,
+    const DeepCollectionEquality().hash(_forceUpdate),
+    const DeepCollectionEquality().hash(_changeLog),
+    flowLine,
+    const DeepCollectionEquality().hash(_testUrls),
+    const DeepCollectionEquality().hash(_tips),
+  );
 
   /// Create a copy of AppApiResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -306,26 +321,26 @@ class _$AppApiResponseImpl implements _AppApiResponse {
   @pragma('vm:prefer-inline')
   _$$AppApiResponseImplCopyWith<_$AppApiResponseImpl> get copyWith =>
       __$$AppApiResponseImplCopyWithImpl<_$AppApiResponseImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AppApiResponseImplToJson(
-      this,
-    );
+    return _$$AppApiResponseImplToJson(this);
   }
 }
 
 abstract class _AppApiResponse implements AppApiResponse {
-  const factory _AppApiResponse(
-      {@JsonKey(name: "version") required final Version version,
-      @JsonKey(name: "forceUpdate")
-      required final Map<String, bool> forceUpdate,
-      @JsonKey(name: "changeLog")
-      required final Map<String, List<String>> changeLog,
-      @JsonKey(name: "flowLine") required final AppApiResponseFlowLine flowLine,
-      @JsonKey(name: "testUrls") required final List<String> testUrls,
-      @JsonKey(name: "tips") final List<Hint>? tips}) = _$AppApiResponseImpl;
+  const factory _AppApiResponse({
+    @JsonKey(name: "version") required final Version version,
+    @JsonKey(name: "forceUpdate") required final Map<String, bool> forceUpdate,
+    @JsonKey(name: "changeLog")
+    required final Map<String, List<String>> changeLog,
+    @JsonKey(name: "flowLine") required final AppApiResponseFlowLine flowLine,
+    @JsonKey(name: "testUrls") required final List<String> testUrls,
+    @JsonKey(name: "tips") final List<Hint>? tips,
+  }) = _$AppApiResponseImpl;
 
   factory _AppApiResponse.fromJson(Map<String, dynamic> json) =
       _$AppApiResponseImpl.fromJson;
@@ -358,7 +373,8 @@ abstract class _AppApiResponse implements AppApiResponse {
 }
 
 AppApiResponseFlowLine _$AppApiResponseFlowLineFromJson(
-    Map<String, dynamic> json) {
+  Map<String, dynamic> json,
+) {
   return _AppApiResponseFlowLine.fromJson(json);
 }
 
@@ -381,18 +397,22 @@ mixin _$AppApiResponseFlowLine {
 
 /// @nodoc
 abstract class $AppApiResponseFlowLineCopyWith<$Res> {
-  factory $AppApiResponseFlowLineCopyWith(AppApiResponseFlowLine value,
-          $Res Function(AppApiResponseFlowLine) then) =
-      _$AppApiResponseFlowLineCopyWithImpl<$Res, AppApiResponseFlowLine>;
+  factory $AppApiResponseFlowLineCopyWith(
+    AppApiResponseFlowLine value,
+    $Res Function(AppApiResponseFlowLine) then,
+  ) = _$AppApiResponseFlowLineCopyWithImpl<$Res, AppApiResponseFlowLine>;
   @useResult
-  $Res call(
-      {@JsonKey(name: "startLine") int startLine,
-      @JsonKey(name: "flowLine") List<FlowLineElement> flowLine});
+  $Res call({
+    @JsonKey(name: "startLine") int startLine,
+    @JsonKey(name: "flowLine") List<FlowLineElement> flowLine,
+  });
 }
 
 /// @nodoc
-class _$AppApiResponseFlowLineCopyWithImpl<$Res,
-        $Val extends AppApiResponseFlowLine>
+class _$AppApiResponseFlowLineCopyWithImpl<
+  $Res,
+  $Val extends AppApiResponseFlowLine
+>
     implements $AppApiResponseFlowLineCopyWith<$Res> {
   _$AppApiResponseFlowLineCopyWithImpl(this._value, this._then);
 
@@ -405,20 +425,20 @@ class _$AppApiResponseFlowLineCopyWithImpl<$Res,
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? startLine = null,
-    Object? flowLine = null,
-  }) {
-    return _then(_value.copyWith(
-      startLine: null == startLine
-          ? _value.startLine
-          : startLine // ignore: cast_nullable_to_non_nullable
-              as int,
-      flowLine: null == flowLine
-          ? _value.flowLine
-          : flowLine // ignore: cast_nullable_to_non_nullable
-              as List<FlowLineElement>,
-    ) as $Val);
+  $Res call({Object? startLine = null, Object? flowLine = null}) {
+    return _then(
+      _value.copyWith(
+            startLine: null == startLine
+                ? _value.startLine
+                : startLine // ignore: cast_nullable_to_non_nullable
+                      as int,
+            flowLine: null == flowLine
+                ? _value.flowLine
+                : flowLine // ignore: cast_nullable_to_non_nullable
+                      as List<FlowLineElement>,
+          )
+          as $Val,
+    );
   }
 }
 
@@ -426,54 +446,54 @@ class _$AppApiResponseFlowLineCopyWithImpl<$Res,
 abstract class _$$AppApiResponseFlowLineImplCopyWith<$Res>
     implements $AppApiResponseFlowLineCopyWith<$Res> {
   factory _$$AppApiResponseFlowLineImplCopyWith(
-          _$AppApiResponseFlowLineImpl value,
-          $Res Function(_$AppApiResponseFlowLineImpl) then) =
-      __$$AppApiResponseFlowLineImplCopyWithImpl<$Res>;
+    _$AppApiResponseFlowLineImpl value,
+    $Res Function(_$AppApiResponseFlowLineImpl) then,
+  ) = __$$AppApiResponseFlowLineImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {@JsonKey(name: "startLine") int startLine,
-      @JsonKey(name: "flowLine") List<FlowLineElement> flowLine});
+  $Res call({
+    @JsonKey(name: "startLine") int startLine,
+    @JsonKey(name: "flowLine") List<FlowLineElement> flowLine,
+  });
 }
 
 /// @nodoc
 class __$$AppApiResponseFlowLineImplCopyWithImpl<$Res>
-    extends _$AppApiResponseFlowLineCopyWithImpl<$Res,
-        _$AppApiResponseFlowLineImpl>
+    extends
+        _$AppApiResponseFlowLineCopyWithImpl<$Res, _$AppApiResponseFlowLineImpl>
     implements _$$AppApiResponseFlowLineImplCopyWith<$Res> {
   __$$AppApiResponseFlowLineImplCopyWithImpl(
-      _$AppApiResponseFlowLineImpl _value,
-      $Res Function(_$AppApiResponseFlowLineImpl) _then)
-      : super(_value, _then);
+    _$AppApiResponseFlowLineImpl _value,
+    $Res Function(_$AppApiResponseFlowLineImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of AppApiResponseFlowLine
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
-  $Res call({
-    Object? startLine = null,
-    Object? flowLine = null,
-  }) {
-    return _then(_$AppApiResponseFlowLineImpl(
-      startLine: null == startLine
-          ? _value.startLine
-          : startLine // ignore: cast_nullable_to_non_nullable
-              as int,
-      flowLine: null == flowLine
-          ? _value._flowLine
-          : flowLine // ignore: cast_nullable_to_non_nullable
-              as List<FlowLineElement>,
-    ));
+  $Res call({Object? startLine = null, Object? flowLine = null}) {
+    return _then(
+      _$AppApiResponseFlowLineImpl(
+        startLine: null == startLine
+            ? _value.startLine
+            : startLine // ignore: cast_nullable_to_non_nullable
+                  as int,
+        flowLine: null == flowLine
+            ? _value._flowLine
+            : flowLine // ignore: cast_nullable_to_non_nullable
+                  as List<FlowLineElement>,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$AppApiResponseFlowLineImpl implements _AppApiResponseFlowLine {
-  const _$AppApiResponseFlowLineImpl(
-      {@JsonKey(name: "startLine") required this.startLine,
-      @JsonKey(name: "flowLine") required final List<FlowLineElement> flowLine})
-      : _flowLine = flowLine;
+  const _$AppApiResponseFlowLineImpl({
+    @JsonKey(name: "startLine") required this.startLine,
+    @JsonKey(name: "flowLine") required final List<FlowLineElement> flowLine,
+  }) : _flowLine = flowLine;
 
   factory _$AppApiResponseFlowLineImpl.fromJson(Map<String, dynamic> json) =>
       _$$AppApiResponseFlowLineImplFromJson(json);
@@ -508,7 +528,10 @@ class _$AppApiResponseFlowLineImpl implements _AppApiResponseFlowLine {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, startLine, const DeepCollectionEquality().hash(_flowLine));
+    runtimeType,
+    startLine,
+    const DeepCollectionEquality().hash(_flowLine),
+  );
 
   /// Create a copy of AppApiResponseFlowLine
   /// with the given fields replaced by the non-null parameter values.
@@ -516,23 +539,23 @@ class _$AppApiResponseFlowLineImpl implements _AppApiResponseFlowLine {
   @override
   @pragma('vm:prefer-inline')
   _$$AppApiResponseFlowLineImplCopyWith<_$AppApiResponseFlowLineImpl>
-      get copyWith => __$$AppApiResponseFlowLineImplCopyWithImpl<
-          _$AppApiResponseFlowLineImpl>(this, _$identity);
+  get copyWith =>
+      __$$AppApiResponseFlowLineImplCopyWithImpl<_$AppApiResponseFlowLineImpl>(
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$AppApiResponseFlowLineImplToJson(
-      this,
-    );
+    return _$$AppApiResponseFlowLineImplToJson(this);
   }
 }
 
 abstract class _AppApiResponseFlowLine implements AppApiResponseFlowLine {
-  const factory _AppApiResponseFlowLine(
-          {@JsonKey(name: "startLine") required final int startLine,
-          @JsonKey(name: "flowLine")
-          required final List<FlowLineElement> flowLine}) =
-      _$AppApiResponseFlowLineImpl;
+  const factory _AppApiResponseFlowLine({
+    @JsonKey(name: "startLine") required final int startLine,
+    @JsonKey(name: "flowLine") required final List<FlowLineElement> flowLine,
+  }) = _$AppApiResponseFlowLineImpl;
 
   factory _AppApiResponseFlowLine.fromJson(Map<String, dynamic> json) =
       _$AppApiResponseFlowLineImpl.fromJson;
@@ -549,7 +572,7 @@ abstract class _AppApiResponseFlowLine implements AppApiResponseFlowLine {
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   _$$AppApiResponseFlowLineImplCopyWith<_$AppApiResponseFlowLineImpl>
-      get copyWith => throw _privateConstructorUsedError;
+  get copyWith => throw _privateConstructorUsedError;
 }
 
 FlowLineElement _$FlowLineElementFromJson(Map<String, dynamic> json) {
@@ -596,22 +619,24 @@ mixin _$FlowLineElement {
 /// @nodoc
 abstract class $FlowLineElementCopyWith<$Res> {
   factory $FlowLineElementCopyWith(
-          FlowLineElement value, $Res Function(FlowLineElement) then) =
-      _$FlowLineElementCopyWithImpl<$Res, FlowLineElement>;
+    FlowLineElement value,
+    $Res Function(FlowLineElement) then,
+  ) = _$FlowLineElementCopyWithImpl<$Res, FlowLineElement>;
   @useResult
-  $Res call(
-      {@JsonKey(name: "enabled") bool enabled,
-      @JsonKey(name: "type") String type,
-      @JsonKey(name: "provider") String provider,
-      @JsonKey(name: "endpoint") String? endpoint,
-      @JsonKey(name: "dns") String? dns,
-      @JsonKey(name: "scanner") bool? scanner,
-      @JsonKey(name: "scanner_type") String? scannerType,
-      @JsonKey(name: "scanner_timeout") int? scannerTimeout,
-      @JsonKey(name: "psiphon") bool? psiphon,
-      @JsonKey(name: "psiphon_country") String? psiphonCountry,
-      @JsonKey(name: "gool") bool? gool,
-      @JsonKey(name: "url") String? url});
+  $Res call({
+    @JsonKey(name: "enabled") bool enabled,
+    @JsonKey(name: "type") String type,
+    @JsonKey(name: "provider") String provider,
+    @JsonKey(name: "endpoint") String? endpoint,
+    @JsonKey(name: "dns") String? dns,
+    @JsonKey(name: "scanner") bool? scanner,
+    @JsonKey(name: "scanner_type") String? scannerType,
+    @JsonKey(name: "scanner_timeout") int? scannerTimeout,
+    @JsonKey(name: "psiphon") bool? psiphon,
+    @JsonKey(name: "psiphon_country") String? psiphonCountry,
+    @JsonKey(name: "gool") bool? gool,
+    @JsonKey(name: "url") String? url,
+  });
 }
 
 /// @nodoc
@@ -642,80 +667,85 @@ class _$FlowLineElementCopyWithImpl<$Res, $Val extends FlowLineElement>
     Object? gool = freezed,
     Object? url = freezed,
   }) {
-    return _then(_value.copyWith(
-      enabled: null == enabled
-          ? _value.enabled
-          : enabled // ignore: cast_nullable_to_non_nullable
-              as bool,
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as String,
-      provider: null == provider
-          ? _value.provider
-          : provider // ignore: cast_nullable_to_non_nullable
-              as String,
-      endpoint: freezed == endpoint
-          ? _value.endpoint
-          : endpoint // ignore: cast_nullable_to_non_nullable
-              as String?,
-      dns: freezed == dns
-          ? _value.dns
-          : dns // ignore: cast_nullable_to_non_nullable
-              as String?,
-      scanner: freezed == scanner
-          ? _value.scanner
-          : scanner // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      scannerType: freezed == scannerType
-          ? _value.scannerType
-          : scannerType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      scannerTimeout: freezed == scannerTimeout
-          ? _value.scannerTimeout
-          : scannerTimeout // ignore: cast_nullable_to_non_nullable
-              as int?,
-      psiphon: freezed == psiphon
-          ? _value.psiphon
-          : psiphon // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      psiphonCountry: freezed == psiphonCountry
-          ? _value.psiphonCountry
-          : psiphonCountry // ignore: cast_nullable_to_non_nullable
-              as String?,
-      gool: freezed == gool
-          ? _value.gool
-          : gool // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      url: freezed == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            enabled: null == enabled
+                ? _value.enabled
+                : enabled // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            type: null == type
+                ? _value.type
+                : type // ignore: cast_nullable_to_non_nullable
+                      as String,
+            provider: null == provider
+                ? _value.provider
+                : provider // ignore: cast_nullable_to_non_nullable
+                      as String,
+            endpoint: freezed == endpoint
+                ? _value.endpoint
+                : endpoint // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            dns: freezed == dns
+                ? _value.dns
+                : dns // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            scanner: freezed == scanner
+                ? _value.scanner
+                : scanner // ignore: cast_nullable_to_non_nullable
+                      as bool?,
+            scannerType: freezed == scannerType
+                ? _value.scannerType
+                : scannerType // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            scannerTimeout: freezed == scannerTimeout
+                ? _value.scannerTimeout
+                : scannerTimeout // ignore: cast_nullable_to_non_nullable
+                      as int?,
+            psiphon: freezed == psiphon
+                ? _value.psiphon
+                : psiphon // ignore: cast_nullable_to_non_nullable
+                      as bool?,
+            psiphonCountry: freezed == psiphonCountry
+                ? _value.psiphonCountry
+                : psiphonCountry // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            gool: freezed == gool
+                ? _value.gool
+                : gool // ignore: cast_nullable_to_non_nullable
+                      as bool?,
+            url: freezed == url
+                ? _value.url
+                : url // ignore: cast_nullable_to_non_nullable
+                      as String?,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$FlowLineElementImplCopyWith<$Res>
     implements $FlowLineElementCopyWith<$Res> {
-  factory _$$FlowLineElementImplCopyWith(_$FlowLineElementImpl value,
-          $Res Function(_$FlowLineElementImpl) then) =
-      __$$FlowLineElementImplCopyWithImpl<$Res>;
+  factory _$$FlowLineElementImplCopyWith(
+    _$FlowLineElementImpl value,
+    $Res Function(_$FlowLineElementImpl) then,
+  ) = __$$FlowLineElementImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {@JsonKey(name: "enabled") bool enabled,
-      @JsonKey(name: "type") String type,
-      @JsonKey(name: "provider") String provider,
-      @JsonKey(name: "endpoint") String? endpoint,
-      @JsonKey(name: "dns") String? dns,
-      @JsonKey(name: "scanner") bool? scanner,
-      @JsonKey(name: "scanner_type") String? scannerType,
-      @JsonKey(name: "scanner_timeout") int? scannerTimeout,
-      @JsonKey(name: "psiphon") bool? psiphon,
-      @JsonKey(name: "psiphon_country") String? psiphonCountry,
-      @JsonKey(name: "gool") bool? gool,
-      @JsonKey(name: "url") String? url});
+  $Res call({
+    @JsonKey(name: "enabled") bool enabled,
+    @JsonKey(name: "type") String type,
+    @JsonKey(name: "provider") String provider,
+    @JsonKey(name: "endpoint") String? endpoint,
+    @JsonKey(name: "dns") String? dns,
+    @JsonKey(name: "scanner") bool? scanner,
+    @JsonKey(name: "scanner_type") String? scannerType,
+    @JsonKey(name: "scanner_timeout") int? scannerTimeout,
+    @JsonKey(name: "psiphon") bool? psiphon,
+    @JsonKey(name: "psiphon_country") String? psiphonCountry,
+    @JsonKey(name: "gool") bool? gool,
+    @JsonKey(name: "url") String? url,
+  });
 }
 
 /// @nodoc
@@ -723,8 +753,9 @@ class __$$FlowLineElementImplCopyWithImpl<$Res>
     extends _$FlowLineElementCopyWithImpl<$Res, _$FlowLineElementImpl>
     implements _$$FlowLineElementImplCopyWith<$Res> {
   __$$FlowLineElementImplCopyWithImpl(
-      _$FlowLineElementImpl _value, $Res Function(_$FlowLineElementImpl) _then)
-      : super(_value, _then);
+    _$FlowLineElementImpl _value,
+    $Res Function(_$FlowLineElementImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of FlowLineElement
   /// with the given fields replaced by the non-null parameter values.
@@ -744,75 +775,78 @@ class __$$FlowLineElementImplCopyWithImpl<$Res>
     Object? gool = freezed,
     Object? url = freezed,
   }) {
-    return _then(_$FlowLineElementImpl(
-      enabled: null == enabled
-          ? _value.enabled
-          : enabled // ignore: cast_nullable_to_non_nullable
-              as bool,
-      type: null == type
-          ? _value.type
-          : type // ignore: cast_nullable_to_non_nullable
-              as String,
-      provider: null == provider
-          ? _value.provider
-          : provider // ignore: cast_nullable_to_non_nullable
-              as String,
-      endpoint: freezed == endpoint
-          ? _value.endpoint
-          : endpoint // ignore: cast_nullable_to_non_nullable
-              as String?,
-      dns: freezed == dns
-          ? _value.dns
-          : dns // ignore: cast_nullable_to_non_nullable
-              as String?,
-      scanner: freezed == scanner
-          ? _value.scanner
-          : scanner // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      scannerType: freezed == scannerType
-          ? _value.scannerType
-          : scannerType // ignore: cast_nullable_to_non_nullable
-              as String?,
-      scannerTimeout: freezed == scannerTimeout
-          ? _value.scannerTimeout
-          : scannerTimeout // ignore: cast_nullable_to_non_nullable
-              as int?,
-      psiphon: freezed == psiphon
-          ? _value.psiphon
-          : psiphon // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      psiphonCountry: freezed == psiphonCountry
-          ? _value.psiphonCountry
-          : psiphonCountry // ignore: cast_nullable_to_non_nullable
-              as String?,
-      gool: freezed == gool
-          ? _value.gool
-          : gool // ignore: cast_nullable_to_non_nullable
-              as bool?,
-      url: freezed == url
-          ? _value.url
-          : url // ignore: cast_nullable_to_non_nullable
-              as String?,
-    ));
+    return _then(
+      _$FlowLineElementImpl(
+        enabled: null == enabled
+            ? _value.enabled
+            : enabled // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        type: null == type
+            ? _value.type
+            : type // ignore: cast_nullable_to_non_nullable
+                  as String,
+        provider: null == provider
+            ? _value.provider
+            : provider // ignore: cast_nullable_to_non_nullable
+                  as String,
+        endpoint: freezed == endpoint
+            ? _value.endpoint
+            : endpoint // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        dns: freezed == dns
+            ? _value.dns
+            : dns // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        scanner: freezed == scanner
+            ? _value.scanner
+            : scanner // ignore: cast_nullable_to_non_nullable
+                  as bool?,
+        scannerType: freezed == scannerType
+            ? _value.scannerType
+            : scannerType // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        scannerTimeout: freezed == scannerTimeout
+            ? _value.scannerTimeout
+            : scannerTimeout // ignore: cast_nullable_to_non_nullable
+                  as int?,
+        psiphon: freezed == psiphon
+            ? _value.psiphon
+            : psiphon // ignore: cast_nullable_to_non_nullable
+                  as bool?,
+        psiphonCountry: freezed == psiphonCountry
+            ? _value.psiphonCountry
+            : psiphonCountry // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        gool: freezed == gool
+            ? _value.gool
+            : gool // ignore: cast_nullable_to_non_nullable
+                  as bool?,
+        url: freezed == url
+            ? _value.url
+            : url // ignore: cast_nullable_to_non_nullable
+                  as String?,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$FlowLineElementImpl implements _FlowLineElement {
-  const _$FlowLineElementImpl(
-      {@JsonKey(name: "enabled") required this.enabled,
-      @JsonKey(name: "type") required this.type,
-      @JsonKey(name: "provider") required this.provider,
-      @JsonKey(name: "endpoint") this.endpoint,
-      @JsonKey(name: "dns") this.dns,
-      @JsonKey(name: "scanner") this.scanner,
-      @JsonKey(name: "scanner_type") this.scannerType,
-      @JsonKey(name: "scanner_timeout") this.scannerTimeout,
-      @JsonKey(name: "psiphon") this.psiphon,
-      @JsonKey(name: "psiphon_country") this.psiphonCountry,
-      @JsonKey(name: "gool") this.gool,
-      @JsonKey(name: "url") this.url});
+  const _$FlowLineElementImpl({
+    @JsonKey(name: "enabled") required this.enabled,
+    @JsonKey(name: "type") required this.type,
+    @JsonKey(name: "provider") required this.provider,
+    @JsonKey(name: "endpoint") this.endpoint,
+    @JsonKey(name: "dns") this.dns,
+    @JsonKey(name: "scanner") this.scanner,
+    @JsonKey(name: "scanner_type") this.scannerType,
+    @JsonKey(name: "scanner_timeout") this.scannerTimeout,
+    @JsonKey(name: "psiphon") this.psiphon,
+    @JsonKey(name: "psiphon_country") this.psiphonCountry,
+    @JsonKey(name: "gool") this.gool,
+    @JsonKey(name: "url") this.url,
+  });
 
   factory _$FlowLineElementImpl.fromJson(Map<String, dynamic> json) =>
       _$$FlowLineElementImplFromJson(json);
@@ -886,19 +920,20 @@ class _$FlowLineElementImpl implements _FlowLineElement {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      enabled,
-      type,
-      provider,
-      endpoint,
-      dns,
-      scanner,
-      scannerType,
-      scannerTimeout,
-      psiphon,
-      psiphonCountry,
-      gool,
-      url);
+    runtimeType,
+    enabled,
+    type,
+    provider,
+    endpoint,
+    dns,
+    scanner,
+    scannerType,
+    scannerTimeout,
+    psiphon,
+    psiphonCountry,
+    gool,
+    url,
+  );
 
   /// Create a copy of FlowLineElement
   /// with the given fields replaced by the non-null parameter values.
@@ -907,30 +942,31 @@ class _$FlowLineElementImpl implements _FlowLineElement {
   @pragma('vm:prefer-inline')
   _$$FlowLineElementImplCopyWith<_$FlowLineElementImpl> get copyWith =>
       __$$FlowLineElementImplCopyWithImpl<_$FlowLineElementImpl>(
-          this, _$identity);
+        this,
+        _$identity,
+      );
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$FlowLineElementImplToJson(
-      this,
-    );
+    return _$$FlowLineElementImplToJson(this);
   }
 }
 
 abstract class _FlowLineElement implements FlowLineElement {
-  const factory _FlowLineElement(
-      {@JsonKey(name: "enabled") required final bool enabled,
-      @JsonKey(name: "type") required final String type,
-      @JsonKey(name: "provider") required final String provider,
-      @JsonKey(name: "endpoint") final String? endpoint,
-      @JsonKey(name: "dns") final String? dns,
-      @JsonKey(name: "scanner") final bool? scanner,
-      @JsonKey(name: "scanner_type") final String? scannerType,
-      @JsonKey(name: "scanner_timeout") final int? scannerTimeout,
-      @JsonKey(name: "psiphon") final bool? psiphon,
-      @JsonKey(name: "psiphon_country") final String? psiphonCountry,
-      @JsonKey(name: "gool") final bool? gool,
-      @JsonKey(name: "url") final String? url}) = _$FlowLineElementImpl;
+  const factory _FlowLineElement({
+    @JsonKey(name: "enabled") required final bool enabled,
+    @JsonKey(name: "type") required final String type,
+    @JsonKey(name: "provider") required final String provider,
+    @JsonKey(name: "endpoint") final String? endpoint,
+    @JsonKey(name: "dns") final String? dns,
+    @JsonKey(name: "scanner") final bool? scanner,
+    @JsonKey(name: "scanner_type") final String? scannerType,
+    @JsonKey(name: "scanner_timeout") final int? scannerTimeout,
+    @JsonKey(name: "psiphon") final bool? psiphon,
+    @JsonKey(name: "psiphon_country") final String? psiphonCountry,
+    @JsonKey(name: "gool") final bool? gool,
+    @JsonKey(name: "url") final String? url,
+  }) = _$FlowLineElementImpl;
 
   factory _FlowLineElement.fromJson(Map<String, dynamic> json) =
       _$FlowLineElementImpl.fromJson;
@@ -1011,12 +1047,13 @@ abstract class $VersionCopyWith<$Res> {
   factory $VersionCopyWith(Version value, $Res Function(Version) then) =
       _$VersionCopyWithImpl<$Res, Version>;
   @useResult
-  $Res call(
-      {@JsonKey(name: "github") String github,
-      @JsonKey(name: "testFlight") String testFlight,
-      @JsonKey(name: "appleStore") String appleStore,
-      @JsonKey(name: "googlePlay") String googlePlay,
-      @JsonKey(name: "microsoftStore") String microsoftStore});
+  $Res call({
+    @JsonKey(name: "github") String github,
+    @JsonKey(name: "testFlight") String testFlight,
+    @JsonKey(name: "appleStore") String appleStore,
+    @JsonKey(name: "googlePlay") String googlePlay,
+    @JsonKey(name: "microsoftStore") String microsoftStore,
+  });
 }
 
 /// @nodoc
@@ -1040,44 +1077,49 @@ class _$VersionCopyWithImpl<$Res, $Val extends Version>
     Object? googlePlay = null,
     Object? microsoftStore = null,
   }) {
-    return _then(_value.copyWith(
-      github: null == github
-          ? _value.github
-          : github // ignore: cast_nullable_to_non_nullable
-              as String,
-      testFlight: null == testFlight
-          ? _value.testFlight
-          : testFlight // ignore: cast_nullable_to_non_nullable
-              as String,
-      appleStore: null == appleStore
-          ? _value.appleStore
-          : appleStore // ignore: cast_nullable_to_non_nullable
-              as String,
-      googlePlay: null == googlePlay
-          ? _value.googlePlay
-          : googlePlay // ignore: cast_nullable_to_non_nullable
-              as String,
-      microsoftStore: null == microsoftStore
-          ? _value.microsoftStore
-          : microsoftStore // ignore: cast_nullable_to_non_nullable
-              as String,
-    ) as $Val);
+    return _then(
+      _value.copyWith(
+            github: null == github
+                ? _value.github
+                : github // ignore: cast_nullable_to_non_nullable
+                      as String,
+            testFlight: null == testFlight
+                ? _value.testFlight
+                : testFlight // ignore: cast_nullable_to_non_nullable
+                      as String,
+            appleStore: null == appleStore
+                ? _value.appleStore
+                : appleStore // ignore: cast_nullable_to_non_nullable
+                      as String,
+            googlePlay: null == googlePlay
+                ? _value.googlePlay
+                : googlePlay // ignore: cast_nullable_to_non_nullable
+                      as String,
+            microsoftStore: null == microsoftStore
+                ? _value.microsoftStore
+                : microsoftStore // ignore: cast_nullable_to_non_nullable
+                      as String,
+          )
+          as $Val,
+    );
   }
 }
 
 /// @nodoc
 abstract class _$$VersionImplCopyWith<$Res> implements $VersionCopyWith<$Res> {
   factory _$$VersionImplCopyWith(
-          _$VersionImpl value, $Res Function(_$VersionImpl) then) =
-      __$$VersionImplCopyWithImpl<$Res>;
+    _$VersionImpl value,
+    $Res Function(_$VersionImpl) then,
+  ) = __$$VersionImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call(
-      {@JsonKey(name: "github") String github,
-      @JsonKey(name: "testFlight") String testFlight,
-      @JsonKey(name: "appleStore") String appleStore,
-      @JsonKey(name: "googlePlay") String googlePlay,
-      @JsonKey(name: "microsoftStore") String microsoftStore});
+  $Res call({
+    @JsonKey(name: "github") String github,
+    @JsonKey(name: "testFlight") String testFlight,
+    @JsonKey(name: "appleStore") String appleStore,
+    @JsonKey(name: "googlePlay") String googlePlay,
+    @JsonKey(name: "microsoftStore") String microsoftStore,
+  });
 }
 
 /// @nodoc
@@ -1085,8 +1127,9 @@ class __$$VersionImplCopyWithImpl<$Res>
     extends _$VersionCopyWithImpl<$Res, _$VersionImpl>
     implements _$$VersionImplCopyWith<$Res> {
   __$$VersionImplCopyWithImpl(
-      _$VersionImpl _value, $Res Function(_$VersionImpl) _then)
-      : super(_value, _then);
+    _$VersionImpl _value,
+    $Res Function(_$VersionImpl) _then,
+  ) : super(_value, _then);
 
   /// Create a copy of Version
   /// with the given fields replaced by the non-null parameter values.
@@ -1099,40 +1142,43 @@ class __$$VersionImplCopyWithImpl<$Res>
     Object? googlePlay = null,
     Object? microsoftStore = null,
   }) {
-    return _then(_$VersionImpl(
-      github: null == github
-          ? _value.github
-          : github // ignore: cast_nullable_to_non_nullable
-              as String,
-      testFlight: null == testFlight
-          ? _value.testFlight
-          : testFlight // ignore: cast_nullable_to_non_nullable
-              as String,
-      appleStore: null == appleStore
-          ? _value.appleStore
-          : appleStore // ignore: cast_nullable_to_non_nullable
-              as String,
-      googlePlay: null == googlePlay
-          ? _value.googlePlay
-          : googlePlay // ignore: cast_nullable_to_non_nullable
-              as String,
-      microsoftStore: null == microsoftStore
-          ? _value.microsoftStore
-          : microsoftStore // ignore: cast_nullable_to_non_nullable
-              as String,
-    ));
+    return _then(
+      _$VersionImpl(
+        github: null == github
+            ? _value.github
+            : github // ignore: cast_nullable_to_non_nullable
+                  as String,
+        testFlight: null == testFlight
+            ? _value.testFlight
+            : testFlight // ignore: cast_nullable_to_non_nullable
+                  as String,
+        appleStore: null == appleStore
+            ? _value.appleStore
+            : appleStore // ignore: cast_nullable_to_non_nullable
+                  as String,
+        googlePlay: null == googlePlay
+            ? _value.googlePlay
+            : googlePlay // ignore: cast_nullable_to_non_nullable
+                  as String,
+        microsoftStore: null == microsoftStore
+            ? _value.microsoftStore
+            : microsoftStore // ignore: cast_nullable_to_non_nullable
+                  as String,
+      ),
+    );
   }
 }
 
 /// @nodoc
 @JsonSerializable()
 class _$VersionImpl implements _Version {
-  const _$VersionImpl(
-      {@JsonKey(name: "github") required this.github,
-      @JsonKey(name: "testFlight") required this.testFlight,
-      @JsonKey(name: "appleStore") required this.appleStore,
-      @JsonKey(name: "googlePlay") required this.googlePlay,
-      @JsonKey(name: "microsoftStore") required this.microsoftStore});
+  const _$VersionImpl({
+    @JsonKey(name: "github") required this.github,
+    @JsonKey(name: "testFlight") required this.testFlight,
+    @JsonKey(name: "appleStore") required this.appleStore,
+    @JsonKey(name: "googlePlay") required this.googlePlay,
+    @JsonKey(name: "microsoftStore") required this.microsoftStore,
+  });
 
   factory _$VersionImpl.fromJson(Map<String, dynamic> json) =>
       _$$VersionImplFromJson(json);
@@ -1177,7 +1223,13 @@ class _$VersionImpl implements _Version {
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode => Object.hash(
-      runtimeType, github, testFlight, appleStore, googlePlay, microsoftStore);
+    runtimeType,
+    github,
+    testFlight,
+    appleStore,
+    googlePlay,
+    microsoftStore,
+  );
 
   /// Create a copy of Version
   /// with the given fields replaced by the non-null parameter values.
@@ -1189,20 +1241,18 @@ class _$VersionImpl implements _Version {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$VersionImplToJson(
-      this,
-    );
+    return _$$VersionImplToJson(this);
   }
 }
 
 abstract class _Version implements Version {
-  const factory _Version(
-      {@JsonKey(name: "github") required final String github,
-      @JsonKey(name: "testFlight") required final String testFlight,
-      @JsonKey(name: "appleStore") required final String appleStore,
-      @JsonKey(name: "googlePlay") required final String googlePlay,
-      @JsonKey(name: "microsoftStore")
-      required final String microsoftStore}) = _$VersionImpl;
+  const factory _Version({
+    @JsonKey(name: "github") required final String github,
+    @JsonKey(name: "testFlight") required final String testFlight,
+    @JsonKey(name: "appleStore") required final String appleStore,
+    @JsonKey(name: "googlePlay") required final String googlePlay,
+    @JsonKey(name: "microsoftStore") required final String microsoftStore,
+  }) = _$VersionImpl;
 
   factory _Version.fromJson(Map<String, dynamic> json) = _$VersionImpl.fromJson;
 
