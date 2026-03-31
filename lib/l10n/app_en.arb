@@ -36,6 +36,21 @@
     "description": "Connecting status text"
   },
 
+  "connectingVia": "CONNECTING VIA {groupName}",
+  "@connectingVia": {
+    "description": "Connecting status with group name",
+    "placeholders": {
+      "groupName": {
+        "type": "String"
+      }
+    }
+  },
+
+  "switchingMethod": "SWITCHING METHOD",
+  "@switchingMethod": {
+    "description": "Status shown when switching connection method"
+  },
+
   "speedTest": "Speed Test",
   "@speedTest": {
     "description": "Speed test feature label"
@@ -196,19 +211,9 @@
     "description": "English language name"
   },
 
-  "persian": "فارسی (Persian)",
-  "@persian": {
-    "description": "Persian/Farsi language name"
-  },
-
   "chinese": "中文 (Chinese)",
   "@chinese": {
     "description": "Chinese language name"
-  },
-
-  "russian": "Русский (Russian)",
-  "@russian": {
-    "description": "Russian language name"
   },
 
   "gotIt": "Got it",

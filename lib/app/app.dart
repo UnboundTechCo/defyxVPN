@@ -7,6 +7,7 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
+import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -87,8 +88,10 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-
+    final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
+
+    debugPrint('🌍 Building app with locale: ${languageState.language.locale}');
 
     return ToastificationWrapper(
         config: ToastificationConfig(
@@ -109,8 +112,7 @@ class App extends ConsumerWidget {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
-              // Force English locale (comment out to enable device language detection)
-              locale: const Locale('en'),
+              locale: languageState.language.locale,
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
@@ -119,9 +121,7 @@ class App extends ConsumerWidget {
               ],
               supportedLocales: const [
                 Locale('en'),
-                Locale('fa'),
                 Locale('zh'),
-                Locale('ru'),
               ],
             );
           },

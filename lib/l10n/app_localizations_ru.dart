@@ -31,6 +31,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get connecting => 'Подключение';
 
   @override
+  String connectingVia(String groupName) {
+    return 'ПОДКЛЮЧЕНИЕ ЧЕРЕЗ $groupName';
+  }
+
+  @override
+  String get switchingMethod => 'ПЕРЕКЛЮЧЕНИЕ МЕТОДА';
+
+  @override
   String get speedTest => 'Тест скорости';
 
   @override
@@ -127,13 +135,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get english => 'English (Английский)';
 
   @override
-  String get persian => 'فارسی (Персидский)';
-
-  @override
   String get chinese => '中文 (Китайский)';
-
-  @override
-  String get russian => 'Русский';
 
   @override
   String get gotIt => 'Понятно';
