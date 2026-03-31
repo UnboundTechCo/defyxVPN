@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/shimmer.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -309,7 +310,7 @@ class LoggerStatusWidget extends ConsumerWidget {
     final loggerState = ref.watch(loggerStateProvider);
     final groupState = ref.watch(groupStateProvider);
     final statusInfo =
-        _getLoggerStatusInfo(loggerState.status, groupState.groupName);
+        _getLoggerStatusInfo(context, loggerState.status, groupState.groupName);
 
     return AnimatedSize(
       duration:
@@ -355,8 +356,10 @@ class LoggerStatusWidget extends ConsumerWidget {
   }
 
   ({String text, Color color}) _getLoggerStatusInfo(
-      LoggerStatus? status, String groupName) {
+      BuildContext context, LoggerStatus? status, String groupName) {
     const defaultColor = Color(0xFFA7A7A7);
+    final l10n = AppLocalizations.of(context);
+    
     switch (status) {
       case LoggerStatus.loading:
         return (text: 'LOADING', color: defaultColor);
@@ -364,9 +367,9 @@ class LoggerStatusWidget extends ConsumerWidget {
         if (groupName.isEmpty) {
           return (text: 'CONNECTING', color: defaultColor);
         }
-        return (text: 'CONNECTING VIA $groupName ', color: defaultColor);
+        return (text: l10n.connectingVia(groupName), color: defaultColor);
       case LoggerStatus.switching_method:
-        return (text: 'SWITCHING METHOD', color: defaultColor);
+        return (text: l10n.switchingMethod, color: defaultColor);
       default:
         return (text: 'LOADING', color: defaultColor);
     }

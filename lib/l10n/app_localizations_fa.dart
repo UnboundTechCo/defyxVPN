@@ -31,6 +31,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get connecting => 'در حال اتصال';
 
   @override
+  String connectingVia(String groupName) {
+    return 'در حال اتصال از طریق $groupName';
+  }
+
+  @override
+  String get switchingMethod => 'در حال تغییر روش';
+
+  @override
   String get speedTest => 'تست سرعت';
 
   @override
@@ -127,13 +135,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get english => 'English (انگلیسی)';
 
   @override
-  String get persian => 'فارسی';
-
-  @override
   String get chinese => '中文 (چینی)';
-
-  @override
-  String get russian => 'Русский (روسی)';
 
   @override
   String get gotIt => 'متوجه شدم';

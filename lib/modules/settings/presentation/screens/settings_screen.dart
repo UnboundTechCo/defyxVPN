@@ -272,7 +272,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   : null,
               onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
-                      settingsNotifier.resetGroupToDefault(group.id);
+                      settingsNotifier.resetGroupToDefault(group.id, context: context);
                     }
                   : null,
               onNavigate: (route) {

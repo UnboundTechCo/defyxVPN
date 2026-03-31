@@ -144,6 +144,18 @@ abstract class AppLocalizations {
   /// **'Connecting'**
   String get connecting;
 
+  /// Connecting status with group name
+  ///
+  /// In en, this message translates to:
+  /// **'CONNECTING VIA {groupName}'**
+  String connectingVia(String groupName);
+
+  /// Status shown when switching connection method
+  ///
+  /// In en, this message translates to:
+  /// **'SWITCHING METHOD'**
+  String get switchingMethod;
+
   /// Speed test feature label
   ///
   /// In en, this message translates to:
@@ -336,23 +348,11 @@ abstract class AppLocalizations {
   /// **'English'**
   String get english;
 
-  /// Persian/Farsi language name
-  ///
-  /// In en, this message translates to:
-  /// **'فارسی (Persian)'**
-  String get persian;
-
   /// Chinese language name
   ///
   /// In en, this message translates to:
   /// **'中文 (Chinese)'**
   String get chinese;
-
-  /// Russian language name
-  ///
-  /// In en, this message translates to:
-  /// **'Русский (Russian)'**
-  String get russian;
 
   /// Got it button text
   ///
