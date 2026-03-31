@@ -53,11 +53,11 @@ class MainScreenLogic {
     }
   }
 
-  Future<void> checkAndShowPrivacyNotice(Function showDialog) async {
+  Future<void> checkAndShowPrivacyNotice(Future<void> Function() showDialog) async {
     final prefs = await SharedPreferences.getInstance();
     final bool privacyNoticeShown = prefs.getBool('privacy_notice_shown') ?? false;
     if (!privacyNoticeShown) {
-      showDialog();
+      return showDialog();
     }
   }
 
