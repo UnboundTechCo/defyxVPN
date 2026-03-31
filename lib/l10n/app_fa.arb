@@ -8,6 +8,8 @@
   "connected": "متصل شد",
   "disconnected": "قطع شد",
   "connecting": "در حال اتصال",
+  "connectingVia": "در حال اتصال از طریق {groupName}",
+  "switchingMethod": "در حال تغییر روش",
   "speedTest": "تست سرعت",
   "download": "دانلود",
   "upload": "آپلود",

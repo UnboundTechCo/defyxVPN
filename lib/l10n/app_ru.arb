@@ -8,6 +8,8 @@
   "connected": "Подключено",
   "disconnected": "Отключено",
   "connecting": "Подключение",
+  "connectingVia": "ПОДКЛЮЧЕНИЕ ЧЕРЕЗ {groupName}",
+  "switchingMethod": "ПЕРЕКЛЮЧЕНИЕ МЕТОДА",
   "speedTest": "Тест скорости",
   "download": "ЗАГРУЗКА",
   "upload": "ВЫГРУЗКА",

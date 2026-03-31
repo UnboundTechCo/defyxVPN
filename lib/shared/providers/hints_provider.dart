@@ -53,6 +53,7 @@ final selectedHintsProvider = FutureProvider<List<Hint>>((ref) async {
   final currentLocale = languageState.language.code;
   
   debugPrint('Loading hints from secure storage...');
+  debugPrint('Using locale: $currentLocale');
   
   try {
     // Try to read tips from secure storage

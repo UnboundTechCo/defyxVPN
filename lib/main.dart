@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 
 void main() async {
@@ -44,5 +46,16 @@ void main() async {
     }
   }
   
-  runApp(const ProviderScope(child: App()));
+  // Initialize language provider
+  final prefs = await SharedPreferences.getInstance();
+  final languageNotifier = LanguageNotifier(prefs);
+  
+  runApp(
+    ProviderScope(
+      overrides: [
+        languageProvider.overrideWith((ref) => languageNotifier),
+      ],
+      child: const App(),
+    ),
+  );
 }
