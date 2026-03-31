@@ -15,74 +15,76 @@ _$AppApiResponseImpl _$$AppApiResponseImplFromJson(Map<String, dynamic> json) =>
             MapEntry(k, (e as List<dynamic>).map((e) => e as String).toList()),
       ),
       flowLine: AppApiResponseFlowLine.fromJson(
-          json['flowLine'] as Map<String, dynamic>),
-      testUrls:
-          (json['testUrls'] as List<dynamic>).map((e) => e as String).toList(),
+        json['flowLine'] as Map<String, dynamic>,
+      ),
+      testUrls: (json['testUrls'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
       tips: (json['tips'] as List<dynamic>?)
           ?.map((e) => Hint.fromJson(e as Map<String, dynamic>))
           .toList(),
     );
 
 Map<String, dynamic> _$$AppApiResponseImplToJson(
-        _$AppApiResponseImpl instance) =>
-    <String, dynamic>{
-      'version': instance.version,
-      'forceUpdate': instance.forceUpdate,
-      'changeLog': instance.changeLog,
-      'flowLine': instance.flowLine,
-      'testUrls': instance.testUrls,
-      'tips': instance.tips,
-    };
+  _$AppApiResponseImpl instance,
+) => <String, dynamic>{
+  'version': instance.version,
+  'forceUpdate': instance.forceUpdate,
+  'changeLog': instance.changeLog,
+  'flowLine': instance.flowLine,
+  'testUrls': instance.testUrls,
+  'tips': instance.tips,
+};
 
 _$AppApiResponseFlowLineImpl _$$AppApiResponseFlowLineImplFromJson(
-        Map<String, dynamic> json) =>
-    _$AppApiResponseFlowLineImpl(
-      startLine: (json['startLine'] as num).toInt(),
-      flowLine: (json['flowLine'] as List<dynamic>)
-          .map((e) => FlowLineElement.fromJson(e as Map<String, dynamic>))
-          .toList(),
-    );
+  Map<String, dynamic> json,
+) => _$AppApiResponseFlowLineImpl(
+  startLine: (json['startLine'] as num).toInt(),
+  flowLine: (json['flowLine'] as List<dynamic>)
+      .map((e) => FlowLineElement.fromJson(e as Map<String, dynamic>))
+      .toList(),
+);
 
 Map<String, dynamic> _$$AppApiResponseFlowLineImplToJson(
-        _$AppApiResponseFlowLineImpl instance) =>
-    <String, dynamic>{
-      'startLine': instance.startLine,
-      'flowLine': instance.flowLine,
-    };
+  _$AppApiResponseFlowLineImpl instance,
+) => <String, dynamic>{
+  'startLine': instance.startLine,
+  'flowLine': instance.flowLine,
+};
 
 _$FlowLineElementImpl _$$FlowLineElementImplFromJson(
-        Map<String, dynamic> json) =>
-    _$FlowLineElementImpl(
-      enabled: json['enabled'] as bool,
-      type: json['type'] as String,
-      provider: json['provider'] as String,
-      endpoint: json['endpoint'] as String?,
-      dns: json['dns'] as String?,
-      scanner: json['scanner'] as bool?,
-      scannerType: json['scanner_type'] as String?,
-      scannerTimeout: (json['scanner_timeout'] as num?)?.toInt(),
-      psiphon: json['psiphon'] as bool?,
-      psiphonCountry: json['psiphon_country'] as String?,
-      gool: json['gool'] as bool?,
-      url: json['url'] as String?,
-    );
+  Map<String, dynamic> json,
+) => _$FlowLineElementImpl(
+  enabled: json['enabled'] as bool,
+  type: json['type'] as String,
+  provider: json['provider'] as String,
+  endpoint: json['endpoint'] as String?,
+  dns: json['dns'] as String?,
+  scanner: json['scanner'] as bool?,
+  scannerType: json['scanner_type'] as String?,
+  scannerTimeout: (json['scanner_timeout'] as num?)?.toInt(),
+  psiphon: json['psiphon'] as bool?,
+  psiphonCountry: json['psiphon_country'] as String?,
+  gool: json['gool'] as bool?,
+  url: json['url'] as String?,
+);
 
 Map<String, dynamic> _$$FlowLineElementImplToJson(
-        _$FlowLineElementImpl instance) =>
-    <String, dynamic>{
-      'enabled': instance.enabled,
-      'type': instance.type,
-      'provider': instance.provider,
-      'endpoint': instance.endpoint,
-      'dns': instance.dns,
-      'scanner': instance.scanner,
-      'scanner_type': instance.scannerType,
-      'scanner_timeout': instance.scannerTimeout,
-      'psiphon': instance.psiphon,
-      'psiphon_country': instance.psiphonCountry,
-      'gool': instance.gool,
-      'url': instance.url,
-    };
+  _$FlowLineElementImpl instance,
+) => <String, dynamic>{
+  'enabled': instance.enabled,
+  'type': instance.type,
+  'provider': instance.provider,
+  'endpoint': instance.endpoint,
+  'dns': instance.dns,
+  'scanner': instance.scanner,
+  'scanner_type': instance.scannerType,
+  'scanner_timeout': instance.scannerTimeout,
+  'psiphon': instance.psiphon,
+  'psiphon_country': instance.psiphonCountry,
+  'gool': instance.gool,
+  'url': instance.url,
+};
 
 _$VersionImpl _$$VersionImplFromJson(Map<String, dynamic> json) =>
     _$VersionImpl(

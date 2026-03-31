@@ -360,9 +360,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
-  Future<void> resetGroupToDefault(String groupId) async {
+  Future<void> resetGroupToDefault(String groupId, {BuildContext? context}) async {
     if (groupId == SettingsGroupId.connectionMethod) {
-      await resetToDefault();
+      await resetToDefault(context: context);
     }
   }
 
