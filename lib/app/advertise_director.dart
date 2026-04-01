@@ -12,37 +12,34 @@ class AdvertiseDirector {
   AdvertiseDirector(this.ref);
 
   static Future<bool> shouldUseInternalAds(WidgetRef ref) async {
-    // Desktop platforms always use internal ads (no AdMob support)
+    // STRATEGY SELECTION (for backward compatibility with desktop):
+    // - Desktop (Windows/macOS/Linux) → InternalAdStrategy only (no AdMob support)
+    // - Mobile (Android/iOS) → DUAL strategy approach:
+    //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
+    //     * InternalAdStrategy handles internal ads (connected state ONLY)
+    //     * AdsWidget coordinates between the two strategies
+    
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      debugPrint('📍 Ad Manager - Desktop platform detected, using internal ads');
+      debugPrint('📍 Ad Manager - Desktop platform detected, using InternalAdStrategy only');
       return true;
     }
 
+    // Mobile platforms use DUAL strategy (GoogleAdStrategy + InternalAdStrategy)
+    // AdsWidget automatically initializes both and routes based on connection state:
+    //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
+    //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
+    debugPrint('📍 Ad Manager - Mobile platform detected, using DUAL strategy approach');
+    
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     debugPrint('📍 Ad Manager - Current Timezone: $currentTimeZone');
-
-    final adversies =
-        await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
-
+    
+    final adversies = await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
     if (adversies['api_advertise'] != null) {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      
-      // Check for timezone-specific ads only
-      // If timezone matches → use internal ads
-      // If no match → try AdMob first, "General" will be fallback when AdMob fails
-      final hasTimezoneAds = advertiseMap.containsKey(currentTimeZone);
-      if (hasTimezoneAds) {
-        debugPrint('📍 Ad Manager - Has timezone-specific ads: $currentTimeZone');
-        return true;
-      }
-      
-      debugPrint('📍 Ad Manager - No timezone match, will try AdMob (General ads available as fallback)');
-      debugPrint('📍 Ad Manager - Available keys: ${advertiseMap.keys.toList()}');
-    } else {
-      debugPrint('📍 Ad Manager - No advertise data found');
+      debugPrint('📍 Ad Manager - Available ad keys: ${advertiseMap.keys.toList()}');
     }
 
-    return false;
+    return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
   }
 
   static Future<String> getCustomAdBanner(WidgetRef ref) async {
