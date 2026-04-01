@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -11,24 +12,34 @@ class AdvertiseDirector {
   AdvertiseDirector(this.ref);
 
   static Future<bool> shouldUseInternalAds(WidgetRef ref) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Current Timezone: $currentTimeZone');
-
-    final adversies =
-        await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
-
-    if (adversies['api_advertise'] != null) {
-      final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      final hasInternalAds = advertiseMap.containsKey(currentTimeZone);
-      debugPrint('📍 Ad Manager - Has internal ads for timezone: $hasInternalAds');
-      if (hasInternalAds) {
-        debugPrint('📍 Ad Manager - Available timezones: ${advertiseMap.keys.toList()}');
-      }
-      return hasInternalAds;
+    // STRATEGY SELECTION (for backward compatibility with desktop):
+    // - Desktop (Windows/macOS/Linux) → InternalAdStrategy only (no AdMob support)
+    // - Mobile (Android/iOS) → DUAL strategy approach:
+    //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
+    //     * InternalAdStrategy handles internal ads (connected state ONLY)
+    //     * AdsWidget coordinates between the two strategies
+    
+    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
+      debugPrint('📍 Ad Manager - Desktop platform detected, using InternalAdStrategy only');
+      return true;
     }
 
-    debugPrint('📍 Ad Manager - No advertise data found');
-    return false;
+    // Mobile platforms use DUAL strategy (GoogleAdStrategy + InternalAdStrategy)
+    // AdsWidget automatically initializes both and routes based on connection state:
+    //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
+    //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
+    debugPrint('📍 Ad Manager - Mobile platform detected, using DUAL strategy approach');
+    
+    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    debugPrint('📍 Ad Manager - Current Timezone: $currentTimeZone');
+    
+    final adversies = await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
+    if (adversies['api_advertise'] != null) {
+      final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
+      debugPrint('📍 Ad Manager - Available ad keys: ${advertiseMap.keys.toList()}');
+    }
+
+    return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
   }
 
   static Future<String> getCustomAdBanner(WidgetRef ref) async {
@@ -50,26 +61,47 @@ class AdvertiseDirector {
 
     if (adversies['api_advertise'] != null) {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
+      
+      // Try timezone-specific ads first
       if (advertiseMap.containsKey(currentTimeZone)) {
         final adsData = advertiseMap[currentTimeZone] as List<dynamic>;
-        debugPrint('📍 Ad Manager - Found ${adsData.length} ads for timezone');
+        debugPrint('📍 Ad Manager - Found ${adsData.length} timezone-specific ads');
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);
           final selectedAd = adsData[randomIndex] as List<dynamic>;
 
           if (selectedAd.length >= 2) {
-            debugPrint('📍 Ad Manager - Selected ad #$randomIndex');
+            debugPrint('📍 Ad Manager - Selected timezone ad #$randomIndex');
             return {
               'imageUrl': selectedAd[0] as String,
               'clickUrl': selectedAd[1] as String,
             };
           }
         }
-      } else {
-        debugPrint('📍 Ad Manager - No ads for timezone: $currentTimeZone');
-        debugPrint('📍 Ad Manager - Available timezones: ${advertiseMap.keys.toList()}');
       }
+      
+      // Fallback to "General" ads if no timezone-specific ads
+      if (advertiseMap.containsKey('General')) {
+        final adsData = advertiseMap['General'] as List<dynamic>;
+        debugPrint('📍 Ad Manager - Using "General" fallback ads (${adsData.length} available)');
+        if (adsData.isNotEmpty) {
+          final random = Random();
+          final randomIndex = random.nextInt(adsData.length);
+          final selectedAd = adsData[randomIndex] as List<dynamic>;
+
+          if (selectedAd.length >= 2) {
+            debugPrint('📍 Ad Manager - Selected General ad #$randomIndex');
+            return {
+              'imageUrl': selectedAd[0] as String,
+              'clickUrl': selectedAd[1] as String,
+            };
+          }
+        }
+      }
+      
+      debugPrint('📍 Ad Manager - No ads for timezone: $currentTimeZone');
+      debugPrint('📍 Ad Manager - Available keys: ${advertiseMap.keys.toList()}');
     }
     
     debugPrint('📍 Ad Manager - Returning empty ad');

@@ -41,6 +41,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   // Instance state
   bool _isLoading = false;
   bool _hasInitialized = false;
+  OnFallbackNeeded? _onFallbackNeeded;
   
   // Visual properties
   final Color backgroundColor;
@@ -55,13 +56,20 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   String get strategyName => 'Google AdMob';
   
   @override
-  Future<void> initialize(WidgetRef ref) async {
-    if (_hasInitialized) return;
+  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+    debugPrint('🚀 GoogleAdStrategy.initialize() called');
+    _onFallbackNeeded = onFallbackNeeded;
+    
+    if (_hasInitialized) {
+      debugPrint('   ⚠️ Already initialized, skipping');
+      return;
+    }
 
     try {
       // Only supports mobile platforms (Android/iOS)
       if (!(Platform.isAndroid || Platform.isIOS)) {
-        debugPrint('⚠️ Google Ads only supported on Android/iOS');
+        debugPrint('⚠️ Google Ads only supported on Android/iOS - triggering fallback');
+        _onFallbackNeeded?.call();
         return;
       }
 
@@ -78,9 +86,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         }
       }
       
-      // Mark as initialized before starting load process
+      // Mark as initialized
       _hasInitialized = true;
-      await loadAd(ref: ref);
+      
+      // DON'T load ad on initialization - let connection state changes handle it
+      // This prevents race conditions and timing issues
+      debugPrint('✅ GoogleAdStrategy initialized (ad will load on connection state change)');
     } catch (e) {
       debugPrint('Error initializing Google ads: $e');
       ref.read(adsProvider.notifier).setAdLoadFailed();
@@ -129,7 +140,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (adUnitId.isEmpty) {
         debugPrint('❌ No ad unit ID configured for this platform');
         _isLoading = false;
-        ref.read(adsProvider.notifier).setAdLoadFailed();
+        ref.read(adsProvider.notifier).setAdLoadFailed(
+          errorCode: 'NO_AD_UNIT_ID',
+          errorMessage: 'No ad unit ID configured',
+        );
+        
+        // Trigger fallback - this is an unrecoverable configuration error
+        debugPrint('🔄 No ad unit ID - triggering fallback to internal ads');
+        _onFallbackNeeded?.call();
+        
         return AdLoadResult.failure(
           errorCode: 'NO_AD_UNIT_ID',
           errorMessage: 'No ad unit ID configured',
@@ -146,6 +165,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           errorCode: '2',
           errorMessage: 'Network unavailable',
         );
+        // Don't trigger fallback for temporary network issues
+        // User can reconnect and try again
+        debugPrint('⏳ Network issue - will retry when connection restored (no fallback)');
         return AdLoadResult.failure(
           errorCode: '2',
           errorMessage: 'Network unavailable',
@@ -225,6 +247,11 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               },
             );
             
+            // Trigger fallback to internal ads for actual AdMob serving failures
+            // This is when AdMob SDK tried but couldn't serve an ad
+            debugPrint('🔄 AdMob failed to serve ad (error ${error.code}) - triggering fallback to internal ads');
+            _onFallbackNeeded?.call();
+            
             if (!completer.isCompleted) {
               completer.complete(AdLoadResult.failure(
                 errorCode: error.code.toString(),
@@ -237,7 +264,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           },
           onAdImpression: (ad) {
             debugPrint('👁️ NativeAd impression');
-            analytics.logEvent(name: 'ad_impression', parameters: {});
+            analytics.logEvent(name: 'ad_impression', parameters: {
+              'shown_on_disconnect': 'true',
+              'ip_consistent': 'true',
+            });
           },
         ),
         request: const AdRequest(
@@ -267,26 +297,25 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     }
   }
   
+
+  
   @override
   Widget buildAdWidget({
     required BuildContext context,
     required AdsState state,
     required double cornerRadius,
   }) {
-    // Check _nativeAd directly, not state (avoid race condition on restart)
+    // Only show AdMob ads (disconnected state only)
     if (_nativeAd != null) {
-      // Wrap in try-catch to prevent red error screens from disposed ads
       try {
         return AdWidget(ad: _nativeAd!);
       } catch (e) {
-        // Log error but don't show technical details to users
         debugPrint('❌ Error rendering AdWidget: $e');
         return const SizedBox.shrink();
       }
-    } else {
-      // No ad available - parent widget will hide the container
-      return const SizedBox.shrink();
     }
+    
+    return const SizedBox.shrink();
   }
   
   @override
@@ -297,49 +326,81 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     required bool hasInitialized,
     required Function() onRefreshNeeded,
   }) {
-    debugPrint('🔌 Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})');
+    debugPrint('🔌 GoogleAdStrategy - Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})');
     
-    // When disconnected, load ad if we don't have one
-    if (current == ConnectionStatus.disconnected && 
-        previous == ConnectionStatus.connected) {
-      debugPrint('🔌 Disconnected');
-      
+    // Mark first connection complete when user connects (track for UX)
+    if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
+      ref.read(adsProvider.notifier).markFirstConnectionComplete();
+      debugPrint('✅ First connection marked - AdMob ads will show on disconnect');
+      // GoogleAdStrategy does nothing when connected (InternalAdStrategy handles it)
+      return;
+    }
+    
+    // ADMOB ADS: Show when disconnected (after VPN use) with real IP
+    // Only load ads AFTER user has completed first connection
+    if (current == ConnectionStatus.disconnected) {
       final adsState = ref.read(adsProvider);
       
-      // Check if we need to reload (no ad, failed load, or stale)
-      if (_nativeAd == null || !adsState.nativeAdIsLoaded || adsState.needsRefresh) {
+      // Don't show ads before first connection (better UX)
+      if (!adsState.hasCompletedFirstConnection) {
+        debugPrint('🔌 Disconnected but no first connection yet - showing tips only');
+        return;
+      }
+      
+      // Coming from connected state - load fresh ad
+      if (previous == ConnectionStatus.connected) {
+        debugPrint('🔌 Disconnected after connection - loading fresh AdMob ad');
+        
         if (_isLoading) {
           debugPrint('⏳ Ad load already in progress...');
           return;
         }
         
-        debugPrint('📱 Loading ad with real IP');
-        loadAd(ref: ref);
-      } else {
-        debugPrint('✅ Keeping existing cached ad');
+        // Dispose old ad if exists (force fresh ad per disconnect cycle)
+        if (_nativeAd != null) {
+          debugPrint('🗑️ Disposing old AdMob ad to load fresh one');
+          ref.read(adsProvider.notifier).setAdLoaded(false);
+          try {
+            _nativeAd!.dispose();
+          } catch (e) {
+            debugPrint('⚠️ Error disposing ad: $e');
+          }
+          _nativeAd = null;
+        }
+        
+        // Load fresh AdMob ad with real IP
+        debugPrint('📱 Loading fresh AdMob ad with real IP');
+        loadAd(ref: ref).then((result) {
+          if (result.success && _nativeAd != null) {
+            debugPrint('⏰ Fresh AdMob ad loaded - starting countdown');
+            ref.read(adsProvider.notifier).startCountdownTimer();
+          }
+        });
+      } 
+      // Initial disconnected state or coming from other states
+      else {
+        debugPrint('🔌 Disconnected (from other state) - loading AdMob ad if needed');
+        
+        // Load ad if we don't have one or it's stale
+        if (_nativeAd == null || !adsState.nativeAdIsLoaded || adsState.needsRefresh) {
+          if (_isLoading) {
+            debugPrint('⏳ Ad load already in progress...');
+            return;
+          }
+          
+          debugPrint('📱 Loading AdMob ad with real IP');
+          loadAd(ref: ref).then((result) {
+            if (result.success && _nativeAd != null) {
+              debugPrint('⏰ AdMob ad loaded - starting countdown');
+              ref.read(adsProvider.notifier).startCountdownTimer();
+            }
+          });
+        } else {
+          debugPrint('✅ Already have valid ad - starting countdown');
+          ref.read(adsProvider.notifier).startCountdownTimer();
+        }
       }
       return;
-    }
-    
-    // When connecting, start countdown if we have an ad
-    if (current == ConnectionStatus.connected && 
-        previous != ConnectionStatus.connected) {
-      
-      final adsState = ref.read(adsProvider);
-      
-      if (_isLoading) {
-        debugPrint('⏳ Ad is loading...');
-        return;
-      }
-      
-      if (!adsState.nativeAdIsLoaded) {
-        debugPrint('⚠️ No ad available');
-        return;
-      }
-      
-      // Start countdown
-      debugPrint('⏰ Starting countdown');
-      ref.read(adsProvider.notifier).startCountdownTimer();
     }
   }
   
