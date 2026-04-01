@@ -12,20 +12,33 @@ import 'ad_loading_strategy.dart';
 /// Strategy for loading and displaying internal/custom ads
 /// 
 /// This strategy handles ads served from the app's own backend,
-/// typically used for restricted regions where Google AdMob is not available.
+/// shown during VPN connection (connected state only).
+/// Handles internal ads ONLY - does not manage AdMob ads.
 class InternalAdStrategy implements AdLoadingStrategy {
   bool _internalAdImageFailed = false;
   final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
+  
+  // Visual properties
+  final Color backgroundColor;
+  final double cornerRadius;
+  
+  InternalAdStrategy({
+    this.backgroundColor = const Color(0xFF19312F),
+    this.cornerRadius = 10.0,
+  });
   
   @override
   String get strategyName => 'Internal Ads';
   
   @override
-  Future<void> initialize(WidgetRef ref) async {
+  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+    debugPrint('🚀 InternalAdStrategy.initialize() called');
     debugPrint('🎨 Internal ads strategy initialized');
+    // Internal ads don't need fallback callback (they are the fallback)
     
-    // Load the initial ad
-    await loadAd(ref: ref);
+    // DON'T load ad on initialization - let connection state changes handle it
+    // This prevents race conditions
+    debugPrint('✅ InternalAdStrategy initialized (ad will load on connection state change)');
   }
   
   @override
@@ -138,25 +151,29 @@ class InternalAdStrategy implements AdLoadingStrategy {
           debugPrint('❌ Error opening internal ad URL: $e');
         }
       },
-      child: Container(
-        child: Image.network(
-          imageUrl,
-          width: double.infinity,
-          height: double.infinity,
-          fit: BoxFit.contain,  // Show full image without cropping
-          loadingBuilder: (context, child, loadingProgress) {
-            if (loadingProgress == null) return child;
-            
-            return Center(
+      child: Image.network(
+        imageUrl,
+        width: double.infinity,
+        height: double.infinity,
+        fit: BoxFit.cover,  // Fill entire space like AdMob ads do
+        loadingBuilder: (context, child, loadingProgress) {
+          if (loadingProgress == null) return child;
+          
+          // Show loading spinner on dark background (same as ad container) to prevent blink
+          return Container(
+            color: backgroundColor,
+            child: Center(
               child: CircularProgressIndicator(
                 value: loadingProgress.expectedTotalBytes != null
                     ? loadingProgress.cumulativeBytesLoaded /
                         loadingProgress.expectedTotalBytes!
                     : null,
                 color: Colors.green,
+                strokeWidth: 2.0,
               ),
-            );
-          },
+            ),
+          );
+        },
         errorBuilder: (context, error, stackTrace) {
           debugPrint('❌ Failed to load internal ad image from: $imageUrl');
           debugPrint('   Error: $error');
@@ -185,7 +202,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
           // Return empty widget - parent will be hidden on next rebuild
           return const SizedBox.shrink();
         },
-        ),
       ),
     );
   }
@@ -198,11 +214,33 @@ class InternalAdStrategy implements AdLoadingStrategy {
     required bool hasInitialized,
     required Function() onRefreshNeeded,
   }) {
-    // Start countdown when VPN connects
-    if (current == ConnectionStatus.connected && 
-        previous != ConnectionStatus.connected) {
-      debugPrint('▶️ Starting countdown for internal ad');
-      ref.read(adsProvider.notifier).startCountdownTimer();
+    debugPrint('📍 InternalAdStrategy - Connection: ${previous.name} → ${current.name}');
+    
+    // INTERNAL ADS: Show when connected (during VPN use) with VPN IP
+    // When connected, load fresh internal ad and show it
+    if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
+      debugPrint('▶️ Connected - loading fresh internal ad to show during VPN session');
+      
+      // Mark first connection complete
+      ref.read(adsProvider.notifier).markFirstConnectionComplete();
+      
+      // Load fresh internal ad
+      loadAd(ref: ref).then((result) {
+        if (result.success) {
+          debugPrint('⏰ Fresh internal ad loaded - starting countdown');
+          ref.read(adsProvider.notifier).startCountdownTimer();
+        }
+      });
+      return;
+    }
+    
+    // When disconnecting, stop countdown and clear data
+    // (GoogleAdStrategy will take over and show AdMob ad)
+    if (current == ConnectionStatus.disconnected && 
+        previous == ConnectionStatus.connected) {
+      debugPrint('⏸️ Disconnected - clearing internal ad (GoogleAdStrategy will show AdMob ad)');
+      ref.read(adsProvider.notifier).stopCountdownTimer();
+      ref.read(adsProvider.notifier).clearCustomAdData();
     }
   }
   

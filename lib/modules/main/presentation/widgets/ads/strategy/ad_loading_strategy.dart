@@ -4,10 +4,13 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import '../ads_state.dart';
 import '../models/ad_load_result.dart';
 
+/// Callback for fallback to internal ads when primary ad strategy fails
+typedef OnFallbackNeeded = void Function();
+
 /// Abstract strategy for loading different types of ads
 abstract class AdLoadingStrategy {
   /// Initialize the strategy (called once in initState)
-  Future<void> initialize(WidgetRef ref);
+  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded});
   
   /// Load an ad
   Future<AdLoadResult> loadAd({

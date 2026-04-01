@@ -213,27 +213,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               onSecretTap: _handleSecretTap,
                               onPingRefresh: _logic.refreshPing,
                             ),
-                            SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
-                                  ? 40.h
-                                  : 80.h,
-                            ),
-                            SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
-                                  ? 0.24.sh
-                                  : 0.28.sh,
-                            ),
+                            SizedBox(height: 50.h),  // Reduced to raise ads higher
+                            SizedBox(height: 0.16.sh),  // Reduced to raise ads higher
                             _buildContentSection(
                                 connectionState.status, adsState),
-                            SizedBox(
-                              height: connectionState.status ==
-                                          ConnectionStatus.connected &&
-                                      adsState.showCountdown
-                                  ? 140.h
-                                  : 0.15.sh,
-                            ),
+                            SizedBox(height: 0.15.sh),  // Consistent bottom spacing
                           ],
                         ),
                       ],
@@ -275,58 +259,89 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
+    debugPrint('🎨 _buildContentSection called:');
+    debugPrint('   Status: ${status.name}');
+    debugPrint('   nativeAdIsLoaded: ${adsState.nativeAdIsLoaded}');
+    debugPrint('   showCountdown: ${adsState.showCountdown}');
+    debugPrint('   adLoadFailed: ${adsState.adLoadFailed}');
+    
+    // Determine if we should show ads based on state
+    bool shouldShowAd = false;
+    Widget? mainContent;
+    
     switch (status) {
       case ConnectionStatus.noInternet:
         _dinoGame ??= DinoGame();
-        return SizedBox(
+        mainContent = SizedBox(
           height: 200.h,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16.r),
             child: GameWidget(game: _dinoGame!),
           ),
         );
+        break;
 
       case ConnectionStatus.disconnected:
-        return TipsSliderSection(
-          status: status,
-        );
+        // DISCONNECTED: Show AdMob ad (after VPN use) if available, else show tips
+        final shouldShowAdMobAd = adsState.showCountdown && 
+                                   adsState.nativeAdIsLoaded;
+        
+        debugPrint('   🎯 DISCONNECTED: shouldShowAdMobAd=$shouldShowAdMobAd');
+        
+        if (shouldShowAdMobAd) {
+          debugPrint('   ✅ Rendering AdMob ad');
+          shouldShowAd = true;
+        } else {
+          debugPrint('   ℹ️ Rendering tips slider');
+          mainContent = TipsSliderSection(status: status);
+        }
+        break;
 
       default:
-        // MainScreen controls ad visibility (Strategy Pattern approach)
-        // Works for both GoogleAdStrategy and InternalAdStrategy
-        // - nativeAdIsLoaded: true when ad is ready (Google or Internal)
-        // - showCountdown: true during 60-second display window
-        // - connected: only show when VPN is active
-        final shouldShowAd = status == ConnectionStatus.connected && 
-                             adsState.showCountdown && 
-                             adsState.nativeAdIsLoaded;
-
-        return SizedBox(
-          height: 280.h,
-          width: 336.w,
-          child: AnimatedSlide(
-            offset: Offset(
-              0,
-              shouldShowAd ? 0.0 : 1.0,
-            ),
-            duration: _animationService
-                .adjustDuration(const Duration(milliseconds: 800)),
-            curve: Curves.easeOut,
-            child: AnimatedOpacity(
-              opacity: shouldShowAd ? 1.0 : 0.0,
-              duration: _animationService
-                  .adjustDuration(const Duration(milliseconds: 500)),
-              curve: Curves.easeInOut,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF19312F),
-                  borderRadius: BorderRadius.circular(10.r),
+        // CONNECTED/CONNECTING: Show internal ad (during VPN use) if available
+        final shouldShowInternalAd = adsState.showCountdown && 
+                                      (adsState.customImageUrl?.isNotEmpty ?? false);
+        
+        debugPrint('   🎯 CONNECTED/OTHER: shouldShowInternalAd=$shouldShowInternalAd (hasCustomImage=${adsState.customImageUrl != null})');
+        
+        if (shouldShowInternalAd) {
+          debugPrint('   ✅ Rendering internal ad');
+          shouldShowAd = true;
+        } else {
+          debugPrint('   ⚪ Rendering empty (no ad)');
+          mainContent = const SizedBox.shrink();
+        }
+    }
+    
+    // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
+    // Control visibility with Opacity instead of moving widget around
+    return Stack(
+      alignment: Alignment.topCenter,  // Align to top-center for consistent positioning
+      children: [
+        // Always in tree at same position - never recreated
+        Opacity(
+          opacity: shouldShowAd ? 1.0 : 0.0,
+          child: IgnorePointer(
+            ignoring: !shouldShowAd,  // Prevent touch events when hidden
+            child: Padding(
+              padding: EdgeInsets.only(top: 50.h),  // Match the spacing above ads
+              child: SizedBox(
+                height: 280.h,
+                width: 336.w,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF19312F),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: _adsWidget,  // Always same widget instance, same position
                 ),
-                child: _adsWidget,
               ),
             ),
           ),
-        );
-    }
+        ),
+        // Show main content when not showing ad
+        if (!shouldShowAd && mainContent != null) mainContent,
+      ],
+    );
   }
 }
