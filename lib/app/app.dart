@@ -47,9 +47,14 @@ class App extends ConsumerWidget {
 
     final shouldUseInternalAds = snapshot.data!;
     if (shouldUseInternalAds) {
-      debugPrint('Using internal ads');
+      debugPrint('📱 Using internal ads (desktop platform or backend config)');
     } else {
-      _initializeMobileAdsWithConsent(ref);
+      // Only initialize AdMob on mobile platforms
+      if (Platform.isAndroid || Platform.isIOS) {
+        _initializeMobileAdsWithConsent(ref);
+      } else {
+        debugPrint('📱 Skipping AdMob initialization on desktop platform');
+      }
     }
   }
 
