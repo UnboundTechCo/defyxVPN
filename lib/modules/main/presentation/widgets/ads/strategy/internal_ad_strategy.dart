@@ -21,8 +21,9 @@ class InternalAdStrategy implements AdLoadingStrategy {
   String get strategyName => 'Internal Ads';
   
   @override
-  Future<void> initialize(WidgetRef ref) async {
+  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
     debugPrint('🎨 Internal ads strategy initialized');
+    // Internal ads don't need fallback callback (they are the fallback)
     
     // Load the initial ad
     await loadAd(ref: ref);
@@ -198,6 +199,13 @@ class InternalAdStrategy implements AdLoadingStrategy {
     required bool hasInitialized,
     required Function() onRefreshNeeded,
   }) {
+    // Stop countdown when VPN disconnects (from any non-disconnected state)
+    if (current == ConnectionStatus.disconnected && 
+        previous != ConnectionStatus.disconnected) {
+      debugPrint('⏸️ Stopping countdown for internal ad (disconnected)');
+      ref.read(adsProvider.notifier).stopCountdownTimer();
+    }
+    
     // Start countdown when VPN connects
     if (current == ConnectionStatus.connected && 
         previous != ConnectionStatus.connected) {

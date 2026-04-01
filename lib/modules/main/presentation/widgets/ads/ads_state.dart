@@ -28,6 +28,8 @@ class AdsState {
   final String? customImageUrl;
   final String? customClickUrl;
   final bool customImageLoadFailed;
+  // Fallback tracking
+  final bool hasFallenBackToInternal;
 
   const AdsState({
     this.nativeAdIsLoaded = false,
@@ -41,6 +43,7 @@ class AdsState {
     this.customImageUrl,
     this.customClickUrl,
     this.customImageLoadFailed = false,
+    this.hasFallenBackToInternal = false,
   });
 
   AdsState copyWith({
@@ -55,6 +58,7 @@ class AdsState {
     String? customImageUrl,
     String? customClickUrl,
     bool? customImageLoadFailed,
+    bool? hasFallenBackToInternal,
   }) {
     return AdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
@@ -68,6 +72,7 @@ class AdsState {
       customImageUrl: customImageUrl ?? this.customImageUrl,
       customClickUrl: customClickUrl ?? this.customClickUrl,
       customImageLoadFailed: customImageLoadFailed ?? this.customImageLoadFailed,
+      hasFallenBackToInternal: hasFallenBackToInternal ?? this.hasFallenBackToInternal,
     );
   }
 
@@ -112,27 +117,10 @@ class AdsNotifier extends StateNotifier<AdsState> {
       final startTimeMillis = prefs.getInt(_countdownStartKey);
       
       if (startTimeMillis != null) {
-        final startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMillis);
-        final elapsed = DateTime.now().difference(startTime).inSeconds;
-        final remaining = countdownDuration - elapsed;
-        
-        if (remaining > 0) {
-          // Resume countdown from where it left off
-          debugPrint('⏱️ Resuming countdown: $remaining seconds remaining (elapsed: ${elapsed}s)');
-          state = state.copyWith(
-            countdown: remaining,
-            showCountdown: true,
-          );
-          _startCountdownFromValue(remaining);
-        } else {
-          // Countdown already expired
-          debugPrint('⏱️ Countdown already expired (elapsed: ${elapsed}s)');
-          state = state.copyWith(
-            countdown: 0,
-            showCountdown: false,
-          );
-          await _clearPersistedCountdown();
-        }
+        // Simply clear any persisted countdown on app start
+        // Countdown should only start when VPN connects (handled by strategies)
+        debugPrint('🗑️ Clearing persisted countdown from previous session');
+        await _clearPersistedCountdown();
       }
     } catch (e) {
       debugPrint('⚠️ Error loading persisted countdown: $e');
@@ -163,22 +151,38 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   /// Start the countdown timer after ad is loaded and VPN connects
   /// Always restarts to 60 seconds on each connection
-  void startCountdownTimer() async {
+  void startCountdownTimer() {
     debugPrint('▶️ Starting new countdown timer (60 seconds)');
     _countdownTimer?.cancel();
     
-    // Clear any old persisted countdown before starting new one
-    await _clearPersistedCountdown();
-    
+    // Update state immediately (synchronous)
     state = state.copyWith(
       countdown: countdownDuration,
       showCountdown: true,
     );
     
-    // Save start time for persistence
-    await _saveCountdownStartTime();
+    // Clear old and save new start time in background (async)
+    _clearPersistedCountdown().then((_) {
+      _saveCountdownStartTime();
+    });
     
     _startCountdownFromValue(countdownDuration);
+  }
+  
+  /// Stop the countdown timer and clear persisted state
+  /// Called when VPN disconnects
+  void stopCountdownTimer() {
+    debugPrint('⏸️ Stopping countdown timer');
+    _countdownTimer?.cancel();
+    
+    // Update state immediately (synchronous)
+    state = state.copyWith(
+      showCountdown: false,
+      countdown: countdownDuration,
+    );
+    
+    // Clear persisted data in background (async)
+    _clearPersistedCountdown();
   }
   
   /// Start countdown from a specific value (used for both new and resumed timers)
@@ -235,6 +239,14 @@ class AdsNotifier extends StateNotifier<AdsState> {
     );
   }
 
+  /// Set fallback status to internal ads
+  void setFallenBackToInternal(bool hasFallenBack) {
+    debugPrint('🔄 Fallen back to internal ads: $hasFallenBack');
+    state = state.copyWith(
+      hasFallenBackToInternal: hasFallenBack,
+    );
+  }
+
   /// Set ad loading as failed with error details
   void setAdLoadFailed({String? errorCode, String? errorMessage, int? retryCount}) {
     state = state.copyWith(
@@ -254,8 +266,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   @override
   void dispose() {
+    debugPrint('🧹 AdsNotifier disposing - stopping countdown timer');
     _countdownTimer?.cancel();
-    // Don't clear persisted countdown on dispose - allow it to persist across app restarts
+    _countdownTimer = null;
+    // Clear persisted countdown on dispose to prevent zombie timers
+    _clearPersistedCountdown();
     super.dispose();
   }
 }

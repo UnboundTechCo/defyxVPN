@@ -57,8 +57,10 @@ class AdsWidget extends ConsumerStatefulWidget {
 /// Widget state - orchestrates strategy and renders UI
 class _AdsWidgetState extends ConsumerState<AdsWidget> {
   AdLoadingStrategy? _strategy;
+  AdLoadingStrategy? _internalFallbackStrategy;
   bool _isDisposed = false;
   bool _useInternalAds = false;
+  bool _hasFallenBackToInternal = false;
 
   @override
   void initState() {
@@ -75,15 +77,20 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       // Create appropriate strategy
       if (_useInternalAds) {
         _strategy = InternalAdStrategy();
+        await _strategy!.initialize(ref);
       } else {
+        // Create Google strategy with fallback to internal ads
         _strategy = GoogleAdStrategy(
           backgroundColor: widget.backgroundColor,
           cornerRadius: widget.cornerRadius,
         );
+        
+        // Initialize with fallback callback
+        await _strategy!.initialize(
+          ref,
+          onFallbackNeeded: () => _fallbackToInternalAds(ref),
+        );
       }
-      
-      // Initialize strategy (this also loads the initial ad)
-      await _strategy!.initialize(ref);
       
       // Trigger rebuild to show the ad
       if (mounted && !_isDisposed) {
@@ -115,10 +122,37 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     });
   }
 
+  /// Fallback to internal ads when Google ads fail
+  Future<void> _fallbackToInternalAds(WidgetRef ref) async {
+    if (_hasFallenBackToInternal || _isDisposed) return;
+    
+    debugPrint('🔄 Falling back to internal ads');
+    _hasFallenBackToInternal = true;
+    
+    // Mark state as fallen back
+    ref.read(adsProvider.notifier).setFallenBackToInternal(true);
+    
+    // Dispose Google strategy
+    _strategy?.dispose();
+    
+    // Create and initialize internal strategy
+    _internalFallbackStrategy = InternalAdStrategy();
+    await _internalFallbackStrategy!.initialize(ref);
+    
+    // Switch to internal strategy
+    _strategy = _internalFallbackStrategy;
+    
+    // Rebuild UI
+    if (mounted && !_isDisposed) {
+      setState(() {});
+    }
+  }
+
   @override
   void dispose() {
     _isDisposed = true;
     _strategy?.dispose();
+    _internalFallbackStrategy?.dispose();
     debugPrint('🧹 AdsWidget disposed');
     super.dispose();
   }

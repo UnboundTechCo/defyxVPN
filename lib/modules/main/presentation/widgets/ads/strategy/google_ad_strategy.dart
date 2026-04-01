@@ -41,6 +41,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   // Instance state
   bool _isLoading = false;
   bool _hasInitialized = false;
+  OnFallbackNeeded? _onFallbackNeeded;
   
   // Visual properties
   final Color backgroundColor;
@@ -55,13 +56,16 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   String get strategyName => 'Google AdMob';
   
   @override
-  Future<void> initialize(WidgetRef ref) async {
+  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+    _onFallbackNeeded = onFallbackNeeded;
+    
     if (_hasInitialized) return;
 
     try {
       // Only supports mobile platforms (Android/iOS)
       if (!(Platform.isAndroid || Platform.isIOS)) {
-        debugPrint('⚠️ Google Ads only supported on Android/iOS');
+        debugPrint('⚠️ Google Ads only supported on Android/iOS - triggering fallback');
+        _onFallbackNeeded?.call();
         return;
       }
 
@@ -129,7 +133,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (adUnitId.isEmpty) {
         debugPrint('❌ No ad unit ID configured for this platform');
         _isLoading = false;
-        ref.read(adsProvider.notifier).setAdLoadFailed();
+        ref.read(adsProvider.notifier).setAdLoadFailed(
+          errorCode: 'NO_AD_UNIT_ID',
+          errorMessage: 'No ad unit ID configured',
+        );
+        
+        // Trigger fallback - this is an unrecoverable configuration error
+        debugPrint('🔄 No ad unit ID - triggering fallback to internal ads');
+        _onFallbackNeeded?.call();
+        
         return AdLoadResult.failure(
           errorCode: 'NO_AD_UNIT_ID',
           errorMessage: 'No ad unit ID configured',
@@ -146,6 +158,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           errorCode: '2',
           errorMessage: 'Network unavailable',
         );
+        // Don't trigger fallback for temporary network issues
+        // User can reconnect and try again
+        debugPrint('⏳ Network issue - will retry when connection restored (no fallback)');
         return AdLoadResult.failure(
           errorCode: '2',
           errorMessage: 'Network unavailable',
@@ -225,6 +240,11 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               },
             );
             
+            // Trigger fallback to internal ads for actual AdMob serving failures
+            // This is when AdMob SDK tried but couldn't serve an ad
+            debugPrint('🔄 AdMob failed to serve ad (error ${error.code}) - triggering fallback to internal ads');
+            _onFallbackNeeded?.call();
+            
             if (!completer.isCompleted) {
               completer.complete(AdLoadResult.failure(
                 errorCode: error.code.toString(),
@@ -299,10 +319,13 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   }) {
     debugPrint('🔌 Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})');
     
-    // When disconnected, load ad if we don't have one
+    // When disconnected, stop countdown and load ad if we don't have one
     if (current == ConnectionStatus.disconnected && 
-        previous == ConnectionStatus.connected) {
-      debugPrint('🔌 Disconnected');
+        previous != ConnectionStatus.disconnected) {
+      debugPrint('🔌 Disconnected - stopping countdown');
+      
+      // Stop and clear the countdown timer
+      ref.read(adsProvider.notifier).stopCountdownTimer();
       
       final adsState = ref.read(adsProvider);
       
