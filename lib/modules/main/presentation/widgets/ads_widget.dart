@@ -1,43 +1,33 @@
-/// Unified Ads Widget - Strategy Pattern Implementation
+/// Unified Ads Widget - Strategy Pattern Implementation (Refactored)
 /// 
-/// This widget serves as a strategy coordinator that manages dual ad strategies
-/// and switches between them based on VPN connection state.
+/// This widget is a simple renderer that delegates strategy selection to AdStrategyManager.
 /// 
-/// **Architecture:**
-/// Uses the Strategy Pattern to separate ad loading logic from UI presentation:
-/// - GoogleAdStrategy: Handles Google AdMob ads (disconnected state ONLY)
-/// - InternalAdStrategy: Handles custom/internal ads (connected state ONLY)
+/// **Architecture (Proper Strategy Pattern):**
+/// - AdStrategyManager: Owns strategies, decides which is active, handles transitions
+/// - AdsWidget:Uses AdStrategyManager to get active strategy and render it
+/// - Strategies: Handle ad loading and rendering for their specific case
 /// 
-/// **Strategy Coordination:**
-/// - Both strategies are initialized on widget creation (mobile platforms)
-/// - AdsWidget routes connection state changes to the appropriate strategy
-/// - When connected → InternalAdStrategy loads and shows internal ads
-/// - When disconnected → GoogleAdStrategy loads and shows AdMob ads
-/// - Single Responsibility: Each strategy handles ONE ad type in ONE state
+/// **Separation of Concerns:**
+/// - Business Logic → AdStrategyManager (which strategy when)
+/// - Rendering → AdsWidget (show active strategy)
+/// - Ad Loading → Strategies (how to load and display)
 /// 
 /// **Responsibilities:**
-/// - AdsWidget (this file): Strategy initialization, routing, lifecycle management
-/// - GoogleAdStrategy: AdMob ads for disconnected state only
-/// - InternalAdStrategy: Internal ads for connected state only
-/// - State (ads_state.dart): Centralized state shared across strategies
+/// - AdStrategyManager: Strategy selection, lifecycle, transitions
+/// - AdsWidget (this file): Render active strategy, manage widget lifecycle
+/// - GoogleAdStrategy: Load and render AdMob ads
+/// - InternalAdStrategy: Load and render internal ads
 /// - MainScreen: Controls when to show/hide ads widget
-/// 
-/// **Visibility Control:**
-/// - MainScreen decides when to render AdsWidget (based on connection + countdown)
-/// - AdsWidget chooses which strategy to render based on connection state
-/// - Strategies handle their own ad loading and state updates
 /// 
 /// **UI Features:**
 /// - "ADVERTISEMENT" label (top-right corner)
 /// - 60-second countdown timer (bottom-left corner)
 /// - Automatic hiding when countdown expires
-/// - Consistent behavior across both ad types
-/// 
+/// - Smooth fade animations (300ms)
+///
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/ad_loading_strategy.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
-import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -57,184 +47,44 @@ class AdsWidget extends ConsumerStatefulWidget {
   ConsumerState<AdsWidget> createState() => _AdsWidgetState();
 }
 
-/// Widget state - orchestrates dual strategies and renders UI
+/// Widget state - pure renderer, gets manager from provider
 class _AdsWidgetState extends ConsumerState<AdsWidget> {
-  // Dual strategy instances
-  AdLoadingStrategy? _googleAdStrategy;
-  AdLoadingStrategy? _internalAdStrategy;
-  bool _isDisposed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    debugPrint('🎬 AdsWidget initState called');
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      debugPrint('🎬 PostFrameCallback executing...');
-      
-      if (_isDisposed) {
-        debugPrint('   ⚠️ Widget already disposed, aborting initialization');
-        return;
-      }
-      
-      try {
-        // Initialize BOTH strategies (for mobile platforms)
-        // GoogleAdStrategy: Handles AdMob ads when disconnected
-        // InternalAdStrategy: Handles internal ads when connected
-        debugPrint('🎯 Initializing dual ad strategies');
-        
-        _googleAdStrategy = GoogleAdStrategy(
-          backgroundColor: widget.backgroundColor,
-          cornerRadius: widget.cornerRadius,
-        );
-        
-        _internalAdStrategy = InternalAdStrategy(
-          backgroundColor: widget.backgroundColor,
-          cornerRadius: widget.cornerRadius,
-        );
-        
-        // Initialize both strategies
-        await _googleAdStrategy!.initialize(ref);
-        await _internalAdStrategy!.initialize(ref);
-        debugPrint('✅ Both strategies initialized');
-      
-      // Trigger rebuild to show the ad
-      if (mounted && !_isDisposed) {
-        setState(() {});
-      }
-      
-      // Listen to connection changes and route to appropriate strategy
-      ref.listenManual(connectionStateProvider, (previous, next) {
-        debugPrint('🔔 AdsWidget - Connection state listener triggered:');
-        debugPrint('   Previous: ${previous?.status.name ?? "null"}');
-        debugPrint('   Next: ${next.status.name}');
-        
-        if (_isDisposed) return;
-        
-        // Route to appropriate strategy based on connection state
-        final prevStatus = previous?.status ?? ConnectionStatus.disconnected;
-        final currentStatus = next.status;
-        
-        // When connected, use InternalAdStrategy
-        if (currentStatus == ConnectionStatus.connected) {
-          debugPrint('   → Routing to InternalAdStrategy');
-          _internalAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: prevStatus,
-            current: currentStatus,
-            hasInitialized: true,
-            onRefreshNeeded: () => _internalAdStrategy!.loadAd(ref: ref),
-          );
-        }
-        // When disconnected, use GoogleAdStrategy
-        else if (currentStatus == ConnectionStatus.disconnected) {
-          debugPrint('   → Routing to GoogleAdStrategy');
-          _googleAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: prevStatus,
-            current: currentStatus,
-            hasInitialized: true,
-            onRefreshNeeded: () => _googleAdStrategy!.loadAd(ref: ref),
-          );
-        }
-        // For intermediate states (loading, analyzing, etc.), route to both
-        else {
-          debugPrint('   → Routing to both strategies (intermediate state)');
-          _googleAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: prevStatus,
-            current: currentStatus,
-            hasInitialized: true,
-            onRefreshNeeded: () => _googleAdStrategy!.loadAd(ref: ref),
-          );
-          _internalAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: prevStatus,
-            current: currentStatus,
-            hasInitialized: true,
-            onRefreshNeeded: () => _internalAdStrategy!.loadAd(ref: ref),
-          );
-        }
-      });
-      
-      debugPrint('✅ Connection state listener registered');
-      
-      // Manually trigger initial state check
-      final currentState = ref.read(connectionStateProvider).status;
-      debugPrint('🔄 Triggering initial state check: ${currentState.name}');
-      
-      if (!_isDisposed) {
-        if (currentState == ConnectionStatus.connected) {
-          _internalAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: ConnectionStatus.disconnected,
-            current: currentState,
-            hasInitialized: true,
-            onRefreshNeeded: () => _internalAdStrategy!.loadAd(ref: ref),
-          );
-        } else {
-          _googleAdStrategy?.onConnectionStateChanged(
-            ref: ref,
-            previous: ConnectionStatus.disconnected,
-            current: currentState,
-            hasInitialized: true,
-            onRefreshNeeded: () => _googleAdStrategy!.loadAd(ref: ref),
-          );
-        }
-      }
-      
-      } catch (e, stackTrace) {
-        debugPrint('❌ ERROR in AdsWidget initialization: $e');
-        debugPrint('   Stack trace: $stackTrace');
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    _googleAdStrategy?.dispose();
-    _internalAdStrategy?.dispose();
-    debugPrint('🧹 AdsWidget disposed');
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
     debugPrint('🎨 AdsWidget.build() called');
+    
+    // Get manager from provider
+    final manager = ref.watch(adStrategyManagerProvider);
     final adsState = ref.watch(adsProvider);
-    final connectionState = ref.watch(connectionStateProvider).status;
+    final connectionState = ref.watch(conn.connectionStateProvider).status;
+    
+    debugPrint('   Manager: ${manager == null ? "loading" : "ready"}');
     debugPrint('   Ad state: loaded=${adsState.nativeAdIsLoaded}, customAd=${adsState.customImageUrl != null}, countdown=${adsState.showCountdown}');
     debugPrint('   Connection: ${connectionState.name}');
 
-    // Safety check: Hide if loading failed (MainScreen should already handle this)
+    // Safety check: Hide if loading failed
     if (adsState.adLoadFailed) {
+      debugPrint('   ❌ Ad load failed, hiding widget');
       return const SizedBox.shrink();
     }
 
-    // Wait for strategies to initialize (happens in postFrameCallback)
-    if (_googleAdStrategy == null || _internalAdStrategy == null) {
+    // Wait for manager to initialize
+    if (manager == null) {
+      debugPrint('   ⏳ Manager not ready yet');
       return const SizedBox.shrink();
     }
 
-    // Choose which strategy to render based on connection state
-    AdLoadingStrategy? activeStrategy;
-    if (connectionState == ConnectionStatus.connected && 
-        adsState.customImageUrl != null && 
-        adsState.customImageUrl!.isNotEmpty) {
-      // Connected state with internal ad available → use InternalAdStrategy
-      activeStrategy = _internalAdStrategy;
-      debugPrint('   → Rendering InternalAdStrategy');
-    } else if (adsState.nativeAdIsLoaded) {
-      // Disconnected state with AdMob ad available → use GoogleAdStrategy
-      activeStrategy = _googleAdStrategy;
-      debugPrint('   → Rendering GoogleAdStrategy');
-    }
+    // Ask manager which strategy is active - business logic lives there
+    final activeStrategy = manager.getActiveStrategy(connectionState);
+    debugPrint('   Active strategy: ${activeStrategy?.strategyName ?? "none"}');
 
     // If no active strategy, hide widget
     if (activeStrategy == null) {
+      debugPrint('   ⚪ No active strategy, hiding widget');
       return const SizedBox.shrink();
     }
+
+    debugPrint('   ✅ Rendering ${activeStrategy.strategyName}');
 
     // Render ad container with active strategy
     // Size is constrained by parent (main_screen.dart: 280.h x 336.w)

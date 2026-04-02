@@ -11,13 +11,37 @@ class AdvertiseDirector {
 
   AdvertiseDirector(this.ref);
 
-  static Future<bool> shouldUseInternalAds(WidgetRef ref) async {
+  /// Check if user is from Iran based on device timezone
+  /// Iranian users should not see AdMob ads (only internal ads)
+  static Future<bool> isIranianUser() async {
+    try {
+      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+      // Asia/Tehran is the timezone for Iran
+      final isIran = currentTimeZone == 'Asia/Tehran';
+      if (isIran) {
+        debugPrint('🇮🇷 Iranian user detected (timezone: $currentTimeZone) - AdMob disabled');
+      }
+      return isIran;
+    } catch (e) {
+      debugPrint('⚠️ Error detecting timezone: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> shouldUseInternalAds(Ref ref) async {
     // STRATEGY SELECTION (for backward compatibility with desktop):
     // - Desktop (Windows/macOS/Linux) → InternalAdStrategy only (no AdMob support)
+    // - Iranian users → InternalAdStrategy only (AdMob disabled for Iran)
     // - Mobile (Android/iOS) → DUAL strategy approach:
     //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
     //     * InternalAdStrategy handles internal ads (connected state ONLY)
     //     * AdsWidget coordinates between the two strategies
+    
+    // Check for Iranian users first (AdMob disabled for Iran)
+    if (await isIranianUser()) {
+      debugPrint('📍 Ad Manager - Iranian user detected, using InternalAdStrategy only (AdMob disabled)');
+      return true;
+    }
     
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       debugPrint('📍 Ad Manager - Desktop platform detected, using InternalAdStrategy only');
@@ -42,17 +66,17 @@ class AdvertiseDirector {
     return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
   }
 
-  static Future<String> getCustomAdBanner(WidgetRef ref) async {
+  static Future<String> getCustomAdBanner(Ref ref) async {
     final adData = await getRandomCustomAd(ref);
     return adData['imageUrl'] ?? '';
   }
 
-  static Future<String> getCustomAdClickUrl(WidgetRef ref) async {
+  static Future<String> getCustomAdClickUrl(Ref ref) async {
     final adData = await getRandomCustomAd(ref);
     return adData['clickUrl'] ?? '';
   }
 
-  static Future<Map<String, String>> getRandomCustomAd(WidgetRef ref) async {
+  static Future<Map<String, String>> getRandomCustomAd(Ref ref) async {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     debugPrint('📍 Ad Manager - Getting ad for timezone: $currentTimeZone');
 
