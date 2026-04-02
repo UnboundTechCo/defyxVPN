@@ -57,6 +57,9 @@ class MainActivity : FlutterActivity() {
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.defyx.progress_events")
                 .setStreamHandler(ProgressStreamHandler())
+
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.defyx.crash_events")
+                .setStreamHandler(CrashStreamHandler())
     }
     private fun grantNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -449,5 +452,37 @@ class ProgressStreamHandler : EventChannel.StreamHandler, ProgressListener {
 
     override fun onProgress(msg: String?) {
         CoroutineScope(Dispatchers.Main).launch { eventSink?.success(msg) }
+    }
+}
+
+class CrashStreamHandler : EventChannel.StreamHandler {
+
+    private var eventSink: EventChannel.EventSink? = null
+
+    override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+        this.eventSink = events
+        
+        // Register crash callback with Go library
+        Android.setCrashCallback(object : android.CrashListener {
+            override fun onCrash(functionName: String, errorMessage: String, stackTrace: String) {
+                // Forward crash info to Flutter via event channel
+                CoroutineScope(Dispatchers.Main).launch {
+                    eventSink?.success(
+                        mapOf(
+                            "functionName" to functionName,
+                            "errorMessage" to errorMessage,
+                            "stackTrace" to stackTrace,
+                            "platform" to "android"
+                        )
+                    )
+                }
+            }
+        })
+    }
+
+    override fun onCancel(arguments: Any?) {
+        this.eventSink = null
+        // Optionally unregister callback
+        Android.setCrashCallback(null)
     }
 }
