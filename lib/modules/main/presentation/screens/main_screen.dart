@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
@@ -261,12 +262,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
     debugPrint('🎨 _buildContentSection called:');
     debugPrint('   Status: ${status.name}');
-    debugPrint('   nativeAdIsLoaded: ${adsState.nativeAdIsLoaded}');
-    debugPrint('   showCountdown: ${adsState.showCountdown}');
-    debugPrint('   adLoadFailed: ${adsState.adLoadFailed}');
     
-    // Determine if we should show ads based on state
-    bool shouldShowAd = false;
+    // Use hasActiveAdProvider as single source of truth for ad visibility
+    final hasActiveAd = ref.watch(hasActiveAdProvider);
+    debugPrint('   hasActiveAd: $hasActiveAd');
+    
+    bool shouldShowAd = hasActiveAd;
     Widget? mainContent;
     
     switch (status) {
@@ -282,44 +283,33 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         break;
 
       case ConnectionStatus.disconnected:
-        // DISCONNECTED: Show AdMob ad (after VPN use) if available, else show tips
-        final shouldShowAdMobAd = adsState.showCountdown && 
-                                   adsState.nativeAdIsLoaded;
-        
-        debugPrint('   🎯 DISCONNECTED: shouldShowAdMobAd=$shouldShowAdMobAd');
-        
-        if (shouldShowAdMobAd) {
-          debugPrint('   ✅ Rendering AdMob ad');
-          shouldShowAd = true;
-        } else {
-          debugPrint('   ℹ️ Rendering tips slider');
+        // DISCONNECTED: Show ad if director says so, else show tips
+        if (!hasActiveAd) {
+          debugPrint('   ℹ️ Rendering tips slider (no active ad)');
           mainContent = TipsSliderSection(status: status);
+        } else {
+          debugPrint('   ✅ Showing ad container (director has active strategy)');
         }
         break;
 
       default:
-        // CONNECTED/CONNECTING: Show internal ad (during VPN use) if available
-        final shouldShowInternalAd = adsState.showCountdown && 
-                                      (adsState.customImageUrl?.isNotEmpty ?? false);
-        
-        debugPrint('   🎯 CONNECTED/OTHER: shouldShowInternalAd=$shouldShowInternalAd (hasCustomImage=${adsState.customImageUrl != null})');
-        
-        if (shouldShowInternalAd) {
-          debugPrint('   ✅ Rendering internal ad');
-          shouldShowAd = true;
-        } else {
-          debugPrint('   ⚪ Rendering empty (no ad)');
+        // CONNECTED/CONNECTING: Show ad if available, else empty
+        if (!hasActiveAd) {
+          debugPrint('   ⚪ Rendering empty (no active ad)');
           mainContent = const SizedBox.shrink();
+        } else {
+          debugPrint('   ✅ Showing ad container (director has active strategy)');
         }
     }
     
     // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
-    // Control visibility with Opacity instead of moving widget around
+    // Control visibility with AnimatedOpacity for smooth fade transitions
     return Stack(
       alignment: Alignment.topCenter,  // Align to top-center for consistent positioning
       children: [
         // Always in tree at same position - never recreated
-        Opacity(
+        AnimatedOpacity(
+          duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
           opacity: shouldShowAd ? 1.0 : 0.0,
           child: IgnorePointer(
             ignoring: !shouldShowAd,  // Prevent touch events when hidden

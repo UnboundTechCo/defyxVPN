@@ -10,11 +10,11 @@ typedef OnFallbackNeeded = void Function();
 /// Abstract strategy for loading different types of ads
 abstract class AdLoadingStrategy {
   /// Initialize the strategy (called once in initState)
-  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded});
+  Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded});
   
   /// Load an ad
   Future<AdLoadResult> loadAd({
-    required WidgetRef ref,
+    required Ref ref,
   });
   
   /// Build the ad content widget
@@ -26,7 +26,7 @@ abstract class AdLoadingStrategy {
   
   /// Handle VPN connection state changes  
   void onConnectionStateChanged({
-    required WidgetRef ref,
+    required Ref ref,
     required ConnectionStatus previous,
     required ConnectionStatus current,
     required bool hasInitialized,
