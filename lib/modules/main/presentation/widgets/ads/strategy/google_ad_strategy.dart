@@ -88,6 +88,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       // Mark as initialized
       _hasInitialized = true;
       
+      // Register disposal callback for countdown expiry
+      ref.read(adsProvider.notifier).setAdDisposalCallback(() {
+        _disposeAd(ref);
+      });
+      debugPrint('✅ Registered ad disposal callback');
+      
       // DON'T load ad on initialization - let connection state changes handle it
       // This prevents race conditions and timing issues
       debugPrint('✅ GoogleAdStrategy initialized (ad will load on connection state change)');
@@ -95,6 +101,21 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       debugPrint('Error initializing Google ads: $e');
       ref.read(adsProvider.notifier).setAdLoadFailed();
     }
+  }
+  
+  /// Dispose the current ad instance and clear state
+  void _disposeAd(Ref ref) {
+    debugPrint('🗑️ Disposing AdMob ad due to countdown expiry');
+    if (_nativeAd != null) {
+      try {
+        _nativeAd!.dispose();
+        debugPrint('✅ NativeAd disposed successfully');
+      } catch (e) {
+        debugPrint('⚠️ Error disposing NativeAd: $e');
+      }
+      _nativeAd = null;
+    }
+    // State flags already cleared by AdsNotifier, no need to update here
   }
   
   @override
