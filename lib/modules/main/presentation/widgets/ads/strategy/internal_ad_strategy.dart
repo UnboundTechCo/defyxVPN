@@ -11,8 +11,14 @@ import 'ad_loading_strategy.dart';
 
 /// Strategy for loading and displaying internal/custom ads
 /// 
-/// This strategy handles ads served from the app's own backend,
-/// shown during VPN connection (connected state only).
+/// This strategy handles ads served from the app's own backend.
+/// Shows ads ONLY when VPN is connected (all users, including Iranian users).
+/// 
+/// Behavior:
+/// - Connected state: Load and display internal ad with 60s countdown
+/// - Disconnected state: Clear ad data (GoogleAdStrategy handles disconnected for non-Iranian users)
+/// - Iranian users: Will see internal ads only when connected, nothing when disconnected
+/// 
 /// Handles internal ads ONLY - does not manage AdMob ads.
 class InternalAdStrategy implements AdLoadingStrategy {
   bool _internalAdImageFailed = false;
@@ -31,7 +37,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
   String get strategyName => 'Internal Ads';
   
   @override
-  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+  Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
     debugPrint('🚀 InternalAdStrategy.initialize() called');
     debugPrint('🎨 Internal ads strategy initialized');
     // Internal ads don't need fallback callback (they are the fallback)
@@ -43,7 +49,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
   
   @override
   Future<AdLoadResult> loadAd({
-    required WidgetRef ref,
+    required Ref ref,
   }) async {
     try {
       debugPrint('🎨 Loading internal ad for restricted region');
@@ -208,7 +214,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
   
   @override
   void onConnectionStateChanged({
-    required WidgetRef ref,
+    required Ref ref,
     required ConnectionStatus previous,
     required ConnectionStatus current,
     required bool hasInitialized,
@@ -216,7 +222,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
   }) {
     debugPrint('📍 InternalAdStrategy - Connection: ${previous.name} → ${current.name}');
     
-    // INTERNAL ADS: Show when connected (during VPN use) with VPN IP
+    // INTERNAL ADS: Show when connected (all users including Iranian)
     // When connected, load fresh internal ad and show it
     if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
       debugPrint('▶️ Connected - loading fresh internal ad to show during VPN session');
@@ -234,11 +240,12 @@ class InternalAdStrategy implements AdLoadingStrategy {
       return;
     }
     
-    // When disconnecting, stop countdown and clear data
-    // (GoogleAdStrategy will take over and show AdMob ad)
+    // When disconnecting, stop countdown and clear data (all users)
+    // For non-Iranian users: GoogleAdStrategy will show AdMob ad
+    // For Iranian users: Nothing will show (they don't have GoogleAdStrategy)
     if (current == ConnectionStatus.disconnected && 
         previous == ConnectionStatus.connected) {
-      debugPrint('⏸️ Disconnected - clearing internal ad (GoogleAdStrategy will show AdMob ad)');
+      debugPrint('⏸️ Disconnected - clearing internal ad');
       ref.read(adsProvider.notifier).stopCountdownTimer();
       ref.read(adsProvider.notifier).clearCustomAdData();
     }

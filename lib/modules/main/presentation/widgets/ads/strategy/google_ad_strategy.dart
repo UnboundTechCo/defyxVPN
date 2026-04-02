@@ -30,7 +30,9 @@ class AdHelper {
 /// 
 /// Simple, direct ad loading strategy:
 /// - Loads ads only when VPN is disconnected (need real IP for targeting)
+/// - Shows ads only for non-Iranian users (after first VPN connection)
 /// - No retries (fail fast)
+/// - No fallback to internal ads (clean failure)
 /// - No caching (fresh ad on each load)
 /// - No rate limiting (AdMob SDK handles it)
 /// - Basic analytics logging
@@ -41,7 +43,6 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   // Instance state
   bool _isLoading = false;
   bool _hasInitialized = false;
-  OnFallbackNeeded? _onFallbackNeeded;
   
   // Visual properties
   final Color backgroundColor;
@@ -56,9 +57,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   String get strategyName => 'Google AdMob';
   
   @override
-  Future<void> initialize(WidgetRef ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+  Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
     debugPrint('🚀 GoogleAdStrategy.initialize() called');
-    _onFallbackNeeded = onFallbackNeeded;
     
     if (_hasInitialized) {
       debugPrint('   ⚠️ Already initialized, skipping');
@@ -68,8 +68,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     try {
       // Only supports mobile platforms (Android/iOS)
       if (!(Platform.isAndroid || Platform.isIOS)) {
-        debugPrint('⚠️ Google Ads only supported on Android/iOS - triggering fallback');
-        _onFallbackNeeded?.call();
+        debugPrint('⚠️ Google Ads only supported on Android/iOS');
         return;
       }
 
@@ -100,7 +99,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   
   @override
   Future<AdLoadResult> loadAd({
-    required WidgetRef ref,
+    required Ref ref,
   }) async {
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;
@@ -145,9 +144,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           errorMessage: 'No ad unit ID configured',
         );
         
-        // Trigger fallback - this is an unrecoverable configuration error
-        debugPrint('🔄 No ad unit ID - triggering fallback to internal ads');
-        _onFallbackNeeded?.call();
+        // Configuration error - just fail, no fallback
+        debugPrint('⚠️ No ad unit ID - AdMob disabled');
         
         return AdLoadResult.failure(
           errorCode: 'NO_AD_UNIT_ID',
@@ -247,10 +245,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               },
             );
             
-            // Trigger fallback to internal ads for actual AdMob serving failures
-            // This is when AdMob SDK tried but couldn't serve an ad
-            debugPrint('🔄 AdMob failed to serve ad (error ${error.code}) - triggering fallback to internal ads');
-            _onFallbackNeeded?.call();
+            // AdMob failed - just don't show anything (no fallback to internal ads)
+            debugPrint('⚠️ AdMob failed to serve ad (error ${error.code}) - no ad will show');
             
             if (!completer.isCompleted) {
               completer.complete(AdLoadResult.failure(
@@ -320,7 +316,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   
   @override
   void onConnectionStateChanged({
-    required WidgetRef ref,
+    required Ref ref,
     required ConnectionStatus previous,
     required ConnectionStatus current,
     required bool hasInitialized,

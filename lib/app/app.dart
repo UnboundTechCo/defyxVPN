@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
@@ -26,40 +26,43 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<bool>(
+    // Eagerly trigger environment computation
+    ref.read(adEnvironmentProvider);
+    
+    return FutureBuilder<void>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
-        _handleAdConfiguration(snapshot, ref);
+        _handleAdConfiguration(ref);
         return _buildApp(context, ref);
       },
     );
   }
 
-  Future<bool> _initializeApp(WidgetRef ref) async {
+  Future<void> _initializeApp(WidgetRef ref) async {
     await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
-    return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
-  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot, WidgetRef ref) {
-    if (!snapshot.hasData) return;
-
-    final shouldUseInternalAds = snapshot.data!;
-    if (shouldUseInternalAds) {
-      debugPrint('📱 Using internal ads (desktop platform or backend config)');
-    } else {
-      // Only initialize AdMob on mobile platforms
-      if (Platform.isAndroid || Platform.isIOS) {
-        _initializeMobileAdsWithConsent(ref);
+  void _handleAdConfiguration(WidgetRef ref) {
+    // Use adEnvironmentProvider to decide AdMob initialization
+    final environmentAsync = ref.read(adEnvironmentProvider);
+    
+    environmentAsync.whenData((environment) {
+      if (!environment.shouldInitializeAdMob) {
+        debugPrint('📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})');
       } else {
-        debugPrint('📱 Skipping AdMob initialization on desktop platform');
+        debugPrint('📱 Initializing AdMob for mobile non-Iranian user');
+        _initializeMobileAdsWithConsent(ref, environment);
       }
-    }
+    });
   }
 
-  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref) async {
+  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref, AdEnvironment environment) async {
     try {
+      // Environment already verified shouldInitializeAdMob = true
+      debugPrint('📱 Starting AdMob initialization...');
+      
       if (Platform.isAndroid || Platform.isIOS) {
         // Request App Tracking Transparency (iOS only)
         if (Platform.isIOS) {

@@ -20,14 +20,16 @@ const int countdownDuration = 60;
 /// **State Flag Ownership:**
 /// 
 /// GoogleAdStrategy (AdMob ads, disconnected state):
-/// - `nativeAdIsLoaded` - True when AdMob NativeAd is loaded and ready
+/// - `nativeAdIsLoaded` - True when AdMob NativeAd is loaded and ready (EXCLUSIVE OWNERSHIP)
 /// - Uses shared: `adLoadedAt`, `showCountdown`, `countdown`
+/// - Sets via: setNativeAd() method ONLY
 /// 
-/// InternalAdStrategy (Internal ads, connected state):
-/// - `customImageUrl` - URL of internal ad image to display
+/// InternalAdStrategy  (Internal ads, connected state):
+/// - `customImageUrl` - URL of internal ad image to display (EXCLUSIVE OWNERSHIP)
 /// - `customClickUrl` - URL to open when internal ad is clicked
 /// - `customImageLoadFailed` - True if image failed to load
 /// - Uses shared: `showCountdown`, `countdown`
+/// - Sets via: setCustomAdData() method (NOTE: does NOT set nativeAdIsLoaded)
 /// 
 /// Shared by both strategies:
 /// - `adLoadFailed` - True if any ad load failed
@@ -263,19 +265,24 @@ class AdsNotifier extends StateNotifier<AdsState> {
     debugPrint('   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
   }
 
-  /// Set custom ad data (for internal/custom ads)
+  /// Set custom ad data (for internal/custom ads ONLY)
+  /// 
+  /// OWNERSHIP: This method is EXCLUSIVELY for InternalAdStrategy.
+  /// GoogleAdStrategy must NOT call this method.
+  /// 
+  /// NOTE: This does NOT set nativeAdIsLoaded flag. That flag belongs to GoogleAdStrategy.
   void setCustomAdData(String imageUrl, String clickUrl) {
     debugPrint('✅ Custom ad loaded: $imageUrl');
-    debugPrint('   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
+    debugPrint('   📊 State BEFORE: customImageUrl=${state.customImageUrl}, nativeAdIsLoaded=${state.nativeAdIsLoaded}');
     state = state.copyWith(
       customImageUrl: imageUrl,
       customClickUrl: clickUrl,
-      nativeAdIsLoaded: true,
+      // NOTE: nativeAdIsLoaded is NOT set here - it belongs ONLY to GoogleAdStrategy
       adLoadFailed: false,
       adLoadedAt: DateTime.now(),
       customImageLoadFailed: false,
     );
-    debugPrint('   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
+    debugPrint('   📊 State AFTER: customImageUrl set, nativeAdIsLoaded=${state.nativeAdIsLoaded} (unchanged)');
   }
 
   /// Mark custom image load as failed
@@ -290,13 +297,14 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Clear internal/custom ad data (for switching to AdMob ads)
   void clearCustomAdData() {
     debugPrint('🗑️ Clearing internal ad data');
-    debugPrint('   📊 State BEFORE: customImageUrl=${state.customImageUrl != null && state.customImageUrl!.isNotEmpty ? "set" : "null"}');
+    debugPrint('   📊 State BEFORE: customImageUrl=${state.customImageUrl != null && state.customImageUrl!.isNotEmpty ? "set" : "null"}, nativeAdIsLoaded=${state.nativeAdIsLoaded}');
     state = state.copyWith(
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
+      nativeAdIsLoaded: false,  // Clear this flag to prevent showing empty ad container
     );
-    debugPrint('   📊 State AFTER: customImageUrl cleared');
+    debugPrint('   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false');
   }
 
   /// Mark that user has completed first VPN connection
