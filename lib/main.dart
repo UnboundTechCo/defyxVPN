@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
@@ -6,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
@@ -29,6 +32,22 @@ void main() async {
       name: "defyx-vpn",
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+    // Initialize Firebase Crashlytics
+    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+    // Pass all uncaught Flutter errors to Crashlytics
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+      // Also print to console in debug mode
+      FlutterError.presentError(errorDetails);
+    };
+
+    // Pass all uncaught asynchronous errors to Crashlytics
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   }
 
   // Only lock orientation on mobile devices, not on Android TV
@@ -50,12 +69,24 @@ void main() async {
   final prefs = await SharedPreferences.getInstance();
   final languageNotifier = LanguageNotifier(prefs);
   
-  runApp(
-    ProviderScope(
-      overrides: [
-        languageProvider.overrideWith((ref) => languageNotifier),
-      ],
-      child: const App(),
-    ),
+  // Run app in guarded zone to catch all errors
+  runZonedGuarded<Future<void>>(
+    () async {
+      runApp(
+        ProviderScope(
+          overrides: [
+            languageProvider.overrideWith((ref) => languageNotifier),
+          ],
+          child: const App(),
+        ),
+      );
+    },
+    (error, stack) {
+      if (!Platform.isWindows && !Platform.isLinux) {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      }
+      debugPrint('Uncaught error: $error');
+      debugPrint('Stack trace: $stack');
+    },
   );
 }

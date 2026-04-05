@@ -58,6 +58,23 @@ class FirebaseAnalyticsService {
     }
   }
 
+  Future<void> logVpnConnectionFailed(
+      String connectionMethod, String? server, int durationSeconds) async {
+    if (_isDesktopPlatform) return;
+    try {
+      await _analyticsInstance?.logEvent(
+        name: 'vpn_connection_failed',
+        parameters: {
+          'connection_method': connectionMethod,
+          'attempt_duration_seconds': durationSeconds,
+          if (server != null) 'server': server,
+        },
+      );
+    } catch (e) {
+      debugPrint('Analytics error: $e');
+    }
+  }
+
   Future<void> logVpnDisconnected() async {
     if (_isDesktopPlatform) return;
     try {
