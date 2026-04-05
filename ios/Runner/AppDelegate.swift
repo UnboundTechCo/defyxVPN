@@ -32,7 +32,14 @@ import Flutter
       let progressHandler = ProgressStreamHandler()
       progressChannel.setStreamHandler(progressHandler)
 
+      let crashChannel = FlutterEventChannel(
+        name: "com.defyx.crash_events",
+        binaryMessenger: controller.binaryMessenger)
+      let crashHandler = CrashStreamHandler()
+      crashChannel.setStreamHandler(crashHandler)
+
       getLogs(progressHandler)
+      getCrashes(crashHandler)
     }
 
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
@@ -60,6 +67,32 @@ import Flutter
       }
 
       defaults.set(currentLogs, forKey: "vpn_logs")
+      defaults.synchronize()
+    }
+  }
+
+  func getCrashes(_ crashHandler: CrashStreamHandler) {
+    Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+      guard let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn"),
+        var crashes = defaults.array(forKey: "go_crashes") as? [[String: String]],
+        !crashes.isEmpty
+      else { return }
+
+      let crashesToSend = crashes
+
+      for crash in crashesToSend {
+        crashHandler.send(crash)
+      }
+
+      var currentCrashes = defaults.array(forKey: "go_crashes") as? [[String: String]] ?? []
+
+      if currentCrashes.count >= crashesToSend.count {
+        currentCrashes.removeFirst(crashesToSend.count)
+      } else {
+        currentCrashes.removeAll()
+      }
+
+      defaults.set(currentCrashes, forKey: "go_crashes")
       defaults.synchronize()
     }
   }
@@ -103,5 +136,25 @@ class StatusStreamHandler: NSObject, FlutterStreamHandler {
   func onCancel(withArguments arguments: Any?) -> FlutterError? {
     plugin.setEventSink({ _ in })
     return nil
+  }
+}
+
+class CrashStreamHandler: NSObject, FlutterStreamHandler {
+  private var eventSink: FlutterEventSink?
+
+  func onListen(withArguments arguments: Any?, eventSink events: @escaping FlutterEventSink)
+    -> FlutterError?
+  {
+    self.eventSink = events
+    return nil
+  }
+
+  func onCancel(withArguments arguments: Any?) -> FlutterError? {
+    self.eventSink = nil
+    return nil
+  }
+
+  func send(_ crashInfo: [String: String]) {
+    eventSink?(crashInfo)
   }
 }
