@@ -152,6 +152,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
   Timer? _countdownTimer;
   static const String _countdownStartKey = 'ad_countdown_start_time';
   
+  /// Callback for notifying strategies when ads should be disposed
+  VoidCallback? _onAdShouldDispose;
+  
   /// Load persisted countdown state on initialization
   Future<void> _loadPersistedCountdown() async {
     try {
@@ -242,11 +245,20 @@ class AdsNotifier extends StateNotifier<AdsState> {
         debugPrint('⏱️ Countdown: $newCount');
         state = state.copyWith(countdown: newCount);
       } else {
-        debugPrint('⏱️ Countdown finished - hiding ad');
+        debugPrint('⏱️ Countdown finished - disposing ad and clearing state');
+        
+        // Clear all ad flags to hide the ad box completely
         state = state.copyWith(
           showCountdown: false,
-          // Keep ad loaded - just hide it until next connection
+          nativeAdIsLoaded: false,
+          customImageUrl: '',
+          customClickUrl: '',
         );
+        
+        // Notify strategies to dispose their ad instances
+        _onAdShouldDispose?.call();
+        debugPrint('🗑️ Ad disposal callback triggered');
+        
         timer.cancel();
         _clearPersistedCountdown();
       }
@@ -306,6 +318,19 @@ class AdsNotifier extends StateNotifier<AdsState> {
     );
     debugPrint('   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false');
   }
+  
+  /// Register a callback to be notified when ads should be disposed
+  /// This allows strategies to clean up their ad instances (e.g., dispose NativeAd)
+  void setAdDisposalCallback(VoidCallback callback) {
+    debugPrint('📌 Registered ad disposal callback');
+    _onAdShouldDispose = callback;
+  }
+  
+  /// Unregister the ad disposal callback
+  void clearAdDisposalCallback() {
+    debugPrint('📌 Cleared ad disposal callback');
+    _onAdShouldDispose = null;
+  }
 
   /// Mark that user has completed first VPN connection
   void markFirstConnectionComplete() {
@@ -347,6 +372,8 @@ class AdsNotifier extends StateNotifier<AdsState> {
     debugPrint('🧹 AdsNotifier disposing - stopping countdown timer');
     _countdownTimer?.cancel();
     _countdownTimer = null;
+    // Clear disposal callback
+    _onAdShouldDispose = null;
     // Clear persisted countdown on dispose to prevent zombie timers
     _clearPersistedCountdown();
     super.dispose();
