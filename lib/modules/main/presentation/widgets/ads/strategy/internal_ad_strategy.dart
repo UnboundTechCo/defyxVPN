@@ -82,6 +82,24 @@ class InternalAdStrategy implements AdLoadingStrategy {
         );
       }
       
+      // Validate URL format before using it (safety check for iOS network issue)
+      if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
+        debugPrint('❌ Invalid internal ad URL format: $imageUrl');
+        await _analytics.logEvent(
+          name: 'ads_internal_ad_load_failure',
+          parameters: {'error_code': 'INVALID_URL', 'url': imageUrl},
+        );
+        
+        ref.read(adsProvider.notifier).setAdLoadFailed(
+          errorCode: 'INVALID_URL',
+          errorMessage: 'Invalid ad URL format',
+        );
+        return AdLoadResult.failure(
+          errorCode: 'INVALID_URL',
+          errorMessage: 'Invalid ad URL format: $imageUrl',
+        );
+      }
+      
       debugPrint('✅ Internal ad loaded:');
       debugPrint('   Image: $imageUrl');
       debugPrint('   Click: $clickUrl');
@@ -124,6 +142,16 @@ class InternalAdStrategy implements AdLoadingStrategy {
   }) {
     final imageUrl = state.customImageUrl ?? '';
     final clickUrl = state.customClickUrl ?? '';
+    
+    // Validate URL format before rendering (defensive check to prevent iOS file:/// error)
+    // CRITICAL: Never pass empty or malformed URLs to Image.network on iOS
+    // iOS incorrectly resolves empty strings as file:/// URIs causing crashes
+    if (imageUrl.isEmpty || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
+      if (imageUrl.isNotEmpty) {
+        debugPrint('❌ Invalid URL in buildAdWidget, refusing to render: $imageUrl');
+      }
+      return const SizedBox.shrink();
+    }
     
     return GestureDetector(
       onTap: () async {
@@ -200,8 +228,9 @@ class InternalAdStrategy implements AdLoadingStrategy {
                 },
               );
               
-              // Trigger state update to hide the entire widget
-              container.read(adsProvider.notifier).setCustomImageLoadFailed();
+              // Clear all ad data so the container disappears completely
+              debugPrint('🗑️ Clearing ad data due to image load failure');
+              container.read(adsProvider.notifier).clearCustomAdData();
             });
           }
           
@@ -225,17 +254,25 @@ class InternalAdStrategy implements AdLoadingStrategy {
     // INTERNAL ADS: Show when connected (all users including Iranian)
     // When connected, load fresh internal ad and show it
     if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
-      debugPrint('▶️ Connected - loading fresh internal ad to show during VPN session');
+      debugPrint('▶️ Connected - will load internal ad after network routing stabilizes');
       
       // Mark first connection complete
       ref.read(adsProvider.notifier).markFirstConnectionComplete();
       
-      // Load fresh internal ad
-      loadAd(ref: ref).then((result) {
-        if (result.success) {
-          debugPrint('⏰ Fresh internal ad loaded - starting countdown');
-          ref.read(adsProvider.notifier).startCountdownTimer();
-        }
+      // iOS FIX: Add delay to allow VPN network routing to fully establish
+      // Without this delay, Image.network may incorrectly resolve HTTPS URLs as file:// URIs
+      // causing "No host specified in URI file:///..." errors on first connection
+      // Also allows time for VPN tunnel to stabilize (tun2socks, ping refresh, SSL/TLS)
+      Future.delayed(const Duration(milliseconds: 2500), () {
+        debugPrint('⏱️ Network routing delay complete (2.5s) - loading fresh internal ad');
+        
+        // Load fresh internal ad
+        loadAd(ref: ref).then((result) {
+          if (result.success) {
+            debugPrint('⏰ Fresh internal ad loaded - starting countdown');
+            ref.read(adsProvider.notifier).startCountdownTimer();
+          }
+        });
       });
       return;
     }
