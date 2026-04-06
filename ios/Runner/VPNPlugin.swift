@@ -17,6 +17,10 @@ class VpnPlugin: VpnStatusDelegate {
         VpnService.shared.statusDelegate = self
         let progressStream = ProgressStreamHandlerIOS()
         IosSetProgressListener(progressStream)
+        
+        // Set up crash callback
+        let crashHandler = CrashStreamHandlerIOS()
+        IosSetCrashCallback(crashHandler)
     }
 
     // MARK: - Event Sink
@@ -435,6 +439,36 @@ class ProgressStreamHandlerIOS: NSObject, IosProgressListenerProtocol {
             logs.append(msg ?? "")
             defaults.set(logs, forKey: "vpn_logs")
             defaults.synchronize()
+        }
+    }
+}
+
+class CrashStreamHandlerIOS: NSObject, IosCrashListenerProtocol {
+    func onCrash(_ functionName: String?, errorMessage: String?, stackTrace: String?) {
+        // Store crash info in UserDefaults for main app to retrieve
+        if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {
+            var crashes = defaults.array(forKey: "go_crashes") as? [[String: String]] ?? []
+            
+            let crashInfo: [String: String] = [
+                "functionName": functionName ?? "unknown",
+                "errorMessage": errorMessage ?? "unknown",
+                "stackTrace": stackTrace ?? "",
+                "platform": "ios",
+                "timestamp": ISO8601DateFormatter().string(from: Date())
+            ]
+            
+            crashes.append(crashInfo)
+            
+            // Keep only last 100 crashes to avoid excessive storage
+            if crashes.count > 100 {
+                crashes = Array(crashes.suffix(100))
+            }
+            
+            defaults.set(crashes, forKey: "go_crashes")
+            defaults.synchronize()
+            
+            // Also log to console for debugging
+            print("🔥 Go panic recovered: \(functionName ?? "unknown") - \(errorMessage ?? "unknown")")
         }
     }
 }
