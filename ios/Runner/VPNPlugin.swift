@@ -20,7 +20,7 @@ class VpnPlugin: VpnStatusDelegate {
         
         // Set up crash callback
         let crashHandler = CrashStreamHandlerIOS()
-        IosSetCrashCallback(crashHandler.onCrash)
+        IosSetCrashCallback(crashHandler)
     }
 
     // MARK: - Event Sink
@@ -443,8 +443,8 @@ class ProgressStreamHandlerIOS: NSObject, IosProgressListenerProtocol {
     }
 }
 
-class CrashStreamHandlerIOS {
-    func onCrash(functionName: String?, errorMessage: String?, stackTrace: String?) {
+class CrashStreamHandlerIOS: NSObject, IosCrashListenerProtocol {
+    func onCrash(_ functionName: String?, errorMessage: String?, stackTrace: String?) {
         // Store crash info in UserDefaults for main app to retrieve
         if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {
             var crashes = defaults.array(forKey: "go_crashes") as? [[String: String]] ?? []
