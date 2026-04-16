@@ -15,25 +15,66 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Countdown duration in seconds before ad is hidden
 const int countdownDuration = 60;
 
+/// Shared ad state model used by both GoogleAdStrategy and InternalAdStrategy.
+/// 
+/// **State Flag Ownership:**
+/// 
+/// GoogleAdStrategy (AdMob ads, disconnected state):
+/// - `nativeAdIsLoaded` - True when AdMob NativeAd is loaded and ready (EXCLUSIVE OWNERSHIP)
+/// - Uses shared: `adLoadedAt`, `showCountdown`, `countdown`
+/// - Sets via: setNativeAd() method ONLY
+/// 
+/// InternalAdStrategy  (Internal ads, connected state):
+/// - `customImageUrl` - URL of internal ad image to display (EXCLUSIVE OWNERSHIP)
+/// - `customClickUrl` - URL to open when internal ad is clicked
+/// - `customImageLoadFailed` - True if image failed to load
+/// - Uses shared: `showCountdown`, `countdown`
+/// - Sets via: setCustomAdData() method (NOTE: does NOT set nativeAdIsLoaded)
+/// 
+/// Shared by both strategies:
+/// - `adLoadFailed` - True if any ad load failed
+/// - `lastErrorCode`, `lastErrorMessage` - Last error info
+/// - `countdown`, `showCountdown` - Countdown timer state
+/// - `hasCompletedFirstConnection` - UX flag (no ads before first VPN use)
+/// - `retryCount` - Number of retry attempts
+/// - `adLoadedAt` - Timestamp when ad was loaded
+/// 
+/// Deprecated/Unused:
+/// - `hasFallenBackToInternal` - No longer needed (dual strategy approach)
+/// 
 class AdsState {
+  // GoogleAdStrategy state (AdMob)
   final bool nativeAdIsLoaded;
+  
+  // Shared error tracking
   final bool adLoadFailed;
-  final int countdown;
-  final bool showCountdown;
-  final DateTime? adLoadedAt;
-  final int retryCount;
   final String? lastErrorCode;
   final String? lastErrorMessage;
-  // Internal ads properties
+  
+  // Shared countdown state
+  final int countdown;
+  final bool showCountdown;
+  
+  // Shared metadata
+  final DateTime? adLoadedAt;
+  final int retryCount;
+  
+  // InternalAdStrategy state (Internal ads)
   final String? customImageUrl;
   final String? customClickUrl;
   final bool customImageLoadFailed;
+  
+  // UX tracking
+  final bool hasCompletedFirstConnection;
+  
+  // Deprecated (kept for compatibility)
+  final bool hasFallenBackToInternal;
 
   const AdsState({
     this.nativeAdIsLoaded = false,
     this.adLoadFailed = false,
     this.countdown = countdownDuration,
-    this.showCountdown = true,
+    this.showCountdown = false,
     this.adLoadedAt,
     this.retryCount = 0,
     this.lastErrorCode,
@@ -41,6 +82,8 @@ class AdsState {
     this.customImageUrl,
     this.customClickUrl,
     this.customImageLoadFailed = false,
+    this.hasFallenBackToInternal = false,
+    this.hasCompletedFirstConnection = false,
   });
 
   AdsState copyWith({
@@ -55,6 +98,8 @@ class AdsState {
     String? customImageUrl,
     String? customClickUrl,
     bool? customImageLoadFailed,
+    bool? hasFallenBackToInternal,
+    bool? hasCompletedFirstConnection,
   }) {
     return AdsState(
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
@@ -65,9 +110,11 @@ class AdsState {
       retryCount: retryCount ?? this.retryCount,
       lastErrorCode: lastErrorCode ?? this.lastErrorCode,
       lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
-      customImageUrl: customImageUrl ?? this.customImageUrl,
-      customClickUrl: customClickUrl ?? this.customClickUrl,
+      customImageUrl: customImageUrl ?? this.customImageUrl,  // Preserve existing value if not provided
+      customClickUrl: customClickUrl ?? this.customClickUrl,  // Preserve existing value if not provided
       customImageLoadFailed: customImageLoadFailed ?? this.customImageLoadFailed,
+      hasFallenBackToInternal: hasFallenBackToInternal ?? this.hasFallenBackToInternal,
+      hasCompletedFirstConnection: hasCompletedFirstConnection ?? this.hasCompletedFirstConnection,
     );
   }
 
@@ -105,6 +152,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
   Timer? _countdownTimer;
   static const String _countdownStartKey = 'ad_countdown_start_time';
   
+  /// Callback for notifying strategies when ads should be disposed
+  VoidCallback? _onAdShouldDispose;
+  
   /// Load persisted countdown state on initialization
   Future<void> _loadPersistedCountdown() async {
     try {
@@ -112,27 +162,10 @@ class AdsNotifier extends StateNotifier<AdsState> {
       final startTimeMillis = prefs.getInt(_countdownStartKey);
       
       if (startTimeMillis != null) {
-        final startTime = DateTime.fromMillisecondsSinceEpoch(startTimeMillis);
-        final elapsed = DateTime.now().difference(startTime).inSeconds;
-        final remaining = countdownDuration - elapsed;
-        
-        if (remaining > 0) {
-          // Resume countdown from where it left off
-          debugPrint('⏱️ Resuming countdown: $remaining seconds remaining (elapsed: ${elapsed}s)');
-          state = state.copyWith(
-            countdown: remaining,
-            showCountdown: true,
-          );
-          _startCountdownFromValue(remaining);
-        } else {
-          // Countdown already expired
-          debugPrint('⏱️ Countdown already expired (elapsed: ${elapsed}s)');
-          state = state.copyWith(
-            countdown: 0,
-            showCountdown: false,
-          );
-          await _clearPersistedCountdown();
-        }
+        // Simply clear any persisted countdown on app start
+        // Countdown should only start when VPN connects (handled by strategies)
+        debugPrint('🗑️ Clearing persisted countdown from previous session');
+        await _clearPersistedCountdown();
       }
     } catch (e) {
       debugPrint('⚠️ Error loading persisted countdown: $e');
@@ -163,22 +196,42 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   /// Start the countdown timer after ad is loaded and VPN connects
   /// Always restarts to 60 seconds on each connection
-  void startCountdownTimer() async {
+  void startCountdownTimer() {
     debugPrint('▶️ Starting new countdown timer (60 seconds)');
+    debugPrint('   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
     _countdownTimer?.cancel();
     
-    // Clear any old persisted countdown before starting new one
-    await _clearPersistedCountdown();
-    
+    // Update state immediately (synchronous)
     state = state.copyWith(
       countdown: countdownDuration,
       showCountdown: true,
     );
+    debugPrint('   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
     
-    // Save start time for persistence
-    await _saveCountdownStartTime();
+    // Clear old and save new start time in background (async)
+    _clearPersistedCountdown().then((_) {
+      _saveCountdownStartTime();
+    });
     
     _startCountdownFromValue(countdownDuration);
+  }
+  
+  /// Stop the countdown timer and clear persisted state
+  /// Called when VPN disconnects
+  void stopCountdownTimer() {
+    debugPrint('⏸️ Stopping countdown timer');
+    debugPrint('   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
+    _countdownTimer?.cancel();
+    
+    // Update state immediately (synchronous)
+    state = state.copyWith(
+      showCountdown: false,
+      countdown: countdownDuration,
+    );
+    debugPrint('   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
+    
+    // Clear persisted data in background (async)
+    _clearPersistedCountdown();
   }
   
   /// Start countdown from a specific value (used for both new and resumed timers)
@@ -192,11 +245,20 @@ class AdsNotifier extends StateNotifier<AdsState> {
         debugPrint('⏱️ Countdown: $newCount');
         state = state.copyWith(countdown: newCount);
       } else {
-        debugPrint('⏱️ Countdown finished - hiding ad');
+        debugPrint('⏱️ Countdown finished - disposing ad and clearing state');
+        
+        // Clear all ad flags to hide the ad box completely
         state = state.copyWith(
           showCountdown: false,
-          // Keep ad loaded - just hide it until next connection
+          nativeAdIsLoaded: false,
+          customImageUrl: '',
+          customClickUrl: '',
         );
+        
+        // Notify strategies to dispose their ad instances
+        _onAdShouldDispose?.call();
+        debugPrint('🗑️ Ad disposal callback triggered');
+        
         timer.cancel();
         _clearPersistedCountdown();
       }
@@ -206,24 +268,33 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
     debugPrint('✅ Ad loaded: $isLoaded');
+    debugPrint('   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
       adLoadedAt: isLoaded ? DateTime.now() : null,
     );
+    debugPrint('   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}');
   }
 
-  /// Set custom ad data (for internal/custom ads)
+  /// Set custom ad data (for internal/custom ads ONLY)
+  /// 
+  /// OWNERSHIP: This method is EXCLUSIVELY for InternalAdStrategy.
+  /// GoogleAdStrategy must NOT call this method.
+  /// 
+  /// NOTE: This does NOT set nativeAdIsLoaded flag. That flag belongs to GoogleAdStrategy.
   void setCustomAdData(String imageUrl, String clickUrl) {
     debugPrint('✅ Custom ad loaded: $imageUrl');
+    debugPrint('   📊 State BEFORE: customImageUrl=${state.customImageUrl}, nativeAdIsLoaded=${state.nativeAdIsLoaded}');
     state = state.copyWith(
       customImageUrl: imageUrl,
       customClickUrl: clickUrl,
-      nativeAdIsLoaded: true,
+      // NOTE: nativeAdIsLoaded is NOT set here - it belongs ONLY to GoogleAdStrategy
       adLoadFailed: false,
       adLoadedAt: DateTime.now(),
       customImageLoadFailed: false,
     );
+    debugPrint('   📊 State AFTER: customImageUrl set, nativeAdIsLoaded=${state.nativeAdIsLoaded} (unchanged)');
   }
 
   /// Mark custom image load as failed
@@ -232,6 +303,50 @@ class AdsNotifier extends StateNotifier<AdsState> {
     state = state.copyWith(
       customImageLoadFailed: true,
       adLoadFailed: true,
+    );
+  }
+
+  /// Clear internal/custom ad data (for switching to AdMob ads)
+  void clearCustomAdData() {
+    debugPrint('🗑️ Clearing internal ad data');
+    debugPrint('   📊 State BEFORE: customImageUrl=${state.customImageUrl != null && state.customImageUrl!.isNotEmpty ? "set" : "null"}, nativeAdIsLoaded=${state.nativeAdIsLoaded}');
+    state = state.copyWith(
+      customImageUrl: '',
+      customClickUrl: '',
+      customImageLoadFailed: false,
+      nativeAdIsLoaded: false,  // Clear this flag to prevent showing empty ad container
+    );
+    debugPrint('   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false');
+  }
+  
+  /// Register a callback to be notified when ads should be disposed
+  /// This allows strategies to clean up their ad instances (e.g., dispose NativeAd)
+  void setAdDisposalCallback(VoidCallback callback) {
+    debugPrint('📌 Registered ad disposal callback');
+    _onAdShouldDispose = callback;
+  }
+  
+  /// Unregister the ad disposal callback
+  void clearAdDisposalCallback() {
+    debugPrint('📌 Cleared ad disposal callback');
+    _onAdShouldDispose = null;
+  }
+
+  /// Mark that user has completed first VPN connection
+  void markFirstConnectionComplete() {
+    if (!state.hasCompletedFirstConnection) {
+      debugPrint('✅ First connection completed - ads will now show after disconnect');
+      state = state.copyWith(
+        hasCompletedFirstConnection: true,
+      );
+    }
+  }
+
+  /// Set fallback status to internal ads
+  void setFallenBackToInternal(bool hasFallenBack) {
+    debugPrint('🔄 Fallen back to internal ads: $hasFallenBack');
+    state = state.copyWith(
+      hasFallenBackToInternal: hasFallenBack,
     );
   }
 
@@ -254,8 +369,13 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   @override
   void dispose() {
+    debugPrint('🧹 AdsNotifier disposing - stopping countdown timer');
     _countdownTimer?.cancel();
-    // Don't clear persisted countdown on dispose - allow it to persist across app restarts
+    _countdownTimer = null;
+    // Clear disposal callback
+    _onAdShouldDispose = null;
+    // Clear persisted countdown on dispose to prevent zombie timers
+    _clearPersistedCountdown();
     super.dispose();
   }
 }

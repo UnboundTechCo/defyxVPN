@@ -17,7 +17,7 @@ class TipsSliderSection extends StatelessWidget {
 
     return isDisconnected
         ? Column(
-            children: [SizedBox(height: 0.05.sh), const TipsSlider()],
+            children: [SizedBox(height: 170.h), const TipsSlider()],  // Much lower for smaller tips
           )
         : const SizedBox.shrink();
   }

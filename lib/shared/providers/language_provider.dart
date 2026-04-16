@@ -6,9 +6,7 @@ const String _languageKey = 'selected_language';
 
 enum AppLanguage {
   english('en', 'English'),
-  persian('fa', 'فارسی'),
-  chinese('zh', '中文'),
-  russian('ru', 'Русский');
+  chinese('zh', '中文');
 
   final String code;
   final String nativeName;
@@ -51,14 +49,37 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
   LanguageNotifier(this._prefs)
       : super(LanguageState(
           language: AppLanguage.fromCode(
-            _prefs.getString(_languageKey) ?? 'en',
+            _prefs.getString(_languageKey) ?? _getDeviceLanguage(),
           ),
-        ));
+        )) {
+    final savedLang = _prefs.getString(_languageKey);
+    debugPrint('🌍 Saved language preference: ${savedLang ?? "none (using device language)"}');
+    debugPrint('🌍 Current app language: ${state.language.code} (${state.language.nativeName})');
+  }
+
+  // Detect device language on first launch
+  static String _getDeviceLanguage() {
+    try {
+      final deviceLocale = WidgetsBinding.instance.platformDispatcher.locale;
+      debugPrint('🌍 Device locale detected: ${deviceLocale.languageCode}');
+      // If device is Chinese, use Chinese; otherwise default to English
+      final selectedLang = deviceLocale.languageCode == 'zh' ? 'zh' : 'en';
+      debugPrint('🌍 Selected language: $selectedLang');
+      return selectedLang;
+    } catch (e) {
+      debugPrint('🌍 Error detecting device language: $e');
+      // Fallback to English if detection fails
+      return 'en';
+    }
+  }
 
   Future<void> changeLanguage(AppLanguage language) async {
+    debugPrint('🌍 Changing language to: ${language.code} (${language.nativeName})');
     state = state.copyWith(isLoading: true);
     await _prefs.setString(_languageKey, language.code);
+    debugPrint('🌍 Language saved to SharedPreferences');
     state = state.copyWith(language: language, isLoading: false);
+    debugPrint('🌍 Language state updated to: ${state.language.code}');
   }
 
   Locale get currentLocale => state.language.locale;

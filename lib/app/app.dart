@@ -1,12 +1,13 @@
 import 'dart:io';
 
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
+import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -25,35 +26,43 @@ class App extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return FutureBuilder<bool>(
+    // Eagerly trigger environment computation
+    ref.read(adEnvironmentProvider);
+    
+    return FutureBuilder<void>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
-        _handleAdConfiguration(snapshot, ref);
+        _handleAdConfiguration(ref);
         return _buildApp(context, ref);
       },
     );
   }
 
-  Future<bool> _initializeApp(WidgetRef ref) async {
+  Future<void> _initializeApp(WidgetRef ref) async {
     await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
-    return await AdvertiseDirector.shouldUseInternalAds(ref);
   }
 
-  void _handleAdConfiguration(AsyncSnapshot<bool> snapshot, WidgetRef ref) {
-    if (!snapshot.hasData) return;
-
-    final shouldUseInternalAds = snapshot.data!;
-    if (shouldUseInternalAds) {
-      debugPrint('Using internal ads');
-    } else {
-      _initializeMobileAdsWithConsent(ref);
-    }
+  void _handleAdConfiguration(WidgetRef ref) {
+    // Use adEnvironmentProvider to decide AdMob initialization
+    final environmentAsync = ref.read(adEnvironmentProvider);
+    
+    environmentAsync.whenData((environment) {
+      if (!environment.shouldInitializeAdMob) {
+        debugPrint('📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})');
+      } else {
+        debugPrint('📱 Initializing AdMob for mobile non-Iranian user');
+        _initializeMobileAdsWithConsent(ref, environment);
+      }
+    });
   }
 
-  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref) async {
+  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref, AdEnvironment environment) async {
     try {
+      // Environment already verified shouldInitializeAdMob = true
+      debugPrint('📱 Starting AdMob initialization...');
+      
       if (Platform.isAndroid || Platform.isIOS) {
         // Request App Tracking Transparency (iOS only)
         if (Platform.isIOS) {
@@ -87,8 +96,10 @@ class App extends ConsumerWidget {
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
-
+    final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
+
+    debugPrint('🌍 Building app with locale: ${languageState.language.locale}');
 
     return ToastificationWrapper(
         config: ToastificationConfig(
@@ -109,8 +120,7 @@ class App extends ConsumerWidget {
               routerConfig: router,
               builder: _appBuilder,
               debugShowCheckedModeBanner: false,
-              // Force English locale (comment out to enable device language detection)
-              locale: const Locale('en'),
+              locale: languageState.language.locale,
               localizationsDelegates: const [
                 AppLocalizations.delegate,
                 GlobalMaterialLocalizations.delegate,
@@ -119,9 +129,7 @@ class App extends ConsumerWidget {
               ],
               supportedLocales: const [
                 Locale('en'),
-                Locale('fa'),
                 Locale('zh'),
-                Locale('ru'),
               ],
             );
           },
