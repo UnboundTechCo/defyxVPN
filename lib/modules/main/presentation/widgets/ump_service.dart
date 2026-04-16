@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/shared/services/ump_consent_cache.dart';
+import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -7,6 +8,34 @@ class UmpService {
   final UmpConsentCacheService? _cacheService;
 
   UmpService([this._cacheService]);
+
+  /// Request consent with ATT compliance (Apple requirement)
+  ///
+  /// If ATT denied → Skip UMP entirely (no tracking, use non-personalized ads)
+  /// If ATT authorized → Show UMP for GDPR compliance
+  Future<void> requestConsentWithATT({
+    required WidgetRef ref,
+    required VoidCallback onDone,
+  }) async {
+    // Check if we should request UMP based on ATT status (Apple compliance)
+    final shouldRequestUMP = ref
+        .read(adPersonalizationProvider.notifier)
+        .shouldRequestUMP;
+
+    if (!shouldRequestUMP) {
+      // ATT denied/restricted - Skip UMP, proceed with non-personalized ads
+      final attStatus = ref.read(adPersonalizationProvider).attStatus;
+      debugPrint(
+        '⏭️ Skipping UMP (ATT $attStatus) - Using non-personalized ads',
+      );
+      onDone();
+      return;
+    }
+
+    // ATT authorized (or Android) - Request UMP for GDPR compliance
+    debugPrint('🔍 Requesting UMP consent (ATT authorized)');
+    await requestConsent(onDone: onDone);
+  }
 
   Future<void> requestConsent({required VoidCallback onDone}) async {
     // Check cache first to potentially skip UMP request
@@ -20,10 +49,8 @@ class UmpService {
     }
 
     final consentInfo = ConsentInformation.instance;
-    final params = ConsentRequestParameters(
-      tagForUnderAgeOfConsent: false,
-    );
-    
+    final params = ConsentRequestParameters(tagForUnderAgeOfConsent: false);
+
     debugPrint('🔍 Requesting UMP consent info update...');
     consentInfo.requestConsentInfoUpdate(
       params,
@@ -73,11 +100,11 @@ class UmpService {
     } else {
       debugPrint('✅ UMP consent form completed');
     }
-    
+
     // Cache consent status after form dismissal
     final status = await ConsentInformation.instance.getConsentStatus();
     await _cacheConsentStatus(status);
-    
+
     onDone();
   }
 
@@ -85,8 +112,9 @@ class UmpService {
     if (_cacheService == null) return;
 
     try {
-      final canShowAds = status == ConsentStatus.obtained ||
-                         status == ConsentStatus.notRequired;
+      final canShowAds =
+          status == ConsentStatus.obtained ||
+          status == ConsentStatus.notRequired;
       final canRequestAds = status != ConsentStatus.required;
 
       await _cacheService.cacheConsentStatus(
@@ -98,7 +126,7 @@ class UmpService {
       debugPrint('⚠️ Failed to cache UMP consent: $e');
     }
   }
-  
+
   Future<bool> canShowAds() async {
     // Try cache first for fast path
     if (_cacheService != null) {

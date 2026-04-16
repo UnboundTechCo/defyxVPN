@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
+import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -28,7 +29,7 @@ class App extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Eagerly trigger environment computation
     ref.read(adEnvironmentProvider);
-    
+
     return FutureBuilder<void>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
@@ -47,10 +48,12 @@ class App extends ConsumerWidget {
   void _handleAdConfiguration(WidgetRef ref) {
     // Use adEnvironmentProvider to decide AdMob initialization
     final environmentAsync = ref.read(adEnvironmentProvider);
-    
+
     environmentAsync.whenData((environment) {
       if (!environment.shouldInitializeAdMob) {
-        debugPrint('📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})');
+        debugPrint(
+          '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
+        );
       } else {
         debugPrint('📱 Initializing AdMob for mobile non-Iranian user');
         _initializeMobileAdsWithConsent(ref, environment);
@@ -58,34 +61,38 @@ class App extends ConsumerWidget {
     });
   }
 
-  Future<void> _initializeMobileAdsWithConsent(WidgetRef ref, AdEnvironment environment) async {
+  Future<void> _initializeMobileAdsWithConsent(
+    WidgetRef ref,
+    AdEnvironment environment,
+  ) async {
     try {
       // Environment already verified shouldInitializeAdMob = true
       debugPrint('📱 Starting AdMob initialization...');
-      
+
       if (Platform.isAndroid || Platform.isIOS) {
         // Request App Tracking Transparency (iOS only)
         if (Platform.isIOS) {
-          final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+          final status =
+              await AppTrackingTransparency.trackingAuthorizationStatus;
           if (status == TrackingStatus.notDetermined) {
             // Small delay to ensure UI is ready
             await Future.delayed(const Duration(milliseconds: 500));
-            final result = await AppTrackingTransparency.requestTrackingAuthorization();
-            debugPrint('📱 ATT Authorization: $result');
-          } else {
-            debugPrint('📱 ATT Status: $status');
+            await AppTrackingTransparency.requestTrackingAuthorization();
           }
+          // Store ATT status in provider (for both cases)
+          await ref
+              .read(adPersonalizationProvider.notifier)
+              .checkTrackingStatus();
         }
-        
-        // Get UMP service with cache integration
+
+        // UMP service will handle ATT status and decide whether to show consent
         final umpService = ref.read(umpServiceProvider);
-        
-        // Request UMP consent (checks cache first)
-        await umpService.requestConsent(
+        await umpService.requestConsentWithATT(
+          ref: ref,
           onDone: () async {
             // Initialize Mobile Ads after consent flow completes
             await MobileAds.instance.initialize();
-            debugPrint('Google AdMob initialized with UMP consent');
+            debugPrint('📱 Google AdMob initialized');
           },
         );
       }
@@ -102,38 +109,36 @@ class App extends ConsumerWidget {
     debugPrint('🌍 Building app with locale: ${languageState.language.locale}');
 
     return ToastificationWrapper(
-        config: ToastificationConfig(
-          maxToastLimit: 1,
-          blockBackgroundInteraction: false,
-          applyMediaQueryViewInsets: true,
-        ),
-        child: ScreenUtilInit(
-          designSize: designSize,
-          minTextAdapt: true,
-          splitScreenMode: true,
-          builder: (_, __) {
-            return MaterialApp.router(
-              title: 'Defyx',
-              theme: AppTheme.lightTheme,
-              darkTheme: AppTheme.darkTheme,
-              themeMode: ThemeMode.light,
-              routerConfig: router,
-              builder: _appBuilder,
-              debugShowCheckedModeBanner: false,
-              locale: languageState.language.locale,
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                GlobalMaterialLocalizations.delegate,
-                GlobalWidgetsLocalizations.delegate,
-                GlobalCupertinoLocalizations.delegate,
-              ],
-              supportedLocales: const [
-                Locale('en'),
-                Locale('zh'),
-              ],
-            );
-          },
-        ));
+      config: ToastificationConfig(
+        maxToastLimit: 1,
+        blockBackgroundInteraction: false,
+        applyMediaQueryViewInsets: true,
+      ),
+      child: ScreenUtilInit(
+        designSize: designSize,
+        minTextAdapt: true,
+        splitScreenMode: true,
+        builder: (_, __) {
+          return MaterialApp.router(
+            title: 'Defyx',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: ThemeMode.light,
+            routerConfig: router,
+            builder: _appBuilder,
+            debugShowCheckedModeBanner: false,
+            locale: languageState.language.locale,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('en'), Locale('zh')],
+          );
+        },
+      ),
+    );
   }
 
   Size _getDesignSize(BuildContext context) {

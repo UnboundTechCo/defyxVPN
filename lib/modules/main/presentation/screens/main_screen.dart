@@ -134,27 +134,24 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   void _showPrivacyNoticeDialog() {
-    PrivacyNoticeDialog.show(
-      context,
-      () async {
-        if (ref.context.mounted) {
-          final vpnBridge = VpnBridge();
-          final result = await vpnBridge.prepareVpn();
-          if (result && ref.context.mounted) {
-            final vpn = VPN(ProviderScope.containerOf(ref.context));
-            await vpn.initVPN();
-            await ref.read(settingsProvider.notifier).saveState();
-            await _logic.markPrivacyNoticeShown();
+    PrivacyNoticeDialog.show(context, () async {
+      if (ref.context.mounted) {
+        final vpnBridge = VpnBridge();
+        final result = await vpnBridge.prepareVpn();
+        if (result && ref.context.mounted) {
+          final vpn = VPN(ProviderScope.containerOf(ref.context));
+          await vpn.initVPN();
+          await ref.read(settingsProvider.notifier).saveState();
+          await _logic.markPrivacyNoticeShown();
 
-            if (!(Platform.isAndroid || Platform.isIOS)) {
-              await _logic.triggerAutoConnectIfEnabled();
-            }
-            return true;
+          if (!(Platform.isAndroid || Platform.isIOS)) {
+            await _logic.triggerAutoConnectIfEnabled();
           }
+          return true;
         }
-        return false;
-      },
-    );
+      }
+      return false;
+    });
   }
 
   @override
@@ -198,7 +195,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                         Positioned(
                           top: 130.h,
                           child: ConnectionButton(
-                            onTap: connectionState.status ==
+                            onTap:
+                                connectionState.status ==
                                         ConnectionStatus.loading ||
                                     connectionState.status ==
                                         ConnectionStatus.disconnecting
@@ -214,11 +212,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               onSecretTap: _handleSecretTap,
                               onPingRefresh: _logic.refreshPing,
                             ),
-                            SizedBox(height: 50.h),  // Reduced to raise ads higher
-                            SizedBox(height: 0.16.sh),  // Reduced to raise ads higher
+                            SizedBox(
+                              height: 50.h,
+                            ), // Reduced to raise ads higher
+                            SizedBox(
+                              height: 0.16.sh,
+                            ), // Reduced to raise ads higher
                             _buildContentSection(
-                                connectionState.status, adsState),
-                            SizedBox(height: 0.15.sh),  // Consistent bottom spacing
+                              connectionState.status,
+                              adsState,
+                            ),
+                            SizedBox(
+                              height: 0.15.sh,
+                            ), // Consistent bottom spacing
                           ],
                         ),
                       ],
@@ -231,8 +237,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                   right: 0,
                   child: IgnorePointer(
                     child: AnimatedOpacity(
-                      duration: _animationService
-                          .adjustDuration(const Duration(milliseconds: 300)),
+                      duration: _animationService.adjustDuration(
+                        const Duration(milliseconds: 300),
+                      ),
                       opacity: _showHeaderShadow ? 1.0 : 0.0,
                       child: Container(
                         height: 150.h,
@@ -260,16 +267,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
-    debugPrint('🎨 _buildContentSection called:');
-    debugPrint('   Status: ${status.name}');
-    
     // Use hasActiveAdProvider as single source of truth for ad visibility
     final hasActiveAd = ref.watch(hasActiveAdProvider);
-    debugPrint('   hasActiveAd: $hasActiveAd');
-    
+
     bool shouldShowAd = hasActiveAd;
     Widget? mainContent;
-    
+
     switch (status) {
       case ConnectionStatus.noInternet:
         _dinoGame ??= DinoGame();
@@ -285,36 +288,35 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       case ConnectionStatus.disconnected:
         // DISCONNECTED: Show ad if director says so, else show tips
         if (!hasActiveAd) {
-          debugPrint('   ℹ️ Rendering tips slider (no active ad)');
           mainContent = TipsSliderSection(status: status);
-        } else {
-          debugPrint('   ✅ Showing ad container (director has active strategy)');
         }
         break;
 
       default:
         // CONNECTED/CONNECTING: Show ad if available, else empty
         if (!hasActiveAd) {
-          debugPrint('   ⚪ Rendering empty (no active ad)');
           mainContent = const SizedBox.shrink();
-        } else {
-          debugPrint('   ✅ Showing ad container (director has active strategy)');
         }
     }
-    
+
     // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
     // Control visibility with AnimatedOpacity for smooth fade transitions
     return Stack(
-      alignment: Alignment.topCenter,  // Align to top-center for consistent positioning
+      alignment:
+          Alignment.topCenter, // Align to top-center for consistent positioning
       children: [
         // Always in tree at same position - never recreated
         AnimatedOpacity(
-          duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
+          duration: _animationService.adjustDuration(
+            const Duration(milliseconds: 300),
+          ),
           opacity: shouldShowAd ? 1.0 : 0.0,
           child: IgnorePointer(
-            ignoring: !shouldShowAd,  // Prevent touch events when hidden
+            ignoring: !shouldShowAd, // Prevent touch events when hidden
             child: Padding(
-              padding: EdgeInsets.only(top: 50.h),  // Match the spacing above ads
+              padding: EdgeInsets.only(
+                top: 50.h,
+              ), // Match the spacing above ads
               child: SizedBox(
                 height: 280.h,
                 width: 336.w,
@@ -323,7 +325,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     color: const Color(0xFF19312F),
                     borderRadius: BorderRadius.circular(10.r),
                   ),
-                  child: _adsWidget,  // Always same widget instance, same position
+                  child:
+                      _adsWidget, // Always same widget instance, same position
                 ),
               ),
             ),
