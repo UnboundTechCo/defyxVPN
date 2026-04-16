@@ -30,6 +30,20 @@ class App extends ConsumerWidget {
     // Eagerly trigger environment computation
     ref.read(adEnvironmentProvider);
 
+    // Listen for VPN profile setup to trigger AdMob initialization
+    ref.listen<AdPersonalizationState>(adPersonalizationProvider, (
+      previous,
+      next,
+    ) {
+      // When VPN profile is setup, trigger AdMob initialization
+      if (next.vpnProfileSetup && (previous?.vpnProfileSetup != true)) {
+        debugPrint(
+          '🚀 VPN profile setup detected - triggering AdMob initialization',
+        );
+        _handleAdConfiguration(ref);
+      }
+    });
+
     return FutureBuilder<void>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
@@ -55,8 +69,19 @@ class App extends ConsumerWidget {
           '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
         );
       } else {
-        debugPrint('📱 Initializing AdMob for mobile non-Iranian user');
-        _initializeMobileAdsWithConsent(ref, environment);
+        // Only initialize AdMob after VPN profile is setup (privacy notice accepted)
+        final adState = ref.read(adPersonalizationProvider);
+        if (adState.vpnProfileSetup && !adState.adMobInitializationStarted) {
+          debugPrint('📱 VPN profile ready - Initializing AdMob');
+          ref
+              .read(adPersonalizationProvider.notifier)
+              .markAdMobInitializationStarted();
+          _initializeMobileAdsWithConsent(ref, environment);
+        } else if (!adState.vpnProfileSetup) {
+          debugPrint(
+            '⏳ Waiting for VPN profile setup before initializing AdMob',
+          );
+        }
       }
     });
   }

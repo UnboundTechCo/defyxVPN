@@ -18,6 +18,7 @@ import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -143,6 +144,28 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           await vpn.initVPN();
           await ref.read(settingsProvider.notifier).saveState();
           await _logic.markPrivacyNoticeShown();
+
+          // Mark VPN profile setup complete - NOW SAFE TO LOAD ADS
+          ref.read(adPersonalizationProvider.notifier).markVpnProfileSetup();
+          debugPrint(
+            '✅ Privacy accepted & VPN profile setup - ads can now load',
+          );
+
+          // Trigger ad loading retry if consent was already complete
+          final consentState = ref.read(adPersonalizationProvider);
+          if (consentState.consentFlowComplete) {
+            final connectionState = ref.read(connectionStateProvider).status;
+            if (connectionState == ConnectionStatus.disconnected) {
+              debugPrint(
+                '🔄 VPN setup complete & disconnected - triggering ad load retry',
+              );
+              // Small delay to ensure state propagation
+              await Future.delayed(const Duration(milliseconds: 100));
+
+              final manager = ref.read(adStrategyManagerProvider);
+              manager?.retryGoogleAdLoad();
+            }
+          }
 
           if (!(Platform.isAndroid || Platform.isIOS)) {
             await _logic.triggerAutoConnectIfEnabled();
