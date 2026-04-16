@@ -9,23 +9,27 @@ class AdPersonalizationState {
   final TrackingStatus attStatus;
   final bool canUsePersonalizedAds;
   final DateTime? lastChecked;
+  final bool consentFlowComplete;
 
   const AdPersonalizationState({
     required this.attStatus,
     required this.canUsePersonalizedAds,
     this.lastChecked,
+    this.consentFlowComplete = false,
   });
 
   AdPersonalizationState copyWith({
     TrackingStatus? attStatus,
     bool? canUsePersonalizedAds,
     DateTime? lastChecked,
+    bool? consentFlowComplete,
   }) {
     return AdPersonalizationState(
       attStatus: attStatus ?? this.attStatus,
       canUsePersonalizedAds:
           canUsePersonalizedAds ?? this.canUsePersonalizedAds,
       lastChecked: lastChecked ?? this.lastChecked,
+      consentFlowComplete: consentFlowComplete ?? this.consentFlowComplete,
     );
   }
 
@@ -35,6 +39,7 @@ class AdPersonalizationState {
       attStatus: TrackingStatus.notDetermined,
       canUsePersonalizedAds: false,
       lastChecked: null,
+      consentFlowComplete: false,
     );
   }
 }
@@ -64,7 +69,8 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         );
 
         debugPrint(
-            '📦 Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize');
+          '📦 Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize',
+        );
       }
     } catch (e) {
       debugPrint('⚠️ Failed to load persisted ATT state: $e');
@@ -96,7 +102,8 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
       await _persistState();
       debugPrint(
-          '✅ ATT status checked: ${status.name}, canPersonalize=$canPersonalize');
+        '✅ ATT status checked: ${status.name}, canPersonalize=$canPersonalize',
+      );
     } catch (e) {
       debugPrint('❌ Failed to check ATT status: $e');
     }
@@ -122,7 +129,8 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
       await _persistState();
       debugPrint(
-          '📱 ATT Authorization: ${status.name}, canPersonalize=$canPersonalize');
+        '📱 ATT Authorization: ${status.name}, canPersonalize=$canPersonalize',
+      );
 
       return status;
     } catch (e) {
@@ -137,7 +145,9 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('${_storageKey}_att_status', state.attStatus.index);
       await prefs.setBool(
-          '${_storageKey}_can_personalize', state.canUsePersonalizedAds);
+        '${_storageKey}_can_personalize',
+        state.canUsePersonalizedAds,
+      );
       debugPrint('💾 Persisted ATT state: ${state.attStatus.name}');
     } catch (e) {
       debugPrint('⚠️ Failed to persist ATT state: $e');
@@ -156,7 +166,8 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
     if (!shouldRequest) {
       debugPrint(
-          '⏭️ Skipping UMP request (ATT not authorized: ${state.attStatus.name})');
+        '⏭️ Skipping UMP request (ATT not authorized: ${state.attStatus.name})',
+      );
     }
 
     return shouldRequest;
@@ -169,11 +180,18 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
       'att_status': state.attStatus.name,
     };
   }
+
+  /// Mark consent flow as complete (called after ATT/UMP finish)
+  void markConsentFlowComplete() {
+    state = state.copyWith(consentFlowComplete: true);
+    debugPrint('✅ Consent flow marked as complete');
+  }
 }
 
 /// Provider for ad personalization state
 final adPersonalizationProvider =
-    StateNotifierProvider<AdPersonalizationNotifier, AdPersonalizationState>(
-        (ref) {
-  return AdPersonalizationNotifier();
-});
+    StateNotifierProvider<AdPersonalizationNotifier, AdPersonalizationState>((
+      ref,
+    ) {
+      return AdPersonalizationNotifier();
+    });

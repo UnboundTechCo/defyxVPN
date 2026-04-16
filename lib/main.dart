@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 import 'package:defyx_vpn/firebase_options.dart';
@@ -16,7 +15,7 @@ import 'app/app.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load();
-  
+
   // Initialize cache directory for VPN core
   try {
     final String vpnCacheDir = await VpnBridge().getSharedDirectory();
@@ -25,7 +24,7 @@ void main() async {
   } catch (e) {
     debugPrint('Failed to set cache directory: $e');
   }
-  
+
   // Initialize Firebase only on supported platforms (not Windows)
   if (!Platform.isWindows && !Platform.isLinux) {
     await Firebase.initializeApp(
@@ -64,29 +63,25 @@ void main() async {
       debugPrint('Could not set orientations: $e');
     }
   }
-  
+
   // Initialize language provider
   final prefs = await SharedPreferences.getInstance();
   final languageNotifier = LanguageNotifier(prefs);
-  
-  // Run app in guarded zone to catch all errors
-  runZonedGuarded<Future<void>>(
-    () async {
-      runApp(
-        ProviderScope(
-          overrides: [
-            languageProvider.overrideWith((ref) => languageNotifier),
-          ],
-          child: const App(),
-        ),
-      );
-    },
-    (error, stack) {
-      if (!Platform.isWindows && !Platform.isLinux) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-      }
-      debugPrint('Uncaught error: $error');
-      debugPrint('Stack trace: $stack');
-    },
+
+  // Set up error handler for zone errors (if not on Windows/Linux)
+  if (!Platform.isWindows && !Platform.isLinux) {
+    // Additional async error handling via runZonedGuarded
+    FlutterError.onError = (errorDetails) {
+      FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+      FlutterError.presentError(errorDetails);
+    };
+  }
+
+  // Run app in same zone as ensureInitialized
+  runApp(
+    ProviderScope(
+      overrides: [languageProvider.overrideWith((ref) => languageNotifier)],
+      child: const App(),
+    ),
   );
 }
