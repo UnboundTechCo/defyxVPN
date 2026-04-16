@@ -279,6 +279,33 @@ class AdStrategyManager {
     }
   }
 
+  /// Retry ad loading for Google Ads (after consent completes)
+  /// This is called when consent flow completes and user is still disconnected
+  void retryGoogleAdLoad() {
+    if (!_hasGoogleStrategy) {
+      debugPrint('⚠️ Cannot retry - Google strategy not available');
+      return;
+    }
+
+    final currentConnectionState = _ref.read(conn.connectionStateProvider);
+    if (currentConnectionState.status != conn.ConnectionStatus.disconnected) {
+      debugPrint(
+        '⚠️ Cannot retry - not disconnected (${currentConnectionState.status.name})',
+      );
+      return;
+    }
+
+    debugPrint('🔄 Retrying Google ad load after consent');
+    final googleStrategy = _googleStrategy!;
+    googleStrategy.onConnectionStateChanged(
+      ref: _ref,
+      previous: conn.ConnectionStatus.disconnected,
+      current: conn.ConnectionStatus.disconnected,
+      hasInitialized: true,
+      onRefreshNeeded: () => googleStrategy.loadAd(ref: _ref),
+    );
+  }
+
   /// Dispose strategies and subscriptions
   void dispose() {
     debugPrint('🧹 AdStrategyManager - Disposing');

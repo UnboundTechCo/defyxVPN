@@ -124,6 +124,36 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   @override
   Future<AdLoadResult> loadAd({required Ref ref}) async {
+    // CRITICAL: Wait for AdMob SDK to be initialized first
+    try {
+      final versionString = await MobileAds.instance.getVersionString();
+      if (versionString.isEmpty) {
+        debugPrint('⏳ AdMob SDK not initialized yet - skipping ad load');
+        return AdLoadResult.failure(
+          errorCode: 'SDK_NOT_READY',
+          errorMessage: 'AdMob SDK not initialized',
+        );
+      }
+      debugPrint('✅ AdMob SDK ready (version: $versionString)');
+    } catch (e) {
+      debugPrint('⚠️ AdMob SDK check failed - may not be initialized: $e');
+      return AdLoadResult.failure(
+        errorCode: 'SDK_NOT_READY',
+        errorMessage: 'AdMob SDK not ready: $e',
+      );
+    }
+
+    // CRITICAL: Wait for consent flow to complete first
+    final consentState = ref.read(adPersonalizationProvider);
+    if (!consentState.consentFlowComplete) {
+      debugPrint('⏳ Consent flow not complete yet - skipping ad load');
+      return AdLoadResult.failure(
+        errorCode: 'CONSENT_PENDING',
+        errorMessage: 'Waiting for ATT/UMP consent flow to complete',
+      );
+    }
+    debugPrint('✅ Consent flow complete - proceeding with ad load');
+
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;
     if (connectionState == ConnectionStatus.connected) {

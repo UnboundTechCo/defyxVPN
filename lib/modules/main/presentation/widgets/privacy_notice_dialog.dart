@@ -7,10 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class PrivacyNoticeDialog extends StatefulWidget {
   final Future<bool> Function() onAccept;
 
-  const PrivacyNoticeDialog({
-    super.key,
-    required this.onAccept,
-  });
+  const PrivacyNoticeDialog({super.key, required this.onAccept});
 
   @override
   State<PrivacyNoticeDialog> createState() => _PrivacyNoticeDialogState();
@@ -40,17 +37,20 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
+
     String message =
         'This app does not collect, store, or transmit any personal information to its servers.\n\n'
-        'Only a small amount of non-personal data (such as your internet provider’s name) may be stored locally on your device to improve connection performance for future sessions.\n';
+        'Only a small amount of non-personal data (such as your internet provider\'s name) may be stored locally on your device to improve connection performance for future sessions.\n';
+
     if (Platform.isIOS || Platform.isAndroid) {
-      message += '\nBy continuing,\nyou agree to install the VPN profile.';
+      message += '\nBy continuing, you agree to install the VPN profile';
+      message +=
+          ' and may be asked for consent to personalize ads based on your preferences';
+      message += '.';
     }
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15.r),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
         padding: EdgeInsets.all(20.w),

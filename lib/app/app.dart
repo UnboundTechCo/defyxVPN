@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -9,6 +8,7 @@ import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -72,17 +72,14 @@ class App extends ConsumerWidget {
       if (Platform.isAndroid || Platform.isIOS) {
         // Request App Tracking Transparency (iOS only)
         if (Platform.isIOS) {
-          final status =
-              await AppTrackingTransparency.trackingAuthorizationStatus;
-          if (status == TrackingStatus.notDetermined) {
-            // Small delay to ensure UI is ready
-            await Future.delayed(const Duration(milliseconds: 500));
-            await AppTrackingTransparency.requestTrackingAuthorization();
-          }
-          // Store ATT status in provider (for both cases)
-          await ref
+          // Small delay to ensure UI is ready
+          await Future.delayed(const Duration(milliseconds: 500));
+
+          // Request ATT authorization - this shows dialog and stores result
+          final status = await ref
               .read(adPersonalizationProvider.notifier)
-              .checkTrackingStatus();
+              .requestATT();
+          debugPrint('📱 ATT dialog result: ${status.name}');
         }
 
         // UMP service will handle ATT status and decide whether to show consent
@@ -93,6 +90,24 @@ class App extends ConsumerWidget {
             // Initialize Mobile Ads after consent flow completes
             await MobileAds.instance.initialize();
             debugPrint('📱 Google AdMob initialized');
+
+            // Mark consent flow as complete - NOW SAFE TO LOAD ADS
+            ref
+                .read(adPersonalizationProvider.notifier)
+                .markConsentFlowComplete();
+
+            // Trigger ad loading retry if still disconnected
+            final connectionState = ref.read(connectionStateProvider).status;
+            if (connectionState == ConnectionStatus.disconnected) {
+              debugPrint(
+                '🔄 Consent complete & disconnected - triggering ad load retry',
+              );
+              // Small delay to ensure state propagation
+              await Future.delayed(const Duration(milliseconds: 100));
+
+              final manager = ref.read(adStrategyManagerProvider);
+              manager?.retryGoogleAdLoad();
+            }
           },
         );
       }

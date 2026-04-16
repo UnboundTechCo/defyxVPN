@@ -261,7 +261,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
         // Notify strategies to dispose their ad instances
         _onAdShouldDispose?.call();
-        debugPrint('�️ Ad disposal callback triggered');
+        debugPrint('🗑️ Ad disposal callback triggered');
 
         timer.cancel();
         _clearPersistedCountdown();
