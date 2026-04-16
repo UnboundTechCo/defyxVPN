@@ -9,6 +9,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
 import '../ads_state.dart';
 import '../models/ad_load_result.dart';
 import 'ad_loading_strategy.dart';
@@ -27,7 +28,7 @@ class AdHelper {
 }
 
 /// Google AdMob implementation of AdLoadingStrategy
-/// 
+///
 /// Simple, direct ad loading strategy:
 /// - Loads ads only when VPN is disconnected (need real IP for targeting)
 /// - Shows ads only for non-Iranian users (after first VPN connection)
@@ -39,27 +40,24 @@ class AdHelper {
 class GoogleAdStrategy implements AdLoadingStrategy {
   // Static ad instance for cross-widget reuse
   static NativeAd? _nativeAd;
-  
+
   // Instance state
   bool _isLoading = false;
   bool _hasInitialized = false;
-  
+
   // Visual properties
   final Color backgroundColor;
   final double cornerRadius;
-  
-  GoogleAdStrategy({
-    required this.backgroundColor,
-    required this.cornerRadius,
-  });
-  
+
+  GoogleAdStrategy({required this.backgroundColor, required this.cornerRadius});
+
   @override
   String get strategyName => 'Google AdMob';
-  
+
   @override
   Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
     debugPrint('🚀 GoogleAdStrategy.initialize() called');
-    
+
     if (_hasInitialized) {
       debugPrint('   ⚠️ Already initialized, skipping');
       return;
@@ -75,34 +73,40 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       // Check if we need to load a new ad
       if (_nativeAd != null) {
         final adsState = ref.read(adsProvider);
-        debugPrint('🔍 Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}');
+        debugPrint(
+          '🔍 Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}',
+        );
         if (adsState.nativeAdIsLoaded) {
           debugPrint('✅ Using existing valid ad');
           _hasInitialized = true;
           return;
         } else {
-          debugPrint('⚠️ Cached ad exists but state says not loaded - will reload');
+          debugPrint(
+            '⚠️ Cached ad exists but state says not loaded - will reload',
+          );
         }
       }
-      
+
       // Mark as initialized
       _hasInitialized = true;
-      
+
       // Register disposal callback for countdown expiry
       ref.read(adsProvider.notifier).setAdDisposalCallback(() {
         _disposeAd(ref);
       });
       debugPrint('✅ Registered ad disposal callback');
-      
+
       // DON'T load ad on initialization - let connection state changes handle it
       // This prevents race conditions and timing issues
-      debugPrint('✅ GoogleAdStrategy initialized (ad will load on connection state change)');
+      debugPrint(
+        '✅ GoogleAdStrategy initialized (ad will load on connection state change)',
+      );
     } catch (e) {
       debugPrint('Error initializing Google ads: $e');
       ref.read(adsProvider.notifier).setAdLoadFailed();
     }
   }
-  
+
   /// Dispose the current ad instance and clear state
   void _disposeAd(Ref ref) {
     debugPrint('🗑️ Disposing AdMob ad due to countdown expiry');
@@ -117,11 +121,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     }
     // State flags already cleared by AdsNotifier, no need to update here
   }
-  
+
   @override
-  Future<AdLoadResult> loadAd({
-    required Ref ref,
-  }) async {
+  Future<AdLoadResult> loadAd({required Ref ref}) async {
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;
     if (connectionState == ConnectionStatus.connected) {
@@ -131,10 +133,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         errorMessage: 'Cannot load ads while VPN is connected',
       );
     }
-    
+
     // Check if we already have a valid cached ad
     final adsState = ref.read(adsProvider);
-    if (_nativeAd != null && adsState.nativeAdIsLoaded && !adsState.needsRefresh) {
+    if (_nativeAd != null &&
+        adsState.nativeAdIsLoaded &&
+        !adsState.needsRefresh) {
       debugPrint('✅ Reusing cached ad (still fresh)');
       return AdLoadResult.success();
     }
@@ -156,18 +160,20 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
     try {
       final adUnitId = AdHelper.adUnitId;
-      
+
       if (adUnitId.isEmpty) {
         debugPrint('❌ No ad unit ID configured for this platform');
         _isLoading = false;
-        ref.read(adsProvider.notifier).setAdLoadFailed(
-          errorCode: 'NO_AD_UNIT_ID',
-          errorMessage: 'No ad unit ID configured',
-        );
-        
+        ref
+            .read(adsProvider.notifier)
+            .setAdLoadFailed(
+              errorCode: 'NO_AD_UNIT_ID',
+              errorMessage: 'No ad unit ID configured',
+            );
+
         // Configuration error - just fail, no fallback
         debugPrint('⚠️ No ad unit ID - AdMob disabled');
-        
+
         return AdLoadResult.failure(
           errorCode: 'NO_AD_UNIT_ID',
           errorMessage: 'No ad unit ID configured',
@@ -180,23 +186,27 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (!hasNetwork) {
         debugPrint('🔴 No network connectivity');
         _isLoading = false;
-        ref.read(adsProvider.notifier).setAdLoadFailed(
-          errorCode: '2',
-          errorMessage: 'Network unavailable',
-        );
+        ref
+            .read(adsProvider.notifier)
+            .setAdLoadFailed(
+              errorCode: '2',
+              errorMessage: 'Network unavailable',
+            );
         // Don't trigger fallback for temporary network issues
         // User can reconnect and try again
-        debugPrint('⏳ Network issue - will retry when connection restored (no fallback)');
+        debugPrint(
+          '⏳ Network issue - will retry when connection restored (no fallback)',
+        );
         return AdLoadResult.failure(
           errorCode: '2',
           errorMessage: 'Network unavailable',
         );
       }
-      
+
       // Analytics
       final analytics = FirebaseAnalyticsService();
       await analytics.logEvent(name: 'ad_load_attempt', parameters: {});
-      
+
       // Create template style
       final templateStyle = NativeTemplateStyle(
         templateType: TemplateType.medium,
@@ -230,7 +240,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
       // Create ad with listener
       final completer = Completer<AdLoadResult>();
-      
+
       final ad = NativeAd(
         adUnitId: adUnitId,
         listener: NativeAdListener(
@@ -239,10 +249,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             _isLoading = false;
             _nativeAd = ad as NativeAd;
             ref.read(adsProvider.notifier).setAdLoaded(true);
-            
+
             // Log success
             analytics.logEvent(name: 'ad_load_success', parameters: {});
-            
+
             if (!completer.isCompleted) {
               completer.complete(AdLoadResult.success());
             }
@@ -251,12 +261,14 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             debugPrint('❌ Ad failed to load: ${error.code} - ${error.message}');
             ad.dispose();
             _isLoading = false;
-            
-            ref.read(adsProvider.notifier).setAdLoadFailed(
-              errorCode: error.code.toString(),
-              errorMessage: error.message,
-            );
-            
+
+            ref
+                .read(adsProvider.notifier)
+                .setAdLoadFailed(
+                  errorCode: error.code.toString(),
+                  errorMessage: error.message,
+                );
+
             // Log failure
             analytics.logEvent(
               name: 'ad_load_failure',
@@ -265,15 +277,19 @@ class GoogleAdStrategy implements AdLoadingStrategy {
                 'error_message': error.message,
               },
             );
-            
+
             // AdMob failed - just don't show anything (no fallback to internal ads)
-            debugPrint('⚠️ AdMob failed to serve ad (error ${error.code}) - no ad will show');
-            
+            debugPrint(
+              '⚠️ AdMob failed to serve ad (error ${error.code}) - no ad will show',
+            );
+
             if (!completer.isCompleted) {
-              completer.complete(AdLoadResult.failure(
-                errorCode: error.code.toString(),
-                errorMessage: error.message,
-              ));
+              completer.complete(
+                AdLoadResult.failure(
+                  errorCode: error.code.toString(),
+                  errorMessage: error.message,
+                ),
+              );
             }
           },
           onAdClicked: (ad) {
@@ -281,41 +297,61 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           },
           onAdImpression: (ad) {
             debugPrint('👁️ NativeAd impression');
-            analytics.logEvent(name: 'ad_impression', parameters: {
-              'shown_on_disconnect': 'true',
-              'ip_consistent': 'true',
-            });
+            analytics.logEvent(
+              name: 'ad_impression',
+              parameters: {
+                'shown_on_disconnect': 'true',
+                'ip_consistent': 'true',
+              },
+            );
           },
         ),
-        request: const AdRequest(
-          keywords: ['privacy', 'security', 'technology', 'mobile', 'internet safety', 'data protection'],
-          contentUrl: 'defyxvpn://home',
+        request: AdRequest(
+          keywords: [
+            // High-value VPN keywords
+            'vpn', 'vpn service', 'secure vpn', 'privacy vpn',
+            // Security & privacy (high CPM category)
+            'online privacy', 'internet security', 'data protection',
+            'cybersecurity', 'encryption', 'anonymous browsing',
+            // Mobile-specific
+            'mobile security', 'smartphone privacy', 'mobile vpn',
+            'ios security', 'android security',
+            // User intent keywords
+            'protect identity', 'hide ip address', 'secure connection',
+            'private internet', 'safe browsing',
+          ],
+          contentUrl: 'https://defyxvpn.com',
+          nonPersonalizedAds: !ref
+              .read(adPersonalizationProvider)
+              .canUsePersonalizedAds,
+          extras: {
+            'app_category': 'utilities',
+            'app_subcategory': 'vpn',
+            'placement': 'main_screen_disconnected',
+            ...ref
+                .read(adPersonalizationProvider.notifier)
+                .getAdRequestExtras(),
+          },
         ),
         nativeTemplateStyle: templateStyle,
       );
-      
+
       // Load ad
       debugPrint('🚀 Loading ad from AdMob...');
       ad.load();
-      
+
       // Wait for result
       return await completer.future;
     } catch (e) {
       debugPrint('❌ Error creating NativeAd: $e');
       _isLoading = false;
-      ref.read(adsProvider.notifier).setAdLoadFailed(
-        errorCode: '0',
-        errorMessage: e.toString(),
-      );
-      return AdLoadResult.failure(
-        errorCode: '0',
-        errorMessage: e.toString(),
-      );
+      ref
+          .read(adsProvider.notifier)
+          .setAdLoadFailed(errorCode: '0', errorMessage: e.toString());
+      return AdLoadResult.failure(errorCode: '0', errorMessage: e.toString());
     }
   }
-  
 
-  
   @override
   Widget buildAdWidget({
     required BuildContext context,
@@ -331,10 +367,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         return const SizedBox.shrink();
       }
     }
-    
+
     return const SizedBox.shrink();
   }
-  
+
   @override
   void onConnectionStateChanged({
     required Ref ref,
@@ -343,36 +379,34 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     required bool hasInitialized,
     required Function() onRefreshNeeded,
   }) {
-    debugPrint('🔌 GoogleAdStrategy - Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})');
-    
-    // Mark first connection complete when user connects (track for UX)
-    if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
-      ref.read(adsProvider.notifier).markFirstConnectionComplete();
-      debugPrint('✅ First connection marked - AdMob ads will show on disconnect');
+    debugPrint(
+      '🔌 GoogleAdStrategy - Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})',
+    );
+
+    // When user connects - do nothing (internal ads handle connected state)
+    if (current == ConnectionStatus.connected &&
+        previous != ConnectionStatus.connected) {
       // GoogleAdStrategy does nothing when connected (InternalAdStrategy handles it)
       return;
     }
-    
-    // ADMOB ADS: Show when disconnected (after VPN use) with real IP
-    // Only load ads AFTER user has completed first connection
+
+    // ADMOB ADS: Show when disconnected with real IP
+    // Show ads immediately when disconnected (user has real IP)
     if (current == ConnectionStatus.disconnected) {
       final adsState = ref.read(adsProvider);
-      
-      // Don't show ads before first connection (better UX)
-      if (!adsState.hasCompletedFirstConnection) {
-        debugPrint('🔌 Disconnected but no first connection yet - showing tips only');
-        return;
-      }
-      
+
+      // Mark first connection when user connects (for analytics)
+      // But don't gate ads on this - show ads immediately
+
       // Coming from connected state - load fresh ad
       if (previous == ConnectionStatus.connected) {
         debugPrint('🔌 Disconnected after connection - loading fresh AdMob ad');
-        
+
         if (_isLoading) {
           debugPrint('⏳ Ad load already in progress...');
           return;
         }
-        
+
         // Dispose old ad if exists (force fresh ad per disconnect cycle)
         if (_nativeAd != null) {
           debugPrint('🗑️ Disposing old AdMob ad to load fresh one');
@@ -384,7 +418,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           }
           _nativeAd = null;
         }
-        
+
         // Load fresh AdMob ad with real IP
         debugPrint('📱 Loading fresh AdMob ad with real IP');
         loadAd(ref: ref).then((result) {
@@ -393,18 +427,22 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             ref.read(adsProvider.notifier).startCountdownTimer();
           }
         });
-      } 
+      }
       // Initial disconnected state or coming from other states
       else {
-        debugPrint('🔌 Disconnected (from other state) - loading AdMob ad if needed');
-        
+        debugPrint(
+          '🔌 Disconnected (from other state) - loading AdMob ad if needed',
+        );
+
         // Load ad if we don't have one or it's stale
-        if (_nativeAd == null || !adsState.nativeAdIsLoaded || adsState.needsRefresh) {
+        if (_nativeAd == null ||
+            !adsState.nativeAdIsLoaded ||
+            adsState.needsRefresh) {
           if (_isLoading) {
             debugPrint('⏳ Ad load already in progress...');
             return;
           }
-          
+
           debugPrint('📱 Loading AdMob ad with real IP');
           loadAd(ref: ref).then((result) {
             if (result.success && _nativeAd != null) {
@@ -420,19 +458,19 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       return;
     }
   }
-  
+
   @override
   bool shouldLoadNewAd(AdsState state) {
     // No ad = need to load
     if (_nativeAd == null) return true;
-    
+
     // Ad not marked as loaded = need to load
     if (!state.nativeAdIsLoaded) return true;
-    
+
     // Ad exists and loaded = don't load
     return false;
   }
-  
+
   @override
   void dispose() {
     debugPrint('🧹 GoogleAdStrategy disposed');
