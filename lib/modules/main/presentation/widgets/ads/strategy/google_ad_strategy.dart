@@ -143,7 +143,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       );
     }
 
-    // CRITICAL: Wait for consent flow to complete first
+    // CRITICAL: Wait for consent flow AND VPN profile setup to complete first
     final consentState = ref.read(adPersonalizationProvider);
     if (!consentState.consentFlowComplete) {
       debugPrint('⏳ Consent flow not complete yet - skipping ad load');
@@ -152,7 +152,14 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         errorMessage: 'Waiting for ATT/UMP consent flow to complete',
       );
     }
-    debugPrint('✅ Consent flow complete - proceeding with ad load');
+    if (!consentState.vpnProfileSetup) {
+      debugPrint('⏳ VPN profile not setup yet - skipping ad load');
+      return AdLoadResult.failure(
+        errorCode: 'VPN_SETUP_PENDING',
+        errorMessage: 'Waiting for VPN profile setup to complete',
+      );
+    }
+    debugPrint('✅ Consent flow & VPN profile ready - proceeding with ad load');
 
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;

@@ -10,12 +10,16 @@ class AdPersonalizationState {
   final bool canUsePersonalizedAds;
   final DateTime? lastChecked;
   final bool consentFlowComplete;
+  final bool vpnProfileSetup;
+  final bool adMobInitializationStarted;
 
   const AdPersonalizationState({
     required this.attStatus,
     required this.canUsePersonalizedAds,
     this.lastChecked,
     this.consentFlowComplete = false,
+    this.vpnProfileSetup = false,
+    this.adMobInitializationStarted = false,
   });
 
   AdPersonalizationState copyWith({
@@ -23,6 +27,8 @@ class AdPersonalizationState {
     bool? canUsePersonalizedAds,
     DateTime? lastChecked,
     bool? consentFlowComplete,
+    bool? vpnProfileSetup,
+    bool? adMobInitializationStarted,
   }) {
     return AdPersonalizationState(
       attStatus: attStatus ?? this.attStatus,
@@ -30,6 +36,9 @@ class AdPersonalizationState {
           canUsePersonalizedAds ?? this.canUsePersonalizedAds,
       lastChecked: lastChecked ?? this.lastChecked,
       consentFlowComplete: consentFlowComplete ?? this.consentFlowComplete,
+      vpnProfileSetup: vpnProfileSetup ?? this.vpnProfileSetup,
+      adMobInitializationStarted:
+          adMobInitializationStarted ?? this.adMobInitializationStarted,
     );
   }
 
@@ -40,6 +49,8 @@ class AdPersonalizationState {
       canUsePersonalizedAds: false,
       lastChecked: null,
       consentFlowComplete: false,
+      vpnProfileSetup: false,
+      adMobInitializationStarted: false,
     );
   }
 }
@@ -185,6 +196,18 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
   void markConsentFlowComplete() {
     state = state.copyWith(consentFlowComplete: true);
     debugPrint('✅ Consent flow marked as complete');
+  }
+
+  /// Mark VPN profile as setup (called after privacy notice accepted and VPN initialized)
+  void markVpnProfileSetup() {
+    state = state.copyWith(vpnProfileSetup: true);
+    debugPrint('✅ VPN profile setup complete');
+  }
+
+  /// Mark AdMob initialization as started (prevents duplicate initialization)
+  void markAdMobInitializationStarted() {
+    state = state.copyWith(adMobInitializationStarted: true);
+    debugPrint('🔒 AdMob initialization started');
   }
 }
 
