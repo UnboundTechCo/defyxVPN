@@ -15,6 +15,7 @@ import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/providers/logs_provider.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
+import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +26,7 @@ class VPN {
   static final VPN _instance = VPN._internal();
   final log = Log();
   final analyticsService = FirebaseAnalyticsService();
+  final crashReportingService = CrashReportingService();
   final alertService = AlertService();
   bool _isReconnectMode = false;
 
@@ -39,13 +41,18 @@ class VPN {
   final _vpnBridge = VpnBridge();
   final _networkStatus = NetworkStatus();
   final _eventChannel = EventChannel("com.defyx.progress_events");
+  final _crashEventChannel = EventChannel("com.defyx.crash_events");
 
   Stream<String> get vpnUpdates =>
       _eventChannel.receiveBroadcastStream().map((event) => event.toString());
 
+  Stream<Map<dynamic, dynamic>> get crashUpdates =>
+      _crashEventChannel.receiveBroadcastStream().cast<Map<dynamic, dynamic>>();
+
   bool _initialized = false;
   ProviderContainer? _container;
   StreamSubscription<String>? _vpnSub;
+  StreamSubscription<Map<dynamic, dynamic>>? _crashSub;
   DateTime? _connectionStartTime;
 
   void _init(ProviderContainer container) {
@@ -65,10 +72,16 @@ class VPN {
     vpnUpdates.listen((msg) {
       _handleVPNUpdates(msg);
     });
+
+    // Listen for Go crash events and report to Crashlytics
+    crashUpdates.listen((crashData) {
+      _handleCrashEvent(crashData);
+    });
   }
 
   void dispose() {
     _vpnSub?.cancel();
+    _crashSub?.cancel();
   }
 
   Future<void> autoConnect() async {
@@ -154,6 +167,41 @@ class VPN {
     log.addLog(msg);
   }
 
+  void _handleCrashEvent(Map<dynamic, dynamic> crashData) {
+    try {
+      final functionName = crashData['functionName'] as String? ?? 'unknown';
+      final errorMessage = crashData['errorMessage'] as String? ?? 'unknown';
+      final stackTrace = crashData['stackTrace'] as String? ?? '';
+      final platform = crashData['platform'] as String? ?? 'unknown';
+
+      // Log the crash
+      log.addLog('[CRASH] Go panic in $functionName: $errorMessage');
+
+      // Get current VPN state for context
+      final connectionState = _container?.read(connectionStateProvider);
+      final vpnState = connectionState?.status.toString() ?? 'unknown';
+      final currentGroup = _container?.read(groupStateProvider)?.groupName;
+
+      // Report to Crashlytics with VPN context
+      crashReportingService.recordGoPanic(
+        functionName,
+        errorMessage,
+        stackTrace,
+      );
+
+      // Add VPN-specific context
+      crashReportingService.setCustomKey('vpn_state', vpnState);
+      if (currentGroup != null) {
+        crashReportingService.setCustomKey('vpn_group', currentGroup);
+      }
+      crashReportingService.setCustomKey('crash_platform', platform);
+
+      debugPrint('🔥 Go panic reported to Crashlytics: $functionName - $errorMessage');
+    } catch (e) {
+      debugPrint('Error handling crash event: $e');
+    }
+  }
+
   Future<void> _connect() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
@@ -173,12 +221,27 @@ class VPN {
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
       alertService.error();
+      
+      // Report network connectivity failure
+      crashReportingService.recordVpnError(
+        Exception('Network not connected'),
+        StackTrace.current,
+        vpnState: 'connecting',
+        connectionMethod: settings?.getPattern() ?? 'auto',
+      );
       return;
     }
 
     final isAccepted = await _grantVpnPermission();
     if (!isAccepted!) {
       connectionNotifier?.setDisconnected();
+      
+      // Report VPN permission denial
+      crashReportingService.recordVpnError(
+        Exception('VPN permission denied'),
+        StackTrace.current,
+        vpnState: 'permission_required',
+      );
       return;
     }
 
@@ -192,19 +255,55 @@ class VPN {
     _connectionStartTime = DateTime.now();
     analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
 
-    await _vpnBridge.startVPN(flowLineStorage, pattern, isDeep);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      connectionNotifier?.setAnalyzing();
-    });
+    try {
+      await _vpnBridge.startVPN(flowLineStorage, pattern, isDeep);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        connectionNotifier?.setAnalyzing();
+      });
+    } catch (e, stack) {
+      // Report VPN start error
+      crashReportingService.recordVpnError(
+        e,
+        stack,
+        vpnState: 'starting',
+        connectionMethod: pattern.isEmpty ? 'auto' : pattern,
+      );
+      
+      connectionNotifier?.setError();
+      alertService.error();
+      log.addLog('[ERROR] Failed to start VPN: $e');
+    }
   }
 
   Future<void> _onFailerConnect() async {
     final connectionNotifier =
         _container?.read(connectionStateProvider.notifier);
+    final settings = _container?.read(settingsProvider.notifier);
+    final currentGroup = _container?.read(groupStateProvider)?.groupName;
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
     alertService.error();
+
+    // Report VPN connection failure to Crashlytics
+    crashReportingService.recordVpnError(
+      Exception('VPN connection failed'),
+      StackTrace.current,
+      vpnState: 'failed',
+      server: currentGroup,
+      protocol: 'dnstt',
+      connectionMethod: settings?.getPattern() ?? 'auto',
+    );
+
+    // Log failure analytics
+    final duration = _connectionStartTime != null
+        ? DateTime.now().difference(_connectionStartTime!).inSeconds
+        : 0;
+    analyticsService.logVpnConnectionFailed(
+      settings?.getPattern() ?? 'auto',
+      currentGroup ?? 'unknown',
+      duration,
+    );
   }
 
   Future<void> _onSuccessConnect() async {

@@ -1,40 +1,33 @@
-/// Unified Ads Widget - Strategy Pattern Implementation
+/// Unified Ads Widget - Strategy Pattern Implementation (Refactored)
 /// 
-/// This widget serves as a lightweight orchestrator that delegates ad loading
-/// to specialized strategy classes based on the user's region.
+/// This widget is a simple renderer that delegates strategy selection to AdStrategyManager.
 /// 
-/// **Architecture:**
-/// Uses the Strategy Pattern to separate ad loading logic from UI presentation:
-/// - GoogleAdStrategy: Handles Google AdMob ads with full orchestration
-/// - InternalAdStrategy: Handles custom/internal ads for restricted regions
+/// **Architecture (Proper Strategy Pattern):**
+/// - AdStrategyManager: Owns strategies, decides which is active, handles transitions
+/// - AdsWidget:Uses AdStrategyManager to get active strategy and render it
+/// - Strategies: Handle ad loading and rendering for their specific case
 /// 
-/// **Strategy Selection:**
-/// - Determined at runtime via AdvertiseDirector.shouldUseInternalAds()
-/// - Strategy is instantiated in initState() and used throughout lifecycle
+/// **Separation of Concerns:**
+/// - Business Logic → AdStrategyManager (which strategy when)
+/// - Rendering → AdsWidget (show active strategy)
+/// - Ad Loading → Strategies (how to load and display)
 /// 
 /// **Responsibilities:**
-/// - Widget (this file): UI rendering, strategy selection, lifecycle management
-/// - Strategies: Ad loading logic, connection state handling, resource cleanup
-/// - State (ads_state.dart): Centralized state shared across all strategies
-/// - MainScreen: Controls when to show/hide ads (single source of truth)
-/// 
-/// **Visibility Control:**
-/// - MainScreen decides when to render AdsWidget (based on connection + countdown)
-/// - AdsWidget trusts MainScreen and renders when called (no duplicate checks)
-/// - This approach works cleanly with Strategy Pattern (both ad types use same state)
+/// - AdStrategyManager: Strategy selection, lifecycle, transitions
+/// - AdsWidget (this file): Render active strategy, manage widget lifecycle
+/// - GoogleAdStrategy: Load and render AdMob ads
+/// - InternalAdStrategy: Load and render internal ads
+/// - MainScreen: Controls when to show/hide ads widget
 /// 
 /// **UI Features:**
 /// - "ADVERTISEMENT" label (top-right corner)
-/// - 60-second countdown timer (bottom-left corner, shown when connected)
+/// - 60-second countdown timer (bottom-left corner)
 /// - Automatic hiding when countdown expires
-/// - Consistent behavior across all ad types
-/// 
+/// - Smooth fade animations (300ms)
+///
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/ad_loading_strategy.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
-import 'package:defyx_vpn/app/advertise_director.dart';
-import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -54,118 +47,71 @@ class AdsWidget extends ConsumerStatefulWidget {
   ConsumerState<AdsWidget> createState() => _AdsWidgetState();
 }
 
-/// Widget state - orchestrates strategy and renders UI
+/// Widget state - pure renderer, gets manager from provider
 class _AdsWidgetState extends ConsumerState<AdsWidget> {
-  AdLoadingStrategy? _strategy;
-  bool _isDisposed = false;
-  bool _useInternalAds = false;
-
-  @override
-  void initState() {
-    super.initState();
-    debugPrint('AdsWidget initState called');
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      if (_isDisposed) return;
-      
-      // Determine which strategy to use
-      _useInternalAds = await AdvertiseDirector.shouldUseInternalAds(ref);
-      debugPrint('📱 Ad type determined: ${_useInternalAds ? "Internal" : "Google"}');
-      
-      // Create appropriate strategy
-      if (_useInternalAds) {
-        _strategy = InternalAdStrategy();
-      } else {
-        _strategy = GoogleAdStrategy(
-          backgroundColor: widget.backgroundColor,
-          cornerRadius: widget.cornerRadius,
-        );
-      }
-      
-      // Initialize strategy (this also loads the initial ad)
-      await _strategy!.initialize(ref);
-      
-      // Trigger rebuild to show the ad
-      if (mounted && !_isDisposed) {
-        setState(() {});
-      }
-      
-      // Check current connection state and start countdown if already connected
-      final currentConnectionState = ref.read(connectionStateProvider).status;
-      if (currentConnectionState == ConnectionStatus.connected) {
-        final adsState = ref.read(adsProvider);
-        if (adsState.nativeAdIsLoaded) {
-          debugPrint('⏰ Already connected on init - starting countdown');
-          ref.read(adsProvider.notifier).startCountdownTimer();
-        }
-      }
-      
-      // Listen to connection changes and delegate to strategy
-      ref.listenManual(connectionStateProvider, (previous, next) {
-        if (_strategy == null || _isDisposed) return;
-        
-        _strategy!.onConnectionStateChanged(
-          ref: ref,
-          previous: previous?.status ?? ConnectionStatus.disconnected,
-          current: next.status,
-          hasInitialized: true,
-          onRefreshNeeded: () => _strategy!.loadAd(ref: ref),
-        );
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    _strategy?.dispose();
-    debugPrint('🧹 AdsWidget disposed');
-    super.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
+    debugPrint('🎨 AdsWidget.build() called');
+    
+    // Get manager from provider
+    final manager = ref.watch(adStrategyManagerProvider);
     final adsState = ref.watch(adsProvider);
+    final connectionState = ref.watch(conn.connectionStateProvider).status;
+    
+    debugPrint('   Manager: ${manager == null ? "loading" : "ready"}');
+    debugPrint('   Ad state: loaded=${adsState.nativeAdIsLoaded}, customAd=${adsState.customImageUrl != null}, countdown=${adsState.showCountdown}');
+    debugPrint('   Connection: ${connectionState.name}');
 
-    // Safety check: Hide if loading failed (MainScreen should already handle this)
+    // Safety check: Hide if loading failed
     if (adsState.adLoadFailed) {
+      debugPrint('   ❌ Ad load failed, hiding widget');
       return const SizedBox.shrink();
     }
 
-    // Wait for strategy to initialize (happens in postFrameCallback)
-    if (_strategy == null) {
+    // Wait for manager to initialize
+    if (manager == null) {
+      debugPrint('   ⏳ Manager not ready yet');
       return const SizedBox.shrink();
     }
 
-    // Render ad container - MainScreen controls visibility via shouldShowAd
-    // No need to check ad loaded state here, MainScreen already does that
-    return SizedBox(
-      height: 280.h,
-      width: 336.w,
-      child: Stack(
-        children: [
-          Container(
-            width: double.infinity,
-            height: double.infinity,
-            decoration: BoxDecoration(
-              color: widget.backgroundColor.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(widget.cornerRadius),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.2),
-                width: 1,
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(widget.cornerRadius),
-              child: _strategy?.buildAdWidget(
-                    context: context,
-                    state: adsState,
-                    cornerRadius: widget.cornerRadius,
-                  ) ?? const SizedBox.shrink(),
+    // Ask manager which strategy is active - business logic lives there
+    final activeStrategy = manager.getActiveStrategy(connectionState);
+    debugPrint('   Active strategy: ${activeStrategy?.strategyName ?? "none"}');
+
+    // If no active strategy, hide widget
+    if (activeStrategy == null) {
+      debugPrint('   ⚪ No active strategy, hiding widget');
+      return const SizedBox.shrink();
+    }
+
+    debugPrint('   ✅ Rendering ${activeStrategy.strategyName}');
+
+    // Render ad container with active strategy
+    // Size is constrained by parent (main_screen.dart: 280.h x 336.w)
+    return Stack(
+      children: [
+        Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            color: widget.backgroundColor.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(widget.cornerRadius),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.2),
+              width: 1,
             ),
           ),
-          // ADVERTISEMENT label (top-right)
-          Positioned(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(widget.cornerRadius),
+            child: activeStrategy.buildAdWidget(
+                  context: context,
+                  state: adsState,
+                  cornerRadius: widget.cornerRadius,
+                ),
+          ),
+        ),
+        // ADVERTISEMENT label (top-right)
+        Positioned(
             top: 0,
             right: 0,
             child: Container(
@@ -220,7 +166,6 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
               ),
             ),
         ],
-      ),
     );
   }
 }

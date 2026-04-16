@@ -30,6 +30,14 @@ class AppLocalizationsZh extends AppLocalizations {
   String get connecting => '正在连接';
 
   @override
+  String connectingVia(String groupName) {
+    return '正在通过 $groupName 连接';
+  }
+
+  @override
+  String get switchingMethod => '切换方式中';
+
+  @override
   String get speedTest => '速度测试';
 
   @override
@@ -126,13 +134,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get english => 'English (英语)';
 
   @override
-  String get persian => 'فارسی (波斯语)';
-
-  @override
   String get chinese => '中文';
-
-  @override
-  String get russian => 'Русский (俄语)';
 
   @override
   String get gotIt => '知道了';

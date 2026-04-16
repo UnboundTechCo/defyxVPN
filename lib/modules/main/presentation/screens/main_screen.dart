@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
@@ -213,27 +214,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                               onSecretTap: _handleSecretTap,
                               onPingRefresh: _logic.refreshPing,
                             ),
-                            SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
-                                  ? 40.h
-                                  : 80.h,
-                            ),
-                            SizedBox(
-                              height: connectionState.status ==
-                                      ConnectionStatus.connected
-                                  ? 0.24.sh
-                                  : 0.28.sh,
-                            ),
+                            SizedBox(height: 50.h),  // Reduced to raise ads higher
+                            SizedBox(height: 0.16.sh),  // Reduced to raise ads higher
                             _buildContentSection(
                                 connectionState.status, adsState),
-                            SizedBox(
-                              height: connectionState.status ==
-                                          ConnectionStatus.connected &&
-                                      adsState.showCountdown
-                                  ? 140.h
-                                  : 0.15.sh,
-                            ),
+                            SizedBox(height: 0.15.sh),  // Consistent bottom spacing
                           ],
                         ),
                       ],
@@ -275,58 +260,78 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
+    debugPrint('🎨 _buildContentSection called:');
+    debugPrint('   Status: ${status.name}');
+    
+    // Use hasActiveAdProvider as single source of truth for ad visibility
+    final hasActiveAd = ref.watch(hasActiveAdProvider);
+    debugPrint('   hasActiveAd: $hasActiveAd');
+    
+    bool shouldShowAd = hasActiveAd;
+    Widget? mainContent;
+    
     switch (status) {
       case ConnectionStatus.noInternet:
         _dinoGame ??= DinoGame();
-        return SizedBox(
+        mainContent = SizedBox(
           height: 200.h,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(16.r),
             child: GameWidget(game: _dinoGame!),
           ),
         );
+        break;
 
       case ConnectionStatus.disconnected:
-        return TipsSliderSection(
-          status: status,
-        );
+        // DISCONNECTED: Show ad if director says so, else show tips
+        if (!hasActiveAd) {
+          debugPrint('   ℹ️ Rendering tips slider (no active ad)');
+          mainContent = TipsSliderSection(status: status);
+        } else {
+          debugPrint('   ✅ Showing ad container (director has active strategy)');
+        }
+        break;
 
       default:
-        // MainScreen controls ad visibility (Strategy Pattern approach)
-        // Works for both GoogleAdStrategy and InternalAdStrategy
-        // - nativeAdIsLoaded: true when ad is ready (Google or Internal)
-        // - showCountdown: true during 60-second display window
-        // - connected: only show when VPN is active
-        final shouldShowAd = status == ConnectionStatus.connected && 
-                             adsState.showCountdown && 
-                             adsState.nativeAdIsLoaded;
-
-        return SizedBox(
-          height: 280.h,
-          width: 336.w,
-          child: AnimatedSlide(
-            offset: Offset(
-              0,
-              shouldShowAd ? 0.0 : 1.0,
-            ),
-            duration: _animationService
-                .adjustDuration(const Duration(milliseconds: 800)),
-            curve: Curves.easeOut,
-            child: AnimatedOpacity(
-              opacity: shouldShowAd ? 1.0 : 0.0,
-              duration: _animationService
-                  .adjustDuration(const Duration(milliseconds: 500)),
-              curve: Curves.easeInOut,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF19312F),
-                  borderRadius: BorderRadius.circular(10.r),
+        // CONNECTED/CONNECTING: Show ad if available, else empty
+        if (!hasActiveAd) {
+          debugPrint('   ⚪ Rendering empty (no active ad)');
+          mainContent = const SizedBox.shrink();
+        } else {
+          debugPrint('   ✅ Showing ad container (director has active strategy)');
+        }
+    }
+    
+    // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
+    // Control visibility with AnimatedOpacity for smooth fade transitions
+    return Stack(
+      alignment: Alignment.topCenter,  // Align to top-center for consistent positioning
+      children: [
+        // Always in tree at same position - never recreated
+        AnimatedOpacity(
+          duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
+          opacity: shouldShowAd ? 1.0 : 0.0,
+          child: IgnorePointer(
+            ignoring: !shouldShowAd,  // Prevent touch events when hidden
+            child: Padding(
+              padding: EdgeInsets.only(top: 50.h),  // Match the spacing above ads
+              child: SizedBox(
+                height: 280.h,
+                width: 336.w,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF19312F),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: _adsWidget,  // Always same widget instance, same position
                 ),
-                child: _adsWidget,
               ),
             ),
           ),
-        );
-    }
+        ),
+        // Show main content when not showing ad
+        if (!shouldShowAd && mainContent != null) mainContent,
+      ],
+    );
   }
 }

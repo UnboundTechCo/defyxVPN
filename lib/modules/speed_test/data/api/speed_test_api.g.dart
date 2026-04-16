@@ -38,11 +38,11 @@ class _SpeedTestApi implements SpeedTestApi {
     const Map<String, dynamic>? _data = null;
     final _options = _setStreamType<HttpResponse<List<int>>>(
       Options(
-        method: 'GET',
-        headers: _headers,
-        extra: _extra,
-        responseType: ResponseType.bytes,
-      )
+            method: 'GET',
+            headers: _headers,
+            extra: _extra,
+            responseType: ResponseType.bytes,
+          )
           .compose(
             _dio.options,
             '/__down',
@@ -89,11 +89,11 @@ class _SpeedTestApi implements SpeedTestApi {
     final _data = data;
     final _options = _setStreamType<HttpResponse<dynamic>>(
       Options(
-        method: 'POST',
-        headers: _headers,
-        extra: _extra,
-        contentType: contentType,
-      )
+            method: 'POST',
+            headers: _headers,
+            extra: _extra,
+            contentType: contentType,
+          )
           .compose(
             _dio.options,
             '/__up',
