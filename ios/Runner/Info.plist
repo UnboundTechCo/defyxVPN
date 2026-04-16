@@ -33,7 +33,7 @@
 		<key>NSVPNConfigurationUsageDescription</key>
 		<string>Defyx needs access to VPN configurations to secure your connection.</string>
 		<key>NSUserTrackingUsageDescription</key>
-		<string>We need permission to show you personalized ads. This helps support our free VPN service. Declining means you'll see generic ads instead.</string>	
+		<string>This identifier will be used to deliver personalized ads to you. You can decline and still use the app with non-personalized ads.</string>	
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Defyx needs access to your photo library to let you select and share images, such as profile pictures or VPN connection QR codes.</string>		
 		<key>UIApplicationSupportsIndirectInputEvents</key>
