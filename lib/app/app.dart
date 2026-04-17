@@ -47,7 +47,15 @@ class App extends ConsumerWidget {
     return FutureBuilder<void>(
       future: _initializeApp(ref),
       builder: (context, snapshot) {
+        // Check immediately on build
         _handleAdConfiguration(ref);
+        
+        // Also check after frame to ensure persisted state is loaded
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          debugPrint('📱 Post-frame callback - rechecking AdMob initialization');
+          _handleAdConfiguration(ref);
+        });
+        
         return _buildApp(context, ref);
       },
     );
@@ -71,16 +79,26 @@ class App extends ConsumerWidget {
       } else {
         // Only initialize AdMob after VPN profile is setup (privacy notice accepted)
         final adState = ref.read(adPersonalizationProvider);
+        debugPrint(
+          '🔍 AdMob check: vpnProfileSetup=${adState.vpnProfileSetup}, adMobInitializationStarted=${adState.adMobInitializationStarted}',
+        );
+        
         if (adState.vpnProfileSetup && !adState.adMobInitializationStarted) {
           debugPrint('📱 VPN profile ready - Initializing AdMob');
-          ref
-              .read(adPersonalizationProvider.notifier)
-              .markAdMobInitializationStarted();
-          _initializeMobileAdsWithConsent(ref, environment);
+          
+          // Defer state modification to avoid modifying provider during build
+          Future.microtask(() {
+            ref
+                .read(adPersonalizationProvider.notifier)
+                .markAdMobInitializationStarted();
+            _initializeMobileAdsWithConsent(ref, environment);
+          });
         } else if (!adState.vpnProfileSetup) {
           debugPrint(
             '⏳ Waiting for VPN profile setup before initializing AdMob',
           );
+        } else if (adState.adMobInitializationStarted) {
+          debugPrint('✅ AdMob already initialized, skipping');
         }
       }
     });
