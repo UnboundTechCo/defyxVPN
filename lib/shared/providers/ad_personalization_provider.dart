@@ -68,7 +68,24 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final storedStatus = prefs.getInt('${_storageKey}_att_status');
+      final storedVpnSetup = prefs.getBool('${_storageKey}_vpn_profile_setup');
 
+      // Android doesn't have ATT - always default to authorized
+      if (!Platform.isIOS) {
+        state = state.copyWith(
+          attStatus: TrackingStatus.authorized,
+          canUsePersonalizedAds: true,
+          lastChecked: DateTime.now(),
+          vpnProfileSetup: storedVpnSetup ?? false,
+        );
+        await _persistState(); // Persist Android default
+        debugPrint(
+          '📦 Android: Set ATT to authorized, vpnProfileSetup=${storedVpnSetup ?? false}',
+        );
+        return;
+      }
+
+      // iOS: Load persisted ATT status
       if (storedStatus != null) {
         final status = TrackingStatus.values[storedStatus];
         final canPersonalize = status == TrackingStatus.authorized;
@@ -77,11 +94,16 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
           attStatus: status,
           canUsePersonalizedAds: canPersonalize,
           lastChecked: DateTime.now(),
+          vpnProfileSetup: storedVpnSetup ?? false,
         );
 
         debugPrint(
-          '📦 Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize',
+          '📦 Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize, vpnProfileSetup=${storedVpnSetup ?? false}',
         );
+      } else if (storedVpnSetup != null) {
+        // Load VPN setup flag even if ATT status not stored yet
+        state = state.copyWith(vpnProfileSetup: storedVpnSetup);
+        debugPrint('📦 Loaded persisted VPN profile setup: $storedVpnSetup');
       }
     } catch (e) {
       debugPrint('⚠️ Failed to load persisted ATT state: $e');
@@ -159,7 +181,11 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         '${_storageKey}_can_personalize',
         state.canUsePersonalizedAds,
       );
-      debugPrint('💾 Persisted ATT state: ${state.attStatus.name}');
+      await prefs.setBool(
+        '${_storageKey}_vpn_profile_setup',
+        state.vpnProfileSetup,
+      );
+      debugPrint('💾 Persisted ATT state: ${state.attStatus.name}, vpnProfileSetup=${state.vpnProfileSetup}');
     } catch (e) {
       debugPrint('⚠️ Failed to persist ATT state: $e');
     }
@@ -202,6 +228,7 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
   void markVpnProfileSetup() {
     state = state.copyWith(vpnProfileSetup: true);
     debugPrint('✅ VPN profile setup complete');
+    _persistState(); // Persist immediately to survive app restarts
   }
 
   /// Mark AdMob initialization as started (prevents duplicate initialization)
