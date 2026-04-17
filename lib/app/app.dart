@@ -6,7 +6,8 @@ import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
-import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
+    as conn;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,11 +20,18 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-class App extends ConsumerWidget {
+class App extends ConsumerStatefulWidget {
   const App({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<App> createState() => _AppState();
+}
+
+class _AppState extends ConsumerState<App> {
+  bool _hasCheckedInitialization = false;
+
+  @override
+  Widget build(BuildContext context) {
     // Eagerly trigger environment computation
     final environmentAsync = ref.watch(adEnvironmentProvider);
 
@@ -37,7 +45,7 @@ class App extends ConsumerWidget {
         
         environmentAsync.whenData((environment) {
           if (environment.shouldInitializeAdMob) {
-            _initializeAdFlow(ref);
+            _initializeAdFlow();
           } else {
             debugPrint(
               '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
@@ -48,8 +56,8 @@ class App extends ConsumerWidget {
       
       // When consent completes and we're disconnected, retry ad load
       if (next.canLoadAds && !previous.canLoadAds) {
-        final connectionState = ref.read(connectionStateProvider).status;
-        if (connectionState == ConnectionStatus.disconnected) {
+        final connectionState = ref.read(conn.connectionStateProvider).status;
+        if (connectionState == conn.ConnectionStatus.disconnected) {
           debugPrint('✅ Consent complete & disconnected - triggering ad load');
           Future.delayed(const Duration(milliseconds: 100), () {
             ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
@@ -59,19 +67,46 @@ class App extends ConsumerWidget {
     });
 
     return FutureBuilder<void>(
-      future: _initializeApp(ref),
-      builder: (context, snapshot) => _buildApp(context, ref),
+      future: _initializeApp(),
+      builder: (context, snapshot) {
+        // Check ONCE if we need to initialize ads after app startup (e.g., after migration)
+        if (snapshot.connectionState == ConnectionState.done && 
+            !_hasCheckedInitialization) {
+          _hasCheckedInitialization = true;
+          
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _checkAndInitializeAds(environmentAsync);
+          });
+        }
+        return _buildApp(context);
+      },
     );
   }
 
-  Future<void> _initializeApp(WidgetRef ref) async {
-    await VPN(ProviderScope.containerOf(ref.context)).getVPNStatus();
+  Future<void> _initializeApp() async {
+    await VPN(ProviderScope.containerOf(context, listen: false)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
   }
 
+  /// Check if ad initialization should happen (for migration/restart cases)
+  void _checkAndInitializeAds(AsyncValue<AdEnvironment> environmentAsync) {
+    final adReadiness = ref.read(adReadinessCoordinatorProvider);
+    
+    // If canInitializeAdMob is already true (e.g., after migration), trigger flow
+    if (adReadiness.canInitializeAdMob) {
+      debugPrint('🔄 Ad initialization needed on startup (migration/restart)');
+      
+      environmentAsync.whenData((environment) {
+        if (environment.shouldInitializeAdMob) {
+          _initializeAdFlow();
+        }
+      });
+    }
+  }
+
   /// Initialize ad flow using the coordinator
-  void _initializeAdFlow(WidgetRef ref) {
+  void _initializeAdFlow() {
     final coordinator = ref.read(adReadinessCoordinatorProvider.notifier);
     final umpService = ref.read(umpServiceProvider);
 
@@ -94,7 +129,7 @@ class App extends ConsumerWidget {
     );
   }
 
-  Widget _buildApp(BuildContext context, WidgetRef ref) {
+  Widget _buildApp(BuildContext context) {
     final router = ref.watch(routerProvider);
     final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
