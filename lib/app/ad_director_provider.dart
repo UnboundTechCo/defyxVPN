@@ -329,9 +329,10 @@ class AdStrategyManager {
 /// - adEnvironmentProvider: To determine which strategies to create
 ///
 /// Lifecycle:
-/// - autoDispose: Cleans up when no longer watched
-/// - ref.onDispose: Ensures manager.dispose() is called
-final adStrategyManagerProvider = Provider.autoDispose<AdStrategyManager?>((
+/// - Session-scoped provider (NOT autoDispose) to prevent recreation churn
+/// - Manager holds static NativeAd which should persist across widget rebuilds
+/// - ref.onDispose: Ensures manager.dispose() is called on app exit
+final adStrategyManagerProvider = Provider<AdStrategyManager?>((
   ref,
 ) {
   // Wait for environment to be ready
@@ -339,7 +340,7 @@ final adStrategyManagerProvider = Provider.autoDispose<AdStrategyManager?>((
 
   return environmentAsync.when(
     data: (environment) {
-      debugPrint('📦 Creating AdStrategyManager from provider');
+      debugPrint('📦 Creating AdStrategyManager (session-scoped)');
 
       // Create manager with environment
       final manager = AdStrategyManager.create(
@@ -351,9 +352,9 @@ final adStrategyManagerProvider = Provider.autoDispose<AdStrategyManager?>((
       // (actual ad loading happens on connection changes, which is async)
       manager.initialize();
 
-      // Register disposal
+      // Register disposal (only happens on app exit now)
       ref.onDispose(() {
-        debugPrint('📦 AdStrategyManager provider disposing');
+        debugPrint('📦 AdStrategyManager disposing (app exit)');
         manager.dispose();
       });
 

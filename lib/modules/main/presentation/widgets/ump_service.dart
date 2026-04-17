@@ -1,7 +1,4 @@
 import 'package:defyx_vpn/shared/services/ump_consent_cache.dart';
-import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
-import 'package:app_tracking_transparency/app_tracking_transparency.dart';
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -11,48 +8,15 @@ class UmpService {
 
   UmpService([this._cacheService]);
 
-  /// Request consent with ATT compliance (Apple requirement)
-  ///
-  /// If ATT denied → Skip UMP entirely (no tracking, use non-personalized ads)
-  /// If ATT authorized → Show UMP for GDPR compliance
-  /// If ATT notDetermined (iOS only) → Don't proceed (dialog not shown yet)
+  /// Request UMP consent flow
+  /// 
+  /// The caller (AdReadinessCoordinator) determines whether this should run
+  /// based on ATT status and platform. This method just executes the UMP flow.
   Future<void> requestConsentWithATT({
     required WidgetRef ref,
     required VoidCallback onDone,
   }) async {
-    // Check ATT status
-    final attState = ref.read(adPersonalizationProvider);
-
-    // iOS only: If ATT status is notDetermined, don't proceed
-    // This means the dialog wasn't shown - likely Info.plist issue or device restriction
-    // Android always returns 'authorized' so this check won't block Android
-    if (Platform.isIOS &&
-        attState.attStatus == TrackingStatus.notDetermined) {
-      debugPrint(
-        '⚠️ ATT dialog not shown (notDetermined) - Check Info.plist or device restrictions',
-      );
-      debugPrint('⚠️ NOT marking consent complete - waiting for ATT dialog');
-      // Don't call onDone() - consent flow is NOT complete
-      return;
-    }
-
-    // Check if we should request UMP based on ATT status (Apple compliance)
-    final shouldRequestUMP = ref
-        .read(adPersonalizationProvider.notifier)
-        .shouldRequestUMP;
-
-    if (!shouldRequestUMP) {
-      // ATT denied/restricted - Skip UMP, proceed with non-personalized ads
-      final attStatus = attState.attStatus;
-      debugPrint(
-        '⏭️ Skipping UMP (ATT $attStatus) - Using non-personalized ads',
-      );
-      onDone();
-      return;
-    }
-
-    // ATT authorized (or Android) - Request UMP for GDPR compliance
-    debugPrint('🔍 Requesting UMP consent (ATT authorized)');
+    debugPrint('🔍 Starting UMP consent flow...');
     await requestConsent(onDone: onDone);
   }
 
