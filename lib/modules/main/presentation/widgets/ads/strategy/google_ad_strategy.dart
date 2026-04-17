@@ -9,7 +9,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
-import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
+import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import '../ads_state.dart';
 import '../models/ad_load_result.dart';
 import 'ad_loading_strategy.dart';
@@ -143,23 +143,16 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       );
     }
 
-    // CRITICAL: Wait for consent flow AND VPN profile setup to complete first
-    final consentState = ref.read(adPersonalizationProvider);
-    if (!consentState.consentFlowComplete) {
-      debugPrint('⏳ Consent flow not complete yet - skipping ad load');
+    // CRITICAL: Check ad readiness (privacy accepted + consent complete + AdMob initialized)
+    final adReadiness = ref.read(adReadinessCoordinatorProvider);
+    if (!adReadiness.canLoadAds) {
+      debugPrint('⏳ Ads not ready yet: $adReadiness');
       return AdLoadResult.failure(
-        errorCode: 'CONSENT_PENDING',
-        errorMessage: 'Waiting for ATT/UMP consent flow to complete',
+        errorCode: 'AD_READINESS_PENDING',
+        errorMessage: 'Privacy/consent/initialization not complete',
       );
     }
-    if (!consentState.vpnProfileSetup) {
-      debugPrint('⏳ VPN profile not setup yet - skipping ad load');
-      return AdLoadResult.failure(
-        errorCode: 'VPN_SETUP_PENDING',
-        errorMessage: 'Waiting for VPN profile setup to complete',
-      );
-    }
-    debugPrint('✅ Consent flow & VPN profile ready - proceeding with ad load');
+    debugPrint('✅ Ad readiness verified - proceeding with ad load');
 
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;
@@ -359,14 +352,14 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           ],
           contentUrl: 'https://defyxvpn.com',
           nonPersonalizedAds: !ref
-              .read(adPersonalizationProvider)
+              .read(adReadinessCoordinatorProvider)
               .canUsePersonalizedAds,
           extras: {
             'app_category': 'utilities',
             'app_subcategory': 'vpn',
             'placement': 'main_screen_disconnected',
             ...ref
-                .read(adPersonalizationProvider.notifier)
+                .read(adReadinessCoordinatorProvider.notifier)
                 .getAdRequestExtras(),
           },
         ),
