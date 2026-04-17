@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -7,13 +5,12 @@ import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
-import 'package:defyx_vpn/shared/providers/ad_personalization_provider.dart';
+import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
 import 'package:toastification/toastification.dart';
@@ -28,36 +25,42 @@ class App extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Eagerly trigger environment computation
-    ref.read(adEnvironmentProvider);
+    final environmentAsync = ref.watch(adEnvironmentProvider);
 
-    // Listen for VPN profile setup to trigger AdMob initialization
-    ref.listen<AdPersonalizationState>(adPersonalizationProvider, (
-      previous,
-      next,
-    ) {
-      // When VPN profile is setup, trigger AdMob initialization
-      if (next.vpnProfileSetup && (previous?.vpnProfileSetup != true)) {
-        debugPrint(
-          '🚀 VPN profile setup detected - triggering AdMob initialization',
-        );
-        _handleAdConfiguration(ref);
+    // Single listener for ad readiness state changes
+    ref.listen(adReadinessCoordinatorProvider, (previous, next) {
+      if (previous == null) return;
+      
+      // When canInitializeAdMob transitions to true, start the flow
+      if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
+        debugPrint('🚀 Privacy accepted - starting ad initialization flow');
+        
+        environmentAsync.whenData((environment) {
+          if (environment.shouldInitializeAdMob) {
+            _initializeAdFlow(ref);
+          } else {
+            debugPrint(
+              '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
+            );
+          }
+        });
+      }
+      
+      // When consent completes and we're disconnected, retry ad load
+      if (next.canLoadAds && !previous.canLoadAds) {
+        final connectionState = ref.read(connectionStateProvider).status;
+        if (connectionState == ConnectionStatus.disconnected) {
+          debugPrint('✅ Consent complete & disconnected - triggering ad load');
+          Future.delayed(const Duration(milliseconds: 100), () {
+            ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
+          });
+        }
       }
     });
 
     return FutureBuilder<void>(
       future: _initializeApp(ref),
-      builder: (context, snapshot) {
-        // Check immediately on build
-        _handleAdConfiguration(ref);
-        
-        // Also check after frame to ensure persisted state is loaded
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          debugPrint('📱 Post-frame callback - rechecking AdMob initialization');
-          _handleAdConfiguration(ref);
-        });
-        
-        return _buildApp(context, ref);
-      },
+      builder: (context, snapshot) => _buildApp(context, ref),
     );
   }
 
@@ -67,96 +70,28 @@ class App extends ConsumerWidget {
     await AnimationService().init();
   }
 
-  void _handleAdConfiguration(WidgetRef ref) {
-    // Use adEnvironmentProvider to decide AdMob initialization
-    final environmentAsync = ref.read(adEnvironmentProvider);
+  /// Initialize ad flow using the coordinator
+  void _initializeAdFlow(WidgetRef ref) {
+    final coordinator = ref.read(adReadinessCoordinatorProvider.notifier);
+    final umpService = ref.read(umpServiceProvider);
 
-    environmentAsync.whenData((environment) {
-      if (!environment.shouldInitializeAdMob) {
-        debugPrint(
-          '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
-        );
-      } else {
-        // Only initialize AdMob after VPN profile is setup (privacy notice accepted)
-        final adState = ref.read(adPersonalizationProvider);
-        debugPrint(
-          '🔍 AdMob check: vpnProfileSetup=${adState.vpnProfileSetup}, adMobInitializationStarted=${adState.adMobInitializationStarted}',
-        );
-        
-        if (adState.vpnProfileSetup && !adState.adMobInitializationStarted) {
-          debugPrint('📱 VPN profile ready - Initializing AdMob');
-          
-          // Defer state modification to avoid modifying provider during build
-          Future.microtask(() {
-            ref
-                .read(adPersonalizationProvider.notifier)
-                .markAdMobInitializationStarted();
-            _initializeMobileAdsWithConsent(ref, environment);
-          });
-        } else if (!adState.vpnProfileSetup) {
-          debugPrint(
-            '⏳ Waiting for VPN profile setup before initializing AdMob',
+    coordinator.initializeAdFlow(
+      onRunUMP: (shouldRequestUMP) async {
+        if (shouldRequestUMP) {
+          debugPrint('🔐 Running UMP consent flow...');
+          await umpService.requestConsentWithATT(
+            ref: ref,
+            onDone: () {
+              debugPrint('✅ UMP flow complete - marking consent done');
+              coordinator.markConsentComplete();
+            },
           );
-        } else if (adState.adMobInitializationStarted) {
-          debugPrint('✅ AdMob already initialized, skipping');
+        } else {
+          debugPrint('⏭️ Skipping UMP (ATT denied/restricted)');
+          coordinator.markConsentComplete();
         }
-      }
-    });
-  }
-
-  Future<void> _initializeMobileAdsWithConsent(
-    WidgetRef ref,
-    AdEnvironment environment,
-  ) async {
-    try {
-      // Environment already verified shouldInitializeAdMob = true
-      debugPrint('📱 Starting AdMob initialization...');
-
-      if (Platform.isAndroid || Platform.isIOS) {
-        // Request App Tracking Transparency (iOS only)
-        if (Platform.isIOS) {
-          // Small delay to ensure UI is ready
-          await Future.delayed(const Duration(milliseconds: 500));
-
-          // Request ATT authorization - this shows dialog and stores result
-          final status = await ref
-              .read(adPersonalizationProvider.notifier)
-              .requestATT();
-          debugPrint('📱 ATT dialog result: ${status.name}');
-        }
-
-        // UMP service will handle ATT status and decide whether to show consent
-        final umpService = ref.read(umpServiceProvider);
-        await umpService.requestConsentWithATT(
-          ref: ref,
-          onDone: () async {
-            // Initialize Mobile Ads after consent flow completes
-            await MobileAds.instance.initialize();
-            debugPrint('📱 Google AdMob initialized');
-
-            // Mark consent flow as complete - NOW SAFE TO LOAD ADS
-            ref
-                .read(adPersonalizationProvider.notifier)
-                .markConsentFlowComplete();
-
-            // Trigger ad loading retry if still disconnected
-            final connectionState = ref.read(connectionStateProvider).status;
-            if (connectionState == ConnectionStatus.disconnected) {
-              debugPrint(
-                '🔄 Consent complete & disconnected - triggering ad load retry',
-              );
-              // Small delay to ensure state propagation
-              await Future.delayed(const Duration(milliseconds: 100));
-
-              final manager = ref.read(adStrategyManagerProvider);
-              manager?.retryGoogleAdLoad();
-            }
-          },
-        );
-      }
-    } catch (error) {
-      debugPrint('Error initializing Google AdMob: $error');
-    }
+      },
+    );
   }
 
   Widget _buildApp(BuildContext context, WidgetRef ref) {
