@@ -256,9 +256,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
     if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
       debugPrint('▶️ Connected - will load internal ad after network routing stabilizes');
       
-      // Mark first connection complete
-      ref.read(adsProvider.notifier).markFirstConnectionComplete();
-      
       // iOS FIX: Add delay to allow VPN network routing to fully establish
       // Without this delay, Image.network may incorrectly resolve HTTPS URLs as file:// URIs
       // causing "No host specified in URI file:///..." errors on first connection

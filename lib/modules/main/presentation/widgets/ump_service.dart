@@ -8,6 +8,18 @@ class UmpService {
 
   UmpService([this._cacheService]);
 
+  /// Request UMP consent flow
+  /// 
+  /// The caller (AdReadinessCoordinator) determines whether this should run
+  /// based on ATT status and platform. This method just executes the UMP flow.
+  Future<void> requestConsentWithATT({
+    required WidgetRef ref,
+    required VoidCallback onDone,
+  }) async {
+    debugPrint('🔍 Starting UMP consent flow...');
+    await requestConsent(onDone: onDone);
+  }
+
   Future<void> requestConsent({required VoidCallback onDone}) async {
     // Check cache first to potentially skip UMP request
     if (_cacheService != null) {
@@ -20,10 +32,8 @@ class UmpService {
     }
 
     final consentInfo = ConsentInformation.instance;
-    final params = ConsentRequestParameters(
-      tagForUnderAgeOfConsent: false,
-    );
-    
+    final params = ConsentRequestParameters(tagForUnderAgeOfConsent: false);
+
     debugPrint('🔍 Requesting UMP consent info update...');
     consentInfo.requestConsentInfoUpdate(
       params,
@@ -73,11 +83,11 @@ class UmpService {
     } else {
       debugPrint('✅ UMP consent form completed');
     }
-    
+
     // Cache consent status after form dismissal
     final status = await ConsentInformation.instance.getConsentStatus();
     await _cacheConsentStatus(status);
-    
+
     onDone();
   }
 
@@ -85,8 +95,9 @@ class UmpService {
     if (_cacheService == null) return;
 
     try {
-      final canShowAds = status == ConsentStatus.obtained ||
-                         status == ConsentStatus.notRequired;
+      final canShowAds =
+          status == ConsentStatus.obtained ||
+          status == ConsentStatus.notRequired;
       final canRequestAds = status != ConsentStatus.required;
 
       await _cacheService.cacheConsentStatus(
@@ -98,7 +109,7 @@ class UmpService {
       debugPrint('⚠️ Failed to cache UMP consent: $e');
     }
   }
-  
+
   Future<bool> canShowAds() async {
     // Try cache first for fast path
     if (_cacheService != null) {
