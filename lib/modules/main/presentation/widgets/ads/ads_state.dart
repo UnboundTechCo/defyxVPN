@@ -12,8 +12,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Countdown duration in seconds before ad is hidden (1 minute)
-const int countdownDuration = 60;
+/// Countdown duration in seconds before ad is hidden (industry standard for native ads)
+const int countdownDuration = 25;
+
+/// Maximum number of ad rotations per connection cycle (conservative UX)
+const int maxAdRotations = 3;
 
 /// Shared ad state model used by both GoogleAdStrategy and InternalAdStrategy.
 ///
@@ -58,6 +61,11 @@ class AdsState {
   final DateTime? adLoadedAt;
   final int retryCount;
 
+  // Ad rotation/carousel state (for GoogleAdStrategy)
+  final int rotationCount; // How many ads shown this connection cycle
+  final bool nextAdReady; // Whether pre-loaded ad is available
+  final DateTime? lastRotationAt; // Timestamp of last rotation
+
   // InternalAdStrategy state (Internal ads)
   final String? customImageUrl;
   final String? customClickUrl;
@@ -73,6 +81,9 @@ class AdsState {
     this.showCountdown = false,
     this.adLoadedAt,
     this.retryCount = 0,
+    this.rotationCount = 0,
+    this.nextAdReady = false,
+    this.lastRotationAt,
     this.lastErrorCode,
     this.lastErrorMessage,
     this.customImageUrl,
@@ -88,6 +99,9 @@ class AdsState {
     bool? showCountdown,
     DateTime? adLoadedAt,
     int? retryCount,
+    int? rotationCount,
+    bool? nextAdReady,
+    DateTime? lastRotationAt,
     String? lastErrorCode,
     String? lastErrorMessage,
     String? customImageUrl,
@@ -101,6 +115,9 @@ class AdsState {
       showCountdown: showCountdown ?? this.showCountdown,
       adLoadedAt: adLoadedAt ?? this.adLoadedAt,
       retryCount: retryCount ?? this.retryCount,
+      rotationCount: rotationCount ?? this.rotationCount,
+      nextAdReady: nextAdReady ?? this.nextAdReady,
+      lastRotationAt: lastRotationAt ?? this.lastRotationAt,
       lastErrorCode: lastErrorCode ?? this.lastErrorCode,
       lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
       customImageUrl:
@@ -154,6 +171,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Callback for notifying strategies when ads should be disposed
   VoidCallback? _onAdShouldDispose;
 
+  /// Callback for notifying strategies when next ad should be loaded (rotation)
+  VoidCallback? _onAdShouldRotate;
+
   /// Load persisted countdown state on initialization
   Future<void> _loadPersistedCountdown() async {
     try {
@@ -197,11 +217,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
   }
 
   /// Start the countdown timer after ad is loaded and VPN connects
-  /// Always restarts to 60 seconds on each connection
+  /// Restarts to 25 seconds on each connection (optimized for ad rotation)
   void startCountdownTimer() {
-    debugPrint('▶️ Starting new countdown timer (60 seconds)');
+    debugPrint('▶️ Starting new countdown timer ($countdownDuration seconds)');
     debugPrint(
-      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
+      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}, rotation=${state.rotationCount}',
     );
     _countdownTimer?.cancel();
 
@@ -246,29 +266,70 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
         final newCount = state.countdown - 1;
-        debugPrint('⏱️ Countdown: $newCount');
+        debugPrint('⏱️ Countdown: $newCount, rotation=${state.rotationCount}/$maxAdRotations');
         state = state.copyWith(countdown: newCount);
       } else {
-        debugPrint('⏱️ Countdown finished - disposing ad and clearing state');
+        debugPrint('⏱️ Countdown finished - rotation=${state.rotationCount}/$maxAdRotations');
 
-        // Clear all ad flags to hide the ad box completely
-        state = state.copyWith(
-          showCountdown: false,
-          nativeAdIsLoaded: false,
-          customImageUrl: '',
-          customClickUrl: '',
-        );
+        // Check if we should rotate to next ad or dispose
+        if (state.rotationCount < maxAdRotations && state.nextAdReady) {
+          debugPrint('🔄 Rotating to next ad (${state.rotationCount + 1}/$maxAdRotations)');
+          
+          // Trigger rotation callback
+          _onAdShouldRotate?.call();
+          debugPrint('🔄 Ad rotation callback triggered');
+          
+          // Note: Don't cancel timer - rotation callback will restart it with new ad
+        } else {
+          debugPrint('⏱️ Max rotations reached or no next ad - disposing and clearing state');
 
-        // Notify strategies to dispose their ad instances
-        _onAdShouldDispose?.call();
-        debugPrint('🗑️ Ad disposal callback triggered');
+          // Clear all ad flags to hide the ad box completely
+          state = state.copyWith(
+            showCountdown: false,
+            nativeAdIsLoaded: false,
+            customImageUrl: '',
+            customClickUrl: '',
+            rotationCount: 0, // Reset for next connection cycle
+            nextAdReady: false,
+          );
 
-        timer.cancel();
-        _clearPersistedCountdown();
+          // Notify strategies to dispose their ad instances
+          _onAdShouldDispose?.call();
+          debugPrint('🗑️ Ad disposal callback triggered');
+
+          timer.cancel();
+          _clearPersistedCountdown();
+        }
       }
     });
   }
 
+
+  /// Mark that next ad is ready for rotation (pre-loaded)
+  void setNextAdReady(bool ready) {
+    debugPrint('📦 Next ad ready: $ready');
+    state = state.copyWith(nextAdReady: ready);
+  }
+
+  /// Increment rotation count and update timestamp
+  void incrementRotationCount() {
+    final newCount = state.rotationCount + 1;
+    debugPrint('🔄 Incrementing rotation count: ${state.rotationCount} → $newCount');
+    state = state.copyWith(
+      rotationCount: newCount,
+      lastRotationAt: DateTime.now(),
+    );
+  }
+
+  /// Reset rotation count (called when connection state changes)
+  void resetRotationCount() {
+    debugPrint('🔄 Resetting rotation count to 0');
+    state = state.copyWith(
+      rotationCount: 0,
+      nextAdReady: false,
+      lastRotationAt: null,
+    );
+  }
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
     debugPrint('✅ Ad loaded: $isLoaded');
@@ -325,8 +386,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
-      nativeAdIsLoaded:
-          false, // Clear this flag to prevent showing empty ad container
+      nativeAdIsLoaded: false, // Clear this flag to prevent showing empty ad container
     );
     debugPrint(
       '   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false',
@@ -340,10 +400,23 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _onAdShouldDispose = callback;
   }
 
+  /// Register a callback to be notified when ad should rotate to next
+  /// This allows strategies to swap to pre-loaded ad (carousel pattern)
+  void setAdRotationCallback(VoidCallback callback) {
+    debugPrint('📌 Registered ad rotation callback');
+    _onAdShouldRotate = callback;
+  }
+
   /// Unregister the ad disposal callback
   void clearAdDisposalCallback() {
     debugPrint('📌 Cleared ad disposal callback');
     _onAdShouldDispose = null;
+  }
+
+  /// Unregister the ad rotation callback
+  void clearAdRotationCallback() {
+    debugPrint('📌 Cleared ad rotation callback');
+    _onAdShouldRotate = null;
   }
 
   /// Set fallback status to internal ads

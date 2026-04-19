@@ -29,21 +29,22 @@ class AdHelper {
 
 /// Google AdMob implementation of AdLoadingStrategy
 ///
-/// Simple, direct ad loading strategy:
+/// Optimized ad loading strategy with carousel/rotation:
 /// - Loads ads only when VPN is disconnected (need real IP for targeting)
-/// - Shows ads only for non-Iranian users (after first VPN connection)
-/// - No retries (fail fast)
-/// - No fallback to internal ads (clean failure)
-/// - No caching (fresh ad on each load)
-/// - No rate limiting (AdMob SDK handles it)
+/// - Implements ad rotation: displays 2-3 ads per disconnect session (25s each)
+/// - Pre-loads next ad while current ad is showing (no blank screens)
+/// - Maximum 3 ad rotations per connection cycle (conservative UX)
+/// - Shows ads only for non-Iranian users
 /// - Basic analytics logging
 class GoogleAdStrategy implements AdLoadingStrategy {
-  // Static ad instance for cross-widget reuse
-  static NativeAd? _nativeAd;
+  // Static ad instances for carousel
+  static NativeAd? _nativeAd; // Current ad being displayed
+  static NativeAd? _nextAd; // Pre-loaded ad for rotation
 
   // Instance state
   bool _isLoading = false;
   bool _hasInitialized = false;
+  bool _isPreloading = false;
 
   // Visual properties
   final Color backgroundColor;
@@ -96,6 +97,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       });
       debugPrint('✅ Registered ad disposal callback');
 
+      // Register rotation callback for ad carousel
+      ref.read(adsProvider.notifier).setAdRotationCallback(() {
+        _rotateToNextAd(ref);
+      });
+      debugPrint('✅ Registered ad rotation callback');
+
       // DON'T load ad on initialization - let connection state changes handle it
       // This prevents race conditions and timing issues
       debugPrint(
@@ -109,34 +116,141 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   /// Dispose the current ad instance and clear state
   void _disposeAd(Ref ref) {
-    debugPrint('🗑️ Disposing AdMob ad due to countdown expiry');
+    debugPrint('🗑️ Disposing AdMob ads due to countdown expiry');
     if (_nativeAd != null) {
       try {
         _nativeAd!.dispose();
-        debugPrint('✅ NativeAd disposed successfully');
+        debugPrint('✅ Current NativeAd disposed successfully');
       } catch (e) {
-        debugPrint('⚠️ Error disposing NativeAd: $e');
+        debugPrint('⚠️ Error disposing current NativeAd: $e');
       }
       _nativeAd = null;
     }
-    // State flags already cleared by AdsNotifier, no need to update here
+    
+    // Also dispose pre-loaded ad if exists
+    if (_nextAd != null) {
+      try {
+        _nextAd!.dispose();
+        debugPrint('✅ Pre-loaded NativeAd disposed successfully');
+      } catch (e) {
+        debugPrint('⚠️ Error disposing pre-loaded NativeAd: $e');
+      }
+      _nextAd = null;
+    }
+
+    // Reset rotation count for next connection cycle
+    ref.read(adsProvider.notifier).resetRotationCount();
+  }
+
+  /// Rotate to the next pre-loaded ad (carousel pattern)
+  void _rotateToNextAd(Ref ref) {
+    debugPrint('🔄 Rotating to next pre-loaded ad');
+    
+    if (_nextAd == null) {
+      debugPrint('⚠️ No pre-loaded ad available for rotation');
+      return;
+    }
+
+    // Dispose current ad
+    if (_nativeAd != null) {
+      try {
+        _nativeAd!.dispose();
+        debugPrint('✅ Disposed previous ad');
+      } catch (e) {
+        debugPrint('⚠️ Error disposing previous ad: $e');
+      }
+    }
+
+    // Swap: next ad becomes current
+    _nativeAd = _nextAd;
+    _nextAd = null;
+
+    // Update state
+    ref.read(adsProvider.notifier).incrementRotationCount();
+    ref.read(adsProvider.notifier).setNextAdReady(false);
+    ref.read(adsProvider.notifier).setAdLoaded(true);
+
+    // Restart countdown for the new ad
+    ref.read(adsProvider.notifier).startCountdownTimer();
+
+    debugPrint('✅ Rotation complete - restarted countdown');
+
+    // Pre-load next ad if haven't reached max rotations
+    final currentRotation = ref.read(adsProvider).rotationCount;
+    if (currentRotation < maxAdRotations) {
+      debugPrint('📦 Pre-loading next ad for rotation ${currentRotation + 1}');
+      _preloadNextAd(ref);
+    } else {
+      debugPrint('🏁 Max rotations reached - no more pre-loading');
+    }
+  }
+
+  /// Pre-load the next ad in the background (for carousel)
+  Future<void> _preloadNextAd(Ref ref) async {
+    if (_isPreloading) {
+      debugPrint('⏳ Pre-load already in progress');
+      return;
+    }
+
+    _isPreloading = true;
+
+    try {
+      debugPrint('📦 Starting pre-load of next ad');
+      final result = await _loadAdInstance(ref, isPreload: true);
+      
+      if (result.success && _nextAd != null) {
+        ref.read(adsProvider.notifier).setNextAdReady(true);
+        debugPrint('✅ Next ad pre-loaded successfully');
+      } else {
+        debugPrint('❌ Failed to pre-load next ad: ${result.errorMessage}');
+      }
+    } catch (e) {
+      debugPrint('❌ Error pre-loading next ad: $e');
+    } finally {
+      _isPreloading = false;
+    }
   }
 
   @override
   Future<AdLoadResult> loadAd({required Ref ref}) async {
+    // Reset rotation count at start of new connection cycle
+    ref.read(adsProvider.notifier).resetRotationCount();
+    
+    // Load the first ad
+    final result = await _loadAdInstance(ref, isPreload: false);
+    
+    // If first ad loaded successfully, start pre-loading the next one
+    if (result.success && _nativeAd != null) {
+      final currentRotation = ref.read(adsProvider).rotationCount;
+      if (currentRotation < maxAdRotations) {
+        debugPrint('📦 First ad loaded - scheduling pre-load of next ad');
+        // Delay pre-load slightly to avoid concurrent requests
+        Future.delayed(const Duration(milliseconds: 500), () {
+          _preloadNextAd(ref);
+        });
+      }
+    }
+    
+    return result;
+  }
+
+  /// Internal method to load a NativeAd instance (for current or pre-load)
+  Future<AdLoadResult> _loadAdInstance(Ref ref, {required bool isPreload}) async {
+    final logPrefix = isPreload ? '📦 [PRELOAD]' : '📱 [LOAD]';
+    
     // CRITICAL: Wait for AdMob SDK to be initialized first
     try {
       final versionString = await MobileAds.instance.getVersionString();
       if (versionString.isEmpty) {
-        debugPrint('⏳ AdMob SDK not initialized yet - skipping ad load');
+        debugPrint('$logPrefix AdMob SDK not initialized yet - skipping');
         return AdLoadResult.failure(
           errorCode: 'SDK_NOT_READY',
           errorMessage: 'AdMob SDK not initialized',
         );
       }
-      debugPrint('✅ AdMob SDK ready (version: $versionString)');
+      debugPrint('$logPrefix AdMob SDK ready (version: $versionString)');
     } catch (e) {
-      debugPrint('⚠️ AdMob SDK check failed - may not be initialized: $e');
+      debugPrint('$logPrefix AdMob SDK check failed: $e');
       return AdLoadResult.failure(
         errorCode: 'SDK_NOT_READY',
         errorMessage: 'AdMob SDK not ready: $e',
@@ -146,63 +260,63 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     // CRITICAL: Check ad readiness (privacy accepted + consent complete + AdMob initialized)
     final adReadiness = ref.read(adReadinessCoordinatorProvider);
     if (!adReadiness.canLoadAds) {
-      debugPrint('⏳ Ads not ready yet: $adReadiness');
+      debugPrint('$logPrefix Ads not ready yet: $adReadiness');
       return AdLoadResult.failure(
         errorCode: 'AD_READINESS_PENDING',
         errorMessage: 'Privacy/consent/initialization not complete',
       );
     }
-    debugPrint('✅ Ad readiness verified - proceeding with ad load');
+    debugPrint('$logPrefix Ad readiness verified');
 
     // CRITICAL: Never load ads while VPN is connected (need real IP for targeting)
     final connectionState = ref.read(connectionStateProvider).status;
     if (connectionState == ConnectionStatus.connected) {
-      debugPrint('⚠️ Skipping ad load - VPN is connected (need real IP)');
+      debugPrint('$logPrefix Skipping - VPN is connected (need real IP)');
       return AdLoadResult.failure(
         errorCode: 'CONNECTED',
         errorMessage: 'Cannot load ads while VPN is connected',
       );
     }
 
-    // Check if we already have a valid cached ad
-    final adsState = ref.read(adsProvider);
-    if (_nativeAd != null &&
-        adsState.nativeAdIsLoaded &&
-        !adsState.needsRefresh) {
-      debugPrint('✅ Reusing cached ad (still fresh)');
-      return AdLoadResult.success();
-    }
-
-    _isLoading = true;
-
-    // Only dispose if we're reloading (ad is stale or failed)
-    if (_nativeAd != null) {
-      debugPrint('🔄 Disposing stale/failed ad before reload');
-      ref.read(adsProvider.notifier).setAdLoaded(false);
-      try {
-        _nativeAd!.dispose();
-        debugPrint('🗑️ Disposed previous ad');
-      } catch (e) {
-        debugPrint('⚠️ Error disposing previous ad: $e');
+    // For regular load (not preload), check if we already have a valid cached ad
+    if (!isPreload) {
+      final adsState = ref.read(adsProvider);
+      if (_nativeAd != null &&
+          adsState.nativeAdIsLoaded &&
+          !adsState.needsRefresh) {
+        debugPrint('$logPrefix Reusing cached ad (still fresh)');
+        return AdLoadResult.success();
       }
-      _nativeAd = null;
+
+      _isLoading = true;
+
+      // Only dispose if we're reloading (ad is stale or failed)
+      if (_nativeAd != null) {
+        debugPrint('$logPrefix Disposing stale/failed ad before reload');
+        ref.read(adsProvider.notifier).setAdLoaded(false);
+        try {
+          _nativeAd!.dispose();
+          debugPrint('$logPrefix Disposed previous ad');
+        } catch (e) {
+          debugPrint('$logPrefix Error disposing previous ad: $e');
+        }
+        _nativeAd = null;
+      }
     }
 
     try {
       final adUnitId = AdHelper.adUnitId;
 
       if (adUnitId.isEmpty) {
-        debugPrint('❌ No ad unit ID configured for this platform');
-        _isLoading = false;
-        ref
-            .read(adsProvider.notifier)
-            .setAdLoadFailed(
-              errorCode: 'NO_AD_UNIT_ID',
-              errorMessage: 'No ad unit ID configured',
-            );
-
-        // Configuration error - just fail, no fallback
-        debugPrint('⚠️ No ad unit ID - AdMob disabled');
+        debugPrint('$logPrefix No ad unit ID configured for this platform');
+        if (!isPreload) _isLoading = false;
+        
+        if (!isPreload) {
+          ref.read(adsProvider.notifier).setAdLoadFailed(
+            errorCode: 'NO_AD_UNIT_ID',
+            errorMessage: 'No ad unit ID configured',
+          );
+        }
 
         return AdLoadResult.failure(
           errorCode: 'NO_AD_UNIT_ID',
@@ -214,19 +328,14 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       final network = NetworkStatus();
       final hasNetwork = await network.checkConnectivity();
       if (!hasNetwork) {
-        debugPrint('🔴 No network connectivity');
-        _isLoading = false;
-        ref
-            .read(adsProvider.notifier)
-            .setAdLoadFailed(
-              errorCode: '2',
-              errorMessage: 'Network unavailable',
-            );
-        // Don't trigger fallback for temporary network issues
-        // User can reconnect and try again
-        debugPrint(
-          '⏳ Network issue - will retry when connection restored (no fallback)',
-        );
+        debugPrint('$logPrefix No network connectivity');
+        if (!isPreload) {
+          _isLoading = false;
+          ref.read(adsProvider.notifier).setAdLoadFailed(
+            errorCode: '2',
+            errorMessage: 'Network unavailable',
+          );
+        }
         return AdLoadResult.failure(
           errorCode: '2',
           errorMessage: 'Network unavailable',
@@ -235,7 +344,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
       // Analytics
       final analytics = FirebaseAnalyticsService();
-      await analytics.logEvent(name: 'ad_load_attempt', parameters: {});
+      await analytics.logEvent(
+        name: isPreload ? 'ad_preload_attempt' : 'ad_load_attempt',
+        parameters: {'rotation_position': ref.read(adsProvider).rotationCount.toString()},
+      );
 
       // Create template style
       final templateStyle = NativeTemplateStyle(
@@ -275,42 +387,49 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         adUnitId: adUnitId,
         listener: NativeAdListener(
           onAdLoaded: (ad) {
-            debugPrint('✅ Ad loaded successfully');
-            _isLoading = false;
-            _nativeAd = ad as NativeAd;
-            ref.read(adsProvider.notifier).setAdLoaded(true);
+            debugPrint('$logPrefix Ad loaded successfully');
+            
+            if (isPreload) {
+              // Store in pre-load slot
+              _nextAd = ad as NativeAd;
+              debugPrint('$logPrefix Stored in pre-load slot');
+            } else {
+              // Store in current slot
+              _nativeAd = ad as NativeAd;
+              ref.read(adsProvider.notifier).setAdLoaded(true);
+              _isLoading = false;
+            }
 
             // Log success
-            analytics.logEvent(name: 'ad_load_success', parameters: {});
+            analytics.logEvent(
+              name: isPreload ? 'ad_preload_success' : 'ad_load_success',
+              parameters: {'rotation_position': ref.read(adsProvider).rotationCount.toString()},
+            );
 
             if (!completer.isCompleted) {
               completer.complete(AdLoadResult.success());
             }
           },
           onAdFailedToLoad: (ad, error) {
-            debugPrint('❌ Ad failed to load: ${error.code} - ${error.message}');
+            debugPrint('$logPrefix Ad failed to load: ${error.code} - ${error.message}');
             ad.dispose();
-            _isLoading = false;
-
-            ref
-                .read(adsProvider.notifier)
-                .setAdLoadFailed(
-                  errorCode: error.code.toString(),
-                  errorMessage: error.message,
-                );
+            
+            if (!isPreload) {
+              _isLoading = false;
+              ref.read(adsProvider.notifier).setAdLoadFailed(
+                errorCode: error.code.toString(),
+                errorMessage: error.message,
+              );
+            }
 
             // Log failure
             analytics.logEvent(
-              name: 'ad_load_failure',
+              name: isPreload ? 'ad_preload_failure' : 'ad_load_failure',
               parameters: {
                 'error_code': error.code.toString(),
                 'error_message': error.message,
+                'rotation_position': ref.read(adsProvider).rotationCount.toString(),
               },
-            );
-
-            // AdMob failed - just don't show anything (no fallback to internal ads)
-            debugPrint(
-              '⚠️ AdMob failed to serve ad (error ${error.code}) - no ad will show',
             );
 
             if (!completer.isCompleted) {
@@ -323,15 +442,44 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             }
           },
           onAdClicked: (ad) {
-            debugPrint('👆 NativeAd clicked');
+            final rotationPosition = ref.read(adsProvider).rotationCount;
+            debugPrint('👆 NativeAd clicked (rotation $rotationPosition)');
+            analytics.logEvent(
+              name: 'ad_click',
+              parameters: {
+                'rotation_position': rotationPosition.toString(),
+                'shown_on_disconnect': 'true',
+              },
+            );
           },
           onAdImpression: (ad) {
-            debugPrint('👁️ NativeAd impression');
+            final rotationPosition = ref.read(adsProvider).rotationCount;
+            debugPrint('👁️ NativeAd impression (rotation $rotationPosition)');
             analytics.logEvent(
               name: 'ad_impression',
               parameters: {
+                'rotation_position': rotationPosition.toString(),
                 'shown_on_disconnect': 'true',
                 'ip_consistent': 'true',
+              },
+            );
+          },
+          onPaidEvent: (ad, valueMicros, precision, currencyCode) {
+            final rotationPosition = ref.read(adsProvider).rotationCount;
+            final revenueUsd = valueMicros / 1000000.0;
+            final eCPM = revenueUsd * 1000;
+            
+            debugPrint('💰 Ad revenue earned: \$$revenueUsd USD (eCPM: \$$eCPM, rotation: $rotationPosition)');
+            
+            analytics.logEvent(
+              name: 'ad_revenue',
+              parameters: {
+                'value': revenueUsd.toString(),
+                'currency': currencyCode,
+                'precision': precision.toString(),
+                'ecpm': eCPM.toStringAsFixed(2),
+                'rotation_position': rotationPosition.toString(),
+                'ad_unit_id': AdHelper.adUnitId,
               },
             );
           },
