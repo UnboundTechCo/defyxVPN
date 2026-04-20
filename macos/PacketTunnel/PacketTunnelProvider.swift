@@ -46,6 +46,14 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             subnetMasks: ["255.255.255.0"]
         )
         networkSettings.ipv4Settings?.includedRoutes = [NEIPv4Route.default()]
+        
+        // Exclude Google ad domains from VPN tunnel
+        // Common Google IP ranges for ads: 142.250.0.0/16, 172.217.0.0/16, 216.58.192.0/19
+        networkSettings.ipv4Settings?.excludedRoutes = [
+            NEIPv4Route(destinationAddress: "142.250.0.0", subnetMask: "255.255.0.0"),
+            NEIPv4Route(destinationAddress: "172.217.0.0", subnetMask: "255.255.0.0"),
+            NEIPv4Route(destinationAddress: "216.58.192.0", subnetMask: "255.255.224.0")
+        ]
 
         networkSettings.ipv6Settings = NEIPv6Settings(
             addresses: ["FC00::0001"],
