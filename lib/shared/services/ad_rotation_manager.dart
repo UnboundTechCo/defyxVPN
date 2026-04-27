@@ -6,6 +6,9 @@ import 'package:uuid/uuid.dart';
 import 'package:defyx_vpn/shared/constants/ad_constants.dart';
 import 'package:defyx_vpn/shared/services/ad_analytics_service.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/app/ad_director_provider.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 
 /// Manages ad rotation cycles with parallel loading.
 ///
@@ -172,16 +175,35 @@ class AdRotationManager {
   ///
   /// Returns null if load fails.
   Future<NativeAd?> _loadAdAtPosition(int position) async {
-    _analytics.logAdPositionLoadStarted(
-      position: position,
-      sessionId: _sessionId!,
-    );
-
     try {
-      // TODO: This will be implemented in GoogleAdStrategy
-      // For now, return null to indicate ad loading should be delegated
-      debugPrint('⚠️ Ad loading delegated to GoogleAdStrategy');
-      return null;
+      // Get the strategy manager to access GoogleAdStrategy
+      final manager = _ref.read(adStrategyManagerProvider);
+      
+      if (manager == null) {
+        debugPrint('❌ No strategy manager available');
+        return null;
+      }
+      
+      // Get the active strategy
+      final connectionState = _ref.read(connectionStateProvider);
+      final activeStrategy = manager.getActiveStrategy(connectionState.status);
+      
+      // Verify it's GoogleAdStrategy
+      if (activeStrategy is! GoogleAdStrategy) {
+        debugPrint('❌ Active strategy is not GoogleAdStrategy');
+        return null;
+      }
+      
+      debugPrint('📞 Calling GoogleAdStrategy.loadAdAtPosition(position: $position)');
+      
+      // Call the actual loading method
+      final ad = await activeStrategy.loadAdAtPosition(
+        position: position,
+        sessionId: _sessionId!,
+        ref: _ref,
+      );
+      
+      return ad;
     } catch (e) {
       _analytics.logAdPositionLoadFailure(
         position: position,

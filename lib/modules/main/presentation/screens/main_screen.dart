@@ -332,19 +332,19 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Ad container - always in tree with dark background
-              DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFF19312F),
-                  borderRadius: BorderRadius.circular(10.r),
+              // Ad container with dark background - only visible when ad is loaded
+              AnimatedOpacity(
+                duration: _animationService.adjustDuration(
+                  const Duration(milliseconds: 300),
                 ),
-                child: AnimatedOpacity(
-                  duration: _animationService.adjustDuration(
-                    const Duration(milliseconds: 300),
-                  ),
-                  opacity: shouldShowAd ? 1.0 : 0.0,
-                  child: IgnorePointer(
-                    ignoring: !shouldShowAd,
+                opacity: shouldShowAd ? 1.0 : 0.0,
+                child: IgnorePointer(
+                  ignoring: !shouldShowAd,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF19312F),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
                     child: _adsWidget,
                   ),
                 ),
