@@ -289,70 +289,82 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final hasActiveAd = ref.watch(hasActiveAdProvider);
 
     bool shouldShowAd = hasActiveAd;
-    Widget? mainContent;
+    Widget? alternativeContent;
 
+    // Build alternative content for when ad is not shown
     switch (status) {
       case ConnectionStatus.noInternet:
         _dinoGame ??= DinoGame();
-        mainContent = SizedBox(
-          height: 200.h,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
-            child: GameWidget(game: _dinoGame!),
+        alternativeContent = Center(
+          child: SizedBox(
+            height: 200.h,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.r),
+              child: GameWidget(game: _dinoGame!),
+            ),
           ),
         );
         break;
 
       case ConnectionStatus.disconnected:
-        // DISCONNECTED: Show ad if director says so, else show tips
+        // DISCONNECTED: Show tips if no ad available
         if (!hasActiveAd) {
-          mainContent = TipsSliderSection(status: status);
+          alternativeContent = TipsSliderSection(status: status);
         }
         break;
 
       default:
-        // CONNECTED/CONNECTING: Show ad if available, else empty
+        // CONNECTED/CONNECTING: Show nothing if no ad
         if (!hasActiveAd) {
-          mainContent = const SizedBox.shrink();
+          alternativeContent = const SizedBox.shrink();
         }
     }
 
-    // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
-    // Control visibility with AnimatedOpacity for smooth fade transitions
-    return Stack(
-      alignment:
-          Alignment.topCenter, // Align to top-center for consistent positioning
-      children: [
-        // Always in tree at same position - never recreated
-        AnimatedOpacity(
-          duration: _animationService.adjustDuration(
-            const Duration(milliseconds: 300),
-          ),
-          opacity: shouldShowAd ? 1.0 : 0.0,
-          child: IgnorePointer(
-            ignoring: !shouldShowAd, // Prevent touch events when hidden
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 50.h,
-              ), // Match the spacing above ads
-              child: SizedBox(
-                height: 280.h,
-                width: 336.w,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF19312F),
-                    borderRadius: BorderRadius.circular(10.r),
+    // CRITICAL: Always use the EXACT same fixed-height container
+    // This prevents header from moving when content changes
+    return SizedBox(
+      height: 330.h, // Fixed height - NEVER changes
+      child: Padding(
+        padding: EdgeInsets.only(top: 50.h),
+        child: SizedBox(
+          height: 280.h,
+          width: 336.w,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Ad container - always in tree with dark background
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  color: const Color(0xFF19312F),
+                  borderRadius: BorderRadius.circular(10.r),
+                ),
+                child: AnimatedOpacity(
+                  duration: _animationService.adjustDuration(
+                    const Duration(milliseconds: 300),
                   ),
-                  child:
-                      _adsWidget, // Always same widget instance, same position
+                  opacity: shouldShowAd ? 1.0 : 0.0,
+                  child: IgnorePointer(
+                    ignoring: !shouldShowAd,
+                    child: _adsWidget,
+                  ),
                 ),
               ),
-            ),
+              // Alternative content - fades in when ad is hidden
+              if (alternativeContent != null)
+                AnimatedOpacity(
+                  duration: _animationService.adjustDuration(
+                    const Duration(milliseconds: 300),
+                  ),
+                  opacity: shouldShowAd ? 0.0 : 1.0,
+                  child: IgnorePointer(
+                    ignoring: shouldShowAd,
+                    child: alternativeContent,
+                  ),
+                ),
+            ],
           ),
         ),
-        // Show main content when not showing ad
-        if (!shouldShowAd && mainContent != null) mainContent,
-      ],
+      ),
     );
   }
 }
