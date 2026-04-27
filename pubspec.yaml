@@ -54,6 +54,7 @@ dependencies:
   msix: ^3.16.12
   flutter_native_splash: ^2.4.7
   file_picker: ^10.3.10
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

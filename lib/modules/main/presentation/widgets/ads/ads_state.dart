@@ -58,6 +58,12 @@ class AdsState {
   final String? customClickUrl;
   final bool customImageLoadFailed;
 
+  // Ad Rotation state (for rotation manager)
+  final int currentAdPosition;
+  final String? rotationSessionId;
+  final bool isRotating;
+  final bool isPreloading;
+
   const AdsState({
     this.nativeAdIsLoaded = false,
     this.adLoadFailed = false,
@@ -70,6 +76,10 @@ class AdsState {
     this.customImageUrl,
     this.customClickUrl,
     this.customImageLoadFailed = false,
+    this.currentAdPosition = 0,
+    this.rotationSessionId,
+    this.isRotating = false,
+    this.isPreloading = false,
   });
 
   AdsState copyWith({
@@ -84,6 +94,10 @@ class AdsState {
     String? customImageUrl,
     String? customClickUrl,
     bool? customImageLoadFailed,
+    int? currentAdPosition,
+    String? rotationSessionId,
+    bool? isRotating,
+    bool? isPreloading,
   }) {
     return AdsState(
       adLoadFailed: adLoadFailed ?? this.adLoadFailed,
@@ -102,6 +116,10 @@ class AdsState {
       customImageLoadFailed:
           customImageLoadFailed ?? this.customImageLoadFailed,
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
+      currentAdPosition: currentAdPosition ?? this.currentAdPosition,
+      rotationSessionId: rotationSessionId ?? this.rotationSessionId,
+      isRotating: isRotating ?? this.isRotating,
+      isPreloading: isPreloading ?? this.isPreloading,
     );
   }
 
@@ -278,6 +296,35 @@ class AdsNotifier extends StateNotifier<AdsState> {
     );
     debugPrint(
       '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
+    );
+  }
+
+  /// Set ad with rotation information (for rotation manager)
+  void setNativeAd({
+    required ad,
+    required int position,
+    required String sessionId,
+  }) {
+    debugPrint('✅ Ad loaded at position $position (session: $sessionId)');
+    state = state.copyWith(
+      nativeAdIsLoaded: true,
+      adLoadFailed: false,
+      adLoadedAt: DateTime.now(),
+      currentAdPosition: position,
+      rotationSessionId: sessionId,
+    );
+  }
+
+  /// Update rotation state
+  void setRotationState({
+    required bool isRotating,
+    bool? isPreloading,
+    String? sessionId,
+  }) {
+    state = state.copyWith(
+      isRotating: isRotating,
+      isPreloading: isPreloading ?? state.isPreloading,
+      rotationSessionId: sessionId ?? state.rotationSessionId,
     );
   }
 

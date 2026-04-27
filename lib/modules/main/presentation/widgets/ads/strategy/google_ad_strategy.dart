@@ -8,6 +8,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
+import 'package:defyx_vpn/shared/services/ad_analytics_service.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import '../ads_state.dart';
@@ -120,6 +121,58 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       _nativeAd = null;
     }
     // State flags already cleared by AdsNotifier, no need to update here
+  }
+
+  /// Load ad at a specific position in rotation cycle (for parallel loading)
+  ///
+  /// This method is used by AdRotationManager to load ads at specific positions.
+  /// It returns the NativeAd instance for caching in the rotation manager.
+  ///
+  /// Parameters:
+  /// - position: Ad position in cycle (1-5)
+  /// - sessionId: Rotation session ID for analytics tracking
+  /// - ref: Riverpod ref for accessing providers
+  Future<NativeAd?> loadAdAtPosition({
+    required int position,
+    required String sessionId,
+    required Ref ref,
+  }) async {
+    final firebaseAnalytics = FirebaseAnalyticsService();
+    final adAnalytics = AdAnalyticsService(firebaseAnalytics: firebaseAnalytics);
+    
+    // Log position load started
+    await adAnalytics.logAdPositionLoadStarted(
+      position: position,
+      sessionId: sessionId,
+    );
+    
+    final loadStartTime = DateTime.now();
+    
+    // Use existing loadAd logic
+    final result = await loadAd(ref: ref);
+    
+    if (result.success && _nativeAd != null) {
+      final loadDuration = DateTime.now().difference(loadStartTime);
+      
+      // Log position load success
+      await adAnalytics.logAdPositionLoadSuccess(
+        position: position,
+        sessionId: sessionId,
+        durationMs: loadDuration.inMilliseconds,
+      );
+      
+      return _nativeAd;
+    } else {
+      // Log position load failure
+      await adAnalytics.logAdPositionLoadFailure(
+        position: position,
+        sessionId: sessionId,
+        errorCode: result.errorCode ?? 'UNKNOWN',
+        errorMessage: result.errorMessage ?? 'Unknown error',
+      );
+      
+      return null;
+    }
   }
 
   @override

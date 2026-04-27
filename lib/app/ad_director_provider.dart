@@ -6,6 +6,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
+import 'package:defyx_vpn/shared/services/ad_rotation_manager.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -180,10 +181,18 @@ class AdStrategyManager {
       '🎯 AdStrategyManager - Connection: ${previous.name} → ${current.name}',
     );
 
-    // When connecting: notify internal strategy
+    // When connecting: notify internal strategy and stop ad rotation
     if (current == conn.ConnectionStatus.connected &&
         previous != conn.ConnectionStatus.connected) {
       debugPrint('   → Activating InternalAdStrategy');
+      
+      // Stop ad rotation if active
+      final rotationManager = _ref.read(adRotationManagerProvider);
+      if (rotationManager.isRotating) {
+        debugPrint('   → Stopping ad rotation (user reconnecting)');
+        rotationManager.stopRotation();
+      }
+      
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -208,21 +217,32 @@ class AdStrategyManager {
       );
     }
 
-    // When reaching disconnected state: Load AdMob ad (if available)
+    // When reaching disconnected state: Start ad rotation cycle (if available)
     // This handles: disconnecting → disconnected, connected → disconnected, anything → disconnected
     if (current == conn.ConnectionStatus.disconnected &&
         previous != conn.ConnectionStatus.disconnected) {
       if (_hasGoogleStrategy) {
         debugPrint(
-          '   → Reached disconnected state, activating GoogleAdStrategy',
+          '   → Reached disconnected state, starting ad rotation cycle',
         );
-        _googleStrategy!.onConnectionStateChanged(
-          ref: _ref,
-          previous: previous,
-          current: current,
-          hasInitialized: true,
-          onRefreshNeeded: () => _googleStrategy.loadAd(ref: _ref),
-        );
+        
+        // Start ad rotation cycle
+        final rotationManager = _ref.read(adRotationManagerProvider);
+        rotationManager.startRotationCycle().then((_) {
+          debugPrint('✅ Ad rotation cycle started');
+        }).catchError((error) {
+          debugPrint('❌ Failed to start ad rotation cycle: $error');
+          
+          // Fallback to single ad load if rotation fails
+          debugPrint('   → Falling back to single ad load');
+          _googleStrategy!.onConnectionStateChanged(
+            ref: _ref,
+            previous: previous,
+            current: current,
+            hasInitialized: true,
+            onRefreshNeeded: () => _googleStrategy.loadAd(ref: _ref),
+          );
+        });
       } else {
         debugPrint('   → No GoogleAdStrategy available (Iranian/Desktop user)');
       }
