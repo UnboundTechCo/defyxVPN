@@ -52,7 +52,7 @@ class NetworkStatus {
       'se',
       'sg',
       'sk',
-      'tr'
+      'tr',
     ];
     try {
       final flag = await _vpnBridge.getFlag();
@@ -67,8 +67,8 @@ class NetworkStatus {
   }
 
   Future<bool> checkConnectivity() async {
-    final List<ConnectivityResult> connectivityResult =
-        await (Connectivity().checkConnectivity());
+    final List<ConnectivityResult> connectivityResult = await (Connectivity()
+        .checkConnectivity());
 
     return connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi) ||
@@ -85,13 +85,8 @@ class NetworkStatus {
   //         result == ConnectivityResult.ethernet ||
   //         result == ConnectivityResult.vpn);
   //   } catch (e) {
-  //     // Fallback: try to resolve a DNS query
-  //     try {
-  //       final result = await dart_io.InternetAddress.lookup('google.com');
-  //       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-  //     } catch (e) {
-  //       return false;
-  //     }
+  //     return false;
+  //   }
   //   }
   // }
 }

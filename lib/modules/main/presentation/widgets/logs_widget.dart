@@ -45,8 +45,9 @@ class LogsNotifier extends StateNotifier<LogsState> {
         List<String> newLogEntries = newLogs.split('\n');
 
         // Filter out empty lines and already shown logs
-        List<String> filteredNewLogs =
-            newLogEntries.where((log) => log.isNotEmpty && !_existingLogs.contains(log)).toList();
+        List<String> filteredNewLogs = newLogEntries
+            .where((log) => log.isNotEmpty && !_existingLogs.contains(log))
+            .toList();
 
         if (filteredNewLogs.isNotEmpty) {
           // Add new logs to the existing logs set to avoid duplicates
@@ -174,7 +175,9 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
 
       if (allLogs.isNotEmpty) {
         List<String> logEntries = allLogs.split('\n');
-        List<String> filteredLogs = logEntries.where((log) => log.isNotEmpty).toList();
+        List<String> filteredLogs = logEntries
+            .where((log) => log.isNotEmpty)
+            .toList();
 
         if (filteredLogs.isNotEmpty) {
           logsNotifier._existingLogs.clear();
@@ -201,11 +204,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (scrollController.hasClients && logsState.logs.isNotEmpty) {
         try {
-          // scrollController.animateTo(
-          //   scrollController.position.maxScrollExtent,
-          //   duration: const Duration(milliseconds: 200),
-          //   curve: Curves.easeOut,
-          // );
+          // Auto-scroll handled by scroll manager
         } catch (e) {
           debugPrint('Error scrolling to bottom: $e');
         }
@@ -274,7 +273,8 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                       iconSize: 20,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
-                      onPressed: () => ref.read(logsProvider.notifier).fetchLogs(),
+                      onPressed: () =>
+                          ref.read(logsProvider.notifier).fetchLogs(),
                     ),
                   ],
                 ),
@@ -452,7 +452,9 @@ class _LogScreenState extends ConsumerState<LogScreen> {
         List<String> logEntries = allLogs.split('\n');
 
         // Filter out empty entries
-        List<String> filteredLogs = logEntries.where((log) => log.isNotEmpty).toList();
+        List<String> filteredLogs = logEntries
+            .where((log) => log.isNotEmpty)
+            .toList();
 
         if (filteredLogs.isNotEmpty) {
           // Reset existing logs set to avoid duplicates with a fresh start

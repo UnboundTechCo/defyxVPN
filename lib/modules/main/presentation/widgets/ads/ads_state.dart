@@ -11,9 +11,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-/// Countdown duration in seconds before ad is hidden (1 minute)
-const int countdownDuration = 60;
+import 'package:defyx_vpn/shared/constants/ad_constants.dart';
 
 /// Shared ad state model used by both GoogleAdStrategy and InternalAdStrategy.
 ///
@@ -38,9 +36,6 @@ const int countdownDuration = 60;
 /// - `retryCount` - Number of retry attempts
 /// - `adLoadedAt` - Timestamp when ad was loaded
 ///
-/// Deprecated/Unused:
-/// - `hasFallenBackToInternal` - No longer needed (dual strategy approach)
-///
 class AdsState {
   // GoogleAdStrategy state (AdMob)
   final bool nativeAdIsLoaded;
@@ -63,13 +58,10 @@ class AdsState {
   final String? customClickUrl;
   final bool customImageLoadFailed;
 
-  // UX tracking
-  final bool hasFallenBackToInternal;
-
   const AdsState({
     this.nativeAdIsLoaded = false,
     this.adLoadFailed = false,
-    this.countdown = countdownDuration,
+    this.countdown = AdConstants.cycleTimeoutSeconds,
     this.showCountdown = false,
     this.adLoadedAt,
     this.retryCount = 0,
@@ -78,7 +70,6 @@ class AdsState {
     this.customImageUrl,
     this.customClickUrl,
     this.customImageLoadFailed = false,
-    this.hasFallenBackToInternal = false,
   });
 
   AdsState copyWith({
@@ -93,7 +84,6 @@ class AdsState {
     String? customImageUrl,
     String? customClickUrl,
     bool? customImageLoadFailed,
-    bool? hasFallenBackToInternal,
   }) {
     return AdsState(
       adLoadFailed: adLoadFailed ?? this.adLoadFailed,
@@ -111,17 +101,15 @@ class AdsState {
           this.customClickUrl, // Preserve existing value if not provided
       customImageLoadFailed:
           customImageLoadFailed ?? this.customImageLoadFailed,
-      hasFallenBackToInternal:
-          hasFallenBackToInternal ?? this.hasFallenBackToInternal,
       nativeAdIsLoaded: nativeAdIsLoaded ?? this.nativeAdIsLoaded,
     );
   }
 
-  /// Check if ad needs refresh (older than 15 minutes)
+  /// Check if ad needs refresh (older than threshold)
   bool get needsRefresh {
     if (adLoadedAt == null) return true;
     final age = DateTime.now().difference(adLoadedAt!);
-    return age.inMinutes >= 15;
+    return age.inMinutes >= AdConstants.adRefreshAgeMinutes;
   }
 
   /// Get user-friendly error solution based on error code
@@ -197,16 +185,21 @@ class AdsNotifier extends StateNotifier<AdsState> {
   }
 
   /// Start the countdown timer after ad is loaded and VPN connects
-  /// Always restarts to 60 seconds on each connection
+  /// Always restarts to cycle timeout duration
   void startCountdownTimer() {
-    debugPrint('▶️ Starting new countdown timer (60 seconds)');
+    debugPrint(
+      '▶️ Starting new countdown timer (${AdConstants.cycleTimeoutSeconds} seconds)',
+    );
     debugPrint(
       '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
     );
     _countdownTimer?.cancel();
 
     // Update state immediately (synchronous)
-    state = state.copyWith(countdown: countdownDuration, showCountdown: true);
+    state = state.copyWith(
+      countdown: AdConstants.cycleTimeoutSeconds,
+      showCountdown: true,
+    );
     debugPrint(
       '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
     );
@@ -216,7 +209,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
       _saveCountdownStartTime();
     });
 
-    _startCountdownFromValue(countdownDuration);
+    _startCountdownFromValue(AdConstants.cycleTimeoutSeconds);
   }
 
   /// Stop the countdown timer and clear persisted state
@@ -229,7 +222,10 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _countdownTimer?.cancel();
 
     // Update state immediately (synchronous)
-    state = state.copyWith(showCountdown: false, countdown: countdownDuration);
+    state = state.copyWith(
+      showCountdown: false,
+      countdown: AdConstants.cycleTimeoutSeconds,
+    );
     debugPrint(
       '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
     );
@@ -344,12 +340,6 @@ class AdsNotifier extends StateNotifier<AdsState> {
   void clearAdDisposalCallback() {
     debugPrint('📌 Cleared ad disposal callback');
     _onAdShouldDispose = null;
-  }
-
-  /// Set fallback status to internal ads
-  void setFallenBackToInternal(bool hasFallenBack) {
-    debugPrint('🔄 Fallen back to internal ads: $hasFallenBack');
-    state = state.copyWith(hasFallenBackToInternal: hasFallenBack);
   }
 
   /// Set ad loading as failed with error details
