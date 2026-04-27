@@ -148,8 +148,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     
     final loadStartTime = DateTime.now();
     
-    // Use existing loadAd logic
-    final result = await loadAd(ref: ref);
+    // Use existing loadAd logic with force reload for rotation variety
+    final result = await loadAd(ref: ref, forceReload: true);
     
     if (result.success && _nativeAd != null) {
       final loadDuration = DateTime.now().difference(loadStartTime);
@@ -176,7 +176,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   }
 
   @override
-  Future<AdLoadResult> loadAd({required Ref ref}) async {
+  Future<AdLoadResult> loadAd({required Ref ref, bool forceReload = false}) async {
     // CRITICAL: Wait for AdMob SDK to be initialized first
     try {
       final versionString = await MobileAds.instance.getVersionString();
@@ -217,9 +217,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       );
     }
 
-    // Check if we already have a valid cached ad
+    // Check if we already have a valid cached ad (unless force reload requested)
     final adsState = ref.read(adsProvider);
-    if (_nativeAd != null &&
+    if (!forceReload &&
+        _nativeAd != null &&
         adsState.nativeAdIsLoaded &&
         !adsState.needsRefresh) {
       debugPrint('✅ Reusing cached ad (still fresh)');
@@ -423,8 +424,23 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       debugPrint('🚀 Loading ad from AdMob...');
       ad.load();
 
-      // Wait for result
-      return await completer.future;
+      // Wait for result with timeout to prevent indefinite blocking
+      return await completer.future.timeout(
+        const Duration(seconds: 30),
+        onTimeout: () {
+          debugPrint('⏱️ Ad load timeout after 30 seconds');
+          ad.dispose();
+          _isLoading = false;
+          ref.read(adsProvider.notifier).setAdLoadFailed(
+            errorCode: 'TIMEOUT',
+            errorMessage: 'Ad load timeout after 30 seconds',
+          );
+          return AdLoadResult.failure(
+            errorCode: 'TIMEOUT',
+            errorMessage: 'Ad load timeout after 30 seconds',
+          );
+        },
+      );
     } catch (e) {
       debugPrint('❌ Error creating NativeAd: $e');
       _isLoading = false;

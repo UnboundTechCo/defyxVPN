@@ -313,6 +313,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
       currentAdPosition: position,
       rotationSessionId: sessionId,
     );
+    
+    // CRITICAL: Restart countdown for each rotation position
+    // This ensures the ad doesn't expire during the rotation cycle
+    startCountdownTimer();
+    debugPrint('⏱️ Countdown restarted for position $position');
   }
 
   /// Update rotation state
