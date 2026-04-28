@@ -53,6 +53,11 @@ class AdsState {
   final DateTime? adLoadedAt;
   final int retryCount;
 
+  // Ad rotation/carousel state (for GoogleAdStrategy)
+  final int rotationCount; // How many ads shown this connection cycle
+  final bool nextAdReady; // Whether pre-loaded ad is available
+  final DateTime? lastRotationAt; // Timestamp of last rotation
+
   // InternalAdStrategy state (Internal ads)
   final String? customImageUrl;
   final String? customClickUrl;
@@ -64,6 +69,9 @@ class AdsState {
   final bool isRotating;
   final bool isPreloading;
 
+  // Fallback tracking
+  final bool hasFallenBackToInternal;
+
   const AdsState({
     this.nativeAdIsLoaded = false,
     this.adLoadFailed = false,
@@ -71,6 +79,9 @@ class AdsState {
     this.showCountdown = false,
     this.adLoadedAt,
     this.retryCount = 0,
+    this.rotationCount = 0,
+    this.nextAdReady = false,
+    this.lastRotationAt,
     this.lastErrorCode,
     this.lastErrorMessage,
     this.customImageUrl,
@@ -80,6 +91,7 @@ class AdsState {
     this.rotationSessionId,
     this.isRotating = false,
     this.isPreloading = false,
+    this.hasFallenBackToInternal = false,
   });
 
   AdsState copyWith({
@@ -89,6 +101,9 @@ class AdsState {
     bool? showCountdown,
     DateTime? adLoadedAt,
     int? retryCount,
+    int? rotationCount,
+    bool? nextAdReady,
+    DateTime? lastRotationAt,
     String? lastErrorCode,
     String? lastErrorMessage,
     String? customImageUrl,
@@ -97,6 +112,7 @@ class AdsState {
     int? currentAdPosition,
     String? rotationSessionId,
     bool? isRotating,
+    bool? hasFallenBackToInternal,
     bool? isPreloading,
   }) {
     return AdsState(
@@ -105,6 +121,9 @@ class AdsState {
       showCountdown: showCountdown ?? this.showCountdown,
       adLoadedAt: adLoadedAt ?? this.adLoadedAt,
       retryCount: retryCount ?? this.retryCount,
+      rotationCount: rotationCount ?? this.rotationCount,
+      nextAdReady: nextAdReady ?? this.nextAdReady,
+      lastRotationAt: lastRotationAt ?? this.lastRotationAt,
       lastErrorCode: lastErrorCode ?? this.lastErrorCode,
       lastErrorMessage: lastErrorMessage ?? this.lastErrorMessage,
       customImageUrl:
@@ -119,6 +138,7 @@ class AdsState {
       currentAdPosition: currentAdPosition ?? this.currentAdPosition,
       rotationSessionId: rotationSessionId ?? this.rotationSessionId,
       isRotating: isRotating ?? this.isRotating,
+      hasFallenBackToInternal: hasFallenBackToInternal ?? this.hasFallenBackToInternal,
       isPreloading: isPreloading ?? this.isPreloading,
     );
   }
@@ -159,6 +179,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   /// Callback for notifying strategies when ads should be disposed
   VoidCallback? _onAdShouldDispose;
+
+  /// Callback for notifying strategies when next ad should be loaded (rotation)
+  VoidCallback? _onAdShouldRotate;
 
   /// Load persisted countdown state on initialization
   Future<void> _loadPersistedCountdown() async {
@@ -209,7 +232,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
       '▶️ Starting new countdown timer (${AdConstants.cycleTimeoutSeconds} seconds)',
     );
     debugPrint(
-      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
+      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}, rotation=${state.rotationCount}',
     );
     _countdownTimer?.cancel();
 
@@ -260,29 +283,70 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
         final newCount = state.countdown - 1;
-        debugPrint('⏱️ Countdown: $newCount');
+        debugPrint('⏱️ Countdown: $newCount, rotation=${state.rotationCount}/${AdConstants.maxAdsPerCycle}');
         state = state.copyWith(countdown: newCount);
       } else {
-        debugPrint('⏱️ Countdown finished - disposing ad and clearing state');
+        debugPrint('⏱️ Countdown finished - rotation=${state.rotationCount}/${AdConstants.maxAdsPerCycle}');
 
-        // Clear all ad flags to hide the ad box completely
-        state = state.copyWith(
-          showCountdown: false,
-          nativeAdIsLoaded: false,
-          customImageUrl: '',
-          customClickUrl: '',
-        );
+        // Check if we should rotate to next ad or dispose
+        if (state.rotationCount < AdConstants.maxAdsPerCycle && state.nextAdReady) {
+          debugPrint('🔄 Rotating to next ad (${state.rotationCount + 1}/${AdConstants.maxAdsPerCycle}');
+          
+          // Trigger rotation callback
+          _onAdShouldRotate?.call();
+          debugPrint('🔄 Ad rotation callback triggered');
+          
+          // Note: Don't cancel timer - rotation callback will restart it with new ad
+        } else {
+          debugPrint('⏱️ Max rotations reached or no next ad - disposing and clearing state');
 
-        // Notify strategies to dispose their ad instances
-        _onAdShouldDispose?.call();
-        debugPrint('🗑️ Ad disposal callback triggered');
+          // Clear all ad flags to hide the ad box completely
+          state = state.copyWith(
+            showCountdown: false,
+            nativeAdIsLoaded: false,
+            customImageUrl: '',
+            customClickUrl: '',
+            rotationCount: 0, // Reset for next connection cycle
+            nextAdReady: false,
+          );
 
-        timer.cancel();
-        _clearPersistedCountdown();
+          // Notify strategies to dispose their ad instances
+          _onAdShouldDispose?.call();
+          debugPrint('🗑️ Ad disposal callback triggered');
+
+          timer.cancel();
+          _clearPersistedCountdown();
+        }
       }
     });
   }
 
+
+  /// Mark that next ad is ready for rotation (pre-loaded)
+  void setNextAdReady(bool ready) {
+    debugPrint('📦 Next ad ready: $ready');
+    state = state.copyWith(nextAdReady: ready);
+  }
+
+  /// Increment rotation count and update timestamp
+  void incrementRotationCount() {
+    final newCount = state.rotationCount + 1;
+    debugPrint('🔄 Incrementing rotation count: ${state.rotationCount} → $newCount');
+    state = state.copyWith(
+      rotationCount: newCount,
+      lastRotationAt: DateTime.now(),
+    );
+  }
+
+  /// Reset rotation count (called when connection state changes)
+  void resetRotationCount() {
+    debugPrint('🔄 Resetting rotation count to 0');
+    state = state.copyWith(
+      rotationCount: 0,
+      nextAdReady: false,
+      lastRotationAt: null,
+    );
+  }
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
     debugPrint('✅ Ad loaded: $isLoaded');
@@ -373,8 +437,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
-      nativeAdIsLoaded:
-          false, // Clear this flag to prevent showing empty ad container
+      nativeAdIsLoaded: false, // Clear this flag to prevent showing empty ad container
     );
     debugPrint(
       '   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false',
@@ -388,10 +451,29 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _onAdShouldDispose = callback;
   }
 
+  /// Register a callback to be notified when ad should rotate to next
+  /// This allows strategies to swap to pre-loaded ad (carousel pattern)
+  void setAdRotationCallback(VoidCallback callback) {
+    debugPrint('📌 Registered ad rotation callback');
+    _onAdShouldRotate = callback;
+  }
+
   /// Unregister the ad disposal callback
   void clearAdDisposalCallback() {
     debugPrint('📌 Cleared ad disposal callback');
     _onAdShouldDispose = null;
+  }
+
+  /// Unregister the ad rotation callback
+  void clearAdRotationCallback() {
+    debugPrint('📌 Cleared ad rotation callback');
+    _onAdShouldRotate = null;
+  }
+
+  /// Set fallback status to internal ads
+  void setFallenBackToInternal(bool hasFallenBack) {
+    debugPrint('🔄 Fallen back to internal ads: $hasFallenBack');
+    state = state.copyWith(hasFallenBackToInternal: hasFallenBack);
   }
 
   /// Set ad loading as failed with error details
