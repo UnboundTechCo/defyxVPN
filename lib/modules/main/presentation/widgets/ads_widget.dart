@@ -21,7 +21,8 @@
 ///
 /// **UI Features:**
 /// - "ADVERTISEMENT" label (top-right corner)
-/// - 60-second countdown timer (bottom-left corner)
+/// - 25-second countdown timer (bottom-left corner)
+/// - Ad carousel rotation with fade transitions (300ms)
 /// - Automatic hiding when countdown expires
 /// - Smooth fade animations (300ms)
 ///
@@ -90,12 +91,24 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
               width: 1,
             ),
           ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(widget.cornerRadius),
-            child: activeStrategy.buildAdWidget(
-              context: context,
-              state: adsState,
-              cornerRadius: widget.cornerRadius,
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            switchInCurve: Curves.easeIn,
+            switchOutCurve: Curves.easeOut,
+            transitionBuilder: (Widget child, Animation<double> animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: ClipRRect(
+              key: ValueKey('ad_rotation_${adsState.rotationCount}'),
+              borderRadius: BorderRadius.circular(widget.cornerRadius),
+              child: activeStrategy.buildAdWidget(
+                context: context,
+                state: adsState,
+                cornerRadius: widget.cornerRadius,
+              ),
             ),
           ),
         ),
