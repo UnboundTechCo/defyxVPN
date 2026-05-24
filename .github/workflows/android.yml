@@ -25,7 +25,8 @@ jobs:
 
       - name: Force Gradle to use NDK 29 (absolute override)
         run: |
-          echo "ndk.dir=${ANDROID_HOME}/ndk/29.0.13846066" >> android/local.properties
+          rm -f android/local.properties
+          echo "ndk.dir=${ANDROID_HOME}/ndk/29.0.13846066" > android/local.properties
           echo "ndkVersion=29.0.13846066" >> android/local.properties
 
       - name: Set up Flutter
