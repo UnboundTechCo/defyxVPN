@@ -110,5 +110,5 @@ jobs:
         with:
           name: android-release
           path: |
-            build/app/outputs/flutter-apk/*.apk
+            build/app/outputs/flutter-apk/DefyxVPN-*.apk
             build/app/outputs/bundle/release/app-release.aab
