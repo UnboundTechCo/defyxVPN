@@ -2,7 +2,7 @@ on:
   workflow_call:
 
 jobs:
-  build-android-googleplay:
+  googleplay:
     if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
     runs-on: ubuntu-latest
     outputs:
@@ -45,18 +45,23 @@ jobs:
           dart --version
           flutter doctor --verbose
 
+      - name: Clean all caches and build artifacts
+        run: |
+          flutter clean
+          rm -rf build/
+          rm -rf ~/.gradle
+          rm -rf android/.gradle
+          rm -rf android/build/
+          rm -rf android/app/build/
+          rm -rf .dart_tool/
+          echo "✅ All caches cleaned"
+
       - name: Get dependencies
         run: flutter pub get
     
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
-
-      - name: Clean Flutter & Gradle caches
-        run: |
-          flutter clean
-          rm -rf ~/.gradle
-          rm -rf android/.gradle
 
       - name: Download Android Framework
         env:
@@ -112,7 +117,7 @@ jobs:
           name: android-googleplay
           path: build/app/outputs/bundle/release/app-release.aab
 
-  build-android-github:
+  github:
     if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
     runs-on: ubuntu-latest
     outputs:
@@ -155,18 +160,23 @@ jobs:
           dart --version
           flutter doctor --verbose
 
+      - name: Clean all caches and build artifacts
+        run: |
+          flutter clean
+          rm -rf build/
+          rm -rf ~/.gradle
+          rm -rf android/.gradle
+          rm -rf android/build/
+          rm -rf android/app/build/
+          rm -rf .dart_tool/
+          echo "✅ All caches cleaned"
+
       - name: Get dependencies
         run: flutter pub get
     
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
-
-      - name: Clean Flutter & Gradle caches
-        run: |
-          flutter clean
-          rm -rf ~/.gradle
-          rm -rf android/.gradle
 
       - name: Download Android Framework
         env:
