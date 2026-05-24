@@ -96,12 +96,18 @@ jobs:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
         run: echo "$KEYSTORE_BASE64" | base64 -d > android/app/keystore.jks
 
-      - name: Build APK & Bundle
+      - name: Build AAB for Google Play
         run: |
           chmod +x scripts/build_release.sh
           bash scripts/build_release.sh <<EOF
           2
           3
+          EOF
+
+      - name: Build APKs for GitHub
+        run: |
+          bash scripts/build_release.sh <<EOF
+          2
           4
           EOF
 
