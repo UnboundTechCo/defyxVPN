@@ -54,7 +54,11 @@ on:
         type: boolean
 
 jobs:
-  android:
+  android-googleplay:
+    uses: ./.github/workflows/android.yml
+    secrets: inherit
+
+  android-github:
     uses: ./.github/workflows/android.yml
     secrets: inherit
 
@@ -73,11 +77,11 @@ jobs:
     secrets: inherit
   
   release-to-telegram:
-    needs: [android, windows]
+    needs: [android-googleplay, android-github, windows]
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    needs: [android, windows]
+    needs: [android-googleplay, android-github, windows]
     uses: ./.github/workflows/release.yml
     secrets: inherit
