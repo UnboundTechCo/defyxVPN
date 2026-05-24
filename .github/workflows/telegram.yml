@@ -13,10 +13,16 @@ jobs:
         id: get_version
         uses: ./.github/actions/get-version
 
-      - name: Download Android Artifacts
+      - name: Download Android Google Play Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: android-release
+          name: android-googleplay
+          path: android-files/
+
+      - name: Download Android GitHub Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-github
           path: android-files/
   
       - name: Download Windows Artifacts

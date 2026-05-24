@@ -3,7 +3,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
 
