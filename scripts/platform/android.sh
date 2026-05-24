@@ -11,7 +11,10 @@ build_android() {
 
     flutter build appbundle --release
 
+    # Change to github type for APK builds and clean to prevent version contamination
     update_build_type "github"
+    flutter clean
+    flutter pub get
     flutter build apk --release
     flutter build apk --split-per-abi --release
     
