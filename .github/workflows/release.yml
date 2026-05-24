@@ -38,10 +38,16 @@ jobs:
           sed "s|RELEASE_TAG|v${{ steps.get_version.outputs.version }}|g" \
             .github/release_message.md >> release.md
 
-      - name: Download Android artifacts
+      - name: Download Android Google Play artifacts
         uses: actions/download-artifact@v4
         with:
-          name: android-release
+          name: android-googleplay
+          path: android-release/
+
+      - name: Download Android GitHub artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-github
           path: android-release/
 
       - name: Download Windows artifacts
