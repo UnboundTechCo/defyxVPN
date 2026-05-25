@@ -249,7 +249,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get updateMethods => '更新方法';
 
   @override
-  String get importAPI => '导入API';
+  String get importConfig => '导入配置';
 
   @override
   String get synchronization => '同步';

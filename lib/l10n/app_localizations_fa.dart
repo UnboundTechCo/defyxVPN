@@ -254,7 +254,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get updateMethods => 'به‌روزرسانی روش‌ها';
 
   @override
-  String get importAPI => 'وارد کردن API';
+  String get importConfig => 'وارد کردن پیکربندی';
 
   @override
   String get synchronization => 'همگام‌سازی';

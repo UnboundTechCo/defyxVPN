@@ -401,9 +401,9 @@
     "description": "Sync menu - update methods option"
   },
 
-  "importAPI": "Import API",
-  "@importAPI": {
-    "description": "Sync menu - import API option"
+  "importConfig": "Import Config",
+  "@importConfig": {
+    "description": "Sync menu - import configuration file option"
   },
 
   "synchronization": "Synchronization",
