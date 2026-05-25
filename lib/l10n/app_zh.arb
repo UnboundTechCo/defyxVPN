@@ -74,7 +74,7 @@
   "offlineFlowlineMessage": "由于当前使用离线版本，Flowline更新已暂停。",
   "offlineFlowlineUndo": "撤销",
   "updateMethods": "更新方法",
-  "importAPI": "导入API",
+  "importConfig": "导入配置",
   "synchronization": "同步",
   "updateAvailable": "可用更新",
   "updateRequired": "需要更新",

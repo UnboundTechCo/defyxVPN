@@ -254,7 +254,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updateMethods => 'Обновить методы';
 
   @override
-  String get importAPI => 'Импорт API';
+  String get importConfig => 'Импорт конфигурации';
 
   @override
   String get synchronization => 'Синхронизация';

@@ -27,7 +27,7 @@ class AppIcons {
   static const String facebookPath = 'assets/icons/facebook.svg';
   static const String linkedinPath = 'assets/icons/linkedin.svg';
 
-  static const String importAPIPath = 'assets/icons/Icon_Import_API.svg';
+  static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
 
   static SvgPicture logo({double? width, double? height}) {
@@ -114,8 +114,8 @@ class AppIcons {
     return SvgPicture.asset(linkedinPath, width: width, height: height);
   }
 
-  static SvgPicture importAPI({double? width, double? height}) {
-    return SvgPicture.asset(importAPIPath, width: width, height: height);
+  static SvgPicture importConfig({double? width, double? height}) {
+    return SvgPicture.asset(importConfigPath, width: width, height: height);
   }
 
   static SvgPicture vpnCloud({double? width, double? height}) {

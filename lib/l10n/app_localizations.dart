@@ -576,11 +576,11 @@ abstract class AppLocalizations {
   /// **'Update Methods'**
   String get updateMethods;
 
-  /// Sync menu - import API option
+  /// Sync menu - import configuration file option
   ///
   /// In en, this message translates to:
-  /// **'Import API'**
-  String get importAPI;
+  /// **'Import Config'**
+  String get importConfig;
 
   /// Sync menu label
   ///

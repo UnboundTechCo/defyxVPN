@@ -76,7 +76,7 @@
   "offlineFlowlineMessage": "Обновления Flowline приостановлены, так как используется автономная версия.",
   "offlineFlowlineUndo": "ОТМЕНИТЬ",
   "updateMethods": "Обновить методы",
-  "importAPI": "Импорт API",
+  "importConfig": "Импорт конфигурации",
   "synchronization": "Синхронизация",
   "updateAvailable": "Доступно обновление",
   "updateRequired": "Требуется обновление",

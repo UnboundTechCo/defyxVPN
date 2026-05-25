@@ -97,13 +97,13 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                 color: const Color(0x8080808C),
               ),
               QuickMenuItem(
-                title: AppLocalizations.of(context).importAPI,
+                title: AppLocalizations.of(context).importConfig,
                 titleStyle: TextStyle(
                   fontSize: 16.sp,
                   color: Colors.black,
                   fontWeight: FontWeight.w500,
                 ),
-                icon: AppIcons.importAPI(width: 20, height: 20),
+                icon: AppIcons.importConfig(width: 20, height: 20),
                 onTap: () {
                   FilePicker.platform
                       .pickFiles(
