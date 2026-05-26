@@ -224,11 +224,55 @@ class VpnPlugin: VpnStatusDelegate {
             )
             return
         }
+        
+        os_log("📤 [VPNPlugin] Sending START_VPN message to extension")
+        
+        // Send START_VPN message to save config in extension
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan
-        ]) {
-            response in
-            result(response)
+            "command": "START_VPN", 
+            "cacheDir": defyxDir.path, 
+            "flowLine": flowLine, 
+            "pattern": pattern,
+            "deepScan": deepScan
+        ]) { response in
+            os_log("✅ [VPNPlugin] START_VPN response: %@", response ?? "nil")
+            
+            // Give extension time to save config before starting tunnel
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                os_log("🚀 [VPNPlugin] Starting VPN tunnel...")
+                VpnService.shared.prepareVPN { prepareResult in
+                    switch prepareResult {
+                    case .success:
+                        DispatchQueue.main.async {
+                            VpnService.shared.startVPN(port: 5000) { startResult in
+                                switch startResult {
+                                case .success:
+                                    os_log("✅ [VPNPlugin] VPN tunnel started")
+                                    result("VPN started successfully")
+                                case .failure(let error):
+                                    os_log("❌ [VPNPlugin] VPN start failed: %@", error.localizedDescription)
+                                    result(
+                                        FlutterError(
+                                            code: "VPN_START_ERROR",
+                                            message: "Failed to start VPN",
+                                            details: error.localizedDescription
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    case .failure(let error):
+                        os_log("❌ [VPNPlugin] VPN prepare failed: %@", error.localizedDescription)
+                        result(
+                            FlutterError(
+                                code: "VPN_PREPARE_ERROR",
+                                message: "Failed to prepare VPN",
+                                details: error.localizedDescription
+                            )
+                        )
+                    }
+                }
+            }
         }
     }
     private func stopVPN(_ result: @escaping FlutterResult) {
