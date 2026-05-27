@@ -2,8 +2,8 @@ on:
   workflow_call:
 
 jobs:
-  build-windows:
-    runs-on: windows-latest
+  github:
+    runs-on: windows-2022
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
 

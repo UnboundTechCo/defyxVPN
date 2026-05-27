@@ -57,7 +57,7 @@ select_platform() {
   echo "6) Windows - GitHub"
   echo "7) Exit"
 
-  echo -n "Enter your choice (1-5): "
+  echo -n "Enter your choice (1-7): "
   read choice
   SELECTED_PLATFORM=$choice
 }
