@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -57,13 +58,16 @@ class SettingsPremiumWidget extends StatelessWidget {
                     ),
                     SizedBox(width: 4.w),
                     Expanded(
-                      child: Text(
-                        'LOGIN OR REGISTER',
-                        style: TextStyle(
-                          fontSize: 12.sp,
-                          color: Color(0xFFFF9A9A),
+                      child: InkWell(
+                        onTap: () => SettingsPremiumLoginDialog.show(context),
+                        child: Text(
+                          'LOGIN OR REGISTER',
+                          style: TextStyle(
+                            fontSize: 12.sp,
+                            color: Color(0xFFFF9A9A),
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],

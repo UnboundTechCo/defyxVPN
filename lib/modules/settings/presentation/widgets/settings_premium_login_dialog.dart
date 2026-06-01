@@ -1,31 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class SettingsPremiumInfoDialog extends StatefulWidget {
-
-  const SettingsPremiumInfoDialog({super.key});
+class SettingsPremiumLoginDialog extends StatefulWidget {
+  const SettingsPremiumLoginDialog({super.key});
 
   @override
-  State<SettingsPremiumInfoDialog> createState() =>
-      _SettingsPremiumInfoDialogState();
+  State<SettingsPremiumLoginDialog> createState() =>
+      _SettingsPremiumLoginDialogState();
 
-  static Future<void> show(
-    BuildContext context,
-  ) {
+  static Future<void> show(BuildContext context) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return PopScope(
           canPop: true,
-          child: const SettingsPremiumInfoDialog(),
+          child: const SettingsPremiumLoginDialog(),
         );
       },
     );
   }
 }
 
-class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
+class _SettingsPremiumLoginDialogState
+    extends State<SettingsPremiumLoginDialog> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = 1.sw;
@@ -48,7 +46,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Connection Required',
+              'Authentication Required',
               style: TextStyle(
                 fontFamily: 'Lato',
                 fontSize: fontSize * 1.4,
@@ -58,7 +56,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ),
             SizedBox(height: 20.h),
             Text(
-              "To complete a secure login or registration process through the Defyx website or Telegram bot, you must first establish a connection using one of the available connection methods.",
+              "To access your Premium subscription(s), you need to login or create an account through the Defyx website or Telegram bot.",
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
@@ -68,9 +66,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ),
             SizedBox(height: 20.h),
             ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-              },
+              onPressed: () async {},
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],
                 foregroundColor: const Color.fromARGB(255, 47, 41, 41),
@@ -81,7 +77,29 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
                 elevation: 0,
               ),
               child: Text(
-                'Got it',
+                'Authenticate via Telegram Bot',
+                style: TextStyle(
+                  fontFamily: 'Lato',
+                  color: const Color(0xFF4B4B4B),
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            SizedBox(height: 10.h),
+            ElevatedButton(
+              onPressed: () async {},
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.grey[200],
+                foregroundColor: const Color.fromARGB(255, 47, 41, 41),
+                padding: EdgeInsets.symmetric(vertical: 16.h),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                elevation: 0,
+              ),
+              child: Text(
+                'Authenticate via Website',
                 style: TextStyle(
                   fontFamily: 'Lato',
                   color: const Color(0xFF4B4B4B),
