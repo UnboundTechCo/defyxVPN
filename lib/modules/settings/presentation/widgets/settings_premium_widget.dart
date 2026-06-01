@@ -1,14 +1,54 @@
+import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class SettingsPremiumWidget extends StatelessWidget {
+class SettingsPremiumWidget extends ConsumerWidget {
   const SettingsPremiumWidget({super.key});
 
+  Future<bool> _isLoggedIn(WidgetRef ref) async {
+
+    final secureStorage = ref.watch(secureStorageProvider);
+
+    final token = await secureStorage.read(premiumTokenKey);
+
+    return token != null && token.isNotEmpty;
+  }
+
+  Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
+    return FutureBuilder(
+      future: _isLoggedIn(ref),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) {
+          return const CircularProgressIndicator();
+        }
+
+        return snapshot.data!
+            ? InkWell(
+                child: Text(
+                  'LOGGED IN',
+                  style: TextStyle(fontSize: 12.sp, color: Color(0xFFA3FF8C)),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              )
+            : InkWell(
+                onTap: () => SettingsPremiumLoginDialog.show(context),
+                child: Text(
+                  'LOGIN OR REGISTER',
+                  style: TextStyle(fontSize: 12.sp, color: Color(0xFFFF9A9A)),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
@@ -57,19 +97,7 @@ class SettingsPremiumWidget extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 4.w),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => SettingsPremiumLoginDialog.show(context),
-                        child: Text(
-                          'LOGIN OR REGISTER',
-                          style: TextStyle(
-                            fontSize: 12.sp,
-                            color: Color(0xFFFF9A9A),
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ),
+                    Expanded(child: _buildLoginButton(context, ref)),
                   ],
                 ),
               ],
