@@ -214,6 +214,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsDeepScan => 'اسکن عمیق';
 
   @override
+  String get settingsHealthCheck => 'بررسی سلامت';
+
+  @override
   String get settingsIncluded => 'شامل شده';
 
   @override

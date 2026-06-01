@@ -214,6 +214,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsDeepScan => 'ГЛУБОКОЕ СКАНИРОВАНИЕ';
 
   @override
+  String get settingsHealthCheck => 'ПРОВЕРКА ЗДОРОВЬЯ';
+
+  @override
   String get settingsIncluded => 'ВКЛЮЧЕНО';
 
   @override
