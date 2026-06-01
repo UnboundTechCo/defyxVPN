@@ -122,6 +122,10 @@ class AppIcons {
     return SvgPicture.asset(vpnCloudPath, width: width, height: height);
   }
 
+  static SvgPicture shop({double? width, double? height}) {
+    return SvgPicture.asset('assets/icons/shop.svg', width: width, height: height);
+  }
+
   static Widget shieldAnime({
     double? width,
     double? height,

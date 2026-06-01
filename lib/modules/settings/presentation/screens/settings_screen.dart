@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -103,7 +105,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
-    final double delta = (_lastTouchPosition - details.globalPosition.dy) *
+    final double delta =
+        (_lastTouchPosition - details.globalPosition.dy) *
         _touchScrollSpeedFactor;
     _lastTouchPosition = details.globalPosition.dy;
 
@@ -153,6 +156,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
+                              SizedBox(height: 30.h),
+                              const SettingsPremiumWidget(),
                               SizedBox(height: 60.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),
@@ -267,12 +272,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onReorder: group.isDraggable
                   ? (oldIndex, newIndex) {
                       settingsNotifier.reorderItems(
-                          group.id, oldIndex, newIndex);
+                        group.id,
+                        oldIndex,
+                        newIndex,
+                      );
                     }
                   : null,
               onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
-                      settingsNotifier.resetGroupToDefault(group.id, context: context);
+                      settingsNotifier.resetGroupToDefault(
+                        group.id,
+                        context: context,
+                      );
                     }
                   : null,
               onNavigate: (route) {

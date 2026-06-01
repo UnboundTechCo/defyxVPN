@@ -39,7 +39,6 @@ class AdEnvironment {
 /// - Desktop platforms: Don't initialize AdMob, only use internal ads
 /// - Mobile non-Iranian: Initialize AdMob, use both strategies
 final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
-  debugPrint('🌍 Computing ad environment...');
 
   final isIranian = await AdvertiseDirector.isIranianUser();
   final isMobile = Platform.isAndroid || Platform.isIOS;
@@ -51,7 +50,6 @@ final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
     shouldInitializeAdMob: shouldInitAdMob,
   );
 
-  debugPrint('🌍 Ad environment: $environment');
   return environment;
 });
 
@@ -91,7 +89,6 @@ class AdStrategyManager {
     Color backgroundColor = const Color(0xFF19312F),
     double cornerRadius = 10.0,
   }) {
-    debugPrint('🏭 AdStrategyManager.create() - Environment: $environment');
 
     // Create InternalAdStrategy (always needed)
     final internalStrategy = InternalAdStrategy(
@@ -122,8 +119,6 @@ class AdStrategyManager {
 
   /// Initialize connection state listener
   void _initializeConnectionListener() {
-    debugPrint('🔔 AdStrategyManager - Registering connection listener');
-    debugPrint('   Environment: ${_environment}');
 
     // Listen to connection changes and delegate to strategies
     _connectionSubscription = _ref.listen(conn.connectionStateProvider, (
@@ -145,7 +140,6 @@ class AdStrategyManager {
 
     // Trigger initial state
     final currentState = _ref.read(conn.connectionStateProvider).status;
-    debugPrint('🔄 Triggering initial connection state: ${currentState.name}');
     _handleConnectionStateChanged(
       previous: conn.ConnectionStatus.disconnected,
       current: currentState,
@@ -176,14 +170,11 @@ class AdStrategyManager {
     required conn.ConnectionStatus previous,
     required conn.ConnectionStatus current,
   }) {
-    debugPrint(
-      '🎯 AdStrategyManager - Connection: ${previous.name} → ${current.name}',
-    );
+
 
     // When connecting: notify internal strategy
     if (current == conn.ConnectionStatus.connected &&
         previous != conn.ConnectionStatus.connected) {
-      debugPrint('   → Activating InternalAdStrategy');
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -196,9 +187,7 @@ class AdStrategyManager {
     // This handles: connected → disconnecting, connected → disconnected
     else if (previous == conn.ConnectionStatus.connected &&
         current != conn.ConnectionStatus.connected) {
-      debugPrint(
-        '   → Leaving connected state, deactivating InternalAdStrategy',
-      );
+
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -213,9 +202,7 @@ class AdStrategyManager {
     if (current == conn.ConnectionStatus.disconnected &&
         previous != conn.ConnectionStatus.disconnected) {
       if (_hasGoogleStrategy) {
-        debugPrint(
-          '   → Reached disconnected state, activating GoogleAdStrategy',
-        );
+  
         _googleStrategy!.onConnectionStateChanged(
           ref: _ref,
           previous: previous,
@@ -223,33 +210,25 @@ class AdStrategyManager {
           hasInitialized: true,
           onRefreshNeeded: () => _googleStrategy.loadAd(ref: _ref),
         );
-      } else {
-        debugPrint('   → No GoogleAdStrategy available (Iranian/Desktop user)');
-      }
+      } 
     }
   }
 
   /// Initialize both strategies
   Future<void> initialize() async {
-    debugPrint('🚀 AdStrategyManager - Initializing strategies');
     await _internalStrategy.initialize(_ref);
     if (_hasGoogleStrategy) {
       await _googleStrategy!.initialize(_ref);
     }
-    debugPrint('✅ AdStrategyManager - Initialization complete');
 
     // CRITICAL: Check initial connection state and load ad if already disconnected
     // This handles the case where app starts in disconnected state (no state change)
     final initialConnectionState = _ref.read(conn.connectionStateProvider);
-    debugPrint(
-      '🎬 Checking initial connection state: ${initialConnectionState.status.name}',
-    );
+
 
     if (initialConnectionState.status == conn.ConnectionStatus.disconnected &&
         _hasGoogleStrategy) {
-      debugPrint(
-        '   → App started in disconnected state - triggering initial AdMob load',
-      );
+
       // Simulate a state change to trigger ad load
       final googleStrategy = _googleStrategy!;
       googleStrategy.onConnectionStateChanged(
@@ -261,9 +240,7 @@ class AdStrategyManager {
       );
     } else if (initialConnectionState.status ==
         conn.ConnectionStatus.connected) {
-      debugPrint(
-        '   → App started in connected state - triggering initial internal ad load',
-      );
+  
       // Simulate a state change to trigger internal ad load
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
@@ -271,10 +248,6 @@ class AdStrategyManager {
         current: conn.ConnectionStatus.connected,
         hasInitialized: true,
         onRefreshNeeded: () => _internalStrategy.loadAd(ref: _ref),
-      );
-    } else {
-      debugPrint(
-        '   → No initial ad load needed (state: ${initialConnectionState.status.name})',
       );
     }
   }
@@ -340,7 +313,6 @@ final adStrategyManagerProvider = Provider<AdStrategyManager?>((
 
   return environmentAsync.when(
     data: (environment) {
-      debugPrint('📦 Creating AdStrategyManager (session-scoped)');
 
       // Create manager with environment
       final manager = AdStrategyManager.create(
@@ -354,18 +326,15 @@ final adStrategyManagerProvider = Provider<AdStrategyManager?>((
 
       // Register disposal (only happens on app exit now)
       ref.onDispose(() {
-        debugPrint('📦 AdStrategyManager disposing (app exit)');
         manager.dispose();
       });
 
       return manager;
     },
     loading: () {
-      debugPrint('⏳ Waiting for ad environment...');
       return null;
     },
     error: (error, stack) {
-      debugPrint('❌ Error loading ad environment: $error');
       return null;
     },
   );

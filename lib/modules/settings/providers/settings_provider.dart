@@ -59,7 +59,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   Future<void> _saveSettings() async {
     if (!_isInitialized && state.groups.isEmpty) {
-      debugPrint('Skipping save - not initialized yet');
       return;
     }
 
@@ -263,7 +262,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       );
 
       state = state.copyWith(groups: groups);
-      debugPrint('Settings loaded from storage');
     } catch (e) {
       debugPrint('Failed to load settings: $e');
     }
@@ -272,7 +270,6 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Public Actions ==============
 
   void toggleSetting(String groupId, String itemId, [BuildContext? context]) {
-    print('Toggling setting: $groupId - $itemId');
     final group = state.groups[groupId];
     if (group == null) return;
 
