@@ -43,7 +43,7 @@ class DXCoreBridge {
   using WinStop_t = int (*)();
   using WinMeasurePing_t = int (*)();
   using WinGetFlag_t = const char* (*)();
-  using WinStartVPN_t = void (*)(const char*, const char*, const char*, int);
+  using WinStartVPN_t = void (*)(const char*, const char*, const char*, int, int);
   using WinStopVPN_t = int (*)();
   using WinSetAsnName_t = void (*)();
   using WinSetTimeZone_t = int (*)(float);
