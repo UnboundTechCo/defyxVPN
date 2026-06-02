@@ -70,6 +70,7 @@
   "settingsSplitTunnel": "تونل تقسیم شده",
   "settingsKillSwitch": "کلید قطع",
   "settingsDeepScan": "اسکن عمیق",
+  "settingsHealthCheck": "بررسی سلامت",
   "settingsIncluded": "شامل شده",
   "settingsAtLeastOneCoreRequired": "حداقل یک هسته باید فعال باقی بماند",
   "settingsResetToDefault": "بازنشانی",

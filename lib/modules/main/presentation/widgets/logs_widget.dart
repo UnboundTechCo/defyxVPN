@@ -396,7 +396,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text(AppLocalizations.of(context)!.close),
+                child: Text(AppLocalizations.of(context).close),
               ),
               ElevatedButton(
                 onPressed: () {

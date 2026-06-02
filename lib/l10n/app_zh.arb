@@ -68,6 +68,7 @@
   "settingsSplitTunnel": "分离隧道",
   "settingsKillSwitch": "终止开关",
   "settingsDeepScan": "深度扫描",
+  "settingsHealthCheck": "健康检查",
   "settingsIncluded": "已包含",
   "settingsAtLeastOneCoreRequired": "至少需要保留一个核心",
   "settingsResetToDefault": "重置",

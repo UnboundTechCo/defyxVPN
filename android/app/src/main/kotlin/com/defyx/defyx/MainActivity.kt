@@ -232,7 +232,9 @@ class MainActivity : FlutterActivity() {
                 val flowLine = args?.get("flowLine") as? String
                 val pattern = args?.get("pattern") as? String
                 val deepScan = args?.get("deepScan") as? String
+                val healthCheck = args?.get("healthCheck") as? String
                 val boolDeepScan = deepScan.toBoolean()
+                val boolHealthCheck = healthCheck.toBoolean()
                 if (flowLine.isNullOrEmpty() || pattern.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
                         result.error(
@@ -249,7 +251,7 @@ class MainActivity : FlutterActivity() {
                     cacheDirectory.mkdirs()
                 }
                 DefyxVpnService.getInstance()
-                        .connectVPN(vpnCacheDir, flowLine, pattern, boolDeepScan)
+                        .connectVPN(vpnCacheDir, flowLine, pattern, boolDeepScan, boolHealthCheck)
                 result.success(true)
             } catch (e: Exception) {
                 Log.e("Start VPN", "Start VPN failed: ${e.message}", e)

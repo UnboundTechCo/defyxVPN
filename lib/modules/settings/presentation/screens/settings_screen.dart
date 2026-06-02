@@ -103,7 +103,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _onVerticalDragUpdate(DragUpdateDetails details) {
-    final double delta = (_lastTouchPosition - details.globalPosition.dy) *
+    final double delta =
+        (_lastTouchPosition - details.globalPosition.dy) *
         _touchScrollSpeedFactor;
     _lastTouchPosition = details.globalPosition.dy;
 
@@ -253,7 +254,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final groups = settingsState.groupList;
-
     return Column(
       children: groups
           .map(
@@ -267,12 +267,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onReorder: group.isDraggable
                   ? (oldIndex, newIndex) {
                       settingsNotifier.reorderItems(
-                          group.id, oldIndex, newIndex);
+                        group.id,
+                        oldIndex,
+                        newIndex,
+                      );
                     }
                   : null,
               onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
-                      settingsNotifier.resetGroupToDefault(group.id, context: context);
+                      settingsNotifier.resetGroupToDefault(
+                        group.id,
+                        context: context,
+                      );
                     }
                   : null,
               onNavigate: (route) {

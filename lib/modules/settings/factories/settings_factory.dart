@@ -6,14 +6,16 @@ class SettingsConfig {
   final bool showDestination;
   final bool showSplitTunnel;
   final bool showDeepScan;
+  final bool showHealthCheck;
   final bool showKillSwitch;
   final List<SettingsItem> customItems;
 
   const SettingsConfig({
     this.showDestination = false,
     this.showSplitTunnel = false,
-    this.showKillSwitch = false,
     this.showDeepScan = true,
+    this.showHealthCheck = true,
+    this.showKillSwitch = false,
     this.customItems = const [],
   });
 
@@ -95,6 +97,20 @@ class SettingsFactory {
     );
   }
 
+  static SettingsItem createHealthCheckItem({
+    required String title,
+    bool isEnabled = false,
+  }) {
+    return SettingsItem(
+      id: SettingsItemId.healthCheck,
+      title: title,
+      isEnabled: isEnabled,
+      isAccessible: true,
+      sortOrder: 0,
+      itemType: SettingsItemType.toggle,
+    );
+  }
+
   /// Creates the kill switch toggle item
   static SettingsItem createKillSwitchItem({
     required String title,
@@ -142,10 +158,12 @@ class SettingsFactory {
     String? splitTunnelTitle,
     String? splitTunnelSubtitle,
     String? deepScanTitle,
+    String? healthCheckTitle,
     String? killSwitchTitle,
     bool splitTunnelEnabled = false,
     bool killSwitchEnabled = false,
     bool deepScanEnabled = false,
+    bool healthCheckEnabled = false,
   }) {
     final List<SettingsItem> items = [];
 
@@ -161,6 +179,13 @@ class SettingsFactory {
       items.add(createDeepScanItem(
         title: deepScanTitle,
         isEnabled: deepScanEnabled,
+      ));
+    }
+
+    if (_config.showHealthCheck && healthCheckTitle != null) {
+      items.add(createHealthCheckItem(
+        title: healthCheckTitle,
+        isEnabled: healthCheckEnabled,
       ));
     }
 

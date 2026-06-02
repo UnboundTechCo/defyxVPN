@@ -504,6 +504,12 @@ abstract class AppLocalizations {
   /// **'DEEP SCAN'**
   String get settingsDeepScan;
 
+  /// Settings section - health check
+  ///
+  /// In en, this message translates to:
+  /// **'HEALTH CHECK'**
+  String get settingsHealthCheck;
+
   /// Settings label - included items
   ///
   /// In en, this message translates to:

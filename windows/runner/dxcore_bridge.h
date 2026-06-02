@@ -21,7 +21,7 @@ class DXCoreBridge {
   int MeasurePing();
   std::string GetFlag();
   void StartVPN(const std::string& cache_dir, const std::string& flow_line,
-                const std::string& pattern, const bool deepScan);
+                const std::string& pattern, const bool deepScan, const bool health_check);
   int StopVPN();
   void SetAsnName();
   int SetTimeZone(float tz);

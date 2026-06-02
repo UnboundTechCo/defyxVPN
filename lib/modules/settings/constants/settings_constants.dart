@@ -19,6 +19,7 @@ abstract class SettingsItemId {
   static const splitTunnel = 'split_tunnel';
   static const killSwitch = 'kill_switch';
   static const deepScan = 'deep_scan';
+  static const healthCheck = 'health_check';
 }
 
 // Item Titles
@@ -27,6 +28,7 @@ abstract class SettingsItemTitle {
   static const splitTunnel = 'SPLIT TUNNEL';
   static const killSwitch = 'KILL SWITCH';
   static const deepScan = 'DEEP SCAN';
+  static const healthCheck = 'HEALTH CHECK';
 }
 
 // Navigation Routes
@@ -62,6 +64,7 @@ class SettingsText {
   String get splitTunnelTitle => _l10n?.settingsSplitTunnel ?? SettingsItemTitle.splitTunnel;
   String get splitTunnelSubtitle => _l10n?.settingsIncluded ?? SettingsSubtitle.splitTunnelIncluded;
   String get deepScanTitle => _l10n?.settingsDeepScan ?? SettingsItemTitle.deepScan;
+  String get healthCheckTitle => _l10n?.settingsHealthCheck ?? SettingsItemTitle.healthCheck;
   String get killSwitchTitle => _l10n?.settingsKillSwitch ?? SettingsItemTitle.killSwitch;
   String get connectionMethodTitle => _l10n?.settingsConnectionMethod ?? SettingsGroupTitle.connectionMethod;
   String get destinationTitle => _l10n?.settingsDestination ?? SettingsItemTitle.destination;
