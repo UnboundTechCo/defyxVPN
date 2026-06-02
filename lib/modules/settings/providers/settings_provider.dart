@@ -14,10 +14,7 @@ class SettingsState {
   final Map<String, SettingsGroup> groups;
   final bool isLoading;
 
-  const SettingsState({
-    required this.groups,
-    this.isLoading = false,
-  });
+  const SettingsState({required this.groups, this.isLoading = false});
 
   SettingsState copyWith({
     Map<String, SettingsGroup>? groups,
@@ -48,7 +45,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   // ============== Initialization ==============
 
   Future<void> _initializeSettings() async {
-    await _loadSettingsFromStorage();  
+    await _loadSettingsFromStorage();
     await _updateConnectionMethodFromFlowLine();
     _ensureStaticGroups();
     _isInitialized = true;
@@ -63,8 +60,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       return;
     }
 
-    final jsonMap =
-        state.groups.map((key, group) => MapEntry(key, group.toJson()));
+    final jsonMap = state.groups.map(
+      (key, group) => MapEntry(key, group.toJson()),
+    );
     final jsonString = jsonEncode(jsonMap);
     await _secureStorage?.write(SettingsStorageKey.appSettings, jsonString);
   }
@@ -90,12 +88,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   void _ensureStaticGroups({BuildContext? context}) {
     final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
     final text = SettingsText(context);
-
     // Only add traffic control if it doesn't exist
-    if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
+    // if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
+      // debugPrint('Adding traffic control group');
       updatedGroups[SettingsGroupId.trafficControl] =
           _createTrafficControlGroup(text);
-    }
+    // }
 
     state = state.copyWith(groups: updatedGroups);
 
@@ -109,12 +107,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   SettingsGroup _createTrafficControlGroup(SettingsText text) {
     final savedGroup = state.groups[SettingsGroupId.trafficControl];
-
     return SettingsFactory.createTrafficControlGroup(
       title: text.escapeModeTitle,
       splitTunnelTitle: text.splitTunnelTitle,
       splitTunnelSubtitle: text.splitTunnelSubtitle,
       deepScanTitle: text.deepScanTitle,
+      healthCheckTitle: text.healthCheckTitle,
       killSwitchTitle: text.killSwitchTitle,
       splitTunnelEnabled: SettingsFactory.getSavedItemState(
         savedGroup?.items,
@@ -127,7 +125,12 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       deepScanEnabled: SettingsFactory.getSavedItemState(
         savedGroup?.items,
         SettingsItemId.deepScan,
-      ));
+      ),
+      healthCheckEnabled: SettingsFactory.getSavedItemState(
+        savedGroup?.items,
+        SettingsItemId.healthCheck,
+      ),
+    );
   }
 
   bool isDeepScanEnabled() {
@@ -135,6 +138,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     return SettingsFactory.getSavedItemState(
       savedGroup?.items,
       SettingsItemId.deepScan,
+    );
+  }
+
+  bool isHealthCheckEnabled() {
+    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+    return SettingsFactory.getSavedItemState(
+      savedGroup?.items,
+      SettingsItemId.healthCheck,
     );
   }
 
@@ -152,7 +163,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
   // ============== Connection Method Sync ==============
 
-  Future<void> _updateConnectionMethodFromFlowLine({BuildContext? context}) async {
+  Future<void> _updateConnectionMethodFromFlowLine({
+    BuildContext? context,
+  }) async {
     try {
       final text = SettingsText(context);
       // Load flowline
@@ -163,8 +176,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       }
 
       // Load saved settings
-      final settingsJson =
-          await _secureStorage?.read(SettingsStorageKey.appSettings);
+      final settingsJson = await _secureStorage?.read(
+        SettingsStorageKey.appSettings,
+      );
 
       if (settingsJson == null) {
         _updateGroup(_createDefaultConnectionMethodGroup(flowline, text));
@@ -180,7 +194,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
       // Get saved items - these contain user's drag order(sortOrder)
       final List<dynamic> savedItems = List<dynamic>.from(
-          savedData[SettingsGroupId.connectionMethod]['items'] ?? []);
+        savedData[SettingsGroupId.connectionMethod]['items'] ?? [],
+      );
 
       final allFlowlineItems = flowline.toList();
 
@@ -188,8 +203,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       // This preserves user's sortOrder!
       final List<dynamic> mergedItems = savedItems.where((settingItem) {
         if (settingItem['itemType'] == 'navigation') return true;
-        return allFlowlineItems
-            .any((flowItem) => flowItem['label'] == settingItem['id']);
+        return allFlowlineItems.any(
+          (flowItem) => flowItem['label'] == settingItem['id'],
+        );
       }).toList();
 
       // Find max sortOrder from existing items
@@ -202,9 +218,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       // New items go to the end (after user's ordered items)
       for (var flowItem in allFlowlineItems) {
         final label = flowItem['label'] as String;
-        final existsInSaved = mergedItems.any((settingItem) =>
-            settingItem['id'] == label ||
-            settingItem['itemType'] == 'navigation');
+        final existsInSaved = mergedItems.any(
+          (settingItem) =>
+              settingItem['id'] == label ||
+              settingItem['itemType'] == 'navigation',
+        );
 
         if (!existsInSaved) {
           maxSortOrder++;
@@ -219,20 +237,25 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       }
 
       if (SettingsFactory.config.showDestination) {
-        if (!mergedItems
-            .any((item) => item['id'] == SettingsItemId.destination)) {
-          mergedItems.add(SettingsFactory.createDestinationItem(
-            title: text.destinationTitle,
-          ).toJson());
+        if (!mergedItems.any(
+          (item) => item['id'] == SettingsItemId.destination,
+        )) {
+          mergedItems.add(
+            SettingsFactory.createDestinationItem(
+              title: text.destinationTitle,
+            ).toJson(),
+          );
         }
       } else {
-        mergedItems
-            .removeWhere((item) => item['id'] == SettingsItemId.destination);
+        mergedItems.removeWhere(
+          (item) => item['id'] == SettingsItemId.destination,
+        );
       }
 
       // Rebuild group with merged items (preserving user's sortOrder)
       final updatedGroupData = Map<String, dynamic>.from(
-          savedData[SettingsGroupId.connectionMethod]);
+        savedData[SettingsGroupId.connectionMethod],
+      );
       updatedGroupData['items'] = mergedItems;
       updatedGroupData['title'] = text.connectionMethodTitle;
 
@@ -247,8 +270,9 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   }
 
   Future<void> _loadSettingsFromStorage() async {
-    final jsonString =
-        await _secureStorage?.read(SettingsStorageKey.appSettings);
+    final jsonString = await _secureStorage?.read(
+      SettingsStorageKey.appSettings,
+    );
 
     if (jsonString == null) return;
 
@@ -256,10 +280,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final Map<String, dynamic> decoded = jsonDecode(jsonString);
 
       final groups = decoded.map(
-        (key, value) => MapEntry(
-          key,
-          SettingsGroup.fromJson(value),
-        ),
+        (key, value) => MapEntry(key, SettingsGroup.fromJson(value)),
       );
 
       state = state.copyWith(groups: groups);
@@ -302,10 +323,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final group = state.groups[groupId];
     if (group == null || !group.isDraggable) return;
 
-    final draggableItems = group.items
-        .where((item) => item.itemType != SettingsItemType.navigation)
-        .toList()
-      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+    final draggableItems =
+        group.items
+            .where((item) => item.itemType != SettingsItemType.navigation)
+            .toList()
+          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
     final navigationItems = group.items
         .where((item) => item.itemType == SettingsItemType.navigation)
@@ -330,7 +352,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         .toList();
 
     _updateGroup(
-        group.copyWith(items: [...updatedDraggableItems, ...navigationItems]));
+      group.copyWith(items: [...updatedDraggableItems, ...navigationItems]),
+    );
     _saveSettings();
   }
 
@@ -340,11 +363,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final group = state.groups[SettingsGroupId.connectionMethod];
     if (group == null) return '';
 
-    final items = group.items
-        .where((item) =>
-            item.isEnabled && item.itemType != SettingsItemType.navigation)
-        .toList()
-      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+    final items =
+        group.items
+            .where(
+              (item) =>
+                  item.isEnabled &&
+                  item.itemType != SettingsItemType.navigation,
+            )
+            .toList()
+          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
     return items.map((item) => item.id).join(',');
   }
@@ -360,7 +387,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     _saveSettings();
   }
 
-  Future<void> resetGroupToDefault(String groupId, {BuildContext? context}) async {
+  Future<void> resetGroupToDefault(
+    String groupId, {
+    BuildContext? context,
+  }) async {
     if (groupId == SettingsGroupId.connectionMethod) {
       await resetToDefault(context: context);
     }
@@ -373,14 +403,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
   void applyLocalization(BuildContext context) {
     final text = SettingsText(context);
     final updatedGroups = Map<String, SettingsGroup>.from(state.groups);
-    
+
     // Update connection method group title and items if it exists
     final connectionGroup = updatedGroups[SettingsGroupId.connectionMethod];
     if (connectionGroup != null) {
       // Update the group title
-      updatedGroups[SettingsGroupId.connectionMethod] = 
-          connectionGroup.copyWith(title: text.connectionMethodTitle);
-      
+      updatedGroups[SettingsGroupId.connectionMethod] = connectionGroup
+          .copyWith(title: text.connectionMethodTitle);
+
       // Update destination item title if it exists
       final updatedItems = connectionGroup.items.map((item) {
         if (item.id == SettingsItemId.destination) {
@@ -388,14 +418,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         }
         return item;
       }).toList();
-      
-      updatedGroups[SettingsGroupId.connectionMethod] = 
-          connectionGroup.copyWith(
-            title: text.connectionMethodTitle,
-            items: updatedItems,
-          );
+
+      updatedGroups[SettingsGroupId.connectionMethod] = connectionGroup
+          .copyWith(title: text.connectionMethodTitle, items: updatedItems);
     }
-    
+
     // Update traffic control group title and items if it exists
     final trafficGroup = updatedGroups[SettingsGroupId.trafficControl];
     if (trafficGroup != null) {
@@ -408,20 +435,22 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
             );
           case SettingsItemId.deepScan:
             return item.copyWith(title: text.deepScanTitle);
+          case SettingsItemId.healthCheck:
+            return item.copyWith(title: text.healthCheckTitle);
           case SettingsItemId.killSwitch:
             return item.copyWith(title: text.killSwitchTitle);
+
           default:
             return item;
         }
       }).toList();
-      
-      updatedGroups[SettingsGroupId.trafficControl] = 
-          trafficGroup.copyWith(
-            title: text.escapeModeTitle,
-            items: updatedItems,
-          );
+
+      updatedGroups[SettingsGroupId.trafficControl] = trafficGroup.copyWith(
+        title: text.escapeModeTitle,
+        items: updatedItems,
+      );
     }
-    
+
     state = state.copyWith(groups: updatedGroups);
   }
 

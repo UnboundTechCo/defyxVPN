@@ -70,6 +70,7 @@
   "settingsSplitTunnel": "РАЗДЕЛЬНОЕ ТУННЕЛИРОВАНИЕ",
   "settingsKillSwitch": "АВАРИЙНОЕ ОТКЛЮЧЕНИЕ",
   "settingsDeepScan": "ГЛУБОКОЕ СКАНИРОВАНИЕ",
+  "settingsHealthCheck": "ПРОВЕРКА ЗДОРОВЬЯ",
   "settingsIncluded": "ВКЛЮЧЕНО",
   "settingsAtLeastOneCoreRequired": "Должен оставаться включенным хотя бы один модуль",
   "settingsResetToDefault": "Сброс",

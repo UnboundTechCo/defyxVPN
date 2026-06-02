@@ -341,6 +341,11 @@
     "description": "Settings section - deep scan"
   },
 
+  "settingsHealthCheck": "HEALTH CHECK",
+  "@settingsHealthCheck": {
+    "description": "Settings section - health check"
+  },
+
   "settingsIncluded": "INCLUDED",
   "@settingsIncluded": {
     "description": "Settings label - included items"

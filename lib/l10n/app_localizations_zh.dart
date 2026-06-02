@@ -212,6 +212,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDeepScan => '深度扫描';
 
   @override
+  String get settingsHealthCheck => '健康检查';
+
+  @override
   String get settingsIncluded => '已包含';
 
   @override
