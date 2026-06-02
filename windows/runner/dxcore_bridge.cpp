@@ -96,7 +96,8 @@ std::string DXCoreBridge::GetFlag() {
 void DXCoreBridge::StartVPN(const std::string& cache_dir,
                             const std::string& flow_line,
                             const std::string& pattern,
-                          const bool deepScan) {
+                            const bool deepScan,
+                            const bool healthCheck) {
   if (pStartVPN_) pStartVPN_(cache_dir.c_str(), flow_line.c_str(), pattern.c_str(), deepScan);
 }
 
