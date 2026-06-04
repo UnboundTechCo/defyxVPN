@@ -258,7 +258,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final groups = settingsState.groupList;
-
     return Column(
       children: groups
           .map(

@@ -214,6 +214,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
+  String get settingsHealthCheck => 'HEALTH CHECK';
+
+  @override
   String get settingsIncluded => 'INCLUDED';
 
   @override

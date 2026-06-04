@@ -426,8 +426,12 @@ void VPNChannelHandler::SetupMethodChannel() {
             auto flow = get_string_arg(m, "flowLine");
             auto pattern = get_string_arg(m, "pattern");
             auto deepScan = get_string_arg(m, "deepScan");
+            auto healthCheck = get_string_arg(m, "healthCheck");
             bool deep_scan = false;
+            bool health_check = false;
             if (deepScan == "true") deep_scan = true;
+            if (healthCheck == "true") health_check = true;
+            
 
             wchar_t env_buf[32767];
             DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", env_buf, 32767);
@@ -453,7 +457,7 @@ void VPNChannelHandler::SetupMethodChannel() {
             };
             auto cache_dir = WideToUtf8(cache_dir_w);
 
-            dxcore_->StartVPN(cache_dir, flow, pattern, deep_scan);
+            dxcore_->StartVPN(cache_dir, flow, pattern, deep_scan, health_check);
 
             {
               std::lock_guard<std::mutex> lock(status_mutex_);
