@@ -504,6 +504,12 @@ abstract class AppLocalizations {
   /// **'DEEP SCAN'**
   String get settingsDeepScan;
 
+  /// Settings section - health check
+  ///
+  /// In en, this message translates to:
+  /// **'HEALTH CHECK'**
+  String get settingsHealthCheck;
+
   /// Settings label - included items
   ///
   /// In en, this message translates to:
@@ -576,11 +582,11 @@ abstract class AppLocalizations {
   /// **'Update Methods'**
   String get updateMethods;
 
-  /// Sync menu - import API option
+  /// Sync menu - import configuration file option
   ///
   /// In en, this message translates to:
-  /// **'Import API'**
-  String get importAPI;
+  /// **'Import Config'**
+  String get importConfig;
 
   /// Sync menu label
   ///

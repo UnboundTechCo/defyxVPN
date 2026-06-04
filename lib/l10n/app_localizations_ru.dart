@@ -214,6 +214,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsDeepScan => 'ГЛУБОКОЕ СКАНИРОВАНИЕ';
 
   @override
+  String get settingsHealthCheck => 'ПРОВЕРКА ЗДОРОВЬЯ';
+
+  @override
   String get settingsIncluded => 'ВКЛЮЧЕНО';
 
   @override
@@ -254,7 +257,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get updateMethods => 'Обновить методы';
 
   @override
-  String get importAPI => 'Импорт API';
+  String get importConfig => 'Импорт конфигурации';
 
   @override
   String get synchronization => 'Синхронизация';

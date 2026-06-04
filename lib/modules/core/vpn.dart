@@ -92,7 +92,8 @@ class VPN {
       await _connect();
     } else {
       log.addLog(
-          '[INFO] Auto-connect skipped - already connected or connecting');
+        '[INFO] Auto-connect skipped - already connected or connecting',
+      );
     }
   }
 
@@ -180,7 +181,7 @@ class VPN {
       // Get current VPN state for context
       final connectionState = _container?.read(connectionStateProvider);
       final vpnState = connectionState?.status.toString() ?? 'unknown';
-      final currentGroup = _container?.read(groupStateProvider)?.groupName;
+      final currentGroup = _container?.read(groupStateProvider).groupName;
 
       // Report to Crashlytics with VPN context
       crashReportingService.recordGoPanic(
@@ -196,15 +197,18 @@ class VPN {
       }
       crashReportingService.setCustomKey('crash_platform', platform);
 
-      debugPrint('🔥 Go panic reported to Crashlytics: $functionName - $errorMessage');
+      debugPrint(
+        '🔥 Go panic reported to Crashlytics: $functionName - $errorMessage',
+      );
     } catch (e) {
       debugPrint('Error handling crash event: $e');
     }
   }
 
   Future<void> _connect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     final loggerNotifier = _container?.read(loggerStateProvider.notifier);
     final settings = _container?.read(settingsProvider.notifier);
 
@@ -221,7 +225,7 @@ class VPN {
     if (!networkIsConnected) {
       connectionNotifier?.setNoInternet();
       alertService.error();
-      
+
       // Report network connectivity failure
       crashReportingService.recordVpnError(
         Exception('Network not connected'),
@@ -235,7 +239,7 @@ class VPN {
     final isAccepted = await _grantVpnPermission();
     if (!isAccepted!) {
       connectionNotifier?.setDisconnected();
-      
+
       // Report VPN permission denial
       crashReportingService.recordVpnError(
         Exception('VPN permission denied'),
@@ -251,12 +255,20 @@ class VPN {
 
     final isDeep =
         _container?.read(settingsProvider.notifier).isDeepScanEnabled() ??
-            false;
+        false;
+    final healthCheckEnabled =
+        _container?.read(settingsProvider.notifier).isHealthCheckEnabled() ??
+        false;
     _connectionStartTime = DateTime.now();
     analyticsService.logVpnConnectAttempt(pattern.isEmpty ? 'auto' : pattern);
 
     try {
-      await _vpnBridge.startVPN(flowLineStorage, pattern, isDeep);
+      await _vpnBridge.startVPN(
+        flowLineStorage,
+        pattern,
+        isDeep,
+        healthCheckEnabled,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) {
         connectionNotifier?.setAnalyzing();
       });
@@ -268,7 +280,7 @@ class VPN {
         vpnState: 'starting',
         connectionMethod: pattern.isEmpty ? 'auto' : pattern,
       );
-      
+
       connectionNotifier?.setError();
       alertService.error();
       log.addLog('[ERROR] Failed to start VPN: $e');
@@ -276,10 +288,11 @@ class VPN {
   }
 
   Future<void> _onFailerConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     final settings = _container?.read(settingsProvider.notifier);
-    final currentGroup = _container?.read(groupStateProvider)?.groupName;
+    final currentGroup = _container?.read(groupStateProvider).groupName;
 
     connectionNotifier?.setError();
     await _vpnBridge.disconnectVpn();
@@ -307,8 +320,9 @@ class VPN {
   }
 
   Future<void> _onSuccessConnect() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     final connectionState = _container?.read(connectionStateProvider);
     final vpnData = await _container?.read(vpnDataProvider.future);
     if (connectionState?.status != ConnectionStatus.analyzing) {
@@ -330,21 +344,27 @@ class VPN {
 
     int connectionDuration = 0;
     if (_connectionStartTime != null) {
-      connectionDuration =
-          DateTime.now().difference(_connectionStartTime!).inSeconds;
+      connectionDuration = DateTime.now()
+          .difference(_connectionStartTime!)
+          .inSeconds;
       _connectionStartTime = null;
     }
 
     analyticsService.logVpnConnected(
-        pattern, groupState?.groupName, connectionDuration);
+      pattern,
+      groupState?.groupName,
+      connectionDuration,
+    );
 
-
-    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
+    await _container
+        ?.read(flowlineServiceProvider)
+        .saveFlowline(offlineMode: false);
   }
 
   Future<void> _onLoading() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     final loggerNotifier = _container?.read(loggerStateProvider.notifier);
 
     final vpnData = await _container?.read(vpnDataProvider.future);
@@ -357,8 +377,8 @@ class VPN {
   Future<void> refreshPing() async {
     _container?.read(flagLoadingProvider.notifier).state = true;
     _container?.read(pingLoadingProvider.notifier).state = true;
-    _container?.read(pingProvider.notifier).state =
-        await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus
+        .getPing();
     _container?.read(pingLoadingProvider.notifier).state = false;
   }
 
@@ -382,8 +402,9 @@ class VPN {
   }
 
   Future<void> _closeTunnel() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier?.setDisconnecting();
     if (Platform.isIOS) {
@@ -396,8 +417,9 @@ class VPN {
   }
 
   Future<void> _onTunnelClosed() async {
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     connectionNotifier?.setDisconnecting();
     final vpnData = await _container?.read(vpnDataProvider.future);
     await _vpnBridge.stopVPN();
@@ -467,8 +489,9 @@ class VPN {
   Future<void> getVPNStatus() async {
     final status = await _vpnBridge.getVpnStatus();
     log.addLog("VPN status: $status");
-    final connectionNotifier =
-        _container?.read(connectionStateProvider.notifier);
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
     if (status == "connected") {
       connectionNotifier?.setConnected();
       await refreshPing();
@@ -479,9 +502,13 @@ class VPN {
 
   Future<void> initVPN() async {
     _container?.read(settingsLoadingProvider.notifier).state = true;
-    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: true);
+    await _container
+        ?.read(flowlineServiceProvider)
+        .saveFlowline(offlineMode: true);
     await _vpnBridge.setAsnName();
-    await _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
+    await _container
+        ?.read(flowlineServiceProvider)
+        .saveFlowline(offlineMode: false);
     _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 
@@ -491,16 +518,17 @@ class VPN {
       return;
     }
 
-    _container?.read(pingProvider.notifier).state =
-        await _networkStatus.getPing();
+    _container?.read(pingProvider.notifier).state = await _networkStatus
+        .getPing();
   }
 
   void _sendCoreFirebaseMessage(String message) {
     Map<String, dynamic> jsonData = jsonDecode(message);
     final title = jsonData["title"] ?? "Unknown";
     jsonData.remove("title");
-    final Map<String, String> stringMap =
-        jsonData.map((key, value) => MapEntry(key, value.toString()));
+    final Map<String, String> stringMap = jsonData.map(
+      (key, value) => MapEntry(key, value.toString()),
+    );
     analyticsService.logCoreData(title, stringMap);
   }
 }
