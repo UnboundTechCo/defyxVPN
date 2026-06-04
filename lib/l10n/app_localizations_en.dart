@@ -214,6 +214,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
+  String get settingsHealthCheck => 'HEALTH CHECK';
+
+  @override
   String get settingsIncluded => 'INCLUDED';
 
   @override
@@ -254,7 +257,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get updateMethods => 'Update Methods';
 
   @override
-  String get importAPI => 'Import API';
+  String get importConfig => 'Import Config';
 
   @override
   String get synchronization => 'Synchronization';

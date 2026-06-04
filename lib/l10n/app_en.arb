@@ -341,6 +341,11 @@
     "description": "Settings section - deep scan"
   },
 
+  "settingsHealthCheck": "HEALTH CHECK",
+  "@settingsHealthCheck": {
+    "description": "Settings section - health check"
+  },
+
   "settingsIncluded": "INCLUDED",
   "@settingsIncluded": {
     "description": "Settings label - included items"
@@ -401,9 +406,9 @@
     "description": "Sync menu - update methods option"
   },
 
-  "importAPI": "Import API",
-  "@importAPI": {
-    "description": "Sync menu - import API option"
+  "importConfig": "Import Config",
+  "@importConfig": {
+    "description": "Sync menu - import configuration file option"
   },
 
   "synchronization": "Synchronization",
