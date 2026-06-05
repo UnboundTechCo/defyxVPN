@@ -97,6 +97,8 @@ class VpnPlugin: VpnStatusDelegate {
             prepareVPN(result)
         case "isVPNPrepared":
             isVPNPrepared(result)
+        case "login":
+            login(call.arguments as? [String: Any], result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -267,9 +269,29 @@ class VpnPlugin: VpnStatusDelegate {
         IosSetTimeZone(timezoneFloat)
     }
 
+    private func login(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let email = args["email"] as? String,
+            let password = args["password"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+            let token = IosLogin(email,password)
+             result(token) 
+        
+    }
+
+    
+
     private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
         guard let args = arguments,
-            let isTest = args["isTest"] as? String
+            let isTest = args["isTest"] as? String,
+            let token = args["token"] as? String
         else {
             result(
                 FlutterError(
@@ -288,7 +310,7 @@ class VpnPlugin: VpnStatusDelegate {
         if tuunel {
 
             print("VPN is Prepared ")
-            VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest]) {
+            VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest,"token":token]) {
                 response in
                 result(response)
             }
@@ -296,7 +318,7 @@ class VpnPlugin: VpnStatusDelegate {
 
             print("VPN is not Prepared ")
             self.goQueue.async {
-                let flowline = IosGetFlowLine(isTestBool)
+                let flowline = IosGetFlowLine(isTestBool, token)
                 DispatchQueue.main.async { result(flowline) }
             }
             return

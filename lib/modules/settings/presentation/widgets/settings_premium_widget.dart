@@ -3,44 +3,47 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.da
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+final isLoggedInProvider = FutureProvider<bool>((ref) async {
+  final secureStorage = ref.watch(secureStorageProvider);
+
+  final token = await secureStorage.read(premiumTokenKey);
+
+  return token != null && token.isNotEmpty;
+});
+
 class SettingsPremiumWidget extends ConsumerWidget {
   const SettingsPremiumWidget({super.key});
 
-  Future<bool> _isLoggedIn(WidgetRef ref) async {
-
-    final secureStorage = ref.watch(secureStorageProvider);
-
-    final token = await secureStorage.read(premiumTokenKey);
-
-    return token != null && token.isNotEmpty;
-  }
-
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
-    return FutureBuilder(
-      future: _isLoggedIn(ref),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const CircularProgressIndicator();
-        }
+    final authState = ref.watch(authProvider);
 
-        return snapshot.data!
+    return authState.when(
+      loading: () => const CircularProgressIndicator(),
+      error: (e, st) => Text('Error'),
+      data: (isLoggedIn) {
+        return isLoggedIn
             ? InkWell(
                 child: Text(
                   'LOGGED IN',
-                  style: TextStyle(fontSize: 12.sp, color: Color(0xFFA3FF8C)),
-                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFFA3FF8C),
+                  ),
                 ),
               )
             : InkWell(
-                onTap: () => SettingsPremiumLoginDialog.show(context),
+                onTap: () => SettingsPremiumLoginDialog.show(context, ref),
                 child: Text(
                   'LOGIN OR REGISTER',
-                  style: TextStyle(fontSize: 12.sp, color: Color(0xFFFF9A9A)),
-                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    color: const Color(0xFFFF9A9A),
+                  ),
                 ),
               );
       },

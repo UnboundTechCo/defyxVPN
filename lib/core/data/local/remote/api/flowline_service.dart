@@ -4,6 +4,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -28,7 +29,11 @@ class FlowlineService implements IFlowlineService {
   FlowlineService(this._secureStorage, this._container);
 
   @override
-  Future<String> getFlowline() => _vpnBridge.getFlowLine();
+  Future<String> getFlowline() async {
+    final token = await _container.read(authProvider.notifier).getToken();
+    final flowLine = await _vpnBridge.getFlowLine(token);
+    return flowLine;
+  }
 
   @override
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
