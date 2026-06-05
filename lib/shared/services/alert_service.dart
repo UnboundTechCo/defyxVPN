@@ -19,6 +19,9 @@ abstract class AlertSub {
 }
 
 final class VibrationService extends AlertSub {
+  DateTime? _lastVibrationTime;
+  static const Duration _throttleDuration = Duration(seconds: 2);
+
   @override
   Future<void> init() async {
     _hasAction = await Vibration.hasVibrator();
@@ -29,10 +32,26 @@ final class VibrationService extends AlertSub {
     _hasAction = enabled;
   }
 
+  bool _canVibrate() {
+    if (_lastVibrationTime == null) return true;
+    
+    final now = DateTime.now();
+    final timeSinceLastVibration = now.difference(_lastVibrationTime!);
+    
+    return timeSinceLastVibration >= _throttleDuration;
+  }
+
+  void _recordVibration() {
+    _lastVibrationTime = DateTime.now();
+  }
+
   @override
   Future<void> success() async {
+    if (!_canVibrate()) return;
+    
     try {
       await Vibration.vibrate(duration: 75);
+      _recordVibration();
     } catch (e) {
       debugPrint('Error in success vibration: $e');
     }
@@ -40,8 +59,11 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> heartbeat() async {
+    if (!_canVibrate()) return;
+    
     try {
       await Vibration.vibrate(duration: 35);
+      _recordVibration();
     } catch (e) {
       debugPrint('Error in heartbeat vibration: $e');
     }
@@ -49,8 +71,11 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> error() async {
+    if (!_canVibrate()) return;
+    
     try {
       await Vibration.vibrate(duration: 100);
+      _recordVibration();
     } catch (e) {
       debugPrint('Error in error vibration: $e');
     }
@@ -58,8 +83,11 @@ final class VibrationService extends AlertSub {
 
   @override
   Future<void> short() async {
+    if (!_canVibrate()) return;
+    
     try {
       await Vibration.vibrate(duration: 50);
+      _recordVibration();
     } catch (e) {
       debugPrint('Error in short vibration: $e');
     }
