@@ -515,6 +515,18 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "verifyGateway") {
+          if (!dxcore_->IsLoaded()) {
+            result->Success(flutter::EncodableValue(false));
+            return;
+          }
+          std::thread([this, result = std::move(result)]() mutable {
+            bool ok = dxcore_->PerformGatewayHandshake();
+            result->Success(flutter::EncodableValue(ok));
+          }).detach();
+          return;
+        }
+
         result->NotImplemented();
       });
 }

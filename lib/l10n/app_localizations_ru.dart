@@ -190,6 +190,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusIsReady => 'готов';
 
   @override
+  String get statusIsInTrouble => 'в беде.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore недоступен.';
+
+  @override
   String get statusToSpeedTest => 'к тесту скорости';
 
   @override

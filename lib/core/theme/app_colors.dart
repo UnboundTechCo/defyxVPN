@@ -24,6 +24,10 @@ class AppColors {
   static const Color middleGradientFailedToConnect = Color(0xFF867229);
   static const Color bottomGradientFailedToConnect = Color(0xFFD9B639);
 
+  // Gradient Colors (Core Down — DXcore handshake failed)
+  static const Color middleGradientCoreDown = Color(0xFF2C2000);
+  static const Color bottomGradientCoreDown = Color(0xFF7A5F00);
+
   // Connecting Colors
   static const Color topGradientConnecting = Color(0xFF18181E);
   static const Color middleGradientConnecting = Color(0xFF4161A6);

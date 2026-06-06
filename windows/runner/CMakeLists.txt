@@ -38,6 +38,8 @@ target_compile_definitions(${BINARY_NAME} PRIVATE "NOMINMAX")
 # dependencies here.
 target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)
 target_link_libraries(${BINARY_NAME} PRIVATE "dwmapi.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "bcrypt.lib")
+target_link_libraries(${BINARY_NAME} PRIVATE "crypt32.lib")
 target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_SOURCE_DIR}")
 
 # Run the Flutter tool portions of the build. This must not be removed.
@@ -55,3 +57,20 @@ if (EXISTS "${DXCORE_DLL_PATH}")
 else()
   message(WARNING "DXcore.dll not found at ${DXCORE_DLL_PATH}; skipping copy. Build the DLL first.")
 endif()
+
+# Embed Windows gateway key from WINDOWS_KEY.txt into a generated header
+set(GATEWAY_KEY_FILE "${CMAKE_CURRENT_LIST_DIR}/WINDOWS_KEY.txt")
+if(EXISTS "${GATEWAY_KEY_FILE}")
+  file(READ "${GATEWAY_KEY_FILE}" _GATEWAY_KEY_RAW)
+  string(REGEX REPLACE "[ \t\r\n]+" "" WINDOWS_GATEWAY_KEY_STRIPPED "${_GATEWAY_KEY_RAW}")
+  configure_file(
+    "${CMAKE_CURRENT_LIST_DIR}/windows_key_generated.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/windows_key_generated.h"
+    @ONLY
+  )
+else()
+  message(WARNING "WINDOWS_KEY.txt not found; gateway key will be empty.")
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/windows_key_generated.h"
+    "#pragma once\nstatic const char kWindowsGatewayKey[] = \"\";\n")
+endif()
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")

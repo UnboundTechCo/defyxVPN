@@ -456,6 +456,18 @@ abstract class AppLocalizations {
   /// **'is ready'**
   String get statusIsReady;
 
+  /// Status connector word when DXcore handshake fails
+  ///
+  /// In en, this message translates to:
+  /// **'is in trouble.'**
+  String get statusIsInTrouble;
+
+  /// Status message shown when DXcore cannot be verified
+  ///
+  /// In en, this message translates to:
+  /// **'DXcore down.'**
+  String get statusDXcoreDown;
+
   /// Status message - ready for speed test
   ///
   /// In en, this message translates to:
