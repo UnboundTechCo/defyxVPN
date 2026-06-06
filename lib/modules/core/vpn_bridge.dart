@@ -85,4 +85,12 @@ class VpnBridge {
 
   Future<bool> isVPNPrepared() async =>
       (await _methodChannel.invokeMethod<bool>('isVPNPrepared')) ?? false;
+
+  Future<bool> verifyGateway() async {
+    try {
+      return (await _methodChannel.invokeMethod<bool>('verifyGateway')) ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
 }

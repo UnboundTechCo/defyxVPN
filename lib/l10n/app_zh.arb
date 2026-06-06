@@ -60,6 +60,8 @@
   "statusConnectAlready": "立即连接",
   "statusTestingSpeed": "测试速度中 ...",
   "statusIsReady": "已准备好",
+  "statusIsInTrouble": "遇到麻烦了.",
+  "statusDXcoreDown": "DXcore 已关闭.",
   "statusToSpeedTest": "进行速度测试",
   "statusYoursToShape": "由您塑造",
   "settingsConnectionMethod": "连接方式",

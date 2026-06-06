@@ -62,6 +62,8 @@
   "statusConnectAlready": "الان متصل شوید",
   "statusTestingSpeed": "تست سرعت در جریان است ...",
   "statusIsReady": "آماده است",
+  "statusIsInTrouble": "به مشکل خورده.",
+  "statusDXcoreDown": "DXcore متوقف شده.",
   "statusToSpeedTest": "برای تست سرعت",
   "statusYoursToShape": "برای شما طراحی شده",
   "settingsConnectionMethod": "روش اتصال",
