@@ -20,7 +20,6 @@ dependencies:
   dio_http_formatter: ^3.2.1
   shimmer: ^3.0.0
   shake: ^3.0.0
-  vibration: ^3.1.8
   google_mobile_ads: ^6.0.0
   app_tracking_transparency: ^2.0.5
   url_launcher: ^6.3.1
