@@ -20,5 +20,4 @@ x86/
 runner/DXcore.dll
 runner/DXcore.h
 runner/WINDOWS_KEY.txt
-runner/windows_key_generated.h
 runner/dxcore_windows.h

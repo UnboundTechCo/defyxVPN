@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "dummy",
-    "storage_bucket": "dummy.firebasestorage.app"
+    "project_number": "814111564703",
+    "project_id": "defyx-21c31",
+    "storage_bucket": "defyx-21c31.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:dummyappid",
+        "mobilesdk_app_id": "1:814111564703:android:5af38a5b08a029d07153aa",
         "android_client_info": {
           "package_name": "de.unboundtech.defyxvpn"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "dummy-api-key"
+          "current_key": "AIzaSyCo8HF4sdJQNdEAN5PZD0BBTByggM5WN54"
         }
       ],
       "services": {
