@@ -33,6 +33,8 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
+  static bool _gatewayVerified = false;
+
   final ScrollController _scrollController = ScrollController();
   final AnimationService _animationService = AnimationService();
   bool _showHeaderShadow = false;
@@ -58,7 +60,8 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // On Windows, verify the DXcore gateway before doing anything else.
-      if (Platform.isWindows) {
+      if (Platform.isWindows && !_gatewayVerified) {
+        _gatewayVerified = true;
         final gatewayOk = await VpnBridge().verifyGateway();
         if (!mounted) return;
         if (!gatewayOk) {

@@ -2,10 +2,8 @@
 
 #include <ShlObj.h>
 #include <filesystem>
-#include <random>
 #include <vector>
 #include <bcrypt.h>
-#include <wincrypt.h>
 #include "windows_key_generated.h"
 
 DXCoreBridge* DXCoreBridge::s_instance_ = nullptr;
@@ -174,22 +172,38 @@ int DXCoreBridge::ResetSystemProxy() {
 
 namespace {
 
-// Build key bytes from the embedded key string.
-// Uses the raw ASCII bytes of the (whitespace-stripped) base64 string,
-// which matches the Go-side key derivation.
-std::vector<uint8_t> GatewayKeyBytes(const char* key_str) {
-  if (!key_str || key_str[0] == '\0') return {};
-  const size_t len = strlen(key_str);
-  return std::vector<uint8_t>(
-      reinterpret_cast<const uint8_t*>(key_str),
-      reinterpret_cast<const uint8_t*>(key_str) + len);
+// Hex-encode bytes to a lowercase string.
+std::string GatewayHexEncode(const std::vector<uint8_t>& bytes) {
+  static const char kHex[] = "0123456789abcdef";
+  std::string out;
+  out.reserve(bytes.size() * 2);
+  for (uint8_t b : bytes) { out += kHex[b >> 4]; out += kHex[b & 0x0F]; }
+  return out;
 }
 
-// HMAC-SHA256 of `message` using `key_bytes`; returns raw 32-byte digest.
-std::vector<uint8_t> GatewayHmacSha256Raw(const std::vector<uint8_t>& key_bytes,
-                                           const std::string& message) {
-  if (key_bytes.empty()) return {};
+// Hex-decode a hex string to bytes; returns empty on invalid input.
+std::vector<uint8_t> GatewayHexDecode(const std::string& hex) {
+  if (hex.size() % 2 != 0) return {};
+  std::vector<uint8_t> out;
+  out.reserve(hex.size() / 2);
+  auto hexval = [](char c) -> int {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+  };
+  for (size_t i = 0; i < hex.size(); i += 2) {
+    int hi = hexval(hex[i]), lo = hexval(hex[i + 1]);
+    if (hi < 0 || lo < 0) return {};
+    out.push_back(static_cast<uint8_t>((hi << 4) | lo));
+  }
+  return out;
+}
 
+// HMAC-SHA256(hmac_key, message) — returns raw 32-byte digest.
+// Mirrors Go: hmac.New(sha256.New, hmac_key); h.Write(message); h.Sum(nil)
+std::vector<uint8_t> GatewayHmacSha256(const std::vector<uint8_t>& hmac_key,
+                                        const std::vector<uint8_t>& message) {
   BCRYPT_ALG_HANDLE hAlg = nullptr;
   NTSTATUS status = BCryptOpenAlgorithmProvider(
       &hAlg, BCRYPT_SHA256_ALGORITHM, nullptr, BCRYPT_ALG_HANDLE_HMAC_FLAG);
@@ -204,13 +218,13 @@ std::vector<uint8_t> GatewayHmacSha256Raw(const std::vector<uint8_t>& key_bytes,
   BCRYPT_HASH_HANDLE hHash = nullptr;
   status = BCryptCreateHash(
       hAlg, &hHash, nullptr, 0,
-      const_cast<PUCHAR>(key_bytes.data()),
-      static_cast<ULONG>(key_bytes.size()), 0);
+      const_cast<PUCHAR>(hmac_key.data()),
+      static_cast<ULONG>(hmac_key.size()), 0);
   if (!BCRYPT_SUCCESS(status)) { BCryptCloseAlgorithmProvider(hAlg, 0); return {}; }
 
   status = BCryptHashData(
       hHash,
-      reinterpret_cast<PUCHAR>(const_cast<char*>(message.data())),
+      const_cast<PUCHAR>(message.data()),
       static_cast<ULONG>(message.size()), 0);
   if (!BCRYPT_SUCCESS(status)) {
     BCryptDestroyHash(hHash); BCryptCloseAlgorithmProvider(hAlg, 0); return {};
@@ -222,29 +236,6 @@ std::vector<uint8_t> GatewayHmacSha256Raw(const std::vector<uint8_t>& key_bytes,
   BCryptCloseAlgorithmProvider(hAlg, 0);
   if (!BCRYPT_SUCCESS(status)) return {};
   return hash;
-}
-
-// Encode raw bytes as lowercase hex string.
-std::string GatewayToHex(const std::vector<uint8_t>& bytes) {
-  static const char kHex[] = "0123456789abcdef";
-  std::string hex;
-  hex.reserve(bytes.size() * 2);
-  for (uint8_t b : bytes) { hex += kHex[b >> 4]; hex += kHex[b & 0x0F]; }
-  return hex;
-}
-
-// Base64-encode a byte buffer (no CRLF, no trailing newline).
-std::string GatewayBase64Encode(const std::vector<uint8_t>& data) {
-  DWORD len = 0;
-  CryptBinaryToStringA(data.data(), static_cast<DWORD>(data.size()),
-                        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
-                        nullptr, &len);
-  std::string out(len, '\0');
-  CryptBinaryToStringA(data.data(), static_cast<DWORD>(data.size()),
-                        CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF,
-                        out.data(), &len);
-  out.resize(len);
-  return out;
 }
 
 // Generate a cryptographically random 32-character alphanumeric string.
@@ -267,88 +258,62 @@ std::string GatewayGenRandom32() {
 }  // namespace
 
 bool DXCoreBridge::PerformGatewayHandshake() {
-#define GW_LOG(fmt, ...) \
-  do { fprintf(stderr, "[Gateway] " fmt "\n", ##__VA_ARGS__); fflush(stderr); } while(0)
+  if (!pRequestHandshake_ || !pCompleteHandshake_) return false;
 
-  if (!pRequestHandshake_ || !pCompleteHandshake_) {
-    GW_LOG("FAIL: WinRequestHandshake or WinCompleteHandshake not found in DXcore.dll");
-    return false;
-  }
+  // Embedded key: raw ASCII bytes of the (whitespace-stripped) base64 string.
+  // Matches Go's []byte(GATEWAY_KEY) — the string itself, not base64-decoded.
+  const std::vector<uint8_t> embedded_key(
+      reinterpret_cast<const uint8_t*>(kWindowsGatewayKey),
+      reinterpret_cast<const uint8_t*>(kWindowsGatewayKey) + strlen(kWindowsGatewayKey));
+  if (embedded_key.empty()) return false;
 
-  // Key: use the raw ASCII bytes of the embedded key string.
-  // (The base64 string itself — stripped of whitespace by CMake — is used as
-  //  the HMAC key material, matching the Go-side implementation.)
-  const std::vector<uint8_t> key = GatewayKeyBytes(kWindowsGatewayKey);
-  if (key.empty()) {
-    GW_LOG("FAIL: embedded key is empty — WINDOWS_KEY.txt missing at build time");
-    return false;
-  }
-  GW_LOG("key: %zu raw bytes", key.size());
+  // Step 1 — 32-char alphanumeric app random (32 ASCII bytes, no nulls).
+  const std::string app_random_str = GatewayGenRandom32();
+  const std::vector<uint8_t> app_random_bytes(
+      app_random_str.begin(), app_random_str.end());
 
-  // Step 1 — app generates random, calls requestHandshake.
-  const std::string app_random = GatewayGenRandom32();
-  GW_LOG("appRandom(%zu): %s", app_random.size(), app_random.c_str());
+  // Step 2 — requestHandshake; DLL returns hex-encoded 32-byte core random (64 hex chars).
+  std::string ver("1"), app_copy(app_random_str);
+  char* kernel_hex_raw = pRequestHandshake_(ver.data(), app_copy.data());
+  if (!kernel_hex_raw) return false;
+  const std::string kernel_hex(kernel_hex_raw);
+  if (pFreeString_) pFreeString_(kernel_hex_raw);
+  if (kernel_hex.size() != 64) return false;
 
-  std::string ver("1");
-  std::string app_rand_copy(app_random);
-  char* kernel_raw = pRequestHandshake_(
-      const_cast<char*>(ver.c_str()),
-      const_cast<char*>(app_rand_copy.c_str()));
-  if (!kernel_raw) {
-    GW_LOG("FAIL: WinRequestHandshake returned null");
-    return false;
-  }
-  const std::string kernel_random(kernel_raw);
-  if (pFreeString_) pFreeString_(kernel_raw);
-  GW_LOG("kernelRandom(%zu): hex=%s", kernel_random.size(),
-         GatewayToHex(std::vector<uint8_t>(kernel_random.begin(), kernel_random.end())).c_str());
-  if (kernel_random.size() != 32) {
-    GW_LOG("FAIL: kernelRandom length is %zu, expected 32", kernel_random.size());
-    return false;
-  }
+  const std::vector<uint8_t> core_random = GatewayHexDecode(kernel_hex);
+  if (core_random.size() != 32) return false;
 
-  // Step 2 — clientHash = HMAC(key, appRandom[:16] + kernelRandom[16:])
-  const std::string client_msg = app_random.substr(0, 16) + kernel_random.substr(16);
-  const std::vector<uint8_t> client_raw = GatewayHmacSha256Raw(key, client_msg);
-  const std::string client_hash_hex = GatewayToHex(client_raw);
-  const std::string client_hash_b64 = GatewayBase64Encode(client_raw);
-  GW_LOG("clientHash hex: %s", client_hash_hex.c_str());
-  GW_LOG("clientHash b64: %s", client_hash_b64.c_str());
-  if (client_raw.empty()) {
-    GW_LOG("FAIL: BCrypt HMAC-SHA256 failed");
-    return false;
-  }
+  // Step 3 — clientHash = HMAC-SHA256(hmac_key=appRandom||coreRandom, message=embeddedKey)
+  // Matches Go: hmac.New(sha256.New, append(clientRandom, coreRandom...)); h.Write(gateway.key)
+  std::vector<uint8_t> hmac_key_client;
+  hmac_key_client.insert(hmac_key_client.end(),
+                          app_random_bytes.begin(), app_random_bytes.end());
+  hmac_key_client.insert(hmac_key_client.end(),
+                          core_random.begin(), core_random.end());
+  const auto client_hash = GatewayHmacSha256(hmac_key_client, embedded_key);
+  if (client_hash.empty()) return false;
 
-  // Send hex-encoded hash to completeHandshake.
-  // If serverHash remains empty below, try switching to b64 (see comment).
-  const std::string client_hash = client_hash_hex;
+  // Step 4 — completeHandshake; DLL receives hex clientHash, returns hex serverHash.
+  std::string client_hash_hex = GatewayHexEncode(client_hash);
+  std::string ch_copy(client_hash_hex);
+  char* server_hex_raw = pCompleteHandshake_(ch_copy.data());
+  if (!server_hex_raw) return false;
+  const std::string server_hex(server_hex_raw);
+  if (pFreeString_) pFreeString_(server_hex_raw);
+  if (server_hex.size() != 64) return false;
 
-  // Step 3 — completeHandshake: send clientHash, receive serverHash.
-  std::string client_hash_copy(client_hash);
-  char* server_raw = pCompleteHandshake_(
-      const_cast<char*>(client_hash_copy.c_str()));
-  if (!server_raw) {
-    GW_LOG("FAIL: WinCompleteHandshake returned null");
-    return false;
-  }
-  const std::string server_hash(server_raw);
-  if (pFreeString_) pFreeString_(server_raw);
-  GW_LOG("serverHash(%zu): hex=%s", server_hash.size(), server_hash.c_str());
-  if (server_hash.empty()) {
-    GW_LOG("FAIL: WinCompleteHandshake returned empty — kernel rejected our clientHash");
-    GW_LOG("      Check Go source: does completeHandshake expect hex or base64?");
-    return false;
-  }
+  const std::vector<uint8_t> server_hash = GatewayHexDecode(server_hex);
+  if (server_hash.size() != 32) return false;
 
-  // Step 4 — verify: expectedHash = HMAC(key, kernelRandom[:16] + appRandom[16:])
-  const std::string expected_msg = kernel_random.substr(0, 16) + app_random.substr(16);
-  const std::vector<uint8_t> expected_raw = GatewayHmacSha256Raw(key, expected_msg);
-  const std::string expected_hash = GatewayToHex(expected_raw);
-  GW_LOG("expectedHash: %s", expected_hash.c_str());
+  // Step 5 — verify: expected = HMAC-SHA256(hmac_key=coreRandom||appRandom, message=embeddedKey)
+  // Matches Go: hmac.New(sha256.New, append(coreRandom, clientRandom...)); h.Write(gateway.key)
+  std::vector<uint8_t> hmac_key_server;
+  hmac_key_server.insert(hmac_key_server.end(),
+                          core_random.begin(), core_random.end());
+  hmac_key_server.insert(hmac_key_server.end(),
+                          app_random_bytes.begin(), app_random_bytes.end());
+  const auto expected_hash = GatewayHmacSha256(hmac_key_server, embedded_key);
 
-  const bool ok = !expected_hash.empty() && server_hash == expected_hash;
-  GW_LOG("%s", ok ? "OK: handshake verified" : "FAIL: serverHash != expectedHash");
-#undef GW_LOG
-  return ok;
+  return !expected_hash.empty() && server_hash == expected_hash;
 }
 
