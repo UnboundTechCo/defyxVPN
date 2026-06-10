@@ -85,23 +85,22 @@ class _SettingsPremiumTroubleDialogState
                     color: Colors.black.withValues(alpha: 0.5),
                   ),
                 ),
-                ElevatedButton(
-                  onPressed: () async {
-                    _handleSignOut();
-                  },
-                  style: ElevatedButton.styleFrom(elevation: 0),
+                SizedBox(width: 2.w),
+                InkWell(
+                  onTap: _handleSignOut,
                   child: Text(
                     'Sign out'.toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'Lato',
-                      color: const Color(0xFF17A079),
                       fontSize: fontSize,
                       fontWeight: FontWeight.w500,
+                      color: const Color(0xFF17A079),
                     ),
                   ),
                 ),
               ],
             ),
+            SizedBox(height: 24.h),
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();

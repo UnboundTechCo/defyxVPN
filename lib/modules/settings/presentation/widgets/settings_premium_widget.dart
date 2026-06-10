@@ -25,11 +25,10 @@ class SettingsPremiumWidget extends ConsumerWidget {
     final connectionState = ref.read(connectionStateProvider);
 
     if (connectionState.status == ConnectionStatus.connected) {
-      SettingsPremiumTroubleDialog.show(context, ref);
+      SettingsPremiumLoginDialog.show(context, ref);
       return;
     }
-
-    SettingsPremiumInfoDialog.show(context);
+    SettingsPremiumTroubleDialog.show(context, ref);
   }
 
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
