@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
@@ -16,14 +17,14 @@ class SettingsPremiumLoginDialog extends StatefulWidget {
   State<SettingsPremiumLoginDialog> createState() =>
       _SettingsPremiumLoginDialogState();
 
-  static Future<void> show(BuildContext context,  WidgetRef ref) {
+  static Future<void> show(BuildContext context, WidgetRef ref) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return PopScope(
           canPop: true,
-          child: SettingsPremiumLoginDialog( ref: ref),
+          child: SettingsPremiumLoginDialog(ref: ref),
         );
       },
     );
@@ -50,8 +51,10 @@ class _SettingsPremiumLoginDialogState
 
       final token = await vpnBridge.login(email, password);
 
-      if(token.isEmpty){
-        ToastUtil.showToast('Login failed. Please check your credentials and try again.');
+      if (token.isEmpty) {
+        ToastUtil.showToast(
+          'Login failed. Please check your credentials and try again.',
+        );
         return;
       }
 
@@ -72,6 +75,10 @@ class _SettingsPremiumLoginDialogState
       debugPrint(e.toString());
       debugPrint(stack.toString());
     }
+  }
+
+  void _handleNotNow() {
+    Navigator.of(context).pop();
   }
 
   @override
@@ -108,7 +115,7 @@ class _SettingsPremiumLoginDialogState
               ),
               SizedBox(height: 20.h),
               Text(
-                "To access your Premium subscription(s), you need to login or create an account through the Defyx website or Telegram bot.",
+                "To access premium features, please log in with your account credentials.",
                 style: TextStyle(
                   fontSize: fontSize,
                   fontFamily: 'Lato',
@@ -117,39 +124,26 @@ class _SettingsPremiumLoginDialogState
                 ),
               ),
               SizedBox(height: 20.h),
-              TextFormField(
+              AppTextField(
                 controller: _emailController,
+                label: 'Email',
+                hintText: 'example@domain.com',
+                prefixIcon: Icons.email,
                 keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                  prefixIcon: Icon(Icons.email),
-                ),
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your email';
-                  }
-                  if (!RegExp(
-                    r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                  ).hasMatch(value)) {
-                    return 'Please enter a valid email address';
                   }
                   return null;
                 },
               ),
               SizedBox(height: 20.h),
-              TextFormField(
+              AppTextField(
                 controller: _passwordController,
-                obscureText: true, // Hides the typing for passwords
-                decoration: const InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.all(Radius.circular(8)),
-                  ),
-                  prefixIcon: Icon(Icons.lock),
-                ),
+                label: 'Password',
+                hintText: "P@w0r|)",
+                prefixIcon: Icons.lock,
+                obscureText: true,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
                     return 'Please enter your password';
@@ -164,9 +158,9 @@ class _SettingsPremiumLoginDialogState
               ElevatedButton(
                 onPressed: _submitLoginData,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
+                  backgroundColor: const Color(0xFF21AD86),
                   foregroundColor: const Color.fromARGB(255, 47, 41, 41),
-                  padding: EdgeInsets.symmetric(vertical: 16.h),
+                  padding: EdgeInsets.symmetric(vertical: 11.h),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.r),
                   ),
@@ -176,9 +170,31 @@ class _SettingsPremiumLoginDialogState
                   'Login',
                   style: TextStyle(
                     fontFamily: 'Lato',
-                    color: const Color(0xFF4B4B4B),
+                    color: Colors.white,
                     fontSize: fontSize,
                     fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+              SizedBox(height: 10.h),
+              ElevatedButton(
+                onPressed: _handleNotNow,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.grey[200],
+                  foregroundColor: const Color.fromARGB(255, 47, 41, 41),
+                  padding: EdgeInsets.symmetric(vertical: 6.h),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  elevation: 0,
+                ),
+                child: Text(
+                  'Not now',
+                  style: TextStyle(
+                    fontFamily: 'Lato',
+                    color: const Color(0xFF4B4B4B),
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ),

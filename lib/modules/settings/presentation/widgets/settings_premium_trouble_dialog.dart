@@ -1,31 +1,39 @@
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SettingsPremiumTroubleDialog extends StatefulWidget {
+  final WidgetRef ref;
 
-  const SettingsPremiumTroubleDialog({super.key});
+  const SettingsPremiumTroubleDialog({super.key, required this.ref});
 
   @override
   State<SettingsPremiumTroubleDialog> createState() =>
       _SettingsPremiumTroubleDialogState();
 
-  static Future<void> show(
-    BuildContext context,
-  ) {
+  static Future<void> show(BuildContext context, WidgetRef ref) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return PopScope(
           canPop: true,
-          child: const SettingsPremiumTroubleDialog(),
+          child: SettingsPremiumTroubleDialog(ref: ref),
         );
       },
     );
   }
 }
 
-class _SettingsPremiumTroubleDialogState extends State<SettingsPremiumTroubleDialog> {
+class _SettingsPremiumTroubleDialogState
+    extends State<SettingsPremiumTroubleDialog> {
+  void _handleSignOut() {
+    widget.ref.read(authProvider.notifier).logout();
+
+    Navigator.of(context).pop();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = 1.sw;
@@ -56,7 +64,7 @@ class _SettingsPremiumTroubleDialogState extends State<SettingsPremiumTroubleDia
                 fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 18.h),
             Text(
               "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
               style: TextStyle(
@@ -66,7 +74,34 @@ class _SettingsPremiumTroubleDialogState extends State<SettingsPremiumTroubleDia
                 height: 1.4,
               ),
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
+            Row(
+              children: [
+                Text(
+                  "Planning to exit?".toUpperCase(),
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontFamily: 'Lato',
+                    color: Colors.black.withValues(alpha: 0.5),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    _handleSignOut();
+                  },
+                  style: ElevatedButton.styleFrom(elevation: 0),
+                  child: Text(
+                    'Sign out'.toUpperCase(),
+                    style: TextStyle(
+                      fontFamily: 'Lato',
+                      color: const Color(0xFF17A079),
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();

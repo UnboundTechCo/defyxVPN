@@ -58,7 +58,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ),
             SizedBox(height: 20.h),
             Text(
-              "To complete a secure login or registration process through the Defyx website or Telegram bot, you must first establish a connection using one of the available connection methods.",
+              "To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.",
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',

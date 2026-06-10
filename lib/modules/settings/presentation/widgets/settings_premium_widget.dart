@@ -3,7 +3,9 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.da
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_trouble_dialog.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -19,6 +21,17 @@ final isLoggedInProvider = FutureProvider<bool>((ref) async {
 class SettingsPremiumWidget extends ConsumerWidget {
   const SettingsPremiumWidget({super.key});
 
+  void _handleOpenLoginDialog(BuildContext context, WidgetRef ref) {
+    final connectionState = ref.read(connectionStateProvider);
+
+    if (connectionState.status == ConnectionStatus.connected) {
+      SettingsPremiumTroubleDialog.show(context, ref);
+      return;
+    }
+
+    SettingsPremiumInfoDialog.show(context);
+  }
+
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authProvider);
 
@@ -28,6 +41,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
       data: (isLoggedIn) {
         return isLoggedIn
             ? InkWell(
+                onTap: () => SettingsPremiumTroubleDialog.show(context, ref),
                 child: Text(
                   'LOGGED IN',
                   style: TextStyle(
@@ -37,7 +51,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
                 ),
               )
             : InkWell(
-                onTap: () => SettingsPremiumLoginDialog.show(context, ref),
+                onTap: () => _handleOpenLoginDialog(context, ref),
                 child: Text(
                   'LOGIN OR REGISTER',
                   style: TextStyle(
