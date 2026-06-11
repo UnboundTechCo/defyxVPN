@@ -98,7 +98,8 @@ class MainActivity : FlutterActivity() {
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
                 "getFlowLine" -> getFlowLine(call.arguments as? Map<String, Any>, result)
                 "getCachedFlowLine" -> getCachedFlowLine(result)
-                "decodeAndVerifyFlowline" -> decodeAndVerifyFlowline(call.arguments as? Map<String, Any>, result)
+                "decodeAndVerifyFlowline" ->
+                        decodeAndVerifyFlowline(call.arguments as? Map<String, Any>, result)
                 "setCacheDir" -> setCacheDir(call.arguments as? Map<String, Any>, result)
                 "getSharedDirectory" -> result.success("${cacheDir.absolutePath}/defyx")
                 "setConnectionMethod" ->
@@ -231,6 +232,7 @@ class MainActivity : FlutterActivity() {
             try {
                 val flowLine = args?.get("flowLine") as? String
                 val pattern = args?.get("pattern") as? String
+                val geoipFile = args?.get("geoipFile") as? String
                 val deepScan = args?.get("deepScan") as? String
                 val healthCheck = args?.get("healthCheck") as? String
                 val boolDeepScan = deepScan.toBoolean()
@@ -251,7 +253,14 @@ class MainActivity : FlutterActivity() {
                     cacheDirectory.mkdirs()
                 }
                 DefyxVpnService.getInstance()
-                        .connectVPN(vpnCacheDir, flowLine, pattern, boolDeepScan, boolHealthCheck)
+                        .connectVPN(
+                                vpnCacheDir,
+                                flowLine,
+                                pattern,
+                                geoipFile,
+                                boolDeepScan,
+                                boolHealthCheck
+                        )
                 result.success(true)
             } catch (e: Exception) {
                 Log.e("Start VPN", "Start VPN failed: ${e.message}", e)
@@ -373,10 +382,15 @@ class MainActivity : FlutterActivity() {
                     }
                     return@launch
                 }
-                val decodedFlowLine = DefyxVpnService.getInstance().decodeAndVerifyFlowline(flowLine)
+                val decodedFlowLine =
+                        DefyxVpnService.getInstance().decodeAndVerifyFlowline(flowLine)
                 result.success(decodedFlowLine)
             } catch (e: Exception) {
-                Log.e("Decode And Verify Flowline", "Decode And Verify Flowline failed: ${e.message}", e)
+                Log.e(
+                        "Decode And Verify Flowline",
+                        "Decode And Verify Flowline failed: ${e.message}",
+                        e
+                )
                 withContext(Dispatchers.Main) {
                     result.error(
                             "DECODE_VERIFY_FLOWLINE_ERROR",
@@ -463,23 +477,29 @@ class CrashStreamHandler : EventChannel.StreamHandler {
 
     override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
         this.eventSink = events
-        
+
         // Register crash callback with Go library
-        Android.setCrashCallback(object : android.CrashListener {
-            override fun onCrash(functionName: String, errorMessage: String, stackTrace: String) {
-                // Forward crash info to Flutter via event channel
-                CoroutineScope(Dispatchers.Main).launch {
-                    eventSink?.success(
-                        mapOf(
-                            "functionName" to functionName,
-                            "errorMessage" to errorMessage,
-                            "stackTrace" to stackTrace,
-                            "platform" to "android"
-                        )
-                    )
+        Android.setCrashCallback(
+                object : android.CrashListener {
+                    override fun onCrash(
+                            functionName: String,
+                            errorMessage: String,
+                            stackTrace: String
+                    ) {
+                        // Forward crash info to Flutter via event channel
+                        CoroutineScope(Dispatchers.Main).launch {
+                            eventSink?.success(
+                                    mapOf(
+                                            "functionName" to functionName,
+                                            "errorMessage" to errorMessage,
+                                            "stackTrace" to stackTrace,
+                                            "platform" to "android"
+                                    )
+                            )
+                        }
+                    }
                 }
-            }
-        })
+        )
     }
 
     override fun onCancel(arguments: Any?) {

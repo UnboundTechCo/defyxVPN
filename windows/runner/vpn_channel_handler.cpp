@@ -425,6 +425,7 @@ void VPNChannelHandler::SetupMethodChannel() {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());
             auto flow = get_string_arg(m, "flowLine");
             auto pattern = get_string_arg(m, "pattern");
+            auto geoipFile = get_string_arg(m, "geoipFile");
             auto deepScan = get_string_arg(m, "deepScan");
             auto healthCheck = get_string_arg(m, "healthCheck");
             bool deep_scan = false;
@@ -457,7 +458,7 @@ void VPNChannelHandler::SetupMethodChannel() {
             };
             auto cache_dir = WideToUtf8(cache_dir_w);
 
-            dxcore_->StartVPN(cache_dir, flow, pattern, deep_scan, health_check);
+            dxcore_->StartVPN(cache_dir, flow, pattern, geoipFile, deep_scan, health_check);
 
             {
               std::lock_guard<std::mutex> lock(status_mutex_);

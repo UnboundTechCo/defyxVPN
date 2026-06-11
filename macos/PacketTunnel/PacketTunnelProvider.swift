@@ -137,8 +137,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 let cacheDir = dict["cacheDir"] ?? ""
                 let flowLine = dict["flowLine"] ?? ""
                 let pattern = dict["pattern"] ?? ""
+                let geoipFile = dict["geoipFile"] ?? ""
+                let deepScan = dict["deepScan"] ?? "false"
+                let healthCheck = dict["healthCheck"] ?? "false"
+                let deepScanBool = Bool(deepScan) ?? false
+                let healthCheckBool = Bool(healthCheck) ?? false
 
-                MacosStartVPN(cacheDir, flowLine, pattern)
+                MacosStartVPN(cacheDir, flowLine, pattern, geoipFile, deepScanBool, healthCheckBool)
 
                 let response = "VPN started successfully"
 

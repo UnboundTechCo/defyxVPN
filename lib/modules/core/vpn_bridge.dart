@@ -34,13 +34,23 @@ class VpnBridge {
   Future<bool?> grantVpnPermission() async =>
       await _methodChannel.invokeMethod<bool>("grantVpnPermission");
 
-  Future<void> startVPN(String flowline, String pattern, bool deepScan, bool healthCheck) async =>
-      await _methodChannel.invokeMethod("startVPN", {
-        "flowLine": flowline,
-        "pattern": pattern,
-        "deepScan": deepScan.toString(),
-        "healthCheck": healthCheck.toString()
-      });
+  Future<void> startVPN(
+    String flowline,
+    String pattern,
+    bool deepScan,
+    bool healthCheck,
+  ) async {
+    // Update the path to the geoip.dat file as needed
+    final geoipFile = "/assets/geoip.dat";
+
+    return await _methodChannel.invokeMethod("startVPN", {
+      "flowLine": flowline,
+      "pattern": pattern,
+      "geoipFile": geoipFile,
+      "deepScan": deepScan.toString(),
+      "healthCheck": healthCheck.toString(),
+    });
+  }
 
   Future<void> startTun2socks() =>
       _methodChannel.invokeMethod("startTun2socks");
@@ -52,8 +62,9 @@ class VpnBridge {
       .invokeMethod("setConnectionMethod", {"method": method});
   Future<String> getFlowLine() async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
-    final flowLine = await _methodChannel
-        .invokeMethod<String>('getFlowLine', {"isTest": isTestMode});
+    final flowLine = await _methodChannel.invokeMethod<String>('getFlowLine', {
+      "isTest": isTestMode,
+    });
     return flowLine ?? '';
   }
 

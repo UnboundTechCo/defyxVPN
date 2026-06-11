@@ -283,10 +283,17 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    fun connectVPN(cacheDir: String, flowLine: String, pattern: String, deepScan: Boolean, healthCheck: Boolean) {
+    fun connectVPN(
+            cacheDir: String,
+            flowLine: String,
+            pattern: String,
+            geoipFile: String,
+            deepScan: Boolean,
+            healthCheck: Boolean
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                Android.startVPN(cacheDir, flowLine, pattern, deepScan, healthCheck)
+                Android.startVPN(cacheDir, flowLine, pattern, geoipFile, deepScan, healthCheck)
             } catch (e: Exception) {
                 log("Start VPN failed: ${e.message}")
             }
