@@ -216,8 +216,10 @@ class VpnPlugin: VpnStatusDelegate {
         guard let args = arguments,
             let flowLine = args["flowLine"] as? String,
             let pattern = args["pattern"] as? String,
+            let geoipFile = args["geoipFile"] as? String
             let deepScan = args["deepScan"] as? String,
-            let healthCheck = args["healthCheck"] as? String
+            let healthCheck = args["healthCheck"] as? String,
+
         else {
             result(
                 FlutterError(
@@ -226,7 +228,7 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
         VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan,"healthCheck":healthCheck
+            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan,"healthCheck":healthCheck,"geoipFile":geoipFile
         ]) {
             response in
             result(response)
