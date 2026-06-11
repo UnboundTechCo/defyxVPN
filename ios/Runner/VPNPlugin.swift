@@ -281,8 +281,10 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
 
+        goQueue.async {
             let token = IosLogin(email,password)
-             result(token) 
+            result(token) 
+        }
         
     }
 

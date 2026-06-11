@@ -1,10 +1,12 @@
+import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
-import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -35,12 +37,16 @@ class _SettingsPremiumLoginDialogState
     extends State<SettingsPremiumLoginDialog> {
   final _formKey = GlobalKey<FormState>();
 
+  bool isSubmitting = false;
+
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _submitLoginData() async {
     try {
+      setState(() => isSubmitting = true);
       if (!(_formKey.currentState?.validate() ?? false)) {
+        setState(() => isSubmitting = false);
         return;
       }
 
@@ -62,18 +68,18 @@ class _SettingsPremiumLoginDialogState
 
       ToastUtil.showToast('Login successful!');
 
-      if (mounted) {
-        final container = ProviderContainer();
-        FlowlineService(
-          container.read(secureStorageProvider),
-          container,
-        ).saveFlowline(offlineMode: false);
+      widget.ref
+          .read(flowlineServiceProvider)
+          .saveFlowline(offlineMode: false, forceUpdate: true);
 
+      if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e, stack) {
       debugPrint(e.toString());
       debugPrint(stack.toString());
+    } finally {
+      setState(() => isSubmitting = false);
     }
   }
 
@@ -114,14 +120,56 @@ class _SettingsPremiumLoginDialogState
                 ),
               ),
               SizedBox(height: 20.h),
-              Text(
-                "To access premium features, please log in with your account credentials.",
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontFamily: 'Lato',
-                  color: Colors.black.withValues(alpha: 0.5),
-                  height: 1.4,
-                ),
+              Column(
+                children: [
+                  Text(
+                    "To access your Premium subscription(s), you need to login or create an account through the Defyx website.",
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontFamily: 'Lato',
+                      color: Colors.black.withValues(alpha: 0.5),
+                      height: 1.4,
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Row(
+                    children: [
+                      Text(
+                        "Don't have an account? ",
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontFamily: 'Lato',
+                          color: Colors.black.withValues(alpha: 0.5),
+                          height: 1.4,
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          final url = dotenv.env["WEBSITE_SIGN_UP"];
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CustomWebViewScreen(
+                                url: url!,
+                                title: "Sign up",
+                              ),
+                            ),
+                          );
+                          // Open the Defyx website in the default browser
+                          // You can use url_launcher package to achieve this
+                        },
+                        child: Text(
+                          "Sign up",
+                          style: TextStyle(
+                            fontSize: fontSize,
+                            fontFamily: 'Lato',
+                            color: Colors.blue,
+                            height: 1.4,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
               SizedBox(height: 20.h),
               AppTextField(
@@ -155,48 +203,19 @@ class _SettingsPremiumLoginDialogState
                 },
               ),
               SizedBox(height: 10.h),
-              ElevatedButton(
+              AppButton(
+                label: "Login",
                 onPressed: _submitLoginData,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF21AD86),
-                  foregroundColor: const Color.fromARGB(255, 47, 41, 41),
-                  padding: EdgeInsets.symmetric(vertical: 11.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(
-                    fontFamily: 'Lato',
-                    color: Colors.white,
-                    fontSize: fontSize,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+                size: AppButtonSize.medium,
+                variant: AppButtonVariant.primary,
+                isLoading: isSubmitting,
               ),
               SizedBox(height: 10.h),
-              ElevatedButton(
+              AppButton(
+                label: "Not now",
                 onPressed: _handleNotNow,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[200],
-                  foregroundColor: const Color.fromARGB(255, 47, 41, 41),
-                  padding: EdgeInsets.symmetric(vertical: 6.h),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  'Not now',
-                  style: TextStyle(
-                    fontFamily: 'Lato',
-                    color: const Color(0xFF4B4B4B),
-                    fontSize: 14.0,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                size: AppButtonSize.small,
+                variant: AppButtonVariant.secondary,
               ),
             ],
           ),

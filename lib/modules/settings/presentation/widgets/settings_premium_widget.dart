@@ -19,7 +19,9 @@ final isLoggedInProvider = FutureProvider<bool>((ref) async {
 });
 
 class SettingsPremiumWidget extends ConsumerWidget {
-  const SettingsPremiumWidget({super.key});
+  final WidgetRef ref;
+
+  const SettingsPremiumWidget({super.key, required this.ref});
 
   void _handleOpenLoginDialog(BuildContext context, WidgetRef ref) {
     final connectionState = ref.read(connectionStateProvider);
@@ -28,7 +30,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
       SettingsPremiumLoginDialog.show(context, ref);
       return;
     }
-    SettingsPremiumTroubleDialog.show(context, ref);
+    SettingsPremiumInfoDialog.show(context, ref);
   }
 
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
@@ -38,27 +40,82 @@ class SettingsPremiumWidget extends ConsumerWidget {
       loading: () => const CircularProgressIndicator(),
       error: (e, st) => Text('Error'),
       data: (isLoggedIn) {
-        return isLoggedIn
-            ? InkWell(
-                onTap: () => SettingsPremiumTroubleDialog.show(context, ref),
-                child: Text(
-                  'LOGGED IN',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFFA3FF8C),
-                  ),
+        return InkWell(
+          onTap: isLoggedIn
+              ? () => SettingsPremiumTroubleDialog.show(context, ref)
+              : () => _handleOpenLoginDialog(context, ref),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Marketplace'.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 17.sp,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(height: 4.h),
+                    Text(
+                      'Browse secure VPN configurations from trusted suppliers',
+                      style: TextStyle(fontSize: 13.sp, color: Colors.white60),
+                      maxLines: 3,
+                      softWrap: true,
+                    ),
+                    SizedBox(height: 10.h),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AppIcons.info(
+                          height: 16,
+                          width: 16,
+                          colorFilter: ColorFilter.mode(
+                            Colors.white.withOpacity(0.16),
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        SizedBox(width: 4.w),
+                        Expanded(
+                          child: isLoggedIn
+                              ? Text(
+                                  'LOGGED IN',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: const Color(0xFFA3FF8C),
+                                  ),
+                                )
+                              : Text(
+                                  'LOGIN OR REGISTER',
+                                  style: TextStyle(
+                                    fontSize: 12.sp,
+                                    color: const Color(0xFFFF9A9A),
+                                  ),
+                                ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              )
-            : InkWell(
-                onTap: () => _handleOpenLoginDialog(context, ref),
-                child: Text(
-                  'LOGIN OR REGISTER',
-                  style: TextStyle(
-                    fontSize: 12.sp,
-                    color: const Color(0xFFFF9A9A),
-                  ),
+              ),
+              SizedBox(width: 10.w),
+              Container(
+                width: 50,
+                height: 50,
+                padding: EdgeInsets.all(13.w),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(50.r),
+                  color: const Color(0xFF6F7987),
                 ),
-              );
+                child: AppIcons.shop(width: 24, height: 24),
+              ),
+            ],
+          ),
+        );
       },
     );
   }
@@ -73,65 +130,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: Colors.white.withOpacity(0.16), width: 1),
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Marketplace'.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 17.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  'Browse secure VPN configurations from trusted suppliers',
-                  style: TextStyle(fontSize: 13.sp, color: Colors.white60),
-                  maxLines: 3,
-                  softWrap: true,
-                ),
-                SizedBox(height: 10.h),
-                Row(
-                  // Align items to the center vertically
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    InkWell(
-                      onTap: () => SettingsPremiumInfoDialog.show(context),
-                      child: AppIcons.info(
-                        height: 16,
-                        width: 16,
-                        colorFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(0.16),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                    SizedBox(width: 4.w),
-                    Expanded(child: _buildLoginButton(context, ref)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Container(
-            width: 50,
-            height: 50,
-            padding: EdgeInsets.all(13.w),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(50.r),
-              color: const Color(0xFF6F7987),
-            ),
-            child: AppIcons.shop(width: 24, height: 24),
-          ),
-        ],
-      ),
+      child: _buildLoginButton(context, ref),
     );
   }
 }

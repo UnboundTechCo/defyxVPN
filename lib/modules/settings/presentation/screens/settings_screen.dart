@@ -157,7 +157,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
                               SizedBox(height: 30.h),
-                              const SettingsPremiumWidget(),
+                              SettingsPremiumWidget(ref: ref),
                               SizedBox(height: 60.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),

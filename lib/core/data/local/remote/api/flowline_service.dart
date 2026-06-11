@@ -46,13 +46,14 @@ class FlowlineService implements IFlowlineService {
   Future<void> saveFlowline({
     required bool offlineMode,
     String? flowLine,
+    bool forceUpdate = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
         (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
         _updateFlowlinePerios;
-    if (!shouldUpdate && !offlineMode) {
+    if (!shouldUpdate && !offlineMode && !forceUpdate) {
       return;
     }
     final flowlineMode = _container.read(flowLineProvider).mode;

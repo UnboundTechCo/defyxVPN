@@ -1,24 +1,25 @@
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SettingsPremiumInfoDialog extends StatefulWidget {
+  final WidgetRef ref;
 
-  const SettingsPremiumInfoDialog({super.key});
+  const SettingsPremiumInfoDialog({super.key, required this.ref});
 
   @override
   State<SettingsPremiumInfoDialog> createState() =>
       _SettingsPremiumInfoDialogState();
 
-  static Future<void> show(
-    BuildContext context,
-  ) {
+  static Future<void> show(BuildContext context, WidgetRef ref) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return PopScope(
           canPop: true,
-          child: const SettingsPremiumInfoDialog(),
+          child: SettingsPremiumInfoDialog(ref: ref),
         );
       },
     );
@@ -70,6 +71,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
+                SettingsPremiumLoginDialog.show(context, widget.ref);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],

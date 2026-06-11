@@ -82,6 +82,7 @@ class _SettingsPremiumTroubleDialogState
                   style: TextStyle(
                     fontSize: fontSize,
                     fontFamily: 'Lato',
+                    height: 1.4,
                     color: Colors.black.withValues(alpha: 0.5),
                   ),
                 ),
@@ -93,7 +94,7 @@ class _SettingsPremiumTroubleDialogState
                     style: TextStyle(
                       fontFamily: 'Lato',
                       fontSize: fontSize,
-                      fontWeight: FontWeight.w500,
+                      height: 1.4,
                       color: const Color(0xFF17A079),
                     ),
                   ),
