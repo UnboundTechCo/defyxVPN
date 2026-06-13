@@ -3,6 +3,7 @@ import Flutter
 @main
 @objc class AppDelegate: FlutterAppDelegate {
   private var vpnPlugin: VpnPlugin?
+  private var vibrationPlugin: VibrationPlugin?
   private var eventSink: FlutterEventSink?
 
   override func application(
@@ -12,6 +13,7 @@ import Flutter
     GeneratedPluginRegistrant.register(with: self)
 
     vpnPlugin = VpnPlugin()
+    vibrationPlugin = VibrationPlugin()
 
     if let controller = window?.rootViewController as? FlutterViewController {
       let channel = FlutterMethodChannel(
@@ -19,6 +21,13 @@ import Flutter
         binaryMessenger: controller.binaryMessenger)
       channel.setMethodCallHandler { [weak self] (call, result) in
         self?.vpnPlugin?.handleMethodCall(call, result: result)
+      }
+      
+      let vibrationChannel = FlutterMethodChannel(
+        name: "com.defyx.vibration",
+        binaryMessenger: controller.binaryMessenger)
+      vibrationChannel.setMethodCallHandler { [weak self] (call, result) in
+        self?.vibrationPlugin?.handleMethodCall(call, result: result)
       }
 
       let eventChannel = FlutterEventChannel(
