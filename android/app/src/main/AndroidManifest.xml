@@ -8,6 +8,7 @@
     <uses-permission android:name="android.permission.BIND_VPN_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
 
     <!-- Android TV features -->
     <uses-feature
@@ -29,16 +30,6 @@
         android:banner="@drawable/tv_banner"
         android:usesCleartextTraffic="true"
         tools:ignore="ForegroundServicePermission">
-
-        <receiver
-            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
-            android:exported="false" />
-
-        <service
-            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="systemExempted"/>
 
         <!-- Register the VPN service with Samsung compatibility -->
         <service

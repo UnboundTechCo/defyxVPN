@@ -12,6 +12,7 @@ enum ConnectionStatus {
   analyzing,
   error,
   noInternet,
+  coreDown,
 }
 
 // Extension to convert ConnectionStatus to int for storage
@@ -102,6 +103,8 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
 
   // Save the current connection state to SharedPreferences
   Future<void> _saveState() async {
+    // coreDown is transient — never persist it across launches.
+    if (state.status == ConnectionStatus.coreDown) return;
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_connectionStatusKey, state.status.toInt());
@@ -144,6 +147,10 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   void setAnalyzing() {
     state = state.copyWith(status: ConnectionStatus.analyzing);
     _saveState();
+  }
+
+  void setCoreDown() {
+    state = state.copyWith(status: ConnectionStatus.coreDown);
   }
 
   @override

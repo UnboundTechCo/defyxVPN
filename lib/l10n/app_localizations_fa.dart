@@ -190,6 +190,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get statusIsReady => 'آماده است';
 
   @override
+  String get statusIsInTrouble => 'به مشکل خورده.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore متوقف شده.';
+
+  @override
   String get statusToSpeedTest => 'برای تست سرعت';
 
   @override
