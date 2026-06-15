@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/common/components/dialog.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
@@ -94,48 +95,30 @@ class _SettingsPremiumLoginDialogState
     final ratio = screenWidth / baseScreenWidth;
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
 
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
-      insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        width: 343.w,
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15.r),
-        ),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'Authentication Required',
-                style: TextStyle(
-                  fontFamily: 'Lato',
-                  fontSize: fontSize * 1.4,
-                  color: Colors.black,
-                  fontWeight: FontWeight.w700,
-                ),
+    return AppDialog(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Authentication Required',
+              style: TextStyle(
+                fontFamily: 'Lato',
+                fontSize: fontSize * 1.4,
+                color: Colors.black,
+                fontWeight: FontWeight.w700,
               ),
-              SizedBox(height: 20.h),
-              Column(
-                children: [
-                  Text(
-                    "To access your Premium subscription(s), you need to login or create an account through the Defyx website.",
-                    style: TextStyle(
-                      fontSize: fontSize,
-                      fontFamily: 'Lato',
-                      color: Colors.black.withValues(alpha: 0.5),
-                      height: 1.4,
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Row(
-                    children: [
-                      Text(
-                        "Don't have an account? ",
+            ),
+            SizedBox(height: 20.h),
+            Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "To access your Premium subscription(s), you need to login or create an account through the Defyx website.",
                         style: TextStyle(
                           fontSize: fontSize,
                           fontFamily: 'Lato',
@@ -143,82 +126,96 @@ class _SettingsPremiumLoginDialogState
                           height: 1.4,
                         ),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          final url = dotenv.env["WEBSITE_SIGN_UP"];
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => CustomWebViewScreen(
-                                url: url!,
-                                title: "Sign up",
-                              ),
+                    ),
+                  ],
+                ),
+                SizedBox(height: 10.h),
+                Row(
+                  children: [
+                    Text(
+                      "Don't have an account? ",
+                      style: TextStyle(
+                        fontSize: fontSize,
+                        fontFamily: 'Lato',
+                        color: Colors.black.withValues(alpha: 0.5),
+                        height: 1.4,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () {
+                        final url = dotenv.env["WEBSITE_SIGN_UP"];
+                        Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (context) => CustomWebViewScreen(
+                              url: url!,
+                              title: "Sign up",
                             ),
-                          );
-                          // Open the Defyx website in the default browser
-                          // You can use url_launcher package to achieve this
-                        },
-                        child: Text(
-                          "Sign up",
-                          style: TextStyle(
-                            fontSize: fontSize,
-                            fontFamily: 'Lato',
-                            color: Colors.blue,
-                            height: 1.4,
                           ),
+                        );
+                        // Open the Defyx website in the default browser
+                        // You can use url_launcher package to achieve this
+                      },
+                      child: Text(
+                        "Sign up",
+                        style: TextStyle(
+                          fontSize: fontSize,
+                          fontFamily: 'Lato',
+                          color: Colors.blue,
+                          height: 1.4,
                         ),
                       ),
-                    ],
-                  ),
-                ],
-              ),
-              SizedBox(height: 20.h),
-              AppTextField(
-                controller: _emailController,
-                label: 'Email',
-                hintText: 'example@domain.com',
-                prefixIcon: Icons.email,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20.h),
-              AppTextField(
-                controller: _passwordController,
-                label: 'Password',
-                hintText: "P@w0r|)",
-                prefixIcon: Icons.lock,
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 10.h),
-              AppButton(
-                label: "Login",
-                onPressed: _submitLoginData,
-                size: AppButtonSize.medium,
-                variant: AppButtonVariant.primary,
-                isLoading: isSubmitting,
-              ),
-              SizedBox(height: 10.h),
-              AppButton(
-                label: "Not now",
-                onPressed: _handleNotNow,
-                size: AppButtonSize.small,
-                variant: AppButtonVariant.secondary,
-              ),
-            ],
-          ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            AppTextField(
+              controller: _emailController,
+              label: 'Email',
+              hintText: 'example@domain.com',
+              prefixIcon: Icons.email,
+              keyboardType: TextInputType.emailAddress,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your email';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 20.h),
+            AppTextField(
+              controller: _passwordController,
+              label: 'Password',
+              hintText: "P@w0r|)",
+              prefixIcon: Icons.lock,
+              obscureText: true,
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Please enter your password';
+                }
+                if (value.length < 6) {
+                  return 'Password must be at least 6 characters';
+                }
+                return null;
+              },
+            ),
+            SizedBox(height: 10.h),
+            AppButton(
+              label: "Login",
+              onPressed: _submitLoginData,
+              size: AppButtonSize.medium,
+              variant: AppButtonVariant.primary,
+              isLoading: isSubmitting,
+            ),
+            SizedBox(height: 10.h),
+            AppButton(
+              label: "Not now",
+              onPressed: _handleNotNow,
+              size: AppButtonSize.small,
+              variant: AppButtonVariant.secondary,
+            ),
+          ],
         ),
       ),
     );
