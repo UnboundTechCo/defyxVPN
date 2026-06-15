@@ -63,17 +63,18 @@ class SettingsItemWidget extends StatelessWidget {
               'assets/icons/draggable_setting_indicator.svg',
               width: 24.w,
               height: 24.h,
-              colorFilter: ColorFilter.mode(
-                Colors.grey[400]!,
-                BlendMode.srcIn,
-              ),
+              colorFilter: ColorFilter.mode(Colors.grey[400]!, BlendMode.srcIn),
             ),
           ),
         ],
         Expanded(
           child: Row(
+            // align center
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 7.w,
             children: [
+              if (item.isPremium) AppIcons.premium(height: 18, width: 18),
               Text(
                 item.title.toUpperCase(),
                 style: TextStyle(
@@ -95,7 +96,7 @@ class SettingsItemWidget extends StatelessWidget {
                   ),
                   onTap: () =>
                       SettingsToastMessage.show(item.description ?? ""),
-                )
+                ),
             ],
           ),
         ),
@@ -116,10 +117,7 @@ class SettingsItemWidget extends StatelessWidget {
                   color: Colors.transparent,
                 )
               : null,
-          child: Opacity(
-            opacity: 1.0,
-            child: rowContent,
-          ),
+          child: Opacity(opacity: 1.0, child: rowContent),
         ),
         if (!isLastItem && showSeparator)
           Container(
@@ -158,11 +156,7 @@ class SettingsItemWidget extends StatelessWidget {
               ),
             ),
           if (item.subtitle != null) SizedBox(width: 8.w),
-          Icon(
-            Icons.chevron_right,
-            color: Colors.grey[400],
-            size: 24.sp,
-          ),
+          Icon(Icons.chevron_right, color: Colors.grey[400], size: 24.sp),
         ],
       );
     }

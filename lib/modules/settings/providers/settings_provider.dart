@@ -89,9 +89,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final text = SettingsText(context);
     // Only add traffic control if it doesn't exist
     // if (!updatedGroups.containsKey(SettingsGroupId.trafficControl)) {
-      // debugPrint('Adding traffic control group');
-      updatedGroups[SettingsGroupId.trafficControl] =
-          _createTrafficControlGroup(text);
+    // debugPrint('Adding traffic control group');
+    updatedGroups[SettingsGroupId.trafficControl] = _createTrafficControlGroup(
+      text,
+    );
     // }
 
     state = state.copyWith(groups: updatedGroups);
@@ -209,9 +210,11 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
       // Find max sortOrder from existing items
       int maxSortOrder = 0;
+      int minSortOrder = allFlowlineItems.length;
       for (var item in mergedItems) {
         final order = item['sortOrder'] as int? ?? 0;
         if (order > maxSortOrder) maxSortOrder = order;
+        if (order < minSortOrder) minSortOrder = order;
       }
 
       // New items go to the end (after user's ordered items)
@@ -224,14 +227,25 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         );
 
         if (!existsInSaved) {
-          maxSortOrder++;
+          final isPremium = flowItem['isPremium'] ?? false;
+          if (isPremium) {
+            maxSortOrder++;
+          } else {
+            minSortOrder--;
+          }
           final newItem = SettingsFactory.createFlowlineItem(
             label: label,
             description: flowItem['description'] ?? '',
-            sortOrder: maxSortOrder,
+            sortOrder: isPremium ? minSortOrder : maxSortOrder,
             isEnabled: flowItem['enabled'] ?? false,
+            isPremium: isPremium,
           );
-          mergedItems.add(newItem.toJson());
+
+          if (newItem.isPremium) {
+            mergedItems.insert(0, newItem.toJson());
+          } else {
+            mergedItems.add(newItem.toJson());
+          }
         }
       }
 
