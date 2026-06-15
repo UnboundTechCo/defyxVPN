@@ -33,7 +33,7 @@ dependencies:
   json_annotation: ^4.9.0
   package_info_plus: ^8.3.0
   version: ^3.0.2
-  flutter_timezone: ^4.1.1
+  flutter_timezone: ^5.1.0
   connectivity_plus: ^7.0.0
 
   # Frontend Packages
