@@ -307,25 +307,12 @@ class VpnPlugin: VpnStatusDelegate {
 
         let isTestBool = Bool(isTest) ?? false
 
-        let tuunel = getIsTunnelRunning()
-
-        if tuunel {
-
-            print("VPN is Prepared ")
-            VpnService.shared.sendTunnelMessage(["command": "GET_FLOW_LINE", "isTest": isTest,"token":token]) {
-                response in
-                result(response)
-            }
-        } else {
-
-            print("VPN is not Prepared ")
-            self.goQueue.async {
-                let flowline = IosGetFlowLine(isTestBool, token)
-                DispatchQueue.main.async { result(flowline) }
-            }
-            return
+        // Always call from main app process (will be routed through VPN if active)
+        // PacketTunnel extension's own traffic doesn't route through the tunnel it creates
+        self.goQueue.async {
+            let flowline = IosGetFlowLine(isTestBool, token)
+            DispatchQueue.main.async { result(flowline) }
         }
-
     }
 
     private func getCachedFlowLine(_ result: @escaping FlutterResult) {
