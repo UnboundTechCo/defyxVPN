@@ -479,6 +479,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+    }
 }
 
 class ProgressStreamHandler : EventChannel.StreamHandler, ProgressListener {
