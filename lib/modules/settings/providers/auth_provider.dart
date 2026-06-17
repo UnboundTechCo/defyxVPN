@@ -34,6 +34,6 @@ class AuthNotifier extends AsyncNotifier<bool> {
   Future<String> getToken() async {
     final storage = ref.read(secureStorageProvider);
 
-    return await storage.read(premiumTokenKey) ??"";
+    return await storage.read(premiumTokenKey) ?? '';
   }
 }

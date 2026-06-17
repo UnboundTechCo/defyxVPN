@@ -99,7 +99,7 @@ class _SettingsPremiumLoginDialogState
       child: Form(
         key: _formKey,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          // mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
@@ -172,7 +172,7 @@ class _SettingsPremiumLoginDialogState
             SizedBox(height: 20.h),
             AppTextField(
               controller: _emailController,
-              label: 'Email',
+              label: 'Email'.toUpperCase(),
               hintText: 'example@domain.com',
               prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
@@ -183,11 +183,11 @@ class _SettingsPremiumLoginDialogState
                 return null;
               },
             ),
-            SizedBox(height: 20.h),
+            SizedBox(height: 16.h),
             AppTextField(
               controller: _passwordController,
-              label: 'Password',
-              hintText: "P@w0r|)",
+              label: 'Password'.toUpperCase(),
+              hintText: "Enter your password",
               prefixIcon: Icons.lock,
               obscureText: true,
               validator: (value) {
@@ -200,7 +200,7 @@ class _SettingsPremiumLoginDialogState
                 return null;
               },
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 16.h),
             AppButton(
               label: "Login",
               onPressed: _submitLoginData,
@@ -208,7 +208,7 @@ class _SettingsPremiumLoginDialogState
               variant: AppButtonVariant.primary,
               isLoading: isSubmitting,
             ),
-            SizedBox(height: 10.h),
+            SizedBox(height: 5.h),
             AppButton(
               label: "Not now",
               onPressed: _handleNotNow,

@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum AppButtonVariant {
-  primary,
-  secondary,
-}
+enum AppButtonVariant { primary, secondary }
 
-enum AppButtonSize {
-  small,
-  medium,
-}
+enum AppButtonSize { small, medium }
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -35,16 +29,13 @@ class AppButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
         elevation: 0,
+        maximumSize: Size(double.infinity, config.height),
         backgroundColor: _backgroundColor,
         disabledBackgroundColor: _backgroundColor,
         foregroundColor: _textColor,
         disabledForegroundColor: _textColor,
-        padding: EdgeInsets.symmetric(
-          vertical: config.verticalPadding,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8.r),
-        ),
+        padding: EdgeInsets.symmetric(vertical: config.verticalPadding),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       ),
       child: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
@@ -55,9 +46,7 @@ class AppButton extends StatelessWidget {
                 width: config.loaderSize,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _loaderColor,
-                  ),
+                  valueColor: AlwaysStoppedAnimation<Color>(_loaderColor),
                 ),
               )
             : Text(
@@ -112,6 +101,7 @@ class AppButton extends StatelessWidget {
           fontSize: 14.sp,
           fontWeight: FontWeight.w600,
           loaderSize: 16.w,
+          height: 36.h,
         );
 
       case AppButtonSize.medium:
@@ -120,6 +110,7 @@ class AppButton extends StatelessWidget {
           fontSize: 16.sp,
           fontWeight: FontWeight.w500,
           loaderSize: 18.w,
+          height: 46.h,
         );
     }
   }
@@ -130,11 +121,13 @@ class _ButtonSizeConfig {
   final double fontSize;
   final FontWeight fontWeight;
   final double loaderSize;
+  final double height;
 
   const _ButtonSizeConfig({
     required this.verticalPadding,
     required this.fontSize,
     required this.fontWeight,
     required this.loaderSize,
+    required this.height,
   });
 }

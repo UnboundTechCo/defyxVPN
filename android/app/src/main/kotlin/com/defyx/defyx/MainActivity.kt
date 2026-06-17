@@ -333,13 +333,7 @@ class MainActivity : FlutterActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val isTest = args?.get("isTest") as? String
-                val token = args?.get("token") as? String
-                if (token.isNullOrEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        result.error("INVALID_ARGUMENT", "token is missing or empty", null)
-                    }
-                    return@launch
-                }
+                val token = args?.get("token") as String
                 if (isTest.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
                         result.error("INVALID_ARGUMENT", "isTest is missing or empty", null)

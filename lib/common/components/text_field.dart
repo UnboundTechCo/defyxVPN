@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class AppTextField extends StatelessWidget {
+class AppTextField extends StatefulWidget {
   final String label;
   final TextEditingController controller;
   final String? hintText;
@@ -21,36 +21,65 @@ class AppTextField extends StatelessWidget {
   });
 
   @override
+  State<AppTextField> createState() => _AppTextFieldState();
+}
+
+class _AppTextFieldState extends State<AppTextField> {
+  late bool _obscureText;
+
+  @override
+  void initState() {
+    super.initState();
+    _obscureText = widget.obscureText;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w400,
-            color: Colors.grey[600]!,
+            color: Colors.grey[600],
           ),
         ),
         const SizedBox(height: 8),
         TextFormField(
-          controller: controller,
-          obscureText: obscureText,
-          validator: validator,
+          controller: widget.controller,
+          obscureText: _obscureText,
+          keyboardType: widget.keyboardType,
+          validator: widget.validator,
           decoration: InputDecoration(
-            hintText: hintText,
-            prefixIcon: prefixIcon != null ? Icon(prefixIcon) : null,
+            hintText: widget.hintText,
+            prefixIcon: widget.prefixIcon != null
+                ? Icon(widget.prefixIcon)
+                : null,
             prefixIconColor: Colors.grey[300],
+            suffixIcon: widget.obscureText
+                ? IconButton(
+                    icon: Icon(
+                      _obscureText ? Icons.visibility_off : Icons.visibility,
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscureText = !_obscureText;
+                      });
+                    },
+                    color: Colors.grey[300],
+                  )
+                : null,
+
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.all(Radius.circular(8)),
+              borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[300]!, width: 1),
             ),
-
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: BorderSide(color: Colors.grey[500]!, width: 1),

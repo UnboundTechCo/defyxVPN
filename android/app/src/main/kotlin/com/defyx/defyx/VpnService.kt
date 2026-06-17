@@ -174,8 +174,12 @@ class DefyxVpnService : VpnService() {
                                 .allowFamily(android.system.OsConstants.AF_INET)
                                 .setMtu(1500)
                                 .setBlocking(true)
-                // Removed .allowBypass() and addDisallowedApplication to allow app traffic through VPN
+                                .allowBypass()
 
+                try {
+                    builder.addDisallowedApplication(context.packageName)
+                } catch (_: Exception) {}
+                
                 vpnInterface?.close()
                 vpnInterface = builder.establish()
                 Log.d(TAG, "vpnInterface: $vpnInterface")
