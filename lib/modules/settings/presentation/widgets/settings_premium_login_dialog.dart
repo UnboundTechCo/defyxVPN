@@ -3,6 +3,7 @@ import 'package:defyx_vpn/common/components/dialog.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
@@ -44,6 +45,7 @@ class _SettingsPremiumLoginDialogState
   final TextEditingController _passwordController = TextEditingController();
 
   Future<void> _submitLoginData() async {
+    final l10n = AppLocalizations.of(context);
     try {
       setState(() => isSubmitting = true);
       if (!(_formKey.currentState?.validate() ?? false)) {
@@ -60,7 +62,7 @@ class _SettingsPremiumLoginDialogState
 
       if (token.isEmpty) {
         ToastUtil.showToast(
-          'Login failed. Please check your credentials and try again.',
+          l10n.loginFailed,
         );
         return;
       }
@@ -71,7 +73,7 @@ class _SettingsPremiumLoginDialogState
           .read(flowlineServiceProvider)
           .saveFlowline(offlineMode: false, forceUpdate: true);
 
-      ToastUtil.showToast('Login successful!');
+      ToastUtil.showToast(l10n.loginSuccess);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -85,10 +87,11 @@ class _SettingsPremiumLoginDialogState
   }
 
   void _openSignUpPage() {
+    final l10n = AppLocalizations.of(context);
     final url = dotenv.env["WEBSITE_SIGN_UP"];
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CustomWebViewScreen(url: url!, title: "Sign up"),
+        builder: (context) => CustomWebViewScreen(url: url!, title: l10n.signUp),
       ),
     );
   }
@@ -99,6 +102,7 @@ class _SettingsPremiumLoginDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = 1.sw;
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
@@ -112,7 +116,7 @@ class _SettingsPremiumLoginDialogState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Authentication Required',
+              l10n.authenticationRequired,
               style: TextStyle(
                 fontFamily: 'Lato',
                 fontSize: fontSize * 1.4,
@@ -127,7 +131,7 @@ class _SettingsPremiumLoginDialogState
                   children: [
                     Expanded(
                       child: Text(
-                        "To access your Premium subscription(s), you need to login or create an account through the Defyx website.",
+                        l10n.premiumLoginDescription,
                         style: TextStyle(
                           fontSize: fontSize,
                           fontFamily: 'Lato',
@@ -143,13 +147,13 @@ class _SettingsPremiumLoginDialogState
             SizedBox(height: 20.h),
             AppTextField(
               controller: _emailController,
-              label: 'Email'.toUpperCase(),
-              hintText: 'example@domain.com',
+              label: l10n.email.toUpperCase(),
+              hintText: l10n.emailHint,
               prefixIcon: Icons.email,
               keyboardType: TextInputType.emailAddress,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your email';
+                  return l10n.emailValidation;
                 }
                 return null;
               },
@@ -157,23 +161,23 @@ class _SettingsPremiumLoginDialogState
             SizedBox(height: 16.h),
             AppTextField(
               controller: _passwordController,
-              label: 'Password'.toUpperCase(),
-              hintText: "Enter your password",
+              label: l10n.password.toUpperCase(),
+              hintText: l10n.passwordHint,
               prefixIcon: Icons.lock,
               obscureText: true,
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Please enter your password';
+                  return l10n.passwordValidation;
                 }
                 if (value.length < 6) {
-                  return 'Password must be at least 6 characters';
+                  return l10n.passwordMinLength;
                 }
                 return null;
               },
             ),
             SizedBox(height: 16.h),
             AppButton(
-              label: "Login",
+              label: l10n.login,
               onPressed: _submitLoginData,
               size: AppButtonSize.medium,
               variant: AppButtonVariant.primary,
@@ -181,7 +185,7 @@ class _SettingsPremiumLoginDialogState
             ),
             SizedBox(height: 10.h),
             AppButton(
-              label: "Not now",
+              label: l10n.notNow,
               onPressed: _handleNotNow,
               size: AppButtonSize.small,
               variant: AppButtonVariant.secondary,
@@ -191,7 +195,7 @@ class _SettingsPremiumLoginDialogState
             Row(
               children: [
                 Text(
-                  "Don't have an account? ".toUpperCase(),
+                  "${l10n.noAccount} ".toUpperCase(),
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontFamily: 'Lato',
@@ -202,7 +206,7 @@ class _SettingsPremiumLoginDialogState
                 GestureDetector(
                   onTap: _openSignUpPage,
                   child: Text(
-                    "Sign up".toUpperCase(),
+                    l10n.signUp.toUpperCase(),
                     style: TextStyle(
                       fontSize: 12.sp,
                       fontFamily: 'Lato',

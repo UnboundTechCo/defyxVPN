@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -12,15 +13,17 @@ class SettingsDonateWidget extends ConsumerWidget {
 
   void _handleOpenDonationPage(BuildContext context, WidgetRef ref) {
     final url = dotenv.env["WEBSITE_DONATION"];
+    final l10n = AppLocalizations.of(context);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CustomWebViewScreen(url: url!, title: "Donation"),
+        builder: (context) => CustomWebViewScreen(url: url!, title: l10n.settingsDonation),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return  Container(
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
@@ -36,7 +39,7 @@ class SettingsDonateWidget extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Donation'.toUpperCase(),
+                  l10n.settingsDonation.toUpperCase(),
                   style: TextStyle(
                     fontSize: 17.sp,
                     fontWeight: FontWeight.w500,
@@ -47,7 +50,7 @@ class SettingsDonateWidget extends ConsumerWidget {
                 SizedBox(
                   width: 206.w,
                   child: Text(
-                    'Help us break down the walls of digital censorship and internet filtering.',
+                    l10n.settingsDonationDescription,
                     style: TextStyle(fontSize: 13.sp, color: Colors.white60),
                     maxLines: 3,
                     softWrap: true,

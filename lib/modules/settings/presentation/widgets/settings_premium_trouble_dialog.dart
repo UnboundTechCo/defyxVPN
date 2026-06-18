@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,6 +39,7 @@ class _SettingsPremiumTroubleDialogState
     extends State<SettingsPremiumTroubleDialog> {
   bool isSigningOut = false;
   Future<void> _handleSignOut() async {
+    final l10n = AppLocalizations.of(context);
     if (isSigningOut) return;
     setState(() => isSigningOut = true);
     await widget.ref.read(authProvider.notifier).logout();
@@ -46,7 +48,7 @@ class _SettingsPremiumTroubleDialogState
         .saveFlowline(offlineMode: false, forceUpdate: true);
 
     if (mounted) {
-      ToastUtil.showToast('Signed out successfully!');
+      ToastUtil.showToast(l10n.signOutSuccess);
       Navigator.of(context).pop();
     }
     setState(() => isSigningOut = false);
@@ -59,6 +61,7 @@ class _SettingsPremiumTroubleDialogState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = 1.sw;
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
@@ -79,7 +82,7 @@ class _SettingsPremiumTroubleDialogState
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Having trouble?',
+              l10n.havingTrouble,
               style: TextStyle(
                 fontFamily: 'Lato',
                 fontSize: fontSize * 1.4,
@@ -97,8 +100,8 @@ class _SettingsPremiumTroubleDialogState
                   height: 1.4,
                 ),
                 children: [
-                  const TextSpan(
-                    text: 'You are currently signed in with the email address ',
+                  TextSpan(
+                    text: '${l10n.signedInAs} ',
                   ),
                   TextSpan(
                     text: widget.email,
@@ -110,7 +113,7 @@ class _SettingsPremiumTroubleDialogState
             ),
             SizedBox(height: 18.h),
             Text(
-              "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
+              l10n.premiumImportDescription,
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
@@ -122,7 +125,7 @@ class _SettingsPremiumTroubleDialogState
             Row(
               children: [
                 Text(
-                  "Planning to exit?".toUpperCase(),
+                  l10n.planningToExit.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12.sp,
                     fontFamily: 'Lato',
@@ -134,7 +137,7 @@ class _SettingsPremiumTroubleDialogState
                 InkWell(
                   onTap: _handleSignOut,
                   child: Text(
-                    'Sign out'.toUpperCase(),
+                    l10n.signOut.toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'Lato',
                       fontSize: 12.sp,
@@ -147,7 +150,7 @@ class _SettingsPremiumTroubleDialogState
             ),
             SizedBox(height: 24.h),
             AppButton(
-              label: "Got it",
+              label: l10n.gotIt,
               onPressed: _closeDialog,
               size: AppButtonSize.medium,
               variant: AppButtonVariant.secondary,

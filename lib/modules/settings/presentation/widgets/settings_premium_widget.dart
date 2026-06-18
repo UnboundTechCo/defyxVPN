@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_trouble_dialog.dart';
@@ -34,11 +35,12 @@ class SettingsPremiumWidget extends ConsumerWidget {
   }
 
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
 
     return authState.when(
       loading: () => const CircularProgressIndicator(),
-      error: (e, st) => Text('Error'),
+      error: (e, st) => Text(l10n.error),
       data: (authData) {
         return InkWell(
           onTap: authData.isLoggedIn
@@ -55,7 +57,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Marketplace'.toUpperCase(),
+                    l10n.settingsMarketplace.toUpperCase(),
                     style: TextStyle(
                       fontSize: 17.sp,
                       fontWeight: FontWeight.w500,
@@ -66,7 +68,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
                   SizedBox(
                     width: 206.w,
                     child: Text(
-                      'Browse secure VPN configurations from trusted suppliers.',
+                      l10n.marketplaceDescription,
                       style: TextStyle(fontSize: 13.sp, color: Colors.white60),
                       maxLines: 3,
                       softWrap: true,
@@ -89,14 +91,14 @@ class SettingsPremiumWidget extends ConsumerWidget {
 
                       authData.isLoggedIn
                           ? Text(
-                              'LOGGED IN',
+                              l10n.loggedIn,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: const Color(0xFFA3FF8C),
                               ),
                             )
                           : Text(
-                              'LOGIN OR REGISTER',
+                              l10n.loginOrRegister,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 color: const Color(0xFFFF9A9A),
