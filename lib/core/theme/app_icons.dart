@@ -30,6 +30,8 @@ class AppIcons {
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
   static const String premiumPath = 'assets/icons/premium.svg';
+  static const String shopPath = 'assets/icons/shop.svg';
+  static const String moneyPath = 'assets/icons/money.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -134,7 +136,7 @@ class AppIcons {
 
   static SvgPicture shop({double? width, double? height}) {
     return SvgPicture.asset(
-      'assets/icons/shop.svg',
+      shopPath,
       width: width,
       height: height,
     );
@@ -142,6 +144,10 @@ class AppIcons {
 
   static SvgPicture premium({double? width, double? height}) {
     return SvgPicture.asset(premiumPath, width: width, height: height);
+  }
+
+  static SvgPicture money({double? width, double? height}) {
+    return SvgPicture.asset(moneyPath, width: width, height: height);
   }
 
   static Widget shieldAnime({

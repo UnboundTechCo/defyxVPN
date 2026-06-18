@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/common/helpers/truncate_text.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
 import 'package:flutter/material.dart';
@@ -74,9 +75,14 @@ class SettingsItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 7.w,
             children: [
-              if (item.isPremium) AppIcons.premium(height: 18, width: 18),
+              if (item.isPremium)
+                InkWell(
+                  child: AppIcons.premium(height: 18, width: 18),
+                  onTap: () =>
+                      SettingsToastMessage.show(item.description ?? ""),
+                ),
               Text(
-                item.title.toUpperCase(),
+                truncateText(item.title.toUpperCase(), 20),
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontFamily: 'Lato',
@@ -84,7 +90,9 @@ class SettingsItemWidget extends StatelessWidget {
                   color: item.isAccessible ? Colors.white : Colors.grey[600],
                 ),
               ),
-              if (item.description != null && item.description!.isNotEmpty)
+              if (item.description != null &&
+                  item.description!.isNotEmpty &&
+                  !item.isPremium)
                 InkWell(
                   child: AppIcons.info(
                     height: 22,

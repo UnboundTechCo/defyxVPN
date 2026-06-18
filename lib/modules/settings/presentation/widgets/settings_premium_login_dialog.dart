@@ -65,13 +65,13 @@ class _SettingsPremiumLoginDialogState
         return;
       }
 
-      await widget.ref.read(authProvider.notifier).login(token);
+      await widget.ref.read(authProvider.notifier).login(email, token);
 
-      ToastUtil.showToast('Login successful!');
-
-      widget.ref
+      await widget.ref
           .read(flowlineServiceProvider)
           .saveFlowline(offlineMode: false, forceUpdate: true);
+
+      ToastUtil.showToast('Login successful!');
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -82,6 +82,15 @@ class _SettingsPremiumLoginDialogState
     } finally {
       setState(() => isSubmitting = false);
     }
+  }
+
+  void _openSignUpPage() {
+    final url = dotenv.env["WEBSITE_SIGN_UP"];
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => CustomWebViewScreen(url: url!, title: "Sign up"),
+      ),
+    );
   }
 
   void _handleNotNow() {
@@ -129,44 +138,6 @@ class _SettingsPremiumLoginDialogState
                     ),
                   ],
                 ),
-                SizedBox(height: 10.h),
-                Row(
-                  children: [
-                    Text(
-                      "Don't have an account? ",
-                      style: TextStyle(
-                        fontSize: fontSize,
-                        fontFamily: 'Lato',
-                        color: Colors.black.withValues(alpha: 0.5),
-                        height: 1.4,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        final url = dotenv.env["WEBSITE_SIGN_UP"];
-                        Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (context) => CustomWebViewScreen(
-                              url: url!,
-                              title: "Sign up",
-                            ),
-                          ),
-                        );
-                        // Open the Defyx website in the default browser
-                        // You can use url_launcher package to achieve this
-                      },
-                      child: Text(
-                        "Sign up",
-                        style: TextStyle(
-                          fontSize: fontSize,
-                          fontFamily: 'Lato',
-                          color: Colors.blue,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ],
             ),
             SizedBox(height: 20.h),
@@ -208,12 +179,39 @@ class _SettingsPremiumLoginDialogState
               variant: AppButtonVariant.primary,
               isLoading: isSubmitting,
             ),
-            SizedBox(height: 5.h),
+            SizedBox(height: 10.h),
             AppButton(
               label: "Not now",
               onPressed: _handleNotNow,
               size: AppButtonSize.small,
               variant: AppButtonVariant.secondary,
+              isLoading: isSubmitting,
+            ),
+            SizedBox(height: 24.h),
+            Row(
+              children: [
+                Text(
+                  "Don't have an account? ".toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 12.sp,
+                    fontFamily: 'Lato',
+                    color: Colors.black.withValues(alpha: 0.5),
+                    height: 1.4,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: _openSignUpPage,
+                  child: Text(
+                    "Sign up".toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 12.sp,
+                      fontFamily: 'Lato',
+                      color: Colors.blue,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

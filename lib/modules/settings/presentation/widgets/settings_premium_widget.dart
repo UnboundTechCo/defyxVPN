@@ -39,68 +39,72 @@ class SettingsPremiumWidget extends ConsumerWidget {
     return authState.when(
       loading: () => const CircularProgressIndicator(),
       error: (e, st) => Text('Error'),
-      data: (isLoggedIn) {
+      data: (authData) {
         return InkWell(
-          onTap: isLoggedIn
-              ? () => SettingsPremiumTroubleDialog.show(context, ref)
+          onTap: authData.isLoggedIn
+              ? () => SettingsPremiumTroubleDialog.show(
+                  context,
+                  ref,
+                  authData.email,
+                )
               : () => _handleOpenLoginDialog(context, ref),
           child: Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Marketplace'.toUpperCase(),
-                      style: TextStyle(
-                        fontSize: 17.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Marketplace'.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 17.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
                     ),
-                    SizedBox(height: 4.h),
-                    Text(
-                      'Browse secure VPN configurations from trusted suppliers',
+                  ),
+                  SizedBox(height: 4.h),
+                  SizedBox(
+                    width: 206.w,
+                    child: Text(
+                      'Browse secure VPN configurations from trusted suppliers.',
                       style: TextStyle(fontSize: 13.sp, color: Colors.white60),
                       maxLines: 3,
                       softWrap: true,
                     ),
-                    SizedBox(height: 10.h),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AppIcons.info(
-                          height: 16,
-                          width: 16,
-                          colorFilter: ColorFilter.mode(
-                            Colors.white.withOpacity(0.16),
-                            BlendMode.srcIn,
-                          ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AppIcons.info(
+                        height: 16,
+                        width: 16,
+                        colorFilter: ColorFilter.mode(
+                          Colors.white.withOpacity(0.16),
+                          BlendMode.srcIn,
                         ),
-                        SizedBox(width: 4.w),
-                        Expanded(
-                          child: isLoggedIn
-                              ? Text(
-                                  'LOGGED IN',
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    color: const Color(0xFFA3FF8C),
-                                  ),
-                                )
-                              : Text(
-                                  'LOGIN OR REGISTER',
-                                  style: TextStyle(
-                                    fontSize: 12.sp,
-                                    color: const Color(0xFFFF9A9A),
-                                  ),
-                                ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                      SizedBox(width: 4.w),
+
+                      authData.isLoggedIn
+                          ? Text(
+                              'LOGGED IN',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: const Color(0xFFA3FF8C),
+                              ),
+                            )
+                          : Text(
+                              'LOGIN OR REGISTER',
+                              style: TextStyle(
+                                fontSize: 12.sp,
+                                color: const Color(0xFFFF9A9A),
+                              ),
+                            ),
+                    ],
+                  ),
+                ],
               ),
               SizedBox(width: 10.w),
               Container(

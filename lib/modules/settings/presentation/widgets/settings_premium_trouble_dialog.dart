@@ -1,3 +1,6 @@
+import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,21 +8,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SettingsPremiumTroubleDialog extends StatefulWidget {
   final WidgetRef ref;
+  final String email;
 
-  const SettingsPremiumTroubleDialog({super.key, required this.ref});
+  const SettingsPremiumTroubleDialog({
+    super.key,
+    required this.ref,
+    required this.email,
+  });
 
   @override
   State<SettingsPremiumTroubleDialog> createState() =>
       _SettingsPremiumTroubleDialogState();
 
-  static Future<void> show(BuildContext context, WidgetRef ref) {
+  static Future<void> show(BuildContext context, WidgetRef ref, String email) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
         return PopScope(
           canPop: true,
-          child: SettingsPremiumTroubleDialog(ref: ref),
+          child: SettingsPremiumTroubleDialog(ref: ref, email: email),
         );
       },
     );
@@ -28,9 +36,24 @@ class SettingsPremiumTroubleDialog extends StatefulWidget {
 
 class _SettingsPremiumTroubleDialogState
     extends State<SettingsPremiumTroubleDialog> {
-  void _handleSignOut() {
-    widget.ref.read(authProvider.notifier).logout();
+  bool isSigningOut = false;
+  Future<void> _handleSignOut() async {
+    if (isSigningOut) return;
+    setState(() => isSigningOut = true);
+    await widget.ref.read(authProvider.notifier).logout();
+    await widget.ref
+        .read(flowlineServiceProvider)
+        .saveFlowline(offlineMode: false, forceUpdate: true);
 
+    if (mounted) {
+      ToastUtil.showToast('Signed out successfully!');
+      Navigator.of(context).pop();
+    }
+    setState(() => isSigningOut = false);
+  }
+
+  void _closeDialog() {
+    if (isSigningOut) return;
     Navigator.of(context).pop();
   }
 
@@ -65,6 +88,27 @@ class _SettingsPremiumTroubleDialogState
               ),
             ),
             SizedBox(height: 18.h),
+            RichText(
+              text: TextSpan(
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: 'Lato',
+                  color: Colors.black.withValues(alpha: 0.5),
+                  height: 1.4,
+                ),
+                children: [
+                  const TextSpan(
+                    text: 'You are currently signed in with the email address ',
+                  ),
+                  TextSpan(
+                    text: widget.email,
+                    style: const TextStyle(color: Color(0xFF5374BD)),
+                  ),
+                  const TextSpan(text: '.'),
+                ],
+              ),
+            ),
+            SizedBox(height: 18.h),
             Text(
               "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
               style: TextStyle(
@@ -80,7 +124,7 @@ class _SettingsPremiumTroubleDialogState
                 Text(
                   "Planning to exit?".toUpperCase(),
                   style: TextStyle(
-                    fontSize: fontSize,
+                    fontSize: 12.sp,
                     fontFamily: 'Lato',
                     height: 1.4,
                     color: Colors.black.withValues(alpha: 0.5),
@@ -93,7 +137,7 @@ class _SettingsPremiumTroubleDialogState
                     'Sign out'.toUpperCase(),
                     style: TextStyle(
                       fontFamily: 'Lato',
-                      fontSize: fontSize,
+                      fontSize: 12.sp,
                       height: 1.4,
                       color: const Color(0xFF17A079),
                     ),
@@ -102,28 +146,12 @@ class _SettingsPremiumTroubleDialogState
               ],
             ),
             SizedBox(height: 24.h),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[200],
-                foregroundColor: const Color.fromARGB(255, 47, 41, 41),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Got it',
-                style: TextStyle(
-                  fontFamily: 'Lato',
-                  color: const Color(0xFF4B4B4B),
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            AppButton(
+              label: "Got it",
+              onPressed: _closeDialog,
+              size: AppButtonSize.medium,
+              variant: AppButtonVariant.secondary,
+              isLoading: isSigningOut,
             ),
           ],
         ),

@@ -28,13 +28,14 @@ class AppButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
+        minimumSize: Size.zero,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        padding: EdgeInsets.symmetric(vertical: config.verticalPadding),
         elevation: 0,
-        maximumSize: Size(double.infinity, config.height),
         backgroundColor: _backgroundColor,
         disabledBackgroundColor: _backgroundColor,
         foregroundColor: _textColor,
         disabledForegroundColor: _textColor,
-        padding: EdgeInsets.symmetric(vertical: config.verticalPadding),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
       ),
       child: AnimatedSwitcher(
@@ -97,7 +98,7 @@ class AppButton extends StatelessWidget {
     switch (size) {
       case AppButtonSize.small:
         return _ButtonSizeConfig(
-          verticalPadding: 6.h,
+          verticalPadding: 11.h,
           fontSize: 14.sp,
           fontWeight: FontWeight.w600,
           loaderSize: 16.w,
@@ -106,7 +107,7 @@ class AppButton extends StatelessWidget {
 
       case AppButtonSize.medium:
         return _ButtonSizeConfig(
-          verticalPadding: 11.h,
+          verticalPadding: 15.h,
           fontSize: 16.sp,
           fontWeight: FontWeight.w500,
           loaderSize: 18.w,

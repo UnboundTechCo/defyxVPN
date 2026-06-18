@@ -2,25 +2,32 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final authProvider =
-    AsyncNotifierProvider<AuthNotifier, bool>(AuthNotifier.new);
+class AuthData {
+  final String email;
+  final bool isLoggedIn;
 
-class AuthNotifier extends AsyncNotifier<bool> {
+  AuthData({required this.email, required this.isLoggedIn});
+}
+
+final authProvider =
+    AsyncNotifierProvider<AuthNotifier, AuthData>(AuthNotifier.new);
+
+class AuthNotifier extends AsyncNotifier<AuthData> {
   @override
-  Future<bool> build() async {
+  Future<AuthData> build() async {
     final storage = ref.read(secureStorageProvider);
 
     final token = await storage.read(premiumTokenKey);
 
-    return token?.isNotEmpty ?? false;
+    return AuthData(email: '', isLoggedIn: token?.isNotEmpty ?? false);
   }
 
-  Future<void> login(String token) async {
+  Future<void> login(String email, String token) async {
     final storage = ref.read(secureStorageProvider);
 
     await storage.write(premiumTokenKey, token);
 
-    state = const AsyncData(true);
+    state = AsyncData(AuthData(email: email, isLoggedIn: true));
   }
 
   Future<void> logout() async {
@@ -28,7 +35,7 @@ class AuthNotifier extends AsyncNotifier<bool> {
 
     await storage.delete(premiumTokenKey);
 
-    state = const AsyncData(false);
+    state = AsyncData(AuthData(email: '', isLoggedIn: false));
   }
 
   Future<String> getToken() async {

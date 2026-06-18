@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
@@ -156,7 +157,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
                               SizedBox(height: 30.h),
-                              SettingsPremiumWidget(ref: ref),
+                              _buildSliderSecontion(),
                               SizedBox(height: 30.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),
@@ -250,6 +251,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  Widget _buildSliderSecontion() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+
+          children: [
+            SettingsPremiumWidget(ref: ref),
+            SizedBox(width: 15.w),
+            SettingsDonateWidget(ref: ref),
+          ],
+        ),
+      ),
     );
   }
 
