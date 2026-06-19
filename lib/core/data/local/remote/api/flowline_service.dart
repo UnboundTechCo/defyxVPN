@@ -83,7 +83,26 @@ class FlowlineService implements IFlowlineService {
       }
 
       final appBuildType = GlobalVars.appBuildType;
-      final version = decoded['version'][appBuildType];
+      final version = decoded['version']?[appBuildType];
+      
+      // Check if version exists
+      if (version == null || decoded['version'] == null) {
+        debugPrint('Warning: version field is null or missing');
+        debugPrint('Using fallback handling for missing version data');
+        
+        // Still save what we can
+        await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine'] ?? decoded));
+        final settings = _container.read(settingsProvider.notifier);
+        await settings.updateSettingsBasedOnFlowLine();
+        
+        if (!offlineMode) {
+          prefs.setInt(
+            lastFlowlineUpdateKey,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+        return; // Exit early since we don't have version data
+      }
 
       final advertiseStorageMap = {'api_advertise': decoded['advertise']};
       await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);

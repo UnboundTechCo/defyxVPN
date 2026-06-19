@@ -35,6 +35,7 @@ struct GsettingsSnapshot {
   std::string schema;
   bool captured = false;
   std::string mode;
+  std::string autoconfig_url;
   std::string http_host;
   std::string http_port;
   std::string https_host;
@@ -50,6 +51,7 @@ struct GsettingsSnapshot {
   std::string ftp_port;
   std::string ftp_enabled;
   bool supports_use_same_proxy = false;
+  bool supports_autoconfig_url = false;
   bool supports_http_enabled = false;
   bool supports_https_enabled = false;
   bool supports_socks_enabled = false;
@@ -469,7 +471,7 @@ ProxyBackends DetermineProxyBackends() {
     backends.use_gsettings = true;
   }
 
-  if (kde_hint && CommandExists("kwriteconfig5")) {
+  if (kde_hint && (CommandExists("kwriteconfig6") || CommandExists("kwriteconfig5"))) {
     backends.use_kde = true;
   }
 
@@ -478,17 +480,10 @@ ProxyBackends DetermineProxyBackends() {
   }
 
   if (!gsettings_hint && !backends.use_gsettings && CommandExists("gsettings")) {
-    // Fallback to gsettings when available, since many desktop environments rely on it.
     backends.use_gsettings = true;
   }
 
-  if (!kde_hint && !backends.use_kde && CommandExists("kwriteconfig5")) {
-    // If kwriteconfig5 exists but KDE wasn't hinted, prefer not to change KDE settings implicitly.
-    backends.use_kde = false;
-  }
-
   if (!xfce_hint && !backends.use_xfconf) {
-    // Leave XFCE untouched unless explicitly detected.
     backends.use_xfconf = false;
   }
 
@@ -730,6 +725,7 @@ void SaveSnapshotToDisk(const Snapshot& snapshot) {
     ofs << "gsettings_" << i << "_schema=" << Escape(entry.schema) << "\n";
     ofs << "gsettings_" << i << "_captured=" << (entry.captured ? "1" : "0") << "\n";
     ofs << "gsettings_" << i << "_mode=" << Escape(entry.mode) << "\n";
+    ofs << "gsettings_" << i << "_autoconfig_url=" << Escape(entry.autoconfig_url) << "\n";
     ofs << "gsettings_" << i << "_http_host=" << Escape(entry.http_host) << "\n";
     ofs << "gsettings_" << i << "_http_port=" << Escape(entry.http_port) << "\n";
     ofs << "gsettings_" << i << "_https_host=" << Escape(entry.https_host) << "\n";
@@ -745,6 +741,7 @@ void SaveSnapshotToDisk(const Snapshot& snapshot) {
     ofs << "gsettings_" << i << "_ftp_port=" << Escape(entry.ftp_port) << "\n";
     ofs << "gsettings_" << i << "_ftp_enabled=" << Escape(entry.ftp_enabled) << "\n";
     ofs << "gsettings_" << i << "_supports_use_same_proxy=" << (entry.supports_use_same_proxy ? "1" : "0") << "\n";
+    ofs << "gsettings_" << i << "_supports_autoconfig_url=" << (entry.supports_autoconfig_url ? "1" : "0") << "\n";
     ofs << "gsettings_" << i << "_supports_http_enabled=" << (entry.supports_http_enabled ? "1" : "0") << "\n";
     ofs << "gsettings_" << i << "_supports_https_enabled=" << (entry.supports_https_enabled ? "1" : "0") << "\n";
     ofs << "gsettings_" << i << "_supports_socks_enabled=" << (entry.supports_socks_enabled ? "1" : "0") << "\n";
@@ -844,6 +841,7 @@ bool LoadSnapshotFromDisk(Snapshot* snapshot) {
     gs.schema = entries[prefix + "schema"];
     gs.captured = entries[prefix + "captured"] == "1";
     gs.mode = entries[prefix + "mode"];
+    gs.autoconfig_url = entries[prefix + "autoconfig_url"];
     gs.http_host = entries[prefix + "http_host"];
     gs.http_port = entries[prefix + "http_port"];
     gs.https_host = entries[prefix + "https_host"];
@@ -859,6 +857,7 @@ bool LoadSnapshotFromDisk(Snapshot* snapshot) {
     gs.ftp_port = entries[prefix + "ftp_port"];
     gs.ftp_enabled = entries[prefix + "ftp_enabled"];
     gs.supports_use_same_proxy = entries[prefix + "supports_use_same_proxy"] == "1";
+    gs.supports_autoconfig_url = entries[prefix + "supports_autoconfig_url"] == "1";
     gs.supports_http_enabled = entries[prefix + "supports_http_enabled"] == "1";
     gs.supports_https_enabled = entries[prefix + "supports_https_enabled"] == "1";
     gs.supports_socks_enabled = entries[prefix + "supports_socks_enabled"] == "1";
@@ -958,19 +957,37 @@ void CaptureEnv() {
   if (val) g_snapshot.env.no_proxy = val;
 }
 
-void ApplyEnv(const ProxyConfig& config) {
-  const std::string proxy_url = BuildProxyUrl(config.scheme.empty() ? "http" : config.scheme,
-                                              config.host, config.port);
-  setenv("http_proxy", proxy_url.c_str(), 1);
-  setenv("https_proxy", proxy_url.c_str(), 1);
-  setenv("ftp_proxy", proxy_url.c_str(), 1);
-  setenv("all_proxy", proxy_url.c_str(), 1);
-  setenv("HTTP_PROXY", proxy_url.c_str(), 1);
-  setenv("HTTPS_PROXY", proxy_url.c_str(), 1);
-  setenv("FTP_PROXY", proxy_url.c_str(), 1);
-  setenv("ALL_PROXY", proxy_url.c_str(), 1);
+bool IsSocksScheme(const ProxyConfig& config) {
+  return config.scheme.rfind("socks", 0) == 0;
+}
 
+void ApplyEnv(const ProxyConfig& config) {
+  const bool is_socks = IsSocksScheme(config);
+  const std::string socks_url = BuildProxyUrl(config.scheme.empty() ? "socks5" : config.scheme, config.host, config.port);
   std::string no_proxy = config.no_proxy.empty() ? "localhost,127.0.0.1,::1" : config.no_proxy;
+
+  if (is_socks) {
+    // Don't set http_proxy to a SOCKS5 port — apps that speak HTTP to it fail
+    // and fall back to direct connection. Unset the HTTP vars so they don't
+    // override the PAC-based or SOCKS-based proxy from the DE settings.
+    unsetenv("http_proxy");
+    unsetenv("https_proxy");
+    unsetenv("ftp_proxy");
+    unsetenv("HTTP_PROXY");
+    unsetenv("HTTPS_PROXY");
+    unsetenv("FTP_PROXY");
+  } else {
+    const std::string http_url = BuildProxyUrl("http", config.host, config.port);
+    setenv("http_proxy", http_url.c_str(), 1);
+    setenv("https_proxy", http_url.c_str(), 1);
+    setenv("ftp_proxy", http_url.c_str(), 1);
+    setenv("HTTP_PROXY", http_url.c_str(), 1);
+    setenv("HTTPS_PROXY", http_url.c_str(), 1);
+    setenv("FTP_PROXY", http_url.c_str(), 1);
+  }
+
+  setenv("all_proxy", socks_url.c_str(), 1);
+  setenv("ALL_PROXY", socks_url.c_str(), 1);
   setenv("no_proxy", no_proxy.c_str(), 1);
   setenv("NO_PROXY", no_proxy.c_str(), 1);
 }
@@ -1073,6 +1090,8 @@ void CaptureGsettings() {
     };
 
     capture_key(schema, "mode", &snapshot->mode);
+    snapshot->supports_autoconfig_url = false;
+    capture_key(schema, "autoconfig-url", &snapshot->autoconfig_url, &snapshot->supports_autoconfig_url);
     snapshot->supports_use_same_proxy = false;
     capture_key(schema, "use-same-proxy", &snapshot->use_same_proxy, &snapshot->supports_use_same_proxy);
     snapshot->supports_ignore_hosts = false;
@@ -1115,13 +1134,83 @@ std::string QuoteForGSettings(const std::string& value) {
   return "'" + trimmed + "'";
 }
 
+std::string PacFilePath() {
+  return DefaultConfigDir() + "/defyx/proxy.pac";
+}
+
+bool WritePacFile(const ProxyConfig& config) {
+  std::string pac_path = PacFilePath();
+  std::ofstream ofs(pac_path.c_str(), std::ios::trunc);
+  if (!ofs.is_open()) {
+    defyx_core::LogMessage("ProxyManager: failed to write PAC file: " + pac_path);
+    return false;
+  }
+
+  std::string no_proxy = config.no_proxy.empty() ? "localhost,127.0.0.1,::1" : config.no_proxy;
+  auto bypass_hosts = SplitString(no_proxy, ',');
+
+  ofs << "function FindProxyForURL(url, host) {\n";
+  for (const auto& h : bypass_hosts) {
+    if (!h.empty()) {
+      ofs << "    if (host === '" << h << "') return 'DIRECT';\n";
+    }
+  }
+  // Also bypass plain hostnames (no dots = local network)
+  ofs << "    if (isPlainHostName(host)) return 'DIRECT';\n";
+  ofs << "    return 'SOCKS5 " << config.host << ":" << config.port << "; DIRECT';\n";
+  ofs << "}\n";
+
+  ofs.close();
+  defyx_core::LogMessage("ProxyManager: wrote PAC file: " + pac_path);
+  return true;
+}
+
+void RemovePacFile() {
+  std::error_code ec;
+  std::filesystem::remove(PacFilePath(), ec);
+}
+
 bool ApplyGsettingsSchema(const ProxyConfig& config, GsettingsSnapshot* snapshot) {
   if (!snapshot) return false;
   const std::string& schema = snapshot->schema;
   if (!GSettingsKeyExists(schema, "mode")) return false;
 
-  std::ostringstream ignore;
   std::string no_proxy = config.no_proxy.empty() ? "localhost,127.0.0.1,::1" : config.no_proxy;
+
+  if (IsSocksScheme(config)) {
+    // PAC file approach: Chrome reads "SOCKS5 host:port" from PAC and opens
+    // a native SOCKS5 connection — no HTTP-to-SOCKS5 mismatch.
+    // Firefox also reads the PAC and uses SOCKS5 natively.
+    // This avoids setting http sub-schema to a SOCKS5 port (which breaks Chrome).
+    bool pac_ok = WritePacFile(config);
+    if (pac_ok && GSettingsKeyExists(schema, "autoconfig-url")) {
+      snapshot->supports_autoconfig_url = true;
+      std::string pac_url = "file://" + PacFilePath();
+      RunCommand("gsettings set " + schema + " mode 'auto'");
+      RunCommand("gsettings set " + schema + " autoconfig-url '" + pac_url + "'");
+      defyx_core::LogMessage("ProxyManager: gsettings mode=auto, PAC=" + pac_url);
+      return true;
+    }
+    // Fallback if autoconfig-url key not supported: manual SOCKS only
+    defyx_core::LogMessage("ProxyManager: autoconfig-url not supported, using manual SOCKS fallback");
+    RunCommand("gsettings set " + schema + " mode 'manual'");
+    if (GSettingsKeyExists(schema, "use-same-proxy")) {
+      RunCommand("gsettings set " + schema + " use-same-proxy false");
+    }
+    std::string socks_schema = MakeSubSchema(schema, "socks");
+    std::string host_quoted = QuoteForGSettings(config.host);
+    std::string port_str = std::to_string(config.port);
+    if (GSettingsKeyExists(socks_schema, "host")) {
+      RunCommand("gsettings set " + socks_schema + " host " + host_quoted);
+    }
+    if (GSettingsKeyExists(socks_schema, "port")) {
+      RunCommand("gsettings set " + socks_schema + " port " + port_str);
+    }
+    return true;
+  }
+
+  // HTTP proxy path (non-SOCKS): manual mode, set all sub-schemas
+  std::ostringstream ignore;
   ignore << "[";
   std::stringstream ss(no_proxy);
   std::string item;
@@ -1136,7 +1225,6 @@ bool ApplyGsettingsSchema(const ProxyConfig& config, GsettingsSnapshot* snapshot
 
   std::ostringstream port_str;
   port_str << config.port;
-
   std::string host_quoted = QuoteForGSettings(config.host);
   std::string port_command = port_str.str();
   RunCommand("gsettings set " + schema + " mode 'manual'");
@@ -1144,7 +1232,7 @@ bool ApplyGsettingsSchema(const ProxyConfig& config, GsettingsSnapshot* snapshot
   bool use_same_proxy_supported = snapshot->supports_use_same_proxy || GSettingsKeyExists(schema, "use-same-proxy");
   if (use_same_proxy_supported) {
     snapshot->supports_use_same_proxy = true;
-    RunCommand("gsettings set " + schema + " use-same-proxy true");
+    RunCommand("gsettings set " + schema + " use-same-proxy false");
   }
 
   auto apply_group = [&](const std::string& group, bool enable_flag) {
@@ -1187,22 +1275,6 @@ bool ApplyGsettingsSchema(const ProxyConfig& config, GsettingsSnapshot* snapshot
     RunCommand("gsettings set " + schema + " ignore-hosts \"" + ignore.str() + "\"");
   }
 
-  auto log_if_mismatch = [&](const std::string& label, const std::string& full_schema, const std::string& key, const std::string& expected, const std::string& alt_expected = std::string()) {
-    CommandResult current = RunCommand("gsettings get " + full_schema + " " + key);
-    if (current.exit_code != 0) return;
-    std::string trimmed = TrimWhitespace(current.output);
-    if (trimmed != expected && (alt_expected.empty() || trimmed != alt_expected)) {
-      defyx_core::LogMessage("ProxyManager: gsettings(" + schema + ") " + label + " mismatch -> got: " + trimmed + ", expected: " + expected);
-    }
-  };
-
-  log_if_mismatch("mode", schema, "mode", "'manual'");
-  std::string expected_host = "'" + config.host + "'";
-  std::string http_schema = MakeSubSchema(schema, "http");
-  log_if_mismatch("http host", http_schema, "host", expected_host);
-  std::string port_value = std::to_string(config.port);
-  log_if_mismatch("http port", http_schema, "port", port_value, "uint32 " + port_value);
-
   return true;
 }
 
@@ -1242,6 +1314,19 @@ void RestoreGsettings() {
     if (!GSettingsKeyExists(snapshot.schema, "mode")) continue;
 
     set_if_supported(snapshot.schema, "mode", snapshot.mode, true);
+
+    // Restore autoconfig-url if we had captured it
+    if (snapshot.supports_autoconfig_url && GSettingsKeyExists(snapshot.schema, "autoconfig-url")) {
+      if (snapshot.autoconfig_url.empty()) {
+        RunCommand("gsettings reset " + snapshot.schema + " autoconfig-url");
+      } else {
+        std::string formatted;
+        if (NormalizeGsettingsValueForSet(snapshot.autoconfig_url, &formatted)) {
+          RunCommand("gsettings set " + snapshot.schema + " autoconfig-url " + formatted);
+        }
+      }
+    }
+
     set_if_supported(snapshot.schema, "use-same-proxy", snapshot.use_same_proxy, snapshot.supports_use_same_proxy);
     set_if_supported(snapshot.schema, "ignore-hosts", snapshot.ignore_hosts, snapshot.supports_ignore_hosts);
 
@@ -1257,19 +1342,22 @@ void RestoreGsettings() {
     set_group("socks", snapshot.socks_host, snapshot.socks_port, snapshot.socks_enabled, snapshot.supports_socks_enabled);
     set_group("ftp", snapshot.ftp_host, snapshot.ftp_port, snapshot.ftp_enabled, snapshot.supports_ftp_enabled);
   }
+
+  RemovePacFile();
 }
 
 void CaptureKde() {
   if (g_snapshot.kde.captured) return;
-  if (!CommandExists("kreadconfig5")) return;
+  std::string kreadconfig = CommandExists("kreadconfig6") ? "kreadconfig6" : "kreadconfig5";
+  if (!CommandExists(kreadconfig)) return;
 
   g_snapshot.kde.captured = true;
-  g_snapshot.kde.proxy_type = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key ProxyType").output;
-  g_snapshot.kde.http_proxy = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key httpProxy").output;
-  g_snapshot.kde.https_proxy = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key httpsProxy").output;
-  g_snapshot.kde.socks_proxy = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key socksProxy").output;
-  g_snapshot.kde.ftp_proxy = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key ftpProxy").output;
-  g_snapshot.kde.no_proxy_for = RunCommand("kreadconfig5 --file kioslaverc --group 'Proxy Settings' --key NoProxyFor").output;
+  g_snapshot.kde.proxy_type = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key ProxyType").output;
+  g_snapshot.kde.http_proxy = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key httpProxy").output;
+  g_snapshot.kde.https_proxy = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key httpsProxy").output;
+  g_snapshot.kde.socks_proxy = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key socksProxy").output;
+  g_snapshot.kde.ftp_proxy = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key ftpProxy").output;
+  g_snapshot.kde.no_proxy_for = RunCommand(kreadconfig + " --file kioslaverc --group 'Proxy Settings' --key NoProxyFor").output;
 }
 
 std::string QuoteForShell(const std::string& value) {
@@ -1286,39 +1374,48 @@ std::string QuoteForShell(const std::string& value) {
   return oss.str();
 }
 bool ApplyKde(const ProxyConfig& config) {
-  if (!CommandExists("kwriteconfig5")) return false;
+  std::string kwriteconfig = CommandExists("kwriteconfig6") ? "kwriteconfig6" : "kwriteconfig5";
+  if (!CommandExists(kwriteconfig)) return false;
 
-  std::string proxy_url = BuildProxyUrl(config.scheme.empty() ? "http" : config.scheme,
-                                        config.host, config.port);
-  std::string proxy_socks = BuildProxyUrl(config.scheme.empty() ? "socks5" : config.scheme,
-                                          config.host, config.port);
+  std::string socks_url = BuildProxyUrl("socks5", config.host, config.port);
   std::string no_proxy = config.no_proxy.empty() ? "localhost,127.0.0.1,::1" : config.no_proxy;
 
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key ProxyType 1");
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key httpProxy " + QuoteForShell(proxy_url));
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key httpsProxy " + QuoteForShell(proxy_url));
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key socksProxy " + QuoteForShell(proxy_socks));
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key ftpProxy " + QuoteForShell(proxy_url));
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key NoProxyFor " + QuoteForShell(no_proxy));
-  if (CommandExists("qdbus")) {
-    RunCommandQuiet("qdbus org.kde.kded5 /kded org.kde.kded5.loadModule proxy >/dev/null 2>&1");
+  RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key ProxyType 1");
+
+  if (IsSocksScheme(config)) {
+    // SOCKS5 only: clear HTTP/FTP proxy keys, set only socksProxy
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key httpProxy --delete");
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key httpsProxy --delete");
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key ftpProxy --delete");
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key socksProxy " + QuoteForShell(socks_url));
+  } else {
+    std::string http_url = BuildProxyUrl("http", config.host, config.port);
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key httpProxy " + QuoteForShell(http_url));
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key httpsProxy " + QuoteForShell(http_url));
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key ftpProxy " + QuoteForShell(http_url));
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key socksProxy " + QuoteForShell(socks_url));
   }
+
+  RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key NoProxyFor " + QuoteForShell(no_proxy));
+  RunCommandQuiet("dbus-send --type=signal /KIO/Scheduler org.kde.KIO.Scheduler.reparseSlaveConfiguration string:'' 2>/dev/null");
   return true;
 }
 
 void RestoreKde() {
-  if (!g_snapshot.kde.captured || !CommandExists("kwriteconfig5")) return;
+  if (!g_snapshot.kde.captured) return;
+  std::string kwriteconfig = CommandExists("kwriteconfig6") ? "kwriteconfig6" : "kwriteconfig5";
+  if (!CommandExists(kwriteconfig)) return;
 
-  auto write_key = [](const std::string& key, const std::string& value) {
+  auto write_key = [&kwriteconfig](const std::string& key, const std::string& value) {
     if (value.empty()) {
-      RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key " + key + " --delete");
+      RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key " + key + " --delete");
       return;
     }
     std::string trimmed = value;
     while (!trimmed.empty() && (trimmed.back() == '\n' || trimmed.back() == '\r')) {
       trimmed.pop_back();
     }
-    RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key " + key + " " + QuoteForShell(trimmed));
+    RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key " + key + " " + QuoteForShell(trimmed));
   };
 
   std::string proxy_type = g_snapshot.kde.proxy_type;
@@ -1326,7 +1423,7 @@ void RestoreKde() {
     proxy_type.pop_back();
   }
   if (proxy_type.empty()) proxy_type = "0";
-  RunCommand("kwriteconfig5 --file kioslaverc --group 'Proxy Settings' --key ProxyType " + proxy_type);
+  RunCommand(kwriteconfig + " --file kioslaverc --group 'Proxy Settings' --key ProxyType " + proxy_type);
 
   write_key("httpProxy", g_snapshot.kde.http_proxy);
   write_key("httpsProxy", g_snapshot.kde.https_proxy);
@@ -1334,9 +1431,7 @@ void RestoreKde() {
   write_key("ftpProxy", g_snapshot.kde.ftp_proxy);
   write_key("NoProxyFor", g_snapshot.kde.no_proxy_for);
 
-  if (CommandExists("qdbus")) {
-    RunCommandQuiet("qdbus org.kde.kded5 /kded org.kde.kded5.loadModule proxy >/dev/null 2>&1");
-  }
+  RunCommandQuiet("dbus-send --type=signal /KIO/Scheduler org.kde.KIO.Scheduler.reparseSlaveConfiguration string:'' 2>/dev/null");
 }
 
 void CaptureXfce() {
@@ -1398,15 +1493,28 @@ bool ApplyXfce(const ProxyConfig& config) {
   bool ok = true;
 
   ok &= XfconfSetValue(channel, "/general/ProxyMode", "string", "manual");
-  ok &= XfconfSetValue(channel, "/general/ProxyUseSame", "bool", "true");
-  ok &= XfconfSetValue(channel, "/general/ProxyHttpHost", "string", config.host);
-  ok &= XfconfSetValue(channel, "/general/ProxyHttpPort", "int", std::to_string(config.port));
-  ok &= XfconfSetValue(channel, "/general/ProxyHttpsHost", "string", config.host);
-  ok &= XfconfSetValue(channel, "/general/ProxyHttpsPort", "int", std::to_string(config.port));
-  ok &= XfconfSetValue(channel, "/general/ProxySocksHost", "string", config.host);
-  ok &= XfconfSetValue(channel, "/general/ProxySocksPort", "int", std::to_string(config.port));
-  ok &= XfconfSetValue(channel, "/general/ProxyFtpHost", "string", config.host);
-  ok &= XfconfSetValue(channel, "/general/ProxyFtpPort", "int", std::to_string(config.port));
+
+  if (IsSocksScheme(config)) {
+    ok &= XfconfSetValue(channel, "/general/ProxyUseSame", "bool", "false");
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpHost", "string", "");
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpPort", "int", "0");
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpsHost", "string", "");
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpsPort", "int", "0");
+    ok &= XfconfSetValue(channel, "/general/ProxyFtpHost", "string", "");
+    ok &= XfconfSetValue(channel, "/general/ProxyFtpPort", "int", "0");
+    ok &= XfconfSetValue(channel, "/general/ProxySocksHost", "string", config.host);
+    ok &= XfconfSetValue(channel, "/general/ProxySocksPort", "int", std::to_string(config.port));
+  } else {
+    ok &= XfconfSetValue(channel, "/general/ProxyUseSame", "bool", "true");
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpHost", "string", config.host);
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpPort", "int", std::to_string(config.port));
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpsHost", "string", config.host);
+    ok &= XfconfSetValue(channel, "/general/ProxyHttpsPort", "int", std::to_string(config.port));
+    ok &= XfconfSetValue(channel, "/general/ProxySocksHost", "string", config.host);
+    ok &= XfconfSetValue(channel, "/general/ProxySocksPort", "int", std::to_string(config.port));
+    ok &= XfconfSetValue(channel, "/general/ProxyFtpHost", "string", config.host);
+    ok &= XfconfSetValue(channel, "/general/ProxyFtpPort", "int", std::to_string(config.port));
+  }
 
   std::vector<std::string> ignore_hosts = BuildNoProxyList(config.no_proxy);
   ok &= XfconfSetStringList(channel, "/general/ProxyIgnoreHosts", ignore_hosts);
@@ -1491,10 +1599,8 @@ void CaptureNM() {
 
 bool ApplyNM(const ProxyConfig& config) {
   if (!CommandExists("nmcli")) return false;
-  std::string proxy_url = BuildProxyUrl(config.scheme.empty() ? "http" : config.scheme,
-                                        config.host, config.port);
-  std::string socks_url = BuildProxyUrl(config.scheme.empty() ? "socks5" : config.scheme,
-                                        config.host, config.port);
+  const bool is_socks = IsSocksScheme(config);
+  std::string socks_url = BuildProxyUrl("socks5", config.host, config.port);
 
   bool applied = false;
   for (size_t i = 0; i < g_snapshot.nm.connections.size(); ++i) {
@@ -1513,8 +1619,14 @@ bool ApplyNM(const ProxyConfig& config) {
       continue;
     }
 
-    RunCommand("nmcli connection modify " + quoted + " proxy.http " + QuoteForShell(proxy_url) + " >/dev/null 2>&1");
-    RunCommand("nmcli connection modify " + quoted + " proxy.https " + QuoteForShell(proxy_url) + " >/dev/null 2>&1");
+    if (is_socks) {
+      RunCommand("nmcli connection modify " + quoted + " proxy.http '' >/dev/null 2>&1");
+      RunCommand("nmcli connection modify " + quoted + " proxy.https '' >/dev/null 2>&1");
+    } else {
+      std::string http_url = BuildProxyUrl("http", config.host, config.port);
+      RunCommand("nmcli connection modify " + quoted + " proxy.http " + QuoteForShell(http_url) + " >/dev/null 2>&1");
+      RunCommand("nmcli connection modify " + quoted + " proxy.https " + QuoteForShell(http_url) + " >/dev/null 2>&1");
+    }
     RunCommand("nmcli connection modify " + quoted + " proxy.socks " + QuoteForShell(socks_url) + " >/dev/null 2>&1");
     RunCommand("nmcli connection up " + quoted + " >/dev/null 2>&1");
     applied = true;

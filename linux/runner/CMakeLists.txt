@@ -10,7 +10,6 @@ add_executable(${BINARY_NAME}
   "main.cc"
   "my_application.cc"
   "defyx_core.cpp"
-  "defyx_linux_plugin.cc"
   "proxy_manager.cpp"
   "settings_manager.cpp"
   "system_tray.cpp"

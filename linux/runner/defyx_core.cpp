@@ -11,7 +11,7 @@
 #include <limits.h>
 
 extern "C" {
-typedef int (*dx_start_vpn_fn)(const char* cacheDir, const char* flowLine, const char* pattern);
+typedef int (*dx_start_vpn_fn)(const char* cacheDir, const char* flowLine, const char* pattern, int deepScan, int healthCheck);
 typedef int (*dx_stop_vpn_fn)();
 typedef void (*dx_start_t2s_fn)(long long fd, const char* addr);
 typedef void (*dx_stop_t2s_fn)();
@@ -34,7 +34,6 @@ typedef int (*dx_is_tunnel_running_fn)();
 
 static void* g_dx_dll = nullptr;
 static std::mutex g_dx_mutex;
-static std::mutex g_log_mutex;
 static dx_start_vpn_fn g_start_vpn = nullptr;
 static dx_stop_vpn_fn g_stop_vpn = nullptr;
 static dx_start_t2s_fn g_start_t2s = nullptr;
@@ -70,18 +69,9 @@ static std::string GetExeDir() {
 // Logger implementation
 namespace defyx_core {
 void LogMessage(const std::string& msg) {
-  // Prefix with timestamp (ms since epoch)
-  using namespace std::chrono;
-  auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
-  std::lock_guard<std::mutex> lock(g_log_mutex);
-  std::string exeDir = GetExeDir();
-  std::string logPath = exeDir.empty() ? "defyx_linux.log" : (exeDir + "defyx_linux.log");
-  std::ofstream ofs;
-  ofs.open(logPath, std::ios::app);
-  if (ofs.is_open()) {
-    ofs << now << " | " << msg << "\n";
-    ofs.close();
-  }
+  // Logging disabled for release builds.
+  // Call sites are kept intact but produce no file output.
+  (void)msg;
 }
 } // namespace defyx_core
 
@@ -107,7 +97,8 @@ bool LoadCoreDll(const std::string& dllPath) {
     std::string full = exeDir + "libDXcore.so";
     dll = dlopen(full.c_str(), RTLD_LAZY);
     if (!dll) {
-      defyx_core::LogMessage("dlopen failed for exe-dir path '" + full + "' err=" + std::string(dlerror()));
+      const char* err = dlerror();
+      defyx_core::LogMessage("dlopen failed for exe-dir path '" + full + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
       defyx_core::LogMessage("Loaded libDXcore.so from exe dir: " + full);
     }
@@ -118,7 +109,8 @@ bool LoadCoreDll(const std::string& dllPath) {
     std::string nested = exeDir + "lib/libDXcore.so";
     dll = dlopen(nested.c_str(), RTLD_LAZY);
     if (!dll) {
-      defyx_core::LogMessage("dlopen failed for lib-dir path '" + nested + "' err=" + std::string(dlerror()));
+      const char* err = dlerror();
+      defyx_core::LogMessage("dlopen failed for lib-dir path '" + nested + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
       defyx_core::LogMessage("Loaded libDXcore.so from lib dir: " + nested);
     }
@@ -128,7 +120,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   if (!dll && !path.empty()) {
     dll = dlopen(path.c_str(), RTLD_LAZY);
     if (!dll) {
-      defyx_core::LogMessage("dlopen failed for provided path '" + path + "' err=" + std::string(dlerror()));
+      const char* err = dlerror();
+      defyx_core::LogMessage("dlopen failed for provided path '" + path + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
       defyx_core::LogMessage("Loaded libDXcore.so from provided path: " + path);
     }
@@ -138,7 +131,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   if (!dll) {
     dll = dlopen("libDXcore.so", RTLD_LAZY);
     if (!dll) {
-      defyx_core::LogMessage("Final dlopen('libDXcore.so') failed err=" + std::string(dlerror()));
+      const char* err = dlerror();
+      defyx_core::LogMessage("Final dlopen('libDXcore.so') failed err=" + (err ? std::string(err) : "unknown"));
       return false;
     } else {
       defyx_core::LogMessage("Loaded libDXcore.so from default search path");
@@ -169,7 +163,9 @@ bool LoadCoreDll(const std::string& dllPath) {
 
   auto check = [](const char* name, auto fn) {
     if (!fn) {
-      defyx_core::LogMessage(std::string("Missing export: ") + name + " (dlerror=" + std::string(dlerror()) + ")");
+      const char* err = dlerror();
+      std::string errMsg = err ? err : "unknown";
+      defyx_core::LogMessage(std::string("Missing export: ") + name + " (dlerror=" + errMsg + ")");
     }
   };
   check("SetProgressCallback", g_set_progress_cb);
@@ -251,12 +247,12 @@ void RegisterProgressHandler(std::function<void(std::string)> handler) {
 
 namespace defyx_core {
 
-bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const std::string& pattern) {
+bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const std::string& pattern, bool deepScan, bool healthCheck) {
   try {
-    defyx_core::LogMessage("StartVPN called cacheDir='" + cacheDir + "' flowLine='" + flowLine + "' pattern='" + pattern + "'");
+    defyx_core::LogMessage("StartVPN called cacheDir='" + cacheDir + "' pattern='" + pattern + "' deepScan=" + (deepScan?"1":"0") + " healthCheck=" + (healthCheck?"1":"0"));
     if (!g_dx_dll) LoadCoreDll("");
     if (g_start_vpn) {
-      int r = g_start_vpn(cacheDir.c_str(), flowLine.c_str(), pattern.c_str());
+      int r = g_start_vpn(cacheDir.c_str(), flowLine.c_str(), pattern.c_str(), deepScan ? 1 : 0, healthCheck ? 1 : 0);
       defyx_core::LogMessage(std::string("StartVPN returned ") + (r != 0 ? "true" : "false"));
       return r != 0;
     }
@@ -327,7 +323,12 @@ std::string GetFlag() {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_flag) {
       char* flag = g_get_flag();
-      std::string result = flag ? std::string(flag) : std::string();
+      std::string result;
+      if (flag && flag[0] != '\0') {
+        result = std::string(flag);
+      } else {
+        result = "xx";
+      }
       if (g_free_string && flag) g_free_string(flag);
       return result;
     }
@@ -358,7 +359,12 @@ std::string GetFlowLine(bool isTest) {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_flowline) {
       char* line = g_get_flowline(isTest ? 1 : 0);
-      std::string result = line ? std::string(line) : std::string();
+      std::string result;
+      if (line && line[0] != '\0') {
+        result = std::string(line);
+      } else {
+        result = "default";
+      }
       if (g_free_string && line) g_free_string(line);
       return result;
     }
@@ -372,7 +378,10 @@ std::string GetCachedFlowLine() {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_cached_flowline) {
       char* line = g_get_cached_flowline();
-      std::string result = line ? std::string(line) : std::string();
+      std::string result;
+      if (line && line[0] != '\0') {
+        result = std::string(line);
+      }
       if (g_free_string && line) g_free_string(line);
       return result;
     }
@@ -386,7 +395,10 @@ std::string DecodeAndVerifyFlowline(const std::string& flowLine) {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_decode_verify_flowline) {
       char* decoded = g_decode_verify_flowline(flowLine.c_str());
-      std::string result = decoded ? std::string(decoded) : std::string();
+      std::string result;
+      if (decoded && decoded[0] != '\0') {
+        result = std::string(decoded);
+      }
       if (g_free_string && decoded) g_free_string(decoded);
       return result;
     }
@@ -400,7 +412,12 @@ std::string GetVpnStatus() {
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_vpn_status) {
       char* status = g_get_vpn_status();
-      std::string result = status ? std::string(status) : std::string();
+      std::string result;
+      if (status && status[0] != '\0') {
+        result = std::string(status);
+      } else {
+        result = "disconnected";
+      }
       if (g_free_string && status) g_free_string(status);
       return result;
     }

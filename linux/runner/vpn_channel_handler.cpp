@@ -259,9 +259,11 @@ VPNChannelHandler::~VPNChannelHandler()
 
 void VPNChannelHandler::SetupChannels()
 {
+    defyx_core::LogMessage("VPNChannelHandler::SetupChannels called");
     SetupStatusChannel();
     SetupProgressChannel();
     SetupMethodChannel();
+    defyx_core::LogMessage("VPNChannelHandler::SetupChannels completed");
 }
 
 void VPNChannelHandler::SetupStatusChannel()
@@ -409,7 +411,7 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
       if (system_tray_ && system_tray_->GetSystemProxy()) {
         proxy::ProxyConfig config;
         config.host = "127.0.0.1";
-        config.port = 1080;
+        config.port = 5000;
         config.scheme = "socks5";
         proxy::ApplySystemProxy(config);
       } })
@@ -472,6 +474,10 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
 {
     VPNChannelHandler *self = static_cast<VPNChannelHandler *>(user_data);
     const gchar *method = fl_method_call_get_name(method_call);
+    
+    // Log every method call with details
+    std::string methodName = method ? method : "NULL";
+    defyx_core::LogMessage(std::string("VPN MethodCall received: ") + methodName);
 
     try
     {
@@ -656,12 +662,16 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
             FlValue *args = fl_method_call_get_args(method_call);
             std::string flow = LookupString(args, "flowLine");
             std::string pattern = LookupString(args, "pattern");
+            std::string deepScanStr = LookupString(args, "deepScan");
+            std::string healthCheckStr = LookupString(args, "healthCheck");
+            bool deepScan = (deepScanStr == "true" || deepScanStr == "1");
+            bool healthCheck = (healthCheckStr == "true" || healthCheckStr == "1");
 
             std::string cache_dir = "/tmp/defyx";
             std::error_code ec;
             std::filesystem::create_directories(cache_dir, ec);
 
-            defyx_core::StartVPN(cache_dir, flow, pattern);
+            defyx_core::StartVPN(cache_dir, flow, pattern, deepScan, healthCheck);
 
             {
                 std::lock_guard<std::mutex> lock(self->status_mutex_);

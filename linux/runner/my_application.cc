@@ -13,9 +13,7 @@
 #include "settings_manager.h"
 #include "vpn_channel_handler.h"
 #include "defyx_core.h"
-
-// Forward declaration for our custom plugin
-void RegisterDefyxLinuxPlugin(FlPluginRegistrar *registrar);
+#include "proxy_manager.h"
 
 // Global instances
 static SystemTray *g_system_tray = nullptr;
@@ -164,6 +162,10 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     if (g_settings_manager)
     {
       g_settings_manager->SetServiceMode(0);
+      if (g_vpn_channel_handler && g_vpn_channel_handler->GetVPNStatus() == "connected")
+      {
+        std::thread([]() { proxy::ResetSystemProxy(); }).detach();
+      }
     }
     break;
 
@@ -171,6 +173,16 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     if (g_settings_manager)
     {
       g_settings_manager->SetServiceMode(1);
+      if (g_vpn_channel_handler && g_vpn_channel_handler->GetVPNStatus() == "connected")
+      {
+        std::thread([]() {
+          proxy::ProxyConfig config;
+          config.host = "127.0.0.1";
+          config.port = 5000;
+          config.scheme = "socks5";
+          proxy::ApplySystemProxy(config);
+        }).detach();
+      }
     }
     break;
 
@@ -178,6 +190,10 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     if (g_settings_manager)
     {
       g_settings_manager->SetServiceMode(2);
+      if (g_vpn_channel_handler && g_vpn_channel_handler->GetVPNStatus() == "connected")
+      {
+        std::thread([]() { proxy::ResetSystemProxy(); }).detach();
+      }
     }
     break;
 
@@ -361,16 +377,17 @@ static void my_application_activate(GApplication *application)
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
-  // Register custom DefyX VPN plugin
-  g_autoptr(FlPluginRegistrar) defyx_registrar =
-      fl_plugin_registry_get_registrar_for_plugin(FL_PLUGIN_REGISTRY(view), "DefyxLinuxPlugin");
-  RegisterDefyxLinuxPlugin(defyx_registrar);
+  defyx_core::LogMessage("my_application: Plugins registered");
 
   // Load the DXcore library
   defyx_core::LoadCoreDll("");
 
+  defyx_core::LogMessage("my_application: DXcore loaded");
+
   // Get messenger for VPN channel handler
   FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(fl_view_get_engine(view));
+
+  defyx_core::LogMessage("my_application: Got messenger");
 
   // Initialize system tray
   g_system_tray = new SystemTray();
@@ -378,9 +395,22 @@ static void my_application_activate(GApplication *application)
   g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
   g_system_tray->UpdateTooltip("DefyxVPN - Ready");
 
+  defyx_core::LogMessage("my_application: System tray initialized");
+
   // Initialize VPN channel handler with system tray
-  g_vpn_channel_handler = new VPNChannelHandler(messenger, window, g_system_tray);
-  g_vpn_channel_handler->SetupChannels();
+  // We need to delay this until after the GTK main loop starts and Flutter engine is ready
+  g_idle_add([](gpointer data) -> gboolean {
+    auto* messenger = static_cast<FlBinaryMessenger*>(data);
+    
+    defyx_core::LogMessage("my_application: Setting up VPN channel handler (idle callback)");
+    
+    g_vpn_channel_handler = new VPNChannelHandler(messenger, g_main_window, g_system_tray);
+    g_vpn_channel_handler->SetupChannels();
+    
+    defyx_core::LogMessage("my_application: VPNChannelHandler channels setup complete (idle callback)");
+    
+    return FALSE; // Don't repeat
+  }, messenger);
 
   // Load preferences from settings
   g_system_tray->SetLaunchOnStartup(g_settings_manager->IsLaunchOnStartupEnabled());

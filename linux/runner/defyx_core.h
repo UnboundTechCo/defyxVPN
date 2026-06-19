@@ -8,7 +8,7 @@ namespace defyx_core {
 // to the executable.
 void LogMessage(const std::string& msg);
 
-bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const std::string& pattern);
+bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const std::string& pattern, bool deepScan = false, bool healthCheck = false);
 bool StopVPN();
 void StartTun2Socks(long long fd, const std::string& addr);
 void StopTun2Socks();
