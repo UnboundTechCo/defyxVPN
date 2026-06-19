@@ -23,6 +23,7 @@
 		A0CABC262DEF33BC00154A44 /* Tun2SocksKit in Frameworks */ = {isa = PBXBuildFile; productRef = A0CABC252DEF33BC00154A44 /* Tun2SocksKit */; };
 		A0CABC282DEF33BC00154A44 /* Tun2SocksKitC in Frameworks */ = {isa = PBXBuildFile; productRef = A0CABC272DEF33BC00154A44 /* Tun2SocksKitC */; };
 		E640D9F7888558C3BD23A668 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = AE9BD0D6942BB307941DBA0D /* GoogleService-Info.plist */; };
+		F1414C112FE5348A00559413 /* VibrationPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1414C102FE5348800559413 /* VibrationPlugin.swift */; };
 		F1D23AC02E83A529002FF2F6 /* IosDXcore.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = F1D23ABF2E83A528002FF2F6 /* IosDXcore.xcframework */; };
 		F1D584A52E7B5D3B00076143 /* VPNPlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D584A42E7B5D3B00076143 /* VPNPlugin.swift */; };
 		FE197567FA0C370D7A74D3F4 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DCDDE16F3C4844CAA5A11A52 /* Pods_RunnerTests.framework */; };
@@ -99,6 +100,7 @@
 		B5AFB6DC5EFD54F48A0655A6 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DCDDE16F3C4844CAA5A11A52 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		F126793C97B47EFB321481A7 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
+		F1414C102FE5348800559413 /* VibrationPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VibrationPlugin.swift; sourceTree = "<group>"; };
 		F1D23ABF2E83A528002FF2F6 /* IosDXcore.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = IosDXcore.xcframework; sourceTree = "<group>"; };
 		F1D584A42E7B5D3B00076143 /* VPNPlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VPNPlugin.swift; sourceTree = "<group>"; };
 		F363D13D253BC7A752C07D84 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
@@ -234,6 +236,7 @@
 		97C146F01CF9000F007C117D /* Runner */ = {
 			isa = PBXGroup;
 			children = (
+				F1414C102FE5348800559413 /* VibrationPlugin.swift */,
 				F1D584A42E7B5D3B00076143 /* VPNPlugin.swift */,
 				A0CABC202DEF335D00154A44 /* AppDelegate.swift */,
 				A0CABC1C2DEF334C00154A44 /* vpn_service.swift */,
@@ -523,6 +526,7 @@
 			files = (
 				A0CABC212DEF335D00154A44 /* AppDelegate.swift in Sources */,
 				F1D584A52E7B5D3B00076143 /* VPNPlugin.swift in Sources */,
+				F1414C112FE5348A00559413 /* VibrationPlugin.swift in Sources */,
 				A0CABC1D2DEF334C00154A44 /* vpn_service.swift in Sources */,
 				1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */,
 			);
@@ -687,8 +691,6 @@
 					"-framework",
 					"\"WebKit\"",
 					"-framework",
-					"\"device_info_plus\"",
-					"-framework",
 					"\"flutter_secure_storage\"",
 					"-framework",
 					"\"google_mobile_ads\"",
@@ -702,8 +704,6 @@
 					"\"shared_preferences_foundation\"",
 					"-framework",
 					"\"url_launcher_ios\"",
-					"-framework",
-					"\"vibration\"",
 					"-framework",
 					"\"webview_flutter_wkwebview\"",
 					"-weak_framework",
@@ -961,8 +961,6 @@
 					"-framework",
 					"\"WebKit\"",
 					"-framework",
-					"\"device_info_plus\"",
-					"-framework",
 					"\"flutter_secure_storage\"",
 					"-framework",
 					"\"google_mobile_ads\"",
@@ -976,8 +974,6 @@
 					"\"shared_preferences_foundation\"",
 					"-framework",
 					"\"url_launcher_ios\"",
-					"-framework",
-					"\"vibration\"",
 					"-framework",
 					"\"webview_flutter_wkwebview\"",
 					"-weak_framework",
@@ -1068,8 +1064,6 @@
 					"-framework",
 					"\"WebKit\"",
 					"-framework",
-					"\"device_info_plus\"",
-					"-framework",
 					"\"flutter_secure_storage\"",
 					"-framework",
 					"\"google_mobile_ads\"",
@@ -1083,8 +1077,6 @@
 					"\"shared_preferences_foundation\"",
 					"-framework",
 					"\"url_launcher_ios\"",
-					"-framework",
-					"\"vibration\"",
 					"-framework",
 					"\"webview_flutter_wkwebview\"",
 					"-weak_framework",
