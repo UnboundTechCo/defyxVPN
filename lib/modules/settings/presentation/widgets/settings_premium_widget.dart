@@ -60,14 +60,10 @@ class SettingsPremiumWidget extends ConsumerWidget {
         return GestureDetector(
           behavior: HitTestBehavior.translucent,
           onTap: () {
-            debugPrint('[PremiumWidget] Tap detected! shouldExecuteAction=$shouldExecuteAction, isLoggedIn=${authData.isLoggedIn}');
             if (shouldExecuteAction) {
               bool shouldExecute = onTapBefore?.call() ?? true;
               if (shouldExecute) {
-                debugPrint('[PremiumWidget] Executing tap handler');
                 defaultTapHandler.call();
-              } else {
-                debugPrint('[PremiumWidget] Scrolling, not executing action');
               }
             }
           },

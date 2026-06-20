@@ -129,7 +129,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final RenderBox? renderBox =
           key.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox == null) {
-        debugPrint('[Visibility] RenderBox is null, returning true');
         return true;
       }
 
@@ -146,16 +145,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final viewportLeft = scrollOffset;
       final viewportRight = scrollOffset + _horizontalSliderScrollController.position.viewportDimension;
 
-      debugPrint('[Visibility] Widget center in content: $widgetCenterInContent');
-      debugPrint('[Visibility] Viewport bounds: $viewportLeft - $viewportRight');
-
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
       final isVisible = widgetCenterInContent >= viewportLeft && widgetCenterInContent <= viewportRight;
-      debugPrint('[Visibility] Is visible: $isVisible');
 
       return isVisible;
     } catch (e) {
-      debugPrint('[Visibility] Error: $e');
       return true;
     }
   }
@@ -165,7 +159,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final RenderBox? renderBox =
           key.currentContext?.findRenderObject() as RenderBox?;
       if (renderBox == null) {
-        debugPrint('[Scroll] RenderBox is null, cannot scroll');
         return;
       }
 
@@ -178,15 +171,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       final widgetLeftInContent = offset.dx + scrollOffset;
       final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
 
-      // Viewport bounds
-      final viewportCenter = scrollOffset + (viewportWidth / 2);
-
       // Calculate scroll offset to center the widget
       final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
-
-      debugPrint('[Scroll] Current scroll: $scrollOffset');
-      debugPrint('[Scroll] Widget center in content: $widgetCenterInContent');
-      debugPrint('[Scroll] Target scroll: $newScrollOffset');
 
       _horizontalSliderScrollController.animateTo(
         newScrollOffset.clamp(
@@ -196,7 +182,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
-      debugPrint('[Scroll] Animation started to offset $newScrollOffset');
     } catch (e) {
       debugPrint('[Scroll] Error: $e');
     }
@@ -339,10 +324,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool _handlePremiumWidgetTap() {
     if (_isWidgetVisibleInHorizontalScroll(_premiumWidgetKey)) {
-      debugPrint('[Settings] Premium widget is visible, executing action');
       return true;
     } else {
-      debugPrint('[Settings] Premium widget not visible, scrolling to show');
       _scrollToShowWidget(_premiumWidgetKey);
       return false;
     }
@@ -350,10 +333,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   bool _handleDonateWidgetTap() {
     if (_isWidgetVisibleInHorizontalScroll(_donateWidgetKey)) {
-      debugPrint('[Settings] Donate widget is visible, executing action');
       return true;
     } else {
-      debugPrint('[Settings] Donate widget not visible, scrolling to show');
       _scrollToShowWidget(_donateWidgetKey);
       return false;
     }
@@ -361,15 +342,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildSliderSecontion() {
     return Listener(
-      onPointerMove: (event) {
-        debugPrint('[Slider] Pointer move detected: ${event.position}');
-      },
-      onPointerSignal: (event) {
-        debugPrint('[Slider] Pointer signal: ${event.toString()}');
-      },
+      onPointerMove: (event) {},
+      onPointerSignal: (event) {},
       child: NotificationListener<ScrollUpdateNotification>(
         onNotification: (notification) {
-          debugPrint('[Slider] Scroll update: offset=${_horizontalSliderScrollController.offset}');
           return false;
         },
         child: SingleChildScrollView(

@@ -40,14 +40,10 @@ class SettingsDonateWidget extends ConsumerWidget {
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: () {
-          debugPrint('[DonateWidget] Tap detected! shouldExecuteAction=$shouldExecuteAction');
           if (shouldExecuteAction) {
             bool shouldExecute = onTapBefore?.call() ?? true;
             if (shouldExecute) {
-              debugPrint('[DonateWidget] Opening donation page');
               _handleOpenDonationPage(context, ref);
-            } else {
-              debugPrint('[DonateWidget] Scrolling, not executing action');
             }
           }
         },
