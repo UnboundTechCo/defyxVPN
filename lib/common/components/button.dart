@@ -25,41 +25,47 @@ class AppButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final config = _getSizeConfig();
 
-    return ElevatedButton(
-      onPressed: isLoading ? null : onPressed,
-      style: ElevatedButton.styleFrom(
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        padding: EdgeInsets.symmetric(vertical: config.verticalPadding),
-        elevation: 0,
-        backgroundColor: _backgroundColor,
-        disabledBackgroundColor: _backgroundColor,
-        foregroundColor: _textColor,
-        disabledForegroundColor: _textColor,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8.r)),
-      ),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 200),
-        child: isLoading
-            ? SizedBox(
-                key: const ValueKey('loader'),
-                height: config.loaderSize,
-                width: config.loaderSize,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(_loaderColor),
+    return SizedBox(
+      height: config.height,
+      child: ElevatedButton(
+        onPressed: isLoading ? null : onPressed,
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          // padding: Size.zero,
+          elevation: 0,
+          backgroundColor: _backgroundColor,
+          disabledBackgroundColor: _backgroundColor,
+          foregroundColor: _textColor,
+          disabledForegroundColor: _textColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8.r),
+          ),
+        ),
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 200),
+          child: isLoading
+              ? SizedBox(
+                  key: const ValueKey('loader'),
+                  height: config.loaderSize,
+                  width: config.loaderSize,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor: AlwaysStoppedAnimation<Color>(_loaderColor),
+                  ),
+                )
+              : Text(
+                  label,
+                  key: const ValueKey('text'),
+                  style: TextStyle(
+                    fontFamily: 'Lato',
+                    fontSize: config.fontSize,
+                    fontWeight: config.fontWeight,
+                    color: _textColor,
+                    height: 1,
+                  ),
                 ),
-              )
-            : Text(
-                label,
-                key: const ValueKey('text'),
-                style: TextStyle(
-                  fontFamily: 'Lato',
-                  fontSize: config.fontSize,
-                  fontWeight: config.fontWeight,
-                  color: _textColor,
-                ),
-              ),
+        ),
       ),
     );
   }
@@ -98,20 +104,20 @@ class AppButton extends StatelessWidget {
     switch (size) {
       case AppButtonSize.small:
         return _ButtonSizeConfig(
-          verticalPadding: 11.h,
-          fontSize: 14.sp,
+          verticalPadding: 11,
+          fontSize: 14,
           fontWeight: FontWeight.w600,
-          loaderSize: 16.w,
-          height: 36.h,
+          loaderSize: 16,
+          height: 36,
         );
 
       case AppButtonSize.medium:
         return _ButtonSizeConfig(
-          verticalPadding: 15.h,
-          fontSize: 16.sp,
+          verticalPadding: 15,
+          fontSize: 16,
           fontWeight: FontWeight.w500,
-          loaderSize: 18.w,
-          height: 46.h,
+          loaderSize: 18,
+          height: 46,
         );
     }
   }

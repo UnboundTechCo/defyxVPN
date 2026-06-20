@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,11 @@ class SettingsPremiumInfoDialog extends StatefulWidget {
 }
 
 class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
+  void _handleGotIt() async {
+    Navigator.of(context).pop();
+    SettingsPremiumLoginDialog.show(context, widget.ref);
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = 1.sw;
@@ -68,29 +74,12 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
               ),
             ),
             SizedBox(height: 20.h),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                SettingsPremiumLoginDialog.show(context, widget.ref);
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.grey[200],
-                foregroundColor: const Color.fromARGB(255, 47, 41, 41),
-                padding: EdgeInsets.symmetric(vertical: 16.h),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                elevation: 0,
-              ),
-              child: Text(
-                'Got it',
-                style: TextStyle(
-                  fontFamily: 'Lato',
-                  color: const Color(0xFF4B4B4B),
-                  fontSize: fontSize,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+            AppButton(
+              label: "Got it",
+              onPressed: _handleGotIt,
+              size: AppButtonSize.small,
+              variant: AppButtonVariant.secondary,
+              // isLoading: isSubmitting,
             ),
           ],
         ),
