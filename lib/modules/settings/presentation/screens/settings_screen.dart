@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -18,6 +20,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _scrollController;
+  late final ScrollController _horizontalSliderScrollController;
+  final GlobalKey _premiumWidgetKey = GlobalKey();
+  final GlobalKey _donateWidgetKey = GlobalKey();
   final double _scrollSpeedFactor = 0.35;
   final double _touchScrollSpeedFactor = 0.5;
   double _lastTouchPosition = 0;
@@ -29,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _horizontalSliderScrollController = ScrollController();
   }
 
   @override
@@ -48,6 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _horizontalSliderScrollController.dispose();
     super.dispose();
   }
 
@@ -117,6 +124,69 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  bool _isWidgetVisibleInHorizontalScroll(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        return true;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      
+      // Get the scroll position
+      final scrollOffset = _horizontalSliderScrollController.offset;
+
+      // The widget's center in content coordinates
+      final widgetCenterInContent = offset.dx + scrollOffset + (size.width / 2);
+
+      // Get the viewport bounds
+      final viewportLeft = scrollOffset;
+      final viewportRight = scrollOffset + _horizontalSliderScrollController.position.viewportDimension;
+
+      // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
+      final isVisible = widgetCenterInContent >= viewportLeft && widgetCenterInContent <= viewportRight;
+
+      return isVisible;
+    } catch (e) {
+      return true;
+    }
+  }
+
+  void _scrollToShowWidget(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        return;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = _horizontalSliderScrollController.offset;
+      final viewportWidth = _horizontalSliderScrollController.position.viewportDimension;
+
+      // Widget's position in content coordinates
+      final widgetLeftInContent = offset.dx + scrollOffset;
+      final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
+
+      // Calculate scroll offset to center the widget
+      final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
+
+      _horizontalSliderScrollController.animateTo(
+        newScrollOffset.clamp(
+          _horizontalSliderScrollController.position.minScrollExtent,
+          _horizontalSliderScrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } catch (e) {
+      debugPrint('[Scroll] Error: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
@@ -154,7 +224,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
-                              SizedBox(height: 60.h),
+                              SizedBox(height: 30.h),
+                              _buildSliderSection(),
+                              SizedBox(height: 30.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),
                             ],
@@ -247,6 +319,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  bool _handlePremiumWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_premiumWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_premiumWidgetKey);
+      return false;
+    }
+  }
+
+  bool _handleDonateWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_donateWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_donateWidgetKey);
+      return false;
+    }
+  }
+
+  Widget _buildSliderSection() {
+    return Listener(
+      onPointerMove: (event) {},
+      onPointerSignal: (event) {},
+      child: NotificationListener<ScrollUpdateNotification>(
+        onNotification: (notification) {
+          return false;
+        },
+        child: SingleChildScrollView(
+          controller: _horizontalSliderScrollController,
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  key: _premiumWidgetKey,
+                  child: SettingsPremiumWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handlePremiumWidgetTap,
+                  ),
+                ),
+                SizedBox(width: 15.w),
+                Container(
+                  key: _donateWidgetKey,
+                  child: SettingsDonateWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleDonateWidgetTap,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 

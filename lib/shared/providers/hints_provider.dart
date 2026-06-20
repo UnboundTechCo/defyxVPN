@@ -52,41 +52,28 @@ final selectedHintsProvider = FutureProvider<List<Hint>>((ref) async {
   final languageState = ref.watch(languageProvider);
   final currentLocale = languageState.language.code;
   
-  debugPrint('Loading hints from secure storage...');
-  debugPrint('Using locale: $currentLocale');
   
   try {
     // Try to read tips from secure storage
     final hintsJson = await secureStorage.read(apiTipsKey);
     
-    debugPrint('Hints JSON from storage: $hintsJson');
-    
     if (hintsJson == null || hintsJson.isEmpty) {
-      debugPrint('No hints in storage, using defaults');
       return _defaultHints;
     }
     
     // Parse hints from JSON
     final List<dynamic> hintsData = json.decode(hintsJson);
-    debugPrint('Parsed ${hintsData.length} hints from JSON');
     
     final List<Hint> allHints = hintsData
         .map((json) => Hint.fromJson(json as Map<String, dynamic>))
         .toList();
     
-    debugPrint('Converted to ${allHints.length} Hint objects');
-    
     // If no hints or empty list, use defaults
     if (allHints.isEmpty) {
-      debugPrint('Hints list is empty, using defaults');
       return _defaultHints;
     }
-    
-    debugPrint('Returning ${allHints.length} hints from API');
-    
     // Apply translations based on current locale
     final localizedHints = allHints.map((hint) => _applyTranslation(hint, currentLocale)).toList();
-    debugPrint('Applied translations for locale: $currentLocale');
     
     return localizedHints;
   } catch (e) {

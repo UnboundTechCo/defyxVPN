@@ -593,6 +593,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Synchronization'**
   String get synchronization;
+
+  /// Donation widget title
+  ///
+  /// In en, this message translates to:
+  /// **'Donation'**
+  String get settingsDonation;
+
+  /// Donation widget description text
+  ///
+  /// In en, this message translates to:
+  /// **'Help us break down the walls of digital censorship and internet filtering.'**
+  String get settingsDonationDescription;
+
+  /// Premium login dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Authentication Required'**
+  String get authenticationRequired;
+
+  /// Premium login dialog description
+  ///
+  /// In en, this message translates to:
+  /// **'To access your Premium subscription(s), you need to login or create an account through the Defyx website.'**
+  String get premiumLoginDescription;
+
+  /// Email field label
+  ///
+  /// In en, this message translates to:
+  /// **'Email'**
+  String get email;
+
+  /// Email field hint text
+  ///
+  /// In en, this message translates to:
+  /// **'example@domain.com'**
+  String get emailHint;
+
+  /// Email validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email'**
+  String get emailValidation;
+
+  /// Password field label
+  ///
+  /// In en, this message translates to:
+  /// **'Password'**
+  String get password;
+
+  /// Password field hint text
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your password'**
+  String get passwordHint;
+
+  /// Password validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your password'**
+  String get passwordValidation;
+
+  /// Password minimum length validation error
+  ///
+  /// In en, this message translates to:
+  /// **'Password must be at least 6 characters'**
+  String get passwordMinLength;
+
+  /// Login button text
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get login;
+
+  /// Sign up prompt text
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t have an account?'**
+  String get noAccount;
+
+  /// Sign up link text
+  ///
+  /// In en, this message translates to:
+  /// **'Sign up'**
+  String get signUp;
+
+  /// Login failed toast message
+  ///
+  /// In en, this message translates to:
+  /// **'Login failed. Please check your credentials and try again.'**
+  String get loginFailed;
+
+  /// Login success toast message
+  ///
+  /// In en, this message translates to:
+  /// **'Login successful!'**
+  String get loginSuccess;
+
+  /// Premium trouble dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Having trouble?'**
+  String get havingTrouble;
+
+  /// Premium trouble dialog - signed in message prefix
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently signed in with the email address'**
+  String get signedInAs;
+
+  /// Premium trouble dialog - import instructions
+  ///
+  /// In en, this message translates to:
+  /// **'If your Premium subscriptions cannot be loaded due to internet restrictions and you\'re unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.'**
+  String get premiumImportDescription;
+
+  /// Premium trouble dialog - sign out prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Planning to exit?'**
+  String get planningToExit;
+
+  /// Sign out link text
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out'**
+  String get signOut;
+
+  /// Sign out success toast message
+  ///
+  /// In en, this message translates to:
+  /// **'Signed out successfully!'**
+  String get signOutSuccess;
+
+  /// Premium widget - marketplace title
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get settingsMarketplace;
+
+  /// Premium widget - marketplace description
+  ///
+  /// In en, this message translates to:
+  /// **'Browse secure VPN configurations from trusted suppliers.'**
+  String get marketplaceDescription;
+
+  /// Premium widget - logged in status
+  ///
+  /// In en, this message translates to:
+  /// **'LOGGED IN'**
+  String get loggedIn;
+
+  /// Premium widget - login/register prompt
+  ///
+  /// In en, this message translates to:
+  /// **'LOGIN OR REGISTER'**
+  String get loginOrRegister;
 }
 
 class _AppLocalizationsDelegate

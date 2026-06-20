@@ -20,7 +20,6 @@ void main() async {
   try {
     final String vpnCacheDir = await VpnBridge().getSharedDirectory();
     await VpnBridge().setCacheDir(vpnCacheDir);
-    debugPrint('VPN cache directory set to: $vpnCacheDir');
   } catch (e) {
     debugPrint('Failed to set cache directory: $e');
   }
