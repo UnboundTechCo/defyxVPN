@@ -225,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
                               SizedBox(height: 30.h),
-                              _buildSliderSecontion(),
+                              _buildSliderSection(),
                               SizedBox(height: 30.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),
@@ -340,7 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  Widget _buildSliderSecontion() {
+  Widget _buildSliderSection() {
     return Listener(
       onPointerMove: (event) {},
       onPointerSignal: (event) {},

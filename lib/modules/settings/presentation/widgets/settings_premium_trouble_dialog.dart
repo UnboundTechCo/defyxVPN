@@ -47,11 +47,11 @@ class _SettingsPremiumTroubleDialogState
         .read(flowlineServiceProvider)
         .saveFlowline(offlineMode: false, forceUpdate: true);
 
-    if (mounted) {
-      ToastUtil.showToast(l10n.signOutSuccess);
-      Navigator.of(context).pop();
-    }
+    if (!mounted) return;
+
     setState(() => isSigningOut = false);
+    Navigator.of(context).pop();
+    ToastUtil.showToast(l10n.signOutSuccess);
   }
 
   void _closeDialog() {
@@ -100,9 +100,7 @@ class _SettingsPremiumTroubleDialogState
                   height: 1.4,
                 ),
                 children: [
-                  TextSpan(
-                    text: '${l10n.signedInAs} ',
-                  ),
+                  TextSpan(text: '${l10n.signedInAs} '),
                   TextSpan(
                     text: widget.email,
                     style: const TextStyle(color: Color(0xFF5374BD)),
