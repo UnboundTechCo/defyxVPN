@@ -25,19 +25,19 @@
                         <img src="https://img.shields.io/badge/Android-Google Play-044d29.svg?logo=googleplay">
                     </a>
                     <br />
-                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/app-release.apk">
+                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-universal.apk">
                         <img src="https://img.shields.io/badge/APK-Universal-36a132.svg?logo=android">
                     </a>
                     <br />
-                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/app-arm64-v8a-release.apk">
+                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-arm64-v8a.apk">
                         <img src="https://img.shields.io/badge/APK-ARMv8-36a132.svg?logo=android">
                     </a>
                     <br />
-                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/app-armeabi-v7a-release.apk">
+                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-armeabi-v7a.apk">
                         <img src="https://img.shields.io/badge/APK-ARMv7-36a132.svg?logo=android">
                     </a>
                     <br />
-                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/app-x86_64-release.apk">
+                    <a href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-x86_64.apk">
                         <img src="https://img.shields.io/badge/APK-x64-36a132.svg?logo=android">
                     </a>
                 </td>
