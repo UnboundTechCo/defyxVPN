@@ -32,7 +32,7 @@ class AppButton extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          // padding: Size.zero,
+          padding: EdgeInsets.symmetric(vertical: config.verticalPadding),
           elevation: 0,
           backgroundColor: _backgroundColor,
           disabledBackgroundColor: _backgroundColor,
