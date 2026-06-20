@@ -1,7 +1,4 @@
-enum SettingsItemType {
-  toggle,
-  navigation,
-}
+enum SettingsItemType { toggle, navigation }
 
 class SettingsItem {
   final String id;
@@ -15,6 +12,7 @@ class SettingsItem {
   final String? navigationRoute;
   final String? subtitle;
   final bool showLeftIcon;
+  final bool isPremium;
 
   const SettingsItem({
     required this.id,
@@ -28,6 +26,7 @@ class SettingsItem {
     this.navigationRoute,
     this.subtitle,
     this.showLeftIcon = false,
+    this.isPremium = false,
   });
 
   SettingsItem copyWith({
@@ -42,6 +41,7 @@ class SettingsItem {
     String? navigationRoute,
     String? subtitle,
     bool? showLeftIcon,
+    bool? isPremium,
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -55,6 +55,7 @@ class SettingsItem {
       navigationRoute: navigationRoute ?? this.navigationRoute,
       subtitle: subtitle ?? this.subtitle,
       showLeftIcon: showLeftIcon ?? this.showLeftIcon,
+      isPremium: isPremium ?? this.isPremium,
     );
   }
 
@@ -74,6 +75,7 @@ class SettingsItem {
       navigationRoute: json['navigationRoute'] as String?,
       subtitle: json['subtitle'] as String?,
       showLeftIcon: json['showLeftIcon'] as bool? ?? false,
+      isPremium: json['isPremium'] as bool? ?? false,
     );
   }
 
@@ -90,6 +92,7 @@ class SettingsItem {
       'navigationRoute': navigationRoute,
       'subtitle': subtitle,
       'showLeftIcon': showLeftIcon,
+      'isPremium': isPremium,
     };
   }
 }

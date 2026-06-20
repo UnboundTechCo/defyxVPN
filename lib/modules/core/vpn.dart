@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -159,6 +160,10 @@ class VPN {
     if (msg.startsWith("Data: Config Numbers: ")) {
       final configIndex = msg.replaceAll("Data: Config Numbers: ", "");
       _setConnectionTotalSteps(int.parse(configIndex));
+    }
+
+    if (msg.startsWith("Data: Token expired")) {
+      ref.read(authProvider.notifier).logout();
     }
 
     if (msg.contains("VPN Service Destroyed")) {

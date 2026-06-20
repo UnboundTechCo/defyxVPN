@@ -256,4 +256,83 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get synchronization => '同步';
+
+  @override
+  String get settingsDonation => '捐赠';
+
+  @override
+  String get settingsDonationDescription => '帮助我们打破数字审查和互联网过滤的壁垒。';
+
+  @override
+  String get authenticationRequired => '需要身份验证';
+
+  @override
+  String get premiumLoginDescription => '要访问您的高级订阅，您需要通过 Defyx 网站登录或创建账户。';
+
+  @override
+  String get email => '电子邮件';
+
+  @override
+  String get emailHint => 'example@domain.com';
+
+  @override
+  String get emailValidation => '请输入您的电子邮件';
+
+  @override
+  String get password => '密码';
+
+  @override
+  String get passwordHint => '输入您的密码';
+
+  @override
+  String get passwordValidation => '请输入您的密码';
+
+  @override
+  String get passwordMinLength => '密码至少需要6个字符';
+
+  @override
+  String get login => '登录';
+
+  @override
+  String get noAccount => '没有账户？';
+
+  @override
+  String get signUp => '注册';
+
+  @override
+  String get loginFailed => '登录失败。请检查您的凭据并重试。';
+
+  @override
+  String get loginSuccess => '登录成功！';
+
+  @override
+  String get havingTrouble => '遇到问题？';
+
+  @override
+  String get signedInAs => '您当前已使用电子邮件地址登录';
+
+  @override
+  String get premiumImportDescription =>
+      '如果由于互联网限制无法加载您的高级订阅，并且您无法使用可用方法连接，您可以将从市场获得的文件导入应用程序。';
+
+  @override
+  String get planningToExit => '打算退出？';
+
+  @override
+  String get signOut => '退出';
+
+  @override
+  String get signOutSuccess => '退出成功！';
+
+  @override
+  String get settingsMarketplace => '市场';
+
+  @override
+  String get marketplaceDescription => '浏览来自可信供应商的安全VPN配置。';
+
+  @override
+  String get loggedIn => '已登录';
+
+  @override
+  String get loginOrRegister => '登录或注册';
 }

@@ -38,13 +38,10 @@ class InternalAdStrategy implements AdLoadingStrategy {
   
   @override
   Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
-    debugPrint('🚀 InternalAdStrategy.initialize() called');
-    debugPrint('🎨 Internal ads strategy initialized');
     // Internal ads don't need fallback callback (they are the fallback)
     
     // DON'T load ad on initialization - let connection state changes handle it
     // This prevents race conditions
-    debugPrint('✅ InternalAdStrategy initialized (ad will load on connection state change)');
   }
   
   @override
@@ -52,7 +49,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
     required Ref ref,
   }) async {
     try {
-      debugPrint('🎨 Loading internal ad for restricted region');
       
       // Track load attempt
       await _analytics.logEvent(
@@ -66,7 +62,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
       final clickUrl = adData['clickUrl'] ?? '';
       
       if (imageUrl.isEmpty) {
-        debugPrint('⚠️ No internal ad available');
         await _analytics.logEvent(
           name: 'ads_internal_ad_load_failure',
           parameters: {'error_code': 'NO_AD'},
@@ -84,7 +79,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
       
       // Validate URL format before using it (safety check for iOS network issue)
       if (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://')) {
-        debugPrint('❌ Invalid internal ad URL format: $imageUrl');
         await _analytics.logEvent(
           name: 'ads_internal_ad_load_failure',
           parameters: {'error_code': 'INVALID_URL', 'url': imageUrl},
@@ -99,10 +93,6 @@ class InternalAdStrategy implements AdLoadingStrategy {
           errorMessage: 'Invalid ad URL format: $imageUrl',
         );
       }
-      
-      debugPrint('✅ Internal ad loaded:');
-      debugPrint('   Image: $imageUrl');
-      debugPrint('   Click: $clickUrl');
       
       // Track success
       await _analytics.logEvent(

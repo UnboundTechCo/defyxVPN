@@ -230,7 +230,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             do {
                 let isTest = dict["isTest"] ?? "false"
                 let isTestBool = Bool(isTest) ?? false
-                let flowLine = IosGetFlowLine(isTestBool)
+                let token = dict["token"] ?? ""
+                let flowLine = IosGetFlowLine(isTestBool,token)
                 let response: String = flowLine
 
                 if let data = response.data(using: .utf8) {

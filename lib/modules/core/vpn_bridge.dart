@@ -34,13 +34,17 @@ class VpnBridge {
   Future<bool?> grantVpnPermission() async =>
       await _methodChannel.invokeMethod<bool>("grantVpnPermission");
 
-  Future<void> startVPN(String flowline, String pattern, bool deepScan, bool healthCheck) async =>
-      await _methodChannel.invokeMethod("startVPN", {
-        "flowLine": flowline,
-        "pattern": pattern,
-        "deepScan": deepScan.toString(),
-        "healthCheck": healthCheck.toString()
-      });
+  Future<void> startVPN(
+    String flowline,
+    String pattern,
+    bool deepScan,
+    bool healthCheck,
+  ) async => await _methodChannel.invokeMethod("startVPN", {
+    "flowLine": flowline,
+    "pattern": pattern,
+    "deepScan": deepScan.toString(),
+    "healthCheck": healthCheck.toString(),
+  });
 
   Future<void> startTun2socks() =>
       _methodChannel.invokeMethod("startTun2socks");
@@ -50,10 +54,12 @@ class VpnBridge {
 
   Future<void> setConnectionMethod(String method) async => await _methodChannel
       .invokeMethod("setConnectionMethod", {"method": method});
-  Future<String> getFlowLine() async {
+  Future<String> getFlowLine(String token) async {
     final isTestMode = dotenv.env['IS_TEST_MODE'] ?? 'false';
-    final flowLine = await _methodChannel
-        .invokeMethod<String>('getFlowLine', {"isTest": isTestMode});
+    final flowLine = await _methodChannel.invokeMethod<String>('getFlowLine', {
+      "isTest": isTestMode,
+      "token": token,
+    });
     return flowLine ?? '';
   }
 
@@ -85,4 +91,11 @@ class VpnBridge {
 
   Future<bool> isVPNPrepared() async =>
       (await _methodChannel.invokeMethod<bool>('isVPNPrepared')) ?? false;
+
+  Future<String> login(String email, String password) async =>
+      (await _methodChannel.invokeMethod<String>('login', {
+        "email": email,
+        "password": password,
+      }) ??
+      "");
 }
