@@ -8,8 +8,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class SettingsDonateWidget extends ConsumerWidget {
   final WidgetRef ref;
+  final bool shouldExecuteAction;
+  final bool Function()? onTapBefore;
 
-  const SettingsDonateWidget({super.key, required this.ref});
+  const SettingsDonateWidget({
+    super.key,
+    required this.ref,
+    this.shouldExecuteAction = true,
+    this.onTapBefore,
+  });
 
   void _handleOpenDonationPage(BuildContext context, WidgetRef ref) {
     final url = dotenv.env["WEBSITE_DONATION"];
@@ -30,8 +37,20 @@ class SettingsDonateWidget extends ConsumerWidget {
         borderRadius: BorderRadius.circular(10.r),
         border: Border.all(color: Colors.white.withOpacity(0.16), width: 1),
       ),
-      child: InkWell(
-        onTap: () => _handleOpenDonationPage(context, ref),
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          debugPrint('[DonateWidget] Tap detected! shouldExecuteAction=$shouldExecuteAction');
+          if (shouldExecuteAction) {
+            bool shouldExecute = onTapBefore?.call() ?? true;
+            if (shouldExecute) {
+              debugPrint('[DonateWidget] Opening donation page');
+              _handleOpenDonationPage(context, ref);
+            } else {
+              debugPrint('[DonateWidget] Scrolling, not executing action');
+            }
+          }
+        },
         child: Row(
           children: [
             Column(

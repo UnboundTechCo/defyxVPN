@@ -20,6 +20,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _scrollController;
+  late final ScrollController _horizontalSliderScrollController;
+  final GlobalKey _premiumWidgetKey = GlobalKey();
+  final GlobalKey _donateWidgetKey = GlobalKey();
   final double _scrollSpeedFactor = 0.35;
   final double _touchScrollSpeedFactor = 0.5;
   double _lastTouchPosition = 0;
@@ -31,6 +34,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _horizontalSliderScrollController = ScrollController();
   }
 
   @override
@@ -50,6 +54,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _horizontalSliderScrollController.dispose();
     super.dispose();
   }
 
@@ -117,6 +122,84 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _scrollController.position.maxScrollExtent,
       ),
     );
+  }
+
+  bool _isWidgetVisibleInHorizontalScroll(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        debugPrint('[Visibility] RenderBox is null, returning true');
+        return true;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      
+      // Get the scroll position
+      final scrollOffset = _horizontalSliderScrollController.offset;
+
+      // The widget's center in content coordinates
+      final widgetCenterInContent = offset.dx + scrollOffset + (size.width / 2);
+
+      // Get the viewport bounds
+      final viewportLeft = scrollOffset;
+      final viewportRight = scrollOffset + _horizontalSliderScrollController.position.viewportDimension;
+
+      debugPrint('[Visibility] Widget center in content: $widgetCenterInContent');
+      debugPrint('[Visibility] Viewport bounds: $viewportLeft - $viewportRight');
+
+      // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
+      final isVisible = widgetCenterInContent >= viewportLeft && widgetCenterInContent <= viewportRight;
+      debugPrint('[Visibility] Is visible: $isVisible');
+
+      return isVisible;
+    } catch (e) {
+      debugPrint('[Visibility] Error: $e');
+      return true;
+    }
+  }
+
+  void _scrollToShowWidget(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        debugPrint('[Scroll] RenderBox is null, cannot scroll');
+        return;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = _horizontalSliderScrollController.offset;
+      final viewportWidth = _horizontalSliderScrollController.position.viewportDimension;
+
+      // Widget's position in content coordinates
+      final widgetLeftInContent = offset.dx + scrollOffset;
+      final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
+
+      // Viewport bounds
+      final viewportCenter = scrollOffset + (viewportWidth / 2);
+
+      // Calculate scroll offset to center the widget
+      final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
+
+      debugPrint('[Scroll] Current scroll: $scrollOffset');
+      debugPrint('[Scroll] Widget center in content: $widgetCenterInContent');
+      debugPrint('[Scroll] Target scroll: $newScrollOffset');
+
+      _horizontalSliderScrollController.animateTo(
+        newScrollOffset.clamp(
+          _horizontalSliderScrollController.position.minScrollExtent,
+          _horizontalSliderScrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+      debugPrint('[Scroll] Animation started to offset $newScrollOffset');
+    } catch (e) {
+      debugPrint('[Scroll] Error: $e');
+    }
   }
 
   @override
@@ -254,18 +337,68 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Widget _buildSliderSecontion() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+  bool _handlePremiumWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_premiumWidgetKey)) {
+      debugPrint('[Settings] Premium widget is visible, executing action');
+      return true;
+    } else {
+      debugPrint('[Settings] Premium widget not visible, scrolling to show');
+      _scrollToShowWidget(_premiumWidgetKey);
+      return false;
+    }
+  }
 
-          children: [
-            SettingsPremiumWidget(ref: ref),
-            SizedBox(width: 15.w),
-            SettingsDonateWidget(ref: ref),
-          ],
+  bool _handleDonateWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_donateWidgetKey)) {
+      debugPrint('[Settings] Donate widget is visible, executing action');
+      return true;
+    } else {
+      debugPrint('[Settings] Donate widget not visible, scrolling to show');
+      _scrollToShowWidget(_donateWidgetKey);
+      return false;
+    }
+  }
+
+  Widget _buildSliderSecontion() {
+    return Listener(
+      onPointerMove: (event) {
+        debugPrint('[Slider] Pointer move detected: ${event.position}');
+      },
+      onPointerSignal: (event) {
+        debugPrint('[Slider] Pointer signal: ${event.toString()}');
+      },
+      child: NotificationListener<ScrollUpdateNotification>(
+        onNotification: (notification) {
+          debugPrint('[Slider] Scroll update: offset=${_horizontalSliderScrollController.offset}');
+          return false;
+        },
+        child: SingleChildScrollView(
+          controller: _horizontalSliderScrollController,
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  key: _premiumWidgetKey,
+                  child: SettingsPremiumWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handlePremiumWidgetTap,
+                  ),
+                ),
+                SizedBox(width: 15.w),
+                Container(
+                  key: _donateWidgetKey,
+                  child: SettingsDonateWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleDonateWidgetTap,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

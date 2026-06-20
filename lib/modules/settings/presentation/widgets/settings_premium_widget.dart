@@ -21,8 +21,15 @@ final isLoggedInProvider = FutureProvider<bool>((ref) async {
 
 class SettingsPremiumWidget extends ConsumerWidget {
   final WidgetRef ref;
+  final bool shouldExecuteAction;
+  final bool Function()? onTapBefore;
 
-  const SettingsPremiumWidget({super.key, required this.ref});
+  const SettingsPremiumWidget({
+    super.key,
+    required this.ref,
+    this.shouldExecuteAction = true,
+    this.onTapBefore,
+  });
 
   void _handleOpenLoginDialog(BuildContext context, WidgetRef ref) {
     final connectionState = ref.read(connectionStateProvider);
@@ -42,14 +49,28 @@ class SettingsPremiumWidget extends ConsumerWidget {
       loading: () => const CircularProgressIndicator(),
       error: (e, st) => Text(l10n.error),
       data: (authData) {
-        return InkWell(
-          onTap: authData.isLoggedIn
-              ? () => SettingsPremiumTroubleDialog.show(
-                  context,
-                  ref,
-                  authData.email,
-                )
-              : () => _handleOpenLoginDialog(context, ref),
+        final defaultTapHandler = authData.isLoggedIn
+            ? () => SettingsPremiumTroubleDialog.show(
+                context,
+                ref,
+                authData.email,
+              )
+            : () => _handleOpenLoginDialog(context, ref);
+
+        return GestureDetector(
+          behavior: HitTestBehavior.translucent,
+          onTap: () {
+            debugPrint('[PremiumWidget] Tap detected! shouldExecuteAction=$shouldExecuteAction, isLoggedIn=${authData.isLoggedIn}');
+            if (shouldExecuteAction) {
+              bool shouldExecute = onTapBefore?.call() ?? true;
+              if (shouldExecute) {
+                debugPrint('[PremiumWidget] Executing tap handler');
+                defaultTapHandler.call();
+              } else {
+                debugPrint('[PremiumWidget] Scrolling, not executing action');
+              }
+            }
+          },
           child: Row(
             children: [
               Column(
