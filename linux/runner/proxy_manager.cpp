@@ -3,6 +3,7 @@
 #include "defyx_core.h"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
@@ -14,6 +15,9 @@
 #include <sstream>
 #include <string>
 #include <sys/wait.h>
+#include <unistd.h>
+#include <limits.h>
+#include <thread>
 #include <vector>
 // This is customized system proxy manager written by voidreaper. the code set proxy for different linux distro based in De-manager.it supports gnome,xfce,kde... 
 // the QA for the gnome has been tested and fully in production level . for other distros please check and inform me. 
@@ -186,6 +190,58 @@ CommandResult RunCommand(const std::string& command) {
 CommandResult RunCommandQuiet(const std::string& command) {
   return RunCommandInternal(command, false);
 }
+
+std::string ExecutableDir() {
+  char buf[PATH_MAX];
+  ssize_t len = readlink("/proc/self/exe", buf, sizeof(buf) - 1);
+  if (len <= 0) return "";
+  buf[len] = '\0';
+  std::string path(buf);
+  size_t pos = path.find_last_of('/');
+  if (pos == std::string::npos) return "";
+  return path.substr(0, pos + 1);
+}
+
+std::string ProxyScriptPath() {
+  std::string dir = ExecutableDir();
+  const char* candidates[] = {
+      "defyx_proxy.sh",
+      "data/flutter_assets/assets/defyx_proxy.sh",
+      "lib/defyx_proxy.sh",
+  };
+  for (const char* rel : candidates) {
+    std::string full = dir + rel;
+    if (std::filesystem::exists(full)) {
+      return full;
+    }
+  }
+  return "";
+}
+
+std::string SingleQuote(const std::string& value) {
+  std::string out = "'";
+  for (char c : value) {
+    if (c == '\'') {
+      out += "'\\''";
+    } else {
+      out += c;
+    }
+  }
+  out += "'";
+  return out;
+}
+
+bool RunProxyScript(const std::string& args) {
+  std::string script = ProxyScriptPath();
+  if (script.empty()) {
+    defyx_core::LogMessage("ProxyManager: defyx_proxy.sh not found next to executable");
+    return false;
+  }
+  std::string command = "bash " + SingleQuote(script) + " " + args;
+  CommandResult res = RunCommand(command);
+  return res.exit_code == 0;
+}
+
 
 bool CommandExists(const std::string& cmd) {
   CommandResult r = RunCommandQuiet("which " + cmd + " 2>/dev/null");
@@ -1708,91 +1764,66 @@ void RestoreAll() {
 
 }  // namespace
 
-bool ApplySystemProxy(const ProxyConfig& config) {
+namespace {
+
+std::atomic<uint64_t> g_proxy_seq{0};
+std::atomic<uint64_t> g_proxy_done{0};
+
+std::string BuildManualArgs(const ProxyConfig& config) {
+  std::string no_proxy = config.no_proxy.empty()
+      ? "localhost,127.0.0.0/8,::1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12"
+      : config.no_proxy;
+  return "manual " + SingleQuote(config.host) + " " +
+         SingleQuote(std::to_string(config.port)) + " " +
+         SingleQuote(no_proxy);
+}
+
+void RunSequencedProxy(uint64_t seq, const std::string& args, bool enable) {
   std::lock_guard<std::mutex> lock(g_mutex);
+  if (seq < g_proxy_done.load()) {
+    return;
+  }
+  g_proxy_done.store(seq);
+  RunProxyScript(args);
+  g_applied = enable;
+}
+
+}  // namespace
+
+bool ApplySystemProxy(const ProxyConfig& config) {
   if (config.host.empty() || config.port <= 0) {
     defyx_core::LogMessage("ProxyManager: invalid proxy configuration");
     return false;
   }
-
-  ProxyBackends backends = DetermineProxyBackends();
-  std::vector<std::string> backend_names;
-  if (backends.use_env) backend_names.push_back("env");
-  if (backends.use_gsettings) backend_names.push_back("gsettings");
-  if (backends.use_xfconf) backend_names.push_back("xfce");
-  if (backends.use_kde) backend_names.push_back("kde");
-  if (backends.use_nm) backend_names.push_back("network-manager");
-  if (backend_names.empty()) backend_names.push_back("env");
-  defyx_core::LogMessage("ProxyManager: desktop detection -> " + JoinStrings(backend_names, ", "));
-
-  if (!g_applied) {
-    CaptureAll();
-    SaveSnapshotToDisk(g_snapshot);
-  }
-
-  ApplyResults results = ApplyAll(config, backends);
-  g_applied = true;
-  defyx_core::LogMessage("ProxyManager: applied system proxy");
-  bool attempted_desktop = backends.use_gsettings || backends.use_kde || backends.use_xfconf || backends.use_nm;
-  bool desktop_success = (backends.use_gsettings && results.gsettings_applied) ||
-                         (backends.use_kde && results.kde_applied) ||
-                         (backends.use_xfconf && results.xfce_applied) ||
-                         (backends.use_nm && results.nm_applied);
-
-  if (attempted_desktop && !desktop_success) {
-    defyx_core::LogMessage("ProxyManager: desktop-specific proxy settings were not updated; environment variables applied only");
-  } else {
-    if (backends.use_gsettings && !results.gsettings_applied) {
-      defyx_core::LogMessage("ProxyManager: gsettings schemas not available or failed to update");
-    }
-    if (backends.use_xfconf && !results.xfce_applied) {
-      defyx_core::LogMessage("ProxyManager: XFCE proxy settings not applied");
-    }
-    if (backends.use_kde && !results.kde_applied) {
-      defyx_core::LogMessage("ProxyManager: KDE proxy settings not applied");
-    }
-    if (backends.use_nm && !results.nm_applied) {
-      defyx_core::LogMessage("ProxyManager: NetworkManager proxy settings not applied");
-    }
-  }
+  uint64_t seq = ++g_proxy_seq;
+  RunSequencedProxy(seq, BuildManualArgs(config), true);
+  defyx_core::LogMessage("ProxyManager: applied system proxy via defyx_proxy.sh");
   return true;
 }
 
 void ResetSystemProxy() {
-  std::lock_guard<std::mutex> lock(g_mutex);
-  EnsureSnapshotPath();
-  if (!g_applied && !std::filesystem::exists(g_snapshot_path)) {
+  uint64_t seq = ++g_proxy_seq;
+  RunSequencedProxy(seq, "none", false);
+  defyx_core::LogMessage("ProxyManager: cleared system proxy via defyx_proxy.sh");
+}
+
+void ApplySystemProxyAsync(const ProxyConfig& config) {
+  if (config.host.empty() || config.port <= 0) {
     return;
   }
+  uint64_t seq = ++g_proxy_seq;
+  std::string args = BuildManualArgs(config);
+  std::thread([seq, args]() { RunSequencedProxy(seq, args, true); }).detach();
+}
 
-  if (!g_applied) {
-    // Attempt to load snapshot from disk if available.
-    Snapshot snapshot_from_disk;
-    if (!LoadSnapshotFromDisk(&snapshot_from_disk)) {
-      return;
-    }
-    g_snapshot = snapshot_from_disk;
-  }
-
-  RestoreAll();
-  g_applied = false;
-  ClearSnapshotFile();
-  defyx_core::LogMessage("ProxyManager: restored previous proxy configuration");
+void ResetSystemProxyAsync() {
+  uint64_t seq = ++g_proxy_seq;
+  std::thread([seq]() { RunSequencedProxy(seq, "none", false); }).detach();
 }
 
 void RestorePendingSnapshot() {
-  std::lock_guard<std::mutex> lock(g_mutex);
-  EnsureSnapshotPath();
-  Snapshot snapshot_from_disk;
-  if (!LoadSnapshotFromDisk(&snapshot_from_disk)) {
-    return;
-  }
-  g_snapshot = snapshot_from_disk;
-  g_applied = true;
-  RestoreAll();
-  g_applied = false;
-  ClearSnapshotFile();
-  defyx_core::LogMessage("ProxyManager: restored snapshot from previous session");
+  uint64_t seq = ++g_proxy_seq;
+  RunSequencedProxy(seq, "none", false);
 }
 
 }  // namespace proxy

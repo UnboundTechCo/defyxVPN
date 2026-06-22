@@ -21,6 +21,8 @@ add_executable(${BINARY_NAME}
 # that need different build settings.
 apply_standard_settings(${BINARY_NAME})
 
+set_source_files_properties(proxy_manager.cpp PROPERTIES COMPILE_FLAGS "-Wno-error")
+
 # Add preprocessor definitions for the application ID.
 add_definitions(-DAPPLICATION_ID="${APPLICATION_ID}")
 
