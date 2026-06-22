@@ -404,18 +404,14 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
         }
 
-        // Apply system proxy if enabled
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ProxyConfig config;
-        config.host = "127.0.0.1";
-        config.port = 5000;
-        config.scheme = "socks5";
-        proxy::ApplySystemProxy(config);
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ProxyConfig config;
+            config.host = "127.0.0.1";
+            config.port = 5000;
+            config.scheme = "socks5";
+            proxy::ApplySystemProxyAsync(config);
+        }
     }
     else if (msg.find("Data: VPN failed") != std::string::npos)
     {
@@ -431,13 +427,10 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
         }
 
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ResetSystemProxyAsync();
+        }
 
         SendStatus(vpn_status_);
     }
@@ -456,13 +449,10 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
         }
 
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ResetSystemProxyAsync();
+        }
 
         SendStatus(vpn_status_);
     }
@@ -519,13 +509,10 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
                 self->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
             }
 
-            std::thread([self]()
-                        {
-        if (!self->is_active_) return;
-        if (self->system_tray_ && self->system_tray_->GetSystemProxy()) {
-          proxy::ResetSystemProxy();
-        } })
-                .detach();
+            if (self->system_tray_ && self->system_tray_->GetSystemProxy())
+            {
+                proxy::ResetSystemProxyAsync();
+            }
 
             self->SendStatus("disconnected");
             FinishWithBool(method_call, true);
