@@ -31,6 +31,16 @@
         android:usesCleartextTraffic="true"
         tools:ignore="ForegroundServicePermission">
 
+        <receiver
+            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
+            android:exported="false" />
+
+        <service
+            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
+            android:exported="false"
+            android:stopWithTask="false"
+            android:foregroundServiceType="systemExempted"/>
+
         <!-- Register the VPN service with Samsung compatibility -->
         <service
             android:name="de.unboundtech.defyxvpn.DefyxVpnService"
