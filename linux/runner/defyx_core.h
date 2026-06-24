@@ -29,8 +29,8 @@ bool IsTunnelRunning();
 void EnableVerboseLogs(bool enable);
 void RegisterProgressHandler(std::function<void(std::string)> handler);
 
-// Attempts to load the libDXcore.so from the given path. If path is empty, tries
-// to locate libDXcore.so next to the running executable or in application folder.
+// Attempts to load the libdxcore_arm64.so from the given path. If path is empty, tries
+// to locate libdxcore_arm64.so next to the running executable or in application folder.
 // Returns true if the shared library was loaded and entrypoints found.
 bool LoadCoreDll(const std::string& dllPath = "");
 void UnloadCoreDll();

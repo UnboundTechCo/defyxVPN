@@ -36,6 +36,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
+          os_name: "linux"
 
       - name: Download Linux Framework
         env:
@@ -44,26 +45,46 @@ jobs:
           RELEASE_JSON=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest)
 
-          ASSET_ID=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name=="DXcore.zip") | .id')
+          ASSET_ID=$(echo "$RELEASE_JSON" | jq -r '.assets[] | select(.name=="DXcore-linux.zip") | .id')
 
           curl -L \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/octet-stream" \
             "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
-            -o DXcore.zip
+            -o DXcore-linux.zip
 
-          unzip -o DXcore.zip -d linux/runner
-          rm DXcore.zip
+          unzip -o DXcore-linux.zip -d linux/runner
+          mv linux/runner/build/linux/* linux/runner/
+          rm -rf linux/runner/build
+          rm DXcore-linux.zip
           ls -la linux/runner
 
       - name: Enable Linux Desktop support
         run: flutter config --enable-linux-desktop
 
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libgtk-3-dev \
+            liblzma-dev \
+            libayatana-appindicator3-dev \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            libsecret-1-dev
+
       - name: Build Linux Release
         run: flutter build linux --release
+
+      - name: Zip Linux Release Output
+        run: zip -r build/linux/x64/release/linux-release.zip build/linux/x64/release/bundle/
 
       - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-release
-          path: build/linux/x64/release/bundle/
+          path: build/linux/x64/release/linux-release.zip

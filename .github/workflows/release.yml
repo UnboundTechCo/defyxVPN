@@ -56,6 +56,11 @@ jobs:
           name: windows-release
           path: windows-release/
       
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+      
       - name: Download iOS artifacts
         if: false
         uses: actions/download-artifact@v4
@@ -74,6 +79,7 @@ jobs:
           files: |
             android-release/**/*.apk
             windows-release/**
+            linux-release/**
           body_path: release.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

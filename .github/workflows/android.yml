@@ -90,6 +90,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
+          os_name: "android"
 
       - name: Create key.properties for Android signing
         run: |
@@ -206,7 +207,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
-
+          os_name: "android"
       - name: Create key.properties for Android signing
         run: |
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties

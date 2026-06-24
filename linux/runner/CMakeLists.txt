@@ -62,7 +62,7 @@ if(DEFYX_DXCORE_LIB)
   list(APPEND _dxcore_source_candidates "${_override_lib}")
 endif()
 
-set(_runner_local_lib "${_runner_dir}/libDXcore.so")
+set(_runner_local_lib "${_runner_dir}/libdxcore_arm64.so")
 list(APPEND _dxcore_source_candidates "${_runner_local_lib}")
 
 if(DEFYX_DXCORE_DIR)
@@ -71,7 +71,7 @@ else()
   get_filename_component(_dxcore_root "${_runner_dir}/../../../DXcore-private" ABSOLUTE)
 endif()
 
-set(_dxcore_repo_lib "${_dxcore_root}/libDXcore.so")
+set(_dxcore_repo_lib "${_dxcore_root}/libdxcore_arm64.so")
 list(APPEND _dxcore_source_candidates "${_dxcore_repo_lib}")
 
 set(_dxcore_source "")
@@ -92,15 +92,15 @@ if(NOT _dxcore_source AND GO_EXECUTABLE AND EXISTS "${_dxcore_root}")
   add_custom_target(dxcore_shared_lib
     COMMAND ${CMAKE_COMMAND} -E env GO111MODULE=on ${GO_EXECUTABLE} build -buildmode=c-shared -o "${_dxcore_source}" ./DXcore/linux
     WORKING_DIRECTORY "${_dxcore_root}"
-    COMMENT "Building libDXcore.so via Go"
+    COMMENT "Building libdxcore_arm64.so via Go"
     VERBATIM
   )
   add_dependencies(${BINARY_NAME} dxcore_shared_lib)
 elseif(NOT _dxcore_source)
   if(NOT GO_EXECUTABLE)
-    message(WARNING "Go executable not found; libDXcore.so will not be rebuilt automatically.")
+    message(WARNING "Go executable not found; libdxcore_arm64.so will not be rebuilt automatically.")
   elseif(NOT EXISTS "${_dxcore_root}")
-    message(WARNING "DXcore source directory '${_dxcore_root}' is missing; libDXcore.so cannot be rebuilt.")
+    message(WARNING "DXcore source directory '${_dxcore_root}' is missing; libdxcore_arm64.so cannot be rebuilt.")
   endif()
 endif()
 
@@ -110,7 +110,7 @@ endif()
 
 if(_have_dxcore_lib)
   set(DEFYX_DXCORE_LIB_SOURCE "${_dxcore_source}" PARENT_SCOPE)
-  set(DEFYX_DXCORE_LIB_NAME "libDXcore.so" PARENT_SCOPE)
+  set(DEFYX_DXCORE_LIB_NAME "libdxcore_arm64.so" PARENT_SCOPE)
 endif()
 
 if(NOT PROJECT_BUILD_DIR)
@@ -129,11 +129,11 @@ set(_bundle_dir "${PROJECT_BUILD_DIR}linux/x64/${_bundle_config_lower}/bundle")
 if(_have_dxcore_lib)
   add_custom_command(TARGET ${BINARY_NAME} POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_bundle_dir}"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dxcore_source}" "${_bundle_dir}/libDXcore.so"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dxcore_source}" "${_bundle_dir}/libdxcore_arm64.so"
     COMMAND ${CMAKE_COMMAND} -E make_directory "${_bundle_dir}/lib"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dxcore_source}" "${_bundle_dir}/lib/libDXcore.so"
-    COMMENT "Copying libDXcore.so into Flutter Linux bundle (${_bundle_config_lower})"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${_dxcore_source}" "${_bundle_dir}/lib/libdxcore_arm64.so"
+    COMMENT "Copying libdxcore_arm64.so into Flutter Linux bundle (${_bundle_config_lower})"
   )
 else()
-  message(WARNING "libDXcore.so not found and cannot be built; VPN core will be unavailable in the Linux build.")
+  message(WARNING "libdxcore_arm64.so not found and cannot be built; VPN core will be unavailable in the Linux build.")
 endif()
