@@ -76,7 +76,6 @@ flutter:
     - assets/lottie/
     - assets/flags/
     - assets/sounds/
-    - assets/defyx_proxy.sh
     - .env
 
   fonts:

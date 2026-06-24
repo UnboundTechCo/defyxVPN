@@ -75,16 +75,23 @@ jobs:
             libayatana-appindicator3-dev \
             libgstreamer1.0-dev \
             libgstreamer-plugins-base1.0-dev \
-            libsecret-1-dev
+            libsecret-1-dev \
+            libfuse2 \
+            libfuse2t64 \
+            rpm
 
-      - name: Build Linux Release
-        run: flutter build linux --release
+      - name: Activate and Run FastForge Bundle Build
+        run: |
+          dart pub global activate fastforge
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          fastforge release --name=production
 
-      - name: Zip Linux Release Output
-        run: zip -r build/linux/x64/release/linux-release.zip build/linux/x64/release/bundle/
-
-      - name: Upload Linux artifact
+      - name: Upload All Linux Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-release
-          path: build/linux/x64/release/linux-release.zip
+          name: linux-application-packages
+          path: |
+            build/**/*.AppImage
+            build/**/*.deb
+            build/**/*.rpm
+          if-no-files-found: error

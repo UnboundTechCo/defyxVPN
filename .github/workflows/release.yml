@@ -60,6 +60,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: linux-release
+          path: linux-release/
       
       - name: Download iOS artifacts
         if: false

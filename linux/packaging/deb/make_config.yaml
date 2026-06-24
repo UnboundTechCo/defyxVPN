@@ -1,0 +1,28 @@
+display_name: Defyx VPN
+package_name: defyxvpn
+icon: assets/images/logo.png
+summary: Secure, fast, and reliable VPN client
+description: >-
+  Defyx is a privacy-first VPN application featuring user-friendly interactions, 
+  unique visual feedback, and intelligent, AI-driven security insights. Built with 
+  advanced encryption algorithms to ensure robust global privacy protection.
+
+license: MIT
+installed_size: 0
+
+maintainer:
+  name: UnboundTechUG
+  email: defyx@unboundtech.de
+
+priority: optional
+section: x11
+essential: false
+
+keywords:
+  - vpn
+  - proxy
+  - tunnel
+  - security
+  - privacy
+categories:
+  - Network
