@@ -2,4 +2,4 @@ flutter/ephemeral
 
 
 # Remove Core
-runner/libDXcore.so
+runner/libdxcore_arm64.so

@@ -23,18 +23,18 @@ jobs:
           mkdir -p ios/Frameworks
           ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
             https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
-            | jq -r '.assets[] | select(.name == "IosDXcore.xcframework.zip") | .id')
+            | jq -r '.assets[] | select(.name == "DXcore-ios.zip") | .id')
 
           curl -L \
             -H "Authorization: token $GITHUB_TOKEN" \
             -H "Accept: application/octet-stream" \
             "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
-            -o ios/IosDXcore.xcframework.zip
+            -o ios/DXcore-ios.zip
 
           cd ios
-          unzip -o IosDXcore.xcframework.zip
+          unzip -o DXcore-ios.zip
           mv build/ios/* .
-          rm -rf build IosDXcore.xcframework.zip
+          rm -rf build DXcore-ios.zip
           ls -la
 
       - name: Get app version
@@ -46,6 +46,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
+          os_name: "ios"
 
       - name: Import iOS certificates
         uses: apple-actions/import-codesign-certs@v3
