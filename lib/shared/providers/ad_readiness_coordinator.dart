@@ -42,7 +42,6 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       
       if (stateJson != null) {
         state = AdReadinessState.fromJsonString(stateJson);
-        debugPrint('📦 Loaded ad readiness state: $state');
         
         // Android doesn't have ATT - always set to authorized
         if (!Platform.isIOS && state.attStatus != TrackingStatus.authorized) {
@@ -51,7 +50,6 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
             canUsePersonalizedAds: true,
           );
           await _persistState();
-          debugPrint('📦 Android: Set ATT to authorized');
         }
         return;
       }
@@ -90,10 +88,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
             canUsePersonalizedAds: true,
           );
           await _persistState();
-          debugPrint('📦 Fresh install (Android): ATT authorized');
-        } else {
-          debugPrint('📦 Fresh install (iOS): Awaiting privacy acceptance');
-        }
+        } 
       }
     } catch (e, stack) {
       debugPrint('⚠️ Failed to load ad readiness state: $e');
@@ -116,7 +111,6 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_storageKey, state.toJsonString());
-      debugPrint('💾 Persisted ad readiness state');
     } catch (e) {
       debugPrint('⚠️ Failed to persist ad readiness state: $e');
     }
@@ -127,7 +121,6 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   /// Mark that user has accepted privacy notice and completed VPN profile setup
   /// This is the entry point after privacy dialog acceptance
   Future<void> markPrivacyAccepted() async {
-    debugPrint('✅ Privacy accepted - marking VPN profile ready');
     
     state = state.copyWith(
       privacyAccepted: true,

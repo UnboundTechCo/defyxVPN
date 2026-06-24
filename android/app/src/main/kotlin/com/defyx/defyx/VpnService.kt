@@ -179,7 +179,7 @@ class DefyxVpnService : VpnService() {
                 try {
                     builder.addDisallowedApplication(context.packageName)
                 } catch (_: Exception) {}
-
+                
                 vpnInterface?.close()
                 vpnInterface = builder.establish()
                 Log.d(TAG, "vpnInterface: $vpnInterface")
@@ -283,7 +283,13 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    fun connectVPN(cacheDir: String, flowLine: String, pattern: String, deepScan: Boolean, healthCheck: Boolean) {
+    fun connectVPN(
+            cacheDir: String,
+            flowLine: String,
+            pattern: String,
+            deepScan: Boolean,
+            healthCheck: Boolean
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Android.startVPN(cacheDir, flowLine, pattern, deepScan, healthCheck)
@@ -325,9 +331,9 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    fun getFlowLine(isTest: Boolean): String {
+    fun getFlowLine(isTest: Boolean, token: String): String {
         return try {
-            Android.getFlowLine(isTest)
+            Android.getFlowLine(isTest, token)
         } catch (e: Exception) {
             log("Get Flow Line failed: ${e.message}")
             ""
@@ -392,6 +398,15 @@ class DefyxVpnService : VpnService() {
             Android.setCacheDir(cacheDir)
         } catch (e: Exception) {
             log("Set Cache Dir failed: ${e.message}")
+        }
+    }
+
+    fun login(email: String, password: String): String {
+        return try {
+            Android.login(email, password)
+        } catch (e: Exception) {
+            log("Login failed: ${e.message}")
+            ""
         }
     }
 }

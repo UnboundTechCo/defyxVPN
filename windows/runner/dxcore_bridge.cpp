@@ -63,6 +63,7 @@ bool DXCoreBridge::Load() {
   // Handshake functions are optional — don't fail Load() if absent
   load(pRequestHandshake_, "WinRequestHandshake");
   load(pCompleteHandshake_, "WinCompleteHandshake");
+  ok &= load(pLogin_, "WinLogin");
 
   if (!ok) {
     Unload();
@@ -118,9 +119,9 @@ int DXCoreBridge::SetTimeZone(float tz) {
   return pSetTimeZone_ ? pSetTimeZone_(tz) : 0;
 }
 
-std::string DXCoreBridge::GetFlowLine(bool is_test) {
+std::string DXCoreBridge::GetFlowLine(bool is_test, const std::string& token) {
   if (!pGetFlowLine_) return {};
-  const char* s = pGetFlowLine_(is_test ? 1 : 0);
+  const char* s = pGetFlowLine_(is_test ? 1 : 0, token.c_str());
   std::string out = s ? std::string(s) : std::string();
   if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
   return out;
@@ -317,3 +318,10 @@ bool DXCoreBridge::PerformGatewayHandshake() {
   return !expected_hash.empty() && server_hash == expected_hash;
 }
 
+std::string DXCoreBridge::Login(const std::string& email, const std::string& password) {
+  if (!pLogin_) return {};
+  const char* s = pLogin_(email.c_str(), password.c_str());
+  std::string out = s ? std::string(s) : std::string();
+  if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
+  return out;
+}

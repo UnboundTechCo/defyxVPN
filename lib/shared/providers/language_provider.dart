@@ -53,18 +53,13 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
           ),
         )) {
     final savedLang = _prefs.getString(_languageKey);
-    debugPrint('🌍 Saved language preference: ${savedLang ?? "none (using device language)"}');
-    debugPrint('🌍 Current app language: ${state.language.code} (${state.language.nativeName})');
   }
 
   // Detect device language on first launch
   static String _getDeviceLanguage() {
     try {
       final deviceLocale = WidgetsBinding.instance.platformDispatcher.locale;
-      debugPrint('🌍 Device locale detected: ${deviceLocale.languageCode}');
-      // If device is Chinese, use Chinese; otherwise default to English
       final selectedLang = deviceLocale.languageCode == 'zh' ? 'zh' : 'en';
-      debugPrint('🌍 Selected language: $selectedLang');
       return selectedLang;
     } catch (e) {
       debugPrint('🌍 Error detecting device language: $e');
