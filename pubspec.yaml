@@ -1,7 +1,7 @@
 name: defyx_vpn
 description: "Defyx VPN - Secure, fast, and reliable VPN service providing global privacy protection with advanced encryption and multi-platform support"
 publish_to: "none"
-version: 5.4.1+268
+version: 5.5.5+279
 
 environment:
   sdk: ^3.8.0
@@ -20,7 +20,6 @@ dependencies:
   dio_http_formatter: ^3.2.1
   shimmer: ^3.0.0
   shake: ^3.0.0
-  vibration: ^3.1.3
   google_mobile_ads: ^6.0.0
   app_tracking_transparency: ^2.0.5
   url_launcher: ^6.3.1
