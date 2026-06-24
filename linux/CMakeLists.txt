@@ -124,7 +124,7 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
 endforeach(bundled_library)
 
 # Install DXcore library
-set(DXCORE_LIB "${CMAKE_CURRENT_SOURCE_DIR}/libdxcore_arm64.so")
+set(DXCORE_LIB "${CMAKE_CURRENT_SOURCE_DIR}/libdxcore_amd64.so")
 if(NOT DEFYX_DXCORE_LIB_SOURCE AND EXISTS "${DXCORE_LIB}")
   set(DEFYX_DXCORE_LIB_SOURCE "${DXCORE_LIB}")
   message(STATUS "Using DXcore library from source directory: ${DXCORE_LIB}")

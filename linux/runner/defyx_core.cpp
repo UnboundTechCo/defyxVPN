@@ -94,25 +94,25 @@ bool LoadCoreDll(const std::string& dllPath) {
   // 1) Prefer loading from the exe directory
   std::string exeDir = GetExeDir();
   if (!exeDir.empty()) {
-    std::string full = exeDir + "libdxcore_arm64.so";
+    std::string full = exeDir + "libdxcore_amd64.so";
     dll = dlopen(full.c_str(), RTLD_LAZY);
     if (!dll) {
       const char* err = dlerror();
       defyx_core::LogMessage("dlopen failed for exe-dir path '" + full + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
-      defyx_core::LogMessage("Loaded libdxcore_arm64.so from exe dir: " + full);
+      defyx_core::LogMessage("Loaded libdxcore_amd64.so from exe dir: " + full);
     }
   }
 
   // 1b) If not in exe dir root, look in lib/ next to the executable (Flutter bundle layout)
   if (!dll && !exeDir.empty()) {
-    std::string nested = exeDir + "lib/libdxcore_arm64.so";
+    std::string nested = exeDir + "lib/libdxcore_amd64.so";
     dll = dlopen(nested.c_str(), RTLD_LAZY);
     if (!dll) {
       const char* err = dlerror();
       defyx_core::LogMessage("dlopen failed for lib-dir path '" + nested + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
-      defyx_core::LogMessage("Loaded libdxcore_arm64.so from lib dir: " + nested);
+      defyx_core::LogMessage("Loaded libdxcore_amd64.so from lib dir: " + nested);
     }
   }
 
@@ -123,19 +123,19 @@ bool LoadCoreDll(const std::string& dllPath) {
       const char* err = dlerror();
       defyx_core::LogMessage("dlopen failed for provided path '" + path + "' err=" + (err ? std::string(err) : "unknown"));
     } else {
-      defyx_core::LogMessage("Loaded libdxcore_arm64.so from provided path: " + path);
+      defyx_core::LogMessage("Loaded libdxcore_amd64.so from provided path: " + path);
     }
   }
 
-  // 3) As a last resort, attempt to load libdxcore_arm64.so using the default search path
+  // 3) As a last resort, attempt to load libdxcore_amd64.so using the default search path
   if (!dll) {
-    dll = dlopen("libdxcore_arm64.so", RTLD_LAZY);
+    dll = dlopen("libdxcore_amd64.so", RTLD_LAZY);
     if (!dll) {
       const char* err = dlerror();
-      defyx_core::LogMessage("Final dlopen('libdxcore_arm64.so') failed err=" + (err ? std::string(err) : "unknown"));
+      defyx_core::LogMessage("Final dlopen('libdxcore_amd64.so') failed err=" + (err ? std::string(err) : "unknown"));
       return false;
     } else {
-      defyx_core::LogMessage("Loaded libdxcore_arm64.so from default search path");
+      defyx_core::LogMessage("Loaded libdxcore_amd64.so from default search path");
     }
   }
 
@@ -187,7 +187,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("SetConnectionMethod", g_set_connection_method);
   check("SetCacheDir", g_set_cache_dir);
   check("IsTunnelRunning", g_is_tunnel_running);
-  defyx_core::LogMessage("libdxcore_arm64.so loaded and symbol lookup completed");
+  defyx_core::LogMessage("libdxcore_amd64.so loaded and symbol lookup completed");
 
   return true;
 }
@@ -195,7 +195,7 @@ bool LoadCoreDll(const std::string& dllPath) {
 void UnloadCoreDll() {
   std::lock_guard<std::mutex> lock(g_dx_mutex);
   if (g_dx_dll) {
-    defyx_core::LogMessage("Unloading libdxcore_arm64.so");
+    defyx_core::LogMessage("Unloading libdxcore_amd64.so");
     g_start_vpn = nullptr;
     g_stop_vpn = nullptr;
     g_start_t2s = nullptr;
