@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'dart:ui';
+import 'package:flutter/foundation.dart';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
@@ -14,8 +14,17 @@ import 'app/app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Silence Dart console logging in release builds.
+  // Debug builds keep logs so developers can still trace issues.
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
+
   await dotenv.load();
 
+  // Note: VPN cache directory will be initialized after app starts
+  // because native channel handler is not ready yet during main()
   // Initialize cache directory for VPN core
   try {
     final String vpnCacheDir = await VpnBridge().getSharedDirectory();

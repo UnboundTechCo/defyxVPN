@@ -1,57 +1,12 @@
 name: Android & iOS & Linux & Windows Build with Store Uploads
 
 permissions:
-    contents: write
+  contents: write
 
 on:
   push:
     branches: 
       - release
-
-  workflow_dispatch:
-    inputs:
-      send_telegram:
-        description: "Send APK to Telegram?"
-        required: true
-        default: "false"
-      upload_to_play_store:
-        description: "Upload AAB to Google Play Store?"
-        required: false
-        default: "false"
-        type: boolean
-      play_track:
-        description: "Google Play track (internal, alpha, beta, production)"
-        required: false
-        default: "internal"
-        type: choice
-        options:
-          - internal
-          - alpha
-          - beta
-          - production
-      upload_to_app_store:
-        description: "Upload IPA to App Store/TestFlight?"
-        required: false
-        default: "false"
-        type: boolean
-      app_store_destination:
-        description: "App Store destination (testflight, production)"
-        required: false
-        default: "testflight"
-        type: choice
-        options:
-          - testflight
-          - production
-      download_android_framework:
-        description: "Download DXcore-android.zip?"
-        required: false
-        default: "true"
-        type: boolean
-      download_ios_framework:
-        description: "Download IosDXcore.xcframework.zip?"
-        required: false
-        default: "false"
-        type: boolean
 
 jobs:
   android:
@@ -66,18 +21,17 @@ jobs:
   windows:
     uses: ./.github/workflows/windows.yml
     secrets: inherit
-  
+
   linux:
-    if: false
     uses: ./.github/workflows/linux.yml
     secrets: inherit
-  
+
   release-to-telegram:
-    needs: [android, windows]
+    needs: [android, windows, linux]
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
-    needs: [android, windows]
+    needs: [android, windows, linux]
     uses: ./.github/workflows/release.yml
     secrets: inherit
