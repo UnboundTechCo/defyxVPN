@@ -62,6 +62,8 @@
   "statusConnectAlready": "Подключиться сейчас",
   "statusTestingSpeed": "тестирование скорости ...",
   "statusIsReady": "готов",
+  "statusIsInTrouble": "в беде.",
+  "statusDXcoreDown": "DXcore недоступен.",
   "statusToSpeedTest": "к тесту скорости",
   "statusYoursToShape": "создан для вас",
   "settingsConnectionMethod": "МЕТОД ПОДКЛЮЧЕНИЯ",

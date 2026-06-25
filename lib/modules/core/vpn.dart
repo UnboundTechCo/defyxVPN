@@ -74,10 +74,14 @@ class VPN {
       _handleVPNUpdates(msg);
     });
 
-    // Listen for Go crash events and report to Crashlytics
-    crashUpdates.listen((crashData) {
-      _handleCrashEvent(crashData);
-    });
+    // Listen for Go crash events and report to Crashlytics.
+    // Only mobile platforms implement the crash_events channel natively,
+    // so skip it on desktop to avoid MissingPluginException noise.
+    if (Platform.isAndroid || Platform.isIOS) {
+      crashUpdates.listen((crashData) {
+        _handleCrashEvent(crashData);
+      });
+    }
   }
 
   void dispose() {
@@ -439,6 +443,7 @@ class VPN {
       case "ios":
         return await _vpnBridge.connectVpn();
       case "windows":
+      case "linux":
         return await _vpnBridge.grantVpnPermission();
       default:
         return false;
@@ -452,6 +457,11 @@ class VPN {
         break;
       case "ios":
         await _vpnBridge.startTun2socks();
+        break;
+      case "windows":
+      case "linux":
+        // On desktop platforms (Windows/Linux), VPN runs without TUN device
+        // No tunnel creation needed
         break;
     }
   }

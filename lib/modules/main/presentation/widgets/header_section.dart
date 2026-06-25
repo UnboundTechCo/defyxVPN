@@ -124,6 +124,8 @@ class ConnectionStatusText extends ConsumerWidget {
         return l10n.statusHas;
       case ConnectionStatus.disconnecting:
         return l10n.statusIsReturning;
+      case ConnectionStatus.coreDown:
+        return l10n.statusIsInTrouble;
       default:
         return l10n.statusIsChilling;
     }
@@ -188,6 +190,8 @@ class ConnectionStateWidget extends ConsumerWidget {
         return (text: l10n.statusExitedMatrix, color: const Color(0xFFFFC0C0));
       case ConnectionStatus.error:
         return (text: l10n.statusSorry, color: Colors.white);
+      case ConnectionStatus.coreDown:
+        return (text: l10n.statusDXcoreDown, color: Colors.white);
       default:
         return (text: l10n.statusConnectAlready, color: Colors.white);
     }
