@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -26,6 +25,13 @@ void main() async {
 
   // Note: VPN cache directory will be initialized after app starts
   // because native channel handler is not ready yet during main()
+  // Initialize cache directory for VPN core
+  try {
+    final String vpnCacheDir = await VpnBridge().getSharedDirectory();
+    await VpnBridge().setCacheDir(vpnCacheDir);
+  } catch (e) {
+    debugPrint('Failed to set cache directory: $e');
+  }
 
   // Initialize Firebase only on supported platforms (not Windows)
   if (!Platform.isWindows && !Platform.isLinux) {

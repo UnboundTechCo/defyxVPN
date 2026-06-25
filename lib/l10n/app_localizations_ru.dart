@@ -261,4 +261,89 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get synchronization => 'Синхронизация';
+
+  @override
+  String get settingsDonation => 'Пожертвование';
+
+  @override
+  String get settingsDonationDescription =>
+      'Помогите нам разрушить стены цифровой цензуры и интернет-фильтрации.';
+
+  @override
+  String get authenticationRequired => 'Требуется аутентификация';
+
+  @override
+  String get premiumLoginDescription =>
+      'Для доступа к вашим премиум-подпискам вам необходимо войти в систему или создать учетную запись на веб-сайте Defyx.';
+
+  @override
+  String get email => 'Электронная почта';
+
+  @override
+  String get emailHint => 'example@domain.com';
+
+  @override
+  String get emailValidation =>
+      'Пожалуйста, введите ваш адрес электронной почты';
+
+  @override
+  String get password => 'Пароль';
+
+  @override
+  String get passwordHint => 'Введите ваш пароль';
+
+  @override
+  String get passwordValidation => 'Пожалуйста, введите ваш пароль';
+
+  @override
+  String get passwordMinLength => 'Пароль должен содержать не менее 6 символов';
+
+  @override
+  String get login => 'Войти';
+
+  @override
+  String get noAccount => 'Нет учетной записи?';
+
+  @override
+  String get signUp => 'Зарегистрироваться';
+
+  @override
+  String get loginFailed =>
+      'Ошибка входа. Проверьте свои учетные данные и попробуйте снова.';
+
+  @override
+  String get loginSuccess => 'Вход выполнен успешно!';
+
+  @override
+  String get havingTrouble => 'Возникли проблемы?';
+
+  @override
+  String get signedInAs =>
+      'Вы в настоящее время вошли в систему с адресом электронной почты';
+
+  @override
+  String get premiumImportDescription =>
+      'Если ваши премиум-подписки не могут быть загружены из-за ограничений интернета и вы не можете подключиться доступными методами, вы можете импортировать файл, полученный из Маркетплейса, в приложение.';
+
+  @override
+  String get planningToExit => 'Планируете выйти?';
+
+  @override
+  String get signOut => 'Выйти';
+
+  @override
+  String get signOutSuccess => 'Выход выполнен успешно!';
+
+  @override
+  String get settingsMarketplace => 'Маркетплейс';
+
+  @override
+  String get marketplaceDescription =>
+      'Просмотрите безопасные конфигурации VPN от проверенных поставщиков.';
+
+  @override
+  String get loggedIn => 'ВОШЛИ В СИСТЕМУ';
+
+  @override
+  String get loginOrRegister => 'ВОЙТИ ИЛИ ЗАРЕГИСТРИРОВАТЬСЯ';
 }

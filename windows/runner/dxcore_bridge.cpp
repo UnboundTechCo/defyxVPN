@@ -57,6 +57,7 @@ bool DXCoreBridge::Load() {
   ok &= load(pFreeString_, "WinFreeString");
   ok &= load(pSetSystemProxy_, "WinSetSystemProxy");
   ok &= load(pResetSystemProxy_, "WinResetSystemProxy");
+  ok &= load(pLogin_, "WinLogin");
 
   if (!ok) {
     Unload();
@@ -112,9 +113,9 @@ int DXCoreBridge::SetTimeZone(float tz) {
   return pSetTimeZone_ ? pSetTimeZone_(tz) : 0;
 }
 
-std::string DXCoreBridge::GetFlowLine(bool is_test) {
+std::string DXCoreBridge::GetFlowLine(bool is_test, const std::string& token) {
   if (!pGetFlowLine_) return {};
-  const char* s = pGetFlowLine_(is_test ? 1 : 0);
+  const char* s = pGetFlowLine_(is_test ? 1 : 0, token.c_str());
   std::string out = s ? std::string(s) : std::string();
   if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
   return out;
@@ -160,3 +161,10 @@ int DXCoreBridge::ResetSystemProxy() {
   return pResetSystemProxy_ ? pResetSystemProxy_() : 0;
 }
 
+std::string DXCoreBridge::Login(const std::string& email, const std::string& password) {
+  if (!pLogin_) return {};
+  const char* s = pLogin_(email.c_str(), password.c_str());
+  std::string out = s ? std::string(s) : std::string();
+  if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
+  return out;
+}

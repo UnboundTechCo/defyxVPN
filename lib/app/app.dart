@@ -43,7 +43,6 @@ class _AppState extends ConsumerState<App> {
       
       // When canInitializeAdMob transitions to true, start the flow
       if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
-        debugPrint('🚀 Privacy accepted - starting ad initialization flow');
         
         environmentAsync.whenData((environment) {
           if (environment.shouldInitializeAdMob) {
@@ -106,7 +105,6 @@ class _AppState extends ConsumerState<App> {
     
     // If canInitializeAdMob is already true (e.g., after migration), trigger flow
     if (adReadiness.canInitializeAdMob) {
-      debugPrint('🔄 Ad initialization needed on startup (migration/restart)');
       
       environmentAsync.whenData((environment) {
         if (environment.shouldInitializeAdMob) {
@@ -124,16 +122,13 @@ class _AppState extends ConsumerState<App> {
     coordinator.initializeAdFlow(
       onRunUMP: (shouldRequestUMP) async {
         if (shouldRequestUMP) {
-          debugPrint('🔐 Running UMP consent flow...');
           await umpService.requestConsentWithATT(
             ref: ref,
             onDone: () {
-              debugPrint('✅ UMP flow complete - marking consent done');
               coordinator.markConsentComplete();
             },
           );
         } else {
-          debugPrint('⏭️ Skipping UMP (ATT denied/restricted)');
           coordinator.markConsentComplete();
         }
       },
@@ -144,8 +139,6 @@ class _AppState extends ConsumerState<App> {
     final router = ref.watch(routerProvider);
     final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
-
-    debugPrint('🌍 Building app with locale: ${languageState.language.locale}');
 
     return ToastificationWrapper(
       config: ToastificationConfig(

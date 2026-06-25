@@ -20,74 +20,76 @@ class DefyxNavBar extends ConsumerWidget {
     final settingsLoading = ref.watch(settingsLoadingProvider);
 
     return SafeArea(
-        child: Padding(
-      padding: EdgeInsets.only(bottom: 20.h),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 200.w,
-            height: (Theme.of(context).platform == TargetPlatform.iOS ||
-                    Theme.of(context).platform == TargetPlatform.android)
-                ? 65.h
-                : 75.h,
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(100.r),
+      child: Padding(
+        padding: EdgeInsets.only(bottom: 20.h),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              width: 200.w,
+              height:
+                  (Theme.of(context).platform == TargetPlatform.iOS ||
+                      Theme.of(context).platform == TargetPlatform.android)
+                  ? 65.h
+                  : 75.h,
+              decoration: BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.circular(100.r),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  DefyxNavItem(
+                    screen: AppScreen.speedTest,
+                    icon: "speed",
+                    current: currentScreen,
+                    onTap: () => _handleSpeedTest(context, ref),
+                  ),
+                  DefyxNavItem(
+                    screen: AppScreen.home,
+                    icon: "chield",
+                    current: currentScreen,
+                    onTap: () => _navigateToHome(context),
+                  ),
+                  DefyxNavItem(
+                    screen: AppScreen.settings,
+                    icon: "settings",
+                    isLoading: settingsLoading,
+                    current: currentScreen,
+                    onTap: () => _navigateToSettings(context),
+                  ),
+                ],
+              ),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                DefyxNavItem(
-                  screen: AppScreen.speedTest,
-                  icon: "speed",
-                  current: currentScreen,
-                  onTap: () => _handleSpeedTest(context, ref),
-                ),
-                DefyxNavItem(
-                  screen: AppScreen.home,
-                  icon: "chield",
-                  current: currentScreen,
-                  onTap: () => _navigateToHome(context),
-                ),
-                DefyxNavItem(
-                  screen: AppScreen.settings,
-                  icon: "settings",
-                  isLoading: settingsLoading,
-                  current: currentScreen,
-                  onTap: () => _navigateToSettings(context),
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 24.w,
-            child: GestureDetector(
-              onTap: () => _showShareDialog(context, ref),
-              child: Container(
-                width: 60.w,
-                height: 60.w,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/info.svg',
-                    width: 25.w,
-                    height: 25.w,
-                    colorFilter: const ColorFilter.mode(
-                      Colors.white,
-                      BlendMode.srcIn,
+            Positioned(
+              right: 24.w,
+              child: GestureDetector(
+                onTap: () => _showShareDialog(context, ref),
+                child: Container(
+                  width: 60.w,
+                  height: 60.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/icons/info.svg',
+                      width: 25.w,
+                      height: 25.w,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ));
+    );
   }
 
   void _handleSpeedTest(BuildContext context, WidgetRef ref) {
@@ -116,7 +118,7 @@ class DefyxNavBar extends ConsumerWidget {
   }
 
   void _showShareDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
     ref.read(currentScreenProvider.notifier).state = AppScreen.share;
     showGeneralDialog(
       context: context,

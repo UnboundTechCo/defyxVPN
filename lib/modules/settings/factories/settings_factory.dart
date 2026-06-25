@@ -39,6 +39,7 @@ class SettingsFactory {
     required String description,
     required int sortOrder,
     bool isEnabled = false,
+    bool isPremium = false,
   }) {
     return SettingsItem(
       id: label,
@@ -48,6 +49,7 @@ class SettingsFactory {
       sortOrder: sortOrder,
       description: description,
       itemType: SettingsItemType.toggle,
+      isPremium: isPremium,
     );
   }
 
@@ -93,7 +95,6 @@ class SettingsFactory {
       isAccessible: true,
       sortOrder: 0,
       itemType: SettingsItemType.toggle,
-  
     );
   }
 
@@ -140,9 +141,9 @@ class SettingsFactory {
       items.add(createDestinationItem(title: destinationTitle));
     }
 
-    items.addAll(_config.customItems.where(
-      (item) => item.id.startsWith('connection_'),
-    ));
+    items.addAll(
+      _config.customItems.where((item) => item.id.startsWith('connection_')),
+    );
 
     return SettingsGroup(
       id: SettingsGroupId.connectionMethod,
@@ -167,38 +168,45 @@ class SettingsFactory {
   }) {
     final List<SettingsItem> items = [];
 
-    if (_config.showSplitTunnel && splitTunnelTitle != null && splitTunnelSubtitle != null) {
-      items.add(createSplitTunnelItem(
-        title: splitTunnelTitle,
-        subtitle: splitTunnelSubtitle,
-        isEnabled: splitTunnelEnabled,
-      ));
+    if (_config.showSplitTunnel &&
+        splitTunnelTitle != null &&
+        splitTunnelSubtitle != null) {
+      items.add(
+        createSplitTunnelItem(
+          title: splitTunnelTitle,
+          subtitle: splitTunnelSubtitle,
+          isEnabled: splitTunnelEnabled,
+        ),
+      );
     }
 
     if (_config.showDeepScan && deepScanTitle != null) {
-      items.add(createDeepScanItem(
-        title: deepScanTitle,
-        isEnabled: deepScanEnabled,
-      ));
+      items.add(
+        createDeepScanItem(title: deepScanTitle, isEnabled: deepScanEnabled),
+      );
     }
 
     if (_config.showHealthCheck && healthCheckTitle != null) {
-      items.add(createHealthCheckItem(
-        title: healthCheckTitle,
-        isEnabled: healthCheckEnabled,
-      ));
+      items.add(
+        createHealthCheckItem(
+          title: healthCheckTitle,
+          isEnabled: healthCheckEnabled,
+        ),
+      );
     }
 
     if (_config.showKillSwitch && killSwitchTitle != null) {
-      items.add(createKillSwitchItem(
-        title: killSwitchTitle,
-        isEnabled: killSwitchEnabled,
-      ));
+      items.add(
+        createKillSwitchItem(
+          title: killSwitchTitle,
+          isEnabled: killSwitchEnabled,
+        ),
+      );
     }
 
-    items.addAll(_config.customItems.where(
-      (item) => item.id.startsWith('traffic_'),
-    ));
+    items.addAll(
+      _config.customItems.where((item) => item.id.startsWith('traffic_')),
+    );
 
     return SettingsGroup(
       id: SettingsGroupId.trafficControl,
@@ -219,15 +227,13 @@ class SettingsFactory {
         description: flow['description'] ?? '',
         sortOrder: entry.key,
         isEnabled: flow['enabled'] ?? false,
+        isPremium: flow['isPremium'] ?? false,
       );
     }).toList();
   }
 
   /// Gets the enabled state from saved items
-  static bool getSavedItemState(
-    List<SettingsItem>? savedItems,
-    String itemId,
-  ) {
+  static bool getSavedItemState(List<SettingsItem>? savedItems, String itemId) {
     return savedItems?.where((i) => i.id == itemId).firstOrNull?.isEnabled ??
         false;
   }
