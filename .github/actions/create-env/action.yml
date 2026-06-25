@@ -6,7 +6,7 @@ inputs:
     required: true
   var_blob:
     required: true
-  os:_name:
+  os_name:
     required: true
 
 runs:

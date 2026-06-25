@@ -80,7 +80,14 @@ jobs:
             libfuse2t64 \
             rpm
 
+      - name: Install appimagetool
+        run: |
+          sudo wget -O /usr/local/bin/appimagetool https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
+          sudo chmod +x /usr/local/bin/appimagetool
+
       - name: Activate and Run FastForge Bundle Build
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
           dart pub global activate fastforge
           export PATH="$PATH":"$HOME/.pub-cache/bin"
@@ -89,7 +96,7 @@ jobs:
       - name: Upload All Linux Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: linux-application-packages
+          name: linux-release
           path: |
             build/**/*.AppImage
             build/**/*.deb

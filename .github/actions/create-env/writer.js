@@ -28,6 +28,12 @@ FIREBASE_WEB_APP_ID=${secrets.FIREBASE_WEB_APP_ID}
 FIREBASE_WEB_MEASUREMENT_ID=${secrets.FIREBASE_WEB_MEASUREMENT_ID}
 `.trim() + "\n";
 
+const private_data_windows = `
+FIREBASE_WINDOWS_API_KEY=${secrets.FIREBASE_WINDOWS_API_KEY}
+FIREBASE_WINDOWS_APP_ID=${secrets.FIREBASE_WINDOWS_APP_ID}
+FIREBASE_WINDOWS_MEASUREMENT_ID=${secrets.FIREBASE_WINDOWS_MEASUREMENT_ID}
+`.trim() + "\n";
+
 const public_data = `
 LINK_APP_STORE=${vars.LINK_APP_STORE}
 LINK_TEST_FLIGHT=${vars.LINK_TEST_FLIGHT}
@@ -39,7 +45,7 @@ WEBSITE_SIGN_UP=${secrets.WEBSITE_SIGN_UP}
 WEBSITE_DONATION=${secrets.WEBSITE_DONATION}
 `.trim() + "\n";
 
-const data = osName === "windows" ? public_data : public_data + private_data;
+const data = osName === "windows" ? public_data + private_data_windows : public_data + private_data;
 
 fs.writeFileSync(".env", data);
 
