@@ -517,6 +517,18 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "verifyGateway") {
+          if (!dxcore_->IsLoaded()) {
+            result->Success(flutter::EncodableValue(false));
+            return;
+          }
+          std::thread([this, result = std::move(result)]() mutable {
+            bool ok = dxcore_->PerformGatewayHandshake();
+            result->Success(flutter::EncodableValue(ok));
+          }).detach();
+          return;
+        }
+
         if (method == "login") {
           if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());

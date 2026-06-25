@@ -38,7 +38,7 @@ final class VibrationService extends AlertSub {
 
   Future<void> _vibrate(int duration) async {
     if (!_hasAction) return;
-    
+
     try {
       await _channel.invokeMethod('vibrate', {'duration': duration});
     } catch (e) {
@@ -105,11 +105,18 @@ final class AudioService extends AlertSub {
     try {
       if (!kIsWeb &&
           (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-        unawaited(_audioPlayer.stop().then((_) {
-          return _audioPlayer.play(AssetSource('sounds/notification.wav'));
-        }).catchError((e) {
-          debugPrint('Error playing sound on desktop: $e');
-        }));
+        unawaited(
+          _audioPlayer
+              .stop()
+              .then((_) {
+                return _audioPlayer.play(
+                  AssetSource('sounds/notification.wav'),
+                );
+              })
+              .catchError((e) {
+                debugPrint('Error playing sound on desktop: $e');
+              }),
+        );
       } else {
         if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.idle) {
           await _audioPlayer.stop();

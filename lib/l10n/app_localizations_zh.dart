@@ -188,6 +188,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statusIsReady => '已准备好';
 
   @override
+  String get statusIsInTrouble => '遇到麻烦了.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore 已关闭.';
+
+  @override
   String get statusToSpeedTest => '进行速度测试';
 
   @override

@@ -33,6 +33,8 @@ class MainScreen extends ConsumerStatefulWidget {
 }
 
 class _MainScreenState extends ConsumerState<MainScreen> {
+  static bool _gatewayVerified = false;
+
   final ScrollController _scrollController = ScrollController();
   final AnimationService _animationService = AnimationService();
   bool _showHeaderShadow = false;
@@ -57,6 +59,17 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // On Windows, verify the DXcore gateway before doing anything else.
+      if (Platform.isWindows && !_gatewayVerified) {
+        _gatewayVerified = true;
+        final gatewayOk = await VpnBridge().verifyGateway();
+        if (!mounted) return;
+        if (!gatewayOk) {
+          ref.read(connectionStateProvider.notifier).setCoreDown();
+          return;
+        }
+      }
+
       _logic.checkAndReconnect();
 
       // Check if privacy notice should be shown using coordinator
@@ -215,7 +228,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                                 connectionState.status ==
                                         ConnectionStatus.loading ||
                                     connectionState.status ==
-                                        ConnectionStatus.disconnecting
+                                        ConnectionStatus.disconnecting ||
+                                    connectionState.status ==
+                                        ConnectionStatus.coreDown
                                 ? () {}
                                 : _logic.connectOrDisconnect,
                           ),
