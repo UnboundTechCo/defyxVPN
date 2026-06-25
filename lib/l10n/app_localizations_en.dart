@@ -190,6 +190,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusIsReady => 'is ready';
 
   @override
+  String get statusIsInTrouble => 'is in trouble.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore down.';
+
+  @override
   String get statusToSpeedTest => 'to speed test';
 
   @override

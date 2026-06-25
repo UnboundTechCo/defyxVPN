@@ -91,6 +91,17 @@ class MainScreenBackground extends StatelessWidget {
           ],
           stops: const [0.2, 0.7, 1.0],
         );
+      case ConnectionStatus.coreDown:
+        return LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            AppColors.topGradient,
+            AppColors.middleGradientCoreDown,
+            AppColors.bottomGradientCoreDown,
+          ],
+          stops: const [0.2, 0.7, 1.0],
+        );
       default:
         return LinearGradient(
           begin: Alignment.topCenter,

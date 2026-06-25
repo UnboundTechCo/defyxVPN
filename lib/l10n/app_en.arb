@@ -301,6 +301,16 @@
     "description": "Status message - ready state"
   },
 
+  "statusIsInTrouble": "is in trouble.",
+  "@statusIsInTrouble": {
+    "description": "Status connector word when DXcore handshake fails"
+  },
+
+  "statusDXcoreDown": "DXcore down.",
+  "@statusDXcoreDown": {
+    "description": "Status message shown when DXcore cannot be verified"
+  },
+
   "statusToSpeedTest": "to speed test",
   "@statusToSpeedTest": {
     "description": "Status message - ready for speed test"
