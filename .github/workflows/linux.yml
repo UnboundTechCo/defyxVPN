@@ -93,6 +93,19 @@ jobs:
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           fastforge release --name=production
 
+      - name: Rename Linux artifacts
+        run: |
+          shopt -s globstar nullglob
+
+          for file in build/**/*.deb build/**/*.rpm build/**/*.AppImage; do
+            dir=$(dirname "$file")
+            ext="${file##*.}"
+
+            # Extract only X.Y.Z (drop +build)
+            version=$(basename "$file" | sed -E 's/^.*-([0-9]+\.[0-9]+\.[0-9]+)(\+[0-9]+)?-linux\..*$/\1/')
+            mv "$file" "$dir/DefyxVPN-${version}-linux.${ext}"
+          done
+
       - name: Upload All Linux Distribution Artifacts
         uses: actions/upload-artifact@v4
         with:
