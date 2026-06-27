@@ -30,25 +30,25 @@
           </a>
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-universal.apk">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Android-universal.apk">
             <img
               src="https://img.shields.io/badge/APK-Universal-36a132.svg?logo=android" />
           </a>
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-arm64-v8a.apk">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Android-arm64-v8a.apk">
             <img
               src="https://img.shields.io/badge/APK-ARMv8-36a132.svg?logo=android" />
           </a>
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-armeabi-v7a.apk">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Android-armeabi-v7a.apk">
             <img
               src="https://img.shields.io/badge/APK-ARMv7-36a132.svg?logo=android" />
           </a>
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-x86_64.apk">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Android-x86_64.apk">
             <img
               src="https://img.shields.io/badge/APK-x64-36a132.svg?logo=android" />
           </a>
@@ -79,7 +79,7 @@
             src="https://img.shields.io/badge/Windows-Setup (Upcoming)-0C88D8.svg?logo=github" />
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/windows-release.zip">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Windows-Portable-x64.zip">
             <img
               src="https://img.shields.io/badge/Windows-Portable-0C88D8.svg?logo=github" />
           </a>
@@ -100,17 +100,17 @@
       <tr>
         <td>
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-linux.AppImage"
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Linux.AppImage"
             ><img
               src="https://img.shields.io/badge/Linux-AppImage%20x64-DC470E.svg?logo=linux" /> </a
           ><br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-linux.deb"
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Linux.deb"
             ><img
               src="https://img.shields.io/badge/Linux-DEB%20x64-DC470E.svg?logo=debian" /> </a
           ><br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-RELEASE_TAG-linux.rpm"
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Linux.rpm"
             ><img
               src="https://img.shields.io/badge/Linux-RPM%20x64-DC470E.svg?logo=redhat" />
           </a>

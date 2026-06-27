@@ -26,11 +26,11 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
-  
+
       - name: Generate .env
         uses: ./.github/actions/create-env
         with:
@@ -69,7 +69,7 @@ jobs:
         shell: pwsh
         run: |
           $source = "build/windows/x64/runner/Release"
-          $zipPath = "build/windows/x64/runner/Release/windows-release.zip"
+          $zipPath = "build/windows/x64/runner/Release/DefyxVPN-Windows-Portable-x64.zip"
           if (Test-Path $zipPath) { Remove-Item $zipPath }
           Compress-Archive -Path "$source\*" -DestinationPath $zipPath
 
@@ -77,4 +77,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: build/windows/x64/runner/Release/windows-release.zip
+          path: build/windows/x64/runner/Release/DefyxVPN-Windows-Portable-x64.zip

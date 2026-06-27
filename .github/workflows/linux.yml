@@ -101,9 +101,7 @@ jobs:
             dir=$(dirname "$file")
             ext="${file##*.}"
 
-            # Extract only X.Y.Z (drop +build)
-            version=$(basename "$file" | sed -E 's/^.*-([0-9]+\.[0-9]+\.[0-9]+)(\+[0-9]+)?-linux\..*$/\1/')
-            mv "$file" "$dir/DefyxVPN-${version}-linux.${ext}"
+            mv "$file" "$dir/DefyxVPN-Linux.${ext}"
           done
 
       - name: Upload All Linux Distribution Artifacts
