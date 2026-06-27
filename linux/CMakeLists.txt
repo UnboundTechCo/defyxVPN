@@ -4,7 +4,13 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "defyxvpn")
+#
+# IMPORTANT: This MUST match the `name:` field in pubspec.yaml (defyx_vpn).
+# fastforge's AppImage maker generates AppRun/.desktop using the pubspec name
+# (appName), while the built executable is named after BINARY_NAME. If the two
+# differ, the AppImage's AppRun calls a binary that does not exist and fails
+# with "No such file or directory".
+set(BINARY_NAME "defyx_vpn")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "de.unboundtech.defyxvpn")

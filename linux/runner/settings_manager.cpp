@@ -314,7 +314,7 @@ bool SettingsManager::SetLaunchOnStartup(bool enable)
         content << "Name=DefyxVPN\n";
         content << "Comment=DefyxVPN Application\n";
         content << "Exec=" << exe_path << " --startup\n";
-        content << "Icon=defyxvpn\n";
+        content << "Icon=defyx_vpn\n";
         content << "Terminal=false\n";
         content << "Categories=Network;VPN;\n";
         content << "StartupNotify=false\n";

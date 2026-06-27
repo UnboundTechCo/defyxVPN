@@ -266,6 +266,20 @@ void VPNChannelHandler::SetupChannels()
     defyx_core::LogMessage("VPNChannelHandler::SetupChannels completed");
 }
 
+void VPNChannelHandler::InvokeMethod(const std::string &method, FlValue *args)
+{
+    if (method_channel_ == nullptr)
+    {
+        if (args != nullptr)
+            fl_value_unref(args);
+        return;
+    }
+    fl_method_channel_invoke_method(method_channel_, method.c_str(), args,
+                                    nullptr, nullptr, nullptr);
+    if (args != nullptr)
+        fl_value_unref(args);
+}
+
 void VPNChannelHandler::SetupStatusChannel()
 {
     g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();

@@ -77,8 +77,11 @@ jobs:
             libgstreamer-plugins-base1.0-dev \
             libsecret-1-dev \
             libfuse2 \
-            libfuse2t64 \
+            plocate \
             rpm
+
+      - name: Build locate database (needed by fastforge AppImage `include`)
+        run: sudo updatedb
 
       - name: Install appimagetool
         run: |
