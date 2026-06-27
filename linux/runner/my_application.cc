@@ -71,20 +71,12 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     {
       g_settings_manager->SetAutoConnect(g_system_tray->GetAutoConnect());
 
-      if (g_flutter_view)
+      if (g_vpn_channel_handler)
       {
-        FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-            fl_view_get_engine(g_flutter_view));
-        g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-        FlMethodChannel *channel = fl_method_channel_new(
-            messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
         g_autoptr(FlValue) args = fl_value_new_map();
         fl_value_set_string_take(args, "value",
                                  fl_value_new_bool(g_system_tray->GetAutoConnect()));
-        fl_method_channel_invoke_method(channel, "setAutoConnect", args,
-                                        nullptr, nullptr, nullptr);
-        g_object_unref(channel);
+        g_vpn_channel_handler->InvokeMethod("setAutoConnect", fl_value_ref(args));
       }
     }
     break;
@@ -94,20 +86,12 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     {
       g_settings_manager->SetStartMinimized(g_system_tray->GetStartMinimized());
 
-      if (g_flutter_view)
+      if (g_vpn_channel_handler)
       {
-        FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-            fl_view_get_engine(g_flutter_view));
-        g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-        FlMethodChannel *channel = fl_method_channel_new(
-            messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
         g_autoptr(FlValue) args = fl_value_new_map();
         fl_value_set_string_take(args, "value",
                                  fl_value_new_bool(g_system_tray->GetStartMinimized()));
-        fl_method_channel_invoke_method(channel, "setStartMinimized", args,
-                                        nullptr, nullptr, nullptr);
-        g_object_unref(channel);
+        g_vpn_channel_handler->InvokeMethod("setStartMinimized", fl_value_ref(args));
       }
     }
     break;
@@ -117,20 +101,12 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     {
       g_settings_manager->SetForceClose(g_system_tray->GetForceClose());
 
-      if (g_flutter_view)
+      if (g_vpn_channel_handler)
       {
-        FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-            fl_view_get_engine(g_flutter_view));
-        g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-        FlMethodChannel *channel = fl_method_channel_new(
-            messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
         g_autoptr(FlValue) args = fl_value_new_map();
         fl_value_set_string_take(args, "value",
                                  fl_value_new_bool(g_system_tray->GetForceClose()));
-        fl_method_channel_invoke_method(channel, "setForceClose", args,
-                                        nullptr, nullptr, nullptr);
-        g_object_unref(channel);
+        g_vpn_channel_handler->InvokeMethod("setForceClose", fl_value_ref(args));
       }
     }
     break;
@@ -140,20 +116,12 @@ static void HandleTrayAction(SystemTray::TrayAction action)
     {
       g_settings_manager->SetSoundEffect(g_system_tray->GetSoundEffect());
 
-      if (g_flutter_view)
+      if (g_vpn_channel_handler)
       {
-        FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-            fl_view_get_engine(g_flutter_view));
-        g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-        FlMethodChannel *channel = fl_method_channel_new(
-            messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
         g_autoptr(FlValue) args = fl_value_new_map();
         fl_value_set_string_take(args, "value",
                                  fl_value_new_bool(g_system_tray->GetSoundEffect()));
-        fl_method_channel_invoke_method(channel, "setSoundEffect", args,
-                                        nullptr, nullptr, nullptr);
-        g_object_unref(channel);
+        g_vpn_channel_handler->InvokeMethod("setSoundEffect", fl_value_ref(args));
       }
     }
     break;
@@ -199,80 +167,44 @@ static void HandleTrayAction(SystemTray::TrayAction action)
 
   case SystemTray::TrayAction::OpenIntroduction:
     gtk_window_present(g_main_window);
-    if (g_flutter_view)
+    if (g_vpn_channel_handler)
     {
-      FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-          fl_view_get_engine(g_flutter_view));
-      g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-      FlMethodChannel *channel = fl_method_channel_new(
-          messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-      fl_method_channel_invoke_method(channel, "openIntroduction", nullptr,
-                                      nullptr, nullptr, nullptr);
-      g_object_unref(channel);
+      g_vpn_channel_handler->InvokeMethod("openIntroduction", nullptr);
     }
     break;
 
   case SystemTray::TrayAction::OpenSpeedTest:
     gtk_window_present(g_main_window);
-    if (g_flutter_view)
+    if (g_vpn_channel_handler)
     {
-      FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-          fl_view_get_engine(g_flutter_view));
-      g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-      FlMethodChannel *channel = fl_method_channel_new(
-          messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-      fl_method_channel_invoke_method(channel, "openSpeedTest", nullptr,
-                                      nullptr, nullptr, nullptr);
-      g_object_unref(channel);
+      g_vpn_channel_handler->InvokeMethod("openSpeedTest", nullptr);
     }
     break;
 
   case SystemTray::TrayAction::OpenLogs:
     gtk_window_present(g_main_window);
-    if (g_flutter_view)
+    if (g_vpn_channel_handler)
     {
-      FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-          fl_view_get_engine(g_flutter_view));
-      g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-      FlMethodChannel *channel = fl_method_channel_new(
-          messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-      fl_method_channel_invoke_method(channel, "openLogs", nullptr,
-                                      nullptr, nullptr, nullptr);
-      g_object_unref(channel);
+      g_vpn_channel_handler->InvokeMethod("openLogs", nullptr);
     }
     break;
 
   case SystemTray::TrayAction::OpenPreferences:
     gtk_window_present(g_main_window);
-    if (g_flutter_view)
+    if (g_vpn_channel_handler)
     {
-      FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-          fl_view_get_engine(g_flutter_view));
-      g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-      FlMethodChannel *channel = fl_method_channel_new(
-          messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-      fl_method_channel_invoke_method(channel, "openPreferences", nullptr,
-                                      nullptr, nullptr, nullptr);
-      g_object_unref(channel);
+      g_vpn_channel_handler->InvokeMethod("openPreferences", nullptr);
     }
     break;
 
   case SystemTray::TrayAction::ConnectionStatusClick:
     gtk_window_present(g_main_window);
-    if (g_flutter_view && g_system_tray)
+    if (g_vpn_channel_handler && g_system_tray)
     {
-      FlBinaryMessenger *messenger = fl_engine_get_binary_messenger(
-          fl_view_get_engine(g_flutter_view));
-      g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-      FlMethodChannel *channel = fl_method_channel_new(
-          messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
       g_autoptr(FlValue) args = fl_value_new_map();
       fl_value_set_string_take(args, "status",
                                fl_value_new_string(g_system_tray->GetConnectionStatusText().c_str()));
-      fl_method_channel_invoke_method(channel, "handleConnectionStatusClick", args,
-                                      nullptr, nullptr, nullptr);
-      g_object_unref(channel);
+      g_vpn_channel_handler->InvokeMethod("handleConnectionStatusClick", fl_value_ref(args));
     }
     break;
 
@@ -397,20 +329,22 @@ static void my_application_activate(GApplication *application)
 
   defyx_core::LogMessage("my_application: System tray initialized");
 
-  // Initialize VPN channel handler with system tray
-  // We need to delay this until after the GTK main loop starts and Flutter engine is ready
-  g_idle_add([](gpointer data) -> gboolean {
-    auto* messenger = static_cast<FlBinaryMessenger*>(data);
-    
-    defyx_core::LogMessage("my_application: Setting up VPN channel handler (idle callback)");
-    
-    g_vpn_channel_handler = new VPNChannelHandler(messenger, g_main_window, g_system_tray);
-    g_vpn_channel_handler->SetupChannels();
-    
-    defyx_core::LogMessage("my_application: VPNChannelHandler channels setup complete (idle callback)");
-    
-    return FALSE; // Don't repeat
-  }, messenger);
+  // Initialize VPN channel handler with system tray.
+  //
+  // IMPORTANT: register the platform channels SYNCHRONOUSLY here, while we are
+  // still inside activate() and have NOT yet returned to the GTK main loop.
+  //
+  // The Dart entrypoint (main()) calls method-channel methods such as
+  // getSharedDirectory()/setCacheDir() on "com.defyx.vpn" very early, BEFORE
+  // runApp(). If the native method-call handler is registered late (e.g. via
+  // g_idle_add), those early calls arrive before any handler exists, are never
+  // responded to ("FlBinaryMessengerResponseHandle was not responded to"), the
+  // Dart Future never completes, main() blocks forever and runApp() is never
+  // reached -> permanent BLACK SCREEN. Registering synchronously here
+  // guarantees the handler is in place before the main loop dispatches any
+  // platform message from Dart.
+  g_vpn_channel_handler = new VPNChannelHandler(messenger, g_main_window, g_system_tray);
+  g_vpn_channel_handler->SetupChannels();
 
   // Load preferences from settings
   g_system_tray->SetLaunchOnStartup(g_settings_manager->IsLaunchOnStartupEnabled());
@@ -444,35 +378,25 @@ static void my_application_activate(GApplication *application)
 
   // Send initial sound effect setting to Flutter
   {
-    g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-    FlMethodChannel *channel = fl_method_channel_new(
-        messenger, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-
     g_autoptr(FlValue) args = fl_value_new_map();
     fl_value_set_string_take(args, "value",
                              fl_value_new_bool(g_settings_manager->GetSoundEffect()));
-    fl_method_channel_invoke_method(channel, "setSoundEffect", args,
-                                    nullptr, nullptr, nullptr);
-    g_object_unref(channel);
+    g_vpn_channel_handler->InvokeMethod("setSoundEffect", fl_value_ref(args));
   }
 
   // Handle auto-connect
   if (g_system_tray->GetAutoConnect())
   {
-    std::thread([messenger]()
+    std::thread([]()
                 {
       std::this_thread::sleep_for(std::chrono::milliseconds(1000));
       
       g_idle_add([](gpointer data) -> gboolean {
-        FlBinaryMessenger* msg = static_cast<FlBinaryMessenger*>(data);
-        g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
-        FlMethodChannel* channel = fl_method_channel_new(
-            msg, "com.defyx.vpn", FL_METHOD_CODEC(codec));
-        fl_method_channel_invoke_method(channel, "triggerAutoConnect", nullptr,
-                                        nullptr, nullptr, nullptr);
-        g_object_unref(channel);
+        if (g_vpn_channel_handler) {
+          g_vpn_channel_handler->InvokeMethod("triggerAutoConnect", nullptr);
+        }
         return FALSE;
-      }, messenger); })
+      }, nullptr); })
         .detach();
   }
 

@@ -26,3 +26,18 @@ keywords:
   - privacy
 categories:
   - Network
+
+# Shared libraries that must be bundled into the AppImage but are NOT picked up
+# automatically. fastforge only scans the .so files under AppDir/lib (plugins)
+# for their dependencies; it does not scan the main executable. The system tray
+# libs below are linked directly into the executable, so they have to be listed
+# here explicitly, together with their own runtime dependency chain. Without
+# this, the app fails on distros that don't ship appindicator (e.g. NixOS,
+# minimal/KDE installs) with:
+#   "libayatana-appindicator3.so.1: cannot open shared object file"
+# NOTE: these are resolved via `locate`, so CI must run `updatedb` first.
+include:
+  - libayatana-appindicator3.so.1
+  - libayatana-indicator3.so.7
+  - libdbusmenu-gtk3.so.4
+  - libdbusmenu-glib.so.4
