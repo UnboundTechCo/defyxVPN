@@ -237,11 +237,10 @@ jobs:
             dir=$(dirname "$file")
             filename=$(basename "$file")
 
-            newname=$(echo "$filename" | sed -E 's/^DefyxVPN-[0-9]+\.[0-9]+\.[0-9]+(-[A-Za-z0-9_]+)\.apk$/DefyxVPN-Android\1.apk/')
+            newname=$(echo "$filename" | sed -E 's/^DefyxVPN-[0-9]+\.[0-9]+\.[0-9]+-(.+)\.apk$/DefyxVPN-Android-\1.apk/')
 
             mv "$file" "$dir/$newname"
           done
-
       - name: Upload APKs artifact
         uses: actions/upload-artifact@v4
         with:
