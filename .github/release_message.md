@@ -75,9 +75,6 @@
               src="https://img.shields.io/badge/Windows-Microsoft Store-08559e.svg?logo=gitforwindows" />
           </a>
           <br />
-          <img
-            src="https://img.shields.io/badge/Windows-Setup (Upcoming)-0C88D8.svg?logo=github" />
-          <br />
           <a
             href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Windows-Portable-x64.zip">
             <img
@@ -129,15 +126,15 @@
 
 <hr />
 
-### What's Changed: - [x] Fixed some minor bugs
+### What's Changed:
+
+- [x] Fixed some minor bugs
 
 <hr />
 
-> [!NOTE] > To receive **pre-release Android versions**, simply join the
-> **GooglePlay Beta Tester** program. For **pre-release iOS versions**, you can
-> access them via **TestFlight**. All updates and announcements regarding these
-> versions are shared through the [**Beta Tester
-> group**](https://t.me/+KuigyCHadIpiNDhi). By joining this group, you can help us
-> **identify and fix issues** in the app, contributing to a **better experience
-> for all users**. #### To report issues or provide suggestions:
-> https://github.com/UnboundTechCo/defyxVPN/issues
+> [!NOTE]  
+> To receive **pre-release Android versions**, simply join the **GooglePlay Beta Tester** program. For **pre-release iOS versions**, you can access them via **TestFlight**. All updates and announcements regarding these versions are shared through the [**Beta Tester group**](https://t.me/+KuigyCHadIpiNDhi). By joining this group, you can help us **identify and fix issues** in the app, contributing to a **better experience for all users**.
+
+#### To report issues or provide suggestions:
+
+https://github.com/UnboundTechCo/defyxVPN/issues
