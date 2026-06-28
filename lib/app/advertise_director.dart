@@ -15,11 +15,10 @@ class AdvertiseDirector {
   /// Iranian users should not see AdMob ads (only internal ads)
   static Future<bool> isIranianUser() async {
     try {
-      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-      // Asia/Tehran is the timezone for Iran
-      final isIran = currentTimeZone == 'Asia/Tehran';
+      final currentTimeZone = await FlutterTimezone.getLocalTimezone(); // Asia/Tehran is the timezone for Iran
+      final isIran = currentTimeZone.identifier == 'Asia/Tehran';
       if (isIran) {
-        debugPrint('🇮🇷 Iranian user detected (timezone: $currentTimeZone) - AdMob disabled');
+        debugPrint('🇮🇷 Iranian user detected (timezone: ${currentTimeZone.identifier}) - AdMob disabled');
       }
       return isIran;
     } catch (e) {
@@ -53,9 +52,9 @@ class AdvertiseDirector {
     //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
     //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
     debugPrint('📍 Ad Manager - Mobile platform detected, using DUAL strategy approach');
-    
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Current Timezone: $currentTimeZone');
+
+    final currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    debugPrint('📍 Ad Manager - Current Timezone: ${currentTimeZone.identifier}');
     
     final adversies = await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
     if (adversies['api_advertise'] != null) {
@@ -77,8 +76,8 @@ class AdvertiseDirector {
   }
 
   static Future<Map<String, String>> getRandomCustomAd(Ref ref) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Getting ad for timezone: $currentTimeZone');
+    final currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    debugPrint('📍 Ad Manager - Getting ad for timezone: ${currentTimeZone.identifier}');
 
     final adversies =
         await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
@@ -87,8 +86,8 @@ class AdvertiseDirector {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
       
       // Try timezone-specific ads first
-      if (advertiseMap.containsKey(currentTimeZone)) {
-        final adsData = advertiseMap[currentTimeZone] as List<dynamic>;
+      if (advertiseMap.containsKey(currentTimeZone.identifier)) {
+        final adsData = advertiseMap[currentTimeZone.identifier] as List<dynamic>;
         debugPrint('📍 Ad Manager - Found ${adsData.length} timezone-specific ads');
         if (adsData.isNotEmpty) {
           final random = Random();
