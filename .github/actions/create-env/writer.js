@@ -2,8 +2,9 @@ const fs = require("fs");
 
 const secrets = JSON.parse(process.env.INPUT_SECRET_BLOB || "{}");
 const vars = JSON.parse(process.env.INPUT_VAR_BLOB || "{}");
+const osName = process.env.INPUT_OS_NAME || "Linux";
 
-const data = `
+const private_data = `
 ANDROID_AD_APP_ID=${secrets.ANDROID_AD_APP_ID}
 ANDROID_AD_UNIT_ID=${secrets.ANDROID_AD_UNIT_ID}
 IOS_AD_APP_ID=${secrets.IOS_AD_APP_ID}
@@ -25,14 +26,26 @@ FIREBASE_WINDOWS_MEASUREMENT_ID=${secrets.FIREBASE_WINDOWS_MEASUREMENT_ID}
 FIREBASE_WEB_API_KEY=${secrets.FIREBASE_WEB_API_KEY}
 FIREBASE_WEB_APP_ID=${secrets.FIREBASE_WEB_APP_ID}
 FIREBASE_WEB_MEASUREMENT_ID=${secrets.FIREBASE_WEB_MEASUREMENT_ID}
+`.trim() + "\n";
 
+const private_data_windows = `
+FIREBASE_WINDOWS_API_KEY=${secrets.FIREBASE_WINDOWS_API_KEY}
+FIREBASE_WINDOWS_APP_ID=${secrets.FIREBASE_WINDOWS_APP_ID}
+FIREBASE_WINDOWS_MEASUREMENT_ID=${secrets.FIREBASE_WINDOWS_MEASUREMENT_ID}
+`.trim() + "\n";
+
+const public_data = `
 LINK_APP_STORE=${vars.LINK_APP_STORE}
 LINK_TEST_FLIGHT=${vars.LINK_TEST_FLIGHT}
 LINK_GITHUB=https://github.com/${process.env.GITHUB_REPOSITORY}
 LINK_GOOGLE_PLAY=${vars.LINK_GOOGLE_PLAY}
 
 UPDATE_FLOWLINE_PERIOD=${secrets.UPDATE_FLOWLINE_PERIOD}
+WEBSITE_SIGN_UP=${secrets.WEBSITE_SIGN_UP}
+WEBSITE_DONATION=${secrets.WEBSITE_DONATION}
 `.trim() + "\n";
+
+const data = osName === "windows" ? public_data + private_data_windows : public_data + private_data;
 
 fs.writeFileSync(".env", data);
 

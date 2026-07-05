@@ -405,7 +405,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                   );
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(AppLocalizations.of(context)!.logsCopied),
+                      content: Text(AppLocalizations.of(context).logsCopied),
                       backgroundColor: const Color(0xFF2A2A2A),
                     ),
                   );

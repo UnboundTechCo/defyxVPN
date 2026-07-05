@@ -26,12 +26,16 @@ private const val TAG = "MainActivity"
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.defyx.vpn"
     private val STATUS_CHANNEL = "com.defyx.vpn_events"
+    private val VIBRATION_CHANNEL = "com.defyx.vibration"
     private var eventSink: EventChannel.EventSink? = null
     private var pendingVpnResult: MethodChannel.Result? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
+    private lateinit var vibrationPlugin: VibrationPlugin
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        
+        vibrationPlugin = VibrationPlugin(applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
                 call,
@@ -60,6 +64,11 @@ class MainActivity : FlutterActivity() {
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, "com.defyx.crash_events")
                 .setStreamHandler(CrashStreamHandler())
+        
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, VIBRATION_CHANNEL).setMethodCallHandler {
+                call, result ->
+            vibrationPlugin.handleMethodCall(call, result)
+        }
     }
     private fun grantNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -103,6 +112,7 @@ class MainActivity : FlutterActivity() {
                 "getSharedDirectory" -> result.success("${cacheDir.absolutePath}/defyx")
                 "setConnectionMethod" ->
                         setConnectionMethod(call.arguments as? Map<String, Any>, result)
+                "login" -> login(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -323,6 +333,7 @@ class MainActivity : FlutterActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val isTest = args?.get("isTest") as? String
+                val token = args?.get("token") as String
                 if (isTest.isNullOrEmpty()) {
                     withContext(Dispatchers.Main) {
                         result.error("INVALID_ARGUMENT", "isTest is missing or empty", null)
@@ -330,7 +341,7 @@ class MainActivity : FlutterActivity() {
                     return@launch
                 }
                 val isTestBoolean = isTest.toBoolean()
-                val flowLine = DefyxVpnService.getInstance().getFlowLine(isTestBoolean)
+                val flowLine = DefyxVpnService.getInstance().getFlowLine(isTestBoolean,token)
                 result.success(flowLine)
             } catch (e: Exception) {
                 Log.e("Get Flow Line", "Get Flow Line failed: ${e.message}", e)
@@ -433,6 +444,32 @@ class MainActivity : FlutterActivity() {
                             "Failed to Set Cache Dir",
                             e.localizedMessage
                     )
+                }
+            }
+        }
+    }
+
+    private fun login(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val email = args?.get("email") as? String
+                val password = args?.get("password") as? String
+                if (email.isNullOrEmpty() || password.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error(
+                                "INVALID_ARGUMENT",
+                                "email or password is missing or empty",
+                                null
+                        )
+                    }
+                    return@launch
+                }
+                val loginResult = DefyxVpnService.getInstance().login(email, password)
+                result.success(loginResult)
+            } catch (e: Exception) {
+                Log.e("Login", "Login failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("LOGIN_ERROR", "Failed to login", e.localizedMessage)
                 }
             }
         }

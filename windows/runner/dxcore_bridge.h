@@ -25,13 +25,18 @@ class DXCoreBridge {
   int StopVPN();
   void SetAsnName();
   int SetTimeZone(float tz);
-  std::string GetFlowLine(bool is_test);
+  std::string GetFlowLine(bool is_test, const std::string& token);
   std::string GetCachedFlowLine();
   std::string DecodeAndVerifyFlowline(const std::string& flow_line);
   void SetCacheDir(const std::string& cache_dir);
   void SetConnectionMethod(const std::string& method);
   int SetSystemProxy();
   int ResetSystemProxy();
+  std::string Login(const std::string& email, const std::string& password);
+
+  // Gateway handshake — verifies the loaded DXcore.dll is authentic.
+  // Returns true only when the full HMAC challenge-response succeeds.
+  bool PerformGatewayHandshake();
 
   bool IsLoaded() const { return lib_ != nullptr; }
 
@@ -47,7 +52,7 @@ class DXCoreBridge {
   using WinStopVPN_t = int (*)();
   using WinSetAsnName_t = void (*)();
   using WinSetTimeZone_t = int (*)(float);
-  using WinGetFlowLine_t = const char* (*)(int);
+  using WinGetFlowLine_t = const char* (*)(int, const char*);
   using WinGetCachedFlowLine_t = const char* (*)();
   using WinDecodeAndVerifyFlowline_t = const char* (*)(const char*);
   using WinSetCacheDir_t = void (*)(const char*);
@@ -55,6 +60,9 @@ class DXCoreBridge {
   using WinFreeString_t = void (*)(char*);
   using WinSetSystemProxy_t = int (*)();
   using WinResetSystemProxy_t = int (*)();
+  using WinRequestHandshake_t = char* (*)(char*, char*);
+  using WinCompleteHandshake_t = char* (*)(char*);
+  using WinLogin_t = const char* (*)(const char*, const char*);
 
   WinSetProgressListener_t pSetProgress_ = nullptr;
   WinStop_t pStop_ = nullptr;
@@ -72,6 +80,9 @@ class DXCoreBridge {
   WinFreeString_t pFreeString_ = nullptr;
   WinSetSystemProxy_t pSetSystemProxy_ = nullptr;
   WinResetSystemProxy_t pResetSystemProxy_ = nullptr;
+  WinRequestHandshake_t pRequestHandshake_ = nullptr;
+  WinCompleteHandshake_t pCompleteHandshake_ = nullptr;
+  WinLogin_t pLogin_ = nullptr;
 
   static void __stdcall ProgressTrampoline(const char* msg);
   static DXCoreBridge* s_instance_;

@@ -1,0 +1,16 @@
+output: build/
+releases:
+  - name: production
+    jobs:
+      - name: linux-deb
+        package:
+          platform: linux
+          target: deb
+      - name: linux-rpm
+        package:
+          platform: linux
+          target: rpm
+      - name: linux-appimage
+        package:
+          platform: linux
+          target: appimage

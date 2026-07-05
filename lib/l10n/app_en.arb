@@ -301,6 +301,16 @@
     "description": "Status message - ready state"
   },
 
+  "statusIsInTrouble": "is in trouble.",
+  "@statusIsInTrouble": {
+    "description": "Status connector word when DXcore handshake fails"
+  },
+
+  "statusDXcoreDown": "DXcore down.",
+  "@statusDXcoreDown": {
+    "description": "Status message shown when DXcore cannot be verified"
+  },
+
   "statusToSpeedTest": "to speed test",
   "@statusToSpeedTest": {
     "description": "Status message - ready for speed test"
@@ -414,5 +424,135 @@
   "synchronization": "Synchronization",
   "@synchronization": {
     "description": "Sync menu label"
+  },
+
+  "settingsDonation": "Donation",
+  "@settingsDonation": {
+    "description": "Donation widget title"
+  },
+
+  "settingsDonationDescription": "Help us break down the walls of digital censorship and internet filtering.",
+  "@settingsDonationDescription": {
+    "description": "Donation widget description text"
+  },
+
+  "authenticationRequired": "Authentication Required",
+  "@authenticationRequired": {
+    "description": "Premium login dialog title"
+  },
+
+  "premiumLoginDescription": "To access your Premium subscription(s), you need to login or create an account through the Defyx website.",
+  "@premiumLoginDescription": {
+    "description": "Premium login dialog description"
+  },
+
+  "email": "Email",
+  "@email": {
+    "description": "Email field label"
+  },
+
+  "emailHint": "example@domain.com",
+  "@emailHint": {
+    "description": "Email field hint text"
+  },
+
+  "emailValidation": "Please enter your email",
+  "@emailValidation": {
+    "description": "Email validation error message"
+  },
+
+  "password": "Password",
+  "@password": {
+    "description": "Password field label"
+  },
+
+  "passwordHint": "Enter your password",
+  "@passwordHint": {
+    "description": "Password field hint text"
+  },
+
+  "passwordValidation": "Please enter your password",
+  "@passwordValidation": {
+    "description": "Password validation error message"
+  },
+
+  "passwordMinLength": "Password must be at least 6 characters",
+  "@passwordMinLength": {
+    "description": "Password minimum length validation error"
+  },
+
+  "login": "Login",
+  "@login": {
+    "description": "Login button text"
+  },
+
+  "noAccount": "Don't have an account?",
+  "@noAccount": {
+    "description": "Sign up prompt text"
+  },
+
+  "signUp": "Sign up",
+  "@signUp": {
+    "description": "Sign up link text"
+  },
+
+  "loginFailed": "Login failed. Please check your credentials and try again.",
+  "@loginFailed": {
+    "description": "Login failed toast message"
+  },
+
+  "loginSuccess": "Login successful!",
+  "@loginSuccess": {
+    "description": "Login success toast message"
+  },
+
+  "havingTrouble": "Having trouble?",
+  "@havingTrouble": {
+    "description": "Premium trouble dialog title"
+  },
+
+  "signedInAs": "You are currently signed in with the email address",
+  "@signedInAs": {
+    "description": "Premium trouble dialog - signed in message prefix"
+  },
+
+  "premiumImportDescription": "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
+  "@premiumImportDescription": {
+    "description": "Premium trouble dialog - import instructions"
+  },
+
+  "planningToExit": "Planning to exit?",
+  "@planningToExit": {
+    "description": "Premium trouble dialog - sign out prompt"
+  },
+
+  "signOut": "Sign out",
+  "@signOut": {
+    "description": "Sign out link text"
+  },
+
+  "signOutSuccess": "Signed out successfully!",
+  "@signOutSuccess": {
+    "description": "Sign out success toast message"
+  },
+
+  "settingsMarketplace": "Marketplace",
+  "@settingsMarketplace": {
+    "description": "Premium widget - marketplace title"
+  },
+
+  "marketplaceDescription": "Browse secure VPN configurations from trusted suppliers.",
+  "@marketplaceDescription": {
+    "description": "Premium widget - marketplace description"
+  },
+
+  "loggedIn": "LOGGED IN",
+  "@loggedIn": {
+    "description": "Premium widget - logged in status"
+  },
+
+  "loginOrRegister": "LOGIN OR REGISTER",
+  "@loginOrRegister": {
+    "description": "Premium widget - login/register prompt"
   }
 }

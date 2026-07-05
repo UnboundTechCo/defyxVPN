@@ -44,6 +44,9 @@ class DesktopPlatformHandler {
         break;
       case 'setForceClose':
         break;
+      case 'triggerAutoConnect':
+        await _handleAutoConnect();
+        break;
       case 'handleConnectionStatusClick':
         await _handleConnectionStatusClick(call.arguments);
         break;
@@ -126,6 +129,23 @@ class DesktopPlatformHandler {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('auto_connect_enabled', value);
+    }
+  }
+
+  static Future<void> _handleAutoConnect() async {
+    final context = rootNavigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+
+    final container = ProviderScope.containerOf(context);
+    final connectionState = container.read(connectionStateProvider);
+
+    if (connectionState.status == ConnectionStatus.disconnected) {
+      debugPrint('DesktopPlatformHandler: Auto-connect triggered from tray');
+      try {
+        container.read(trayConnectionToggleTriggerProvider.notifier).state++;
+      } catch (e) {
+        debugPrint('DesktopPlatformHandler: Error triggering auto-connect - $e');
+      }
     }
   }
 

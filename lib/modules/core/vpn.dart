@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -73,10 +74,14 @@ class VPN {
       _handleVPNUpdates(msg);
     });
 
-    // Listen for Go crash events and report to Crashlytics
-    crashUpdates.listen((crashData) {
-      _handleCrashEvent(crashData);
-    });
+    // Listen for Go crash events and report to Crashlytics.
+    // Only mobile platforms implement the crash_events channel natively,
+    // so skip it on desktop to avoid MissingPluginException noise.
+    if (Platform.isAndroid || Platform.isIOS) {
+      crashUpdates.listen((crashData) {
+        _handleCrashEvent(crashData);
+      });
+    }
   }
 
   void dispose() {
@@ -159,6 +164,10 @@ class VPN {
     if (msg.startsWith("Data: Config Numbers: ")) {
       final configIndex = msg.replaceAll("Data: Config Numbers: ", "");
       _setConnectionTotalSteps(int.parse(configIndex));
+    }
+
+    if (msg.startsWith("Data: Token expired")) {
+      ref.read(authProvider.notifier).logout();
     }
 
     if (msg.contains("VPN Service Destroyed")) {
@@ -434,6 +443,7 @@ class VPN {
       case "ios":
         return await _vpnBridge.connectVpn();
       case "windows":
+      case "linux":
         return await _vpnBridge.grantVpnPermission();
       default:
         return false;
@@ -447,6 +457,11 @@ class VPN {
         break;
       case "ios":
         await _vpnBridge.startTun2socks();
+        break;
+      case "windows":
+      case "linux":
+        // On desktop platforms (Windows/Linux), VPN runs without TUN device
+        // No tunnel creation needed
         break;
     }
   }

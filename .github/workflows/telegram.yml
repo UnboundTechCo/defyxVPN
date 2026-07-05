@@ -30,6 +30,12 @@ jobs:
         with:
           name: windows-release
           path: windows-files/
+      
+      - name: Download Linux Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-release
+          path: linux-files/
 
       - name: Send initial message (version + summary)
         env:
@@ -37,14 +43,14 @@ jobs:
           CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
           VERSION: ${{ steps.get_version.outputs.version }}
         run: |
-          TEXT="🚀 *New Build Generated*\n\n📌 *Version:* $VERSION\nIncluded Platforms:\n• Android\n• Windows\n\nSending all build files..."
+          TEXT="🚀 *New Build Generated*\n\n📌 *Version:* $VERSION\nIncluded Platforms:\n• Android\n• Windows\n• Linux\n\nSending all build files..."
 
           curl -s -X POST \
             -H "Content-Type: application/json" \
             -d "{\"chat_id\":\"$CHAT\",\"text\":\"$TEXT\",\"parse_mode\":\"Markdown\"}" \
             "https://api.telegram.org/bot$BOT/sendMessage"
 
-      - name: Send all Android + Windows files
+      - name: Send all Android + Windows + Linux files
         env:
           BOT: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           CHAT: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -100,4 +106,9 @@ jobs:
           echo "=== Sending Windows Files ==="
           find windows-files -type f | while read -r f; do
             send_file "$f" "🖥 Windows Build File"
+          done
+
+          echo "=== Sending Linux Files ==="
+          find linux-files -type f | while read -r f; do
+            send_file "$f" "🐧 Linux Build File"
           done

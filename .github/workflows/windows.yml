@@ -26,16 +26,17 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
-      
+
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
-  
+
       - name: Generate .env
         uses: ./.github/actions/create-env
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
+          os_name: "windows"
 
       - name: Download Windows Framework
         env:
@@ -46,15 +47,15 @@ jobs:
           $release = Invoke-RestMethod `
             -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest" `
             -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-          $asset = $release.assets | Where-Object { $_.name -eq "DXcore.zip" }
+          $asset = $release.assets | Where-Object { $_.name -eq "DXcore-windows.zip" }
           $asset_id = $asset.id
           Invoke-WebRequest `
             -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$asset_id" `
             -Headers @{ Authorization = "token $env:GITHUB_TOKEN"; Accept = "application/octet-stream" } `
-            -OutFile "DXcore.zip"
-          Expand-Archive -Path "DXcore.zip" -DestinationPath "windows/runner" -Force
+            -OutFile "DXcore-windows.zip"
+          Expand-Archive -Path "DXcore-windows.zip" -DestinationPath "windows/runner" -Force
           Move-Item "windows/runner/build/windows/*" "windows/runner/" -Force
-          Remove-Item "DXcore.zip"
+          Remove-Item "DXcore-windows.zip"
           Get-ChildItem -Recurse "windows/runner"
 
       - name: Enable Windows Desktop support
@@ -62,19 +63,13 @@ jobs:
 
       - name: Build Windows Release
         shell: bash
-        run: |
-          chmod +x scripts/build_release.sh
-          bash scripts/build_release.sh <<EOF
-          2
-          6
-          4
-          EOF
+        run: flutter build windows --release
 
       - name: Zip Windows Release Output
         shell: pwsh
         run: |
           $source = "build/windows/x64/runner/Release"
-          $zipPath = "build/windows/x64/runner/Release/windows-release.zip"
+          $zipPath = "build/windows/x64/runner/Release/DefyxVPN-Windows-Portable-x64.zip"
           if (Test-Path $zipPath) { Remove-Item $zipPath }
           Compress-Archive -Path "$source\*" -DestinationPath $zipPath
 
@@ -82,4 +77,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-release
-          path: build/windows/x64/runner/Release/windows-release.zip
+          path: build/windows/x64/runner/Release/DefyxVPN-Windows-Portable-x64.zip

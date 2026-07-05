@@ -190,6 +190,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get statusIsReady => 'آماده است';
 
   @override
+  String get statusIsInTrouble => 'به مشکل خورده.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore متوقف شده.';
+
+  @override
   String get statusToSpeedTest => 'برای تست سرعت';
 
   @override
@@ -261,4 +267,87 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get synchronization => 'همگام‌سازی';
+
+  @override
+  String get settingsDonation => 'کمک مالی';
+
+  @override
+  String get settingsDonationDescription =>
+      'به ما کمک کنید تا دیوارهای سانسور دیجیتال و فیلترینگ اینترنت را از بین ببریم.';
+
+  @override
+  String get authenticationRequired => 'احراز هویت لازم است';
+
+  @override
+  String get premiumLoginDescription =>
+      'برای دسترسی به اشتراک پرمیوم خود، باید از طریق وب‌سایت Defyx وارد شوید یا حساب کاربری ایجاد کنید.';
+
+  @override
+  String get email => 'ایمیل';
+
+  @override
+  String get emailHint => 'example@domain.com';
+
+  @override
+  String get emailValidation => 'لطفاً ایمیل خود را وارد کنید';
+
+  @override
+  String get password => 'رمز عبور';
+
+  @override
+  String get passwordHint => 'رمز عبور خود را وارد کنید';
+
+  @override
+  String get passwordValidation => 'لطفاً رمز عبور خود را وارد کنید';
+
+  @override
+  String get passwordMinLength => 'رمز عبور باید حداقل ۶ کاراکتر باشد';
+
+  @override
+  String get login => 'ورود';
+
+  @override
+  String get noAccount => 'حساب کاربری ندارید؟';
+
+  @override
+  String get signUp => 'ثبت نام';
+
+  @override
+  String get loginFailed =>
+      'ورود ناموفق بود. لطفاً اطلاعات ورود خود را بررسی کنید و دوباره تلاش کنید.';
+
+  @override
+  String get loginSuccess => 'ورود موفقیت‌آمیز بود!';
+
+  @override
+  String get havingTrouble => 'مشکل دارید؟';
+
+  @override
+  String get signedInAs => 'شما در حال حاضر با آدرس ایمیل';
+
+  @override
+  String get premiumImportDescription =>
+      'اگر اشتراک‌های پرمیوم شما به دلیل محدودیت‌های اینترنتی قابل بارگذاری نیستند و نمی‌توانید با روش‌های موجود متصل شوید، می‌توانید فایل دریافتی از فروشگاه را در برنامه وارد کنید.';
+
+  @override
+  String get planningToExit => 'قصد خروج دارید؟';
+
+  @override
+  String get signOut => 'خروج';
+
+  @override
+  String get signOutSuccess => 'خروج موفقیت‌آمیز بود!';
+
+  @override
+  String get settingsMarketplace => 'فروشگاه';
+
+  @override
+  String get marketplaceDescription =>
+      'پیکربندی‌های امن VPN را از تامین‌کنندگان قابل اعتماد مرور کنید.';
+
+  @override
+  String get loggedIn => 'وارد شده';
+
+  @override
+  String get loginOrRegister => 'ورود یا ثبت نام';
 }

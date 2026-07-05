@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
@@ -41,7 +43,6 @@ class _AppState extends ConsumerState<App> {
       
       // When canInitializeAdMob transitions to true, start the flow
       if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
-        debugPrint('🚀 Privacy accepted - starting ad initialization flow');
         
         environmentAsync.whenData((environment) {
           if (environment.shouldInitializeAdMob) {
@@ -84,6 +85,15 @@ class _AppState extends ConsumerState<App> {
   }
 
   Future<void> _initializeApp() async {
+    // Initialize cache directory for VPN core
+    try {
+      final String vpnCacheDir = await VpnBridge().getSharedDirectory();
+      await VpnBridge().setCacheDir(vpnCacheDir);
+      debugPrint('VPN cache directory set to: $vpnCacheDir');
+    } catch (e) {
+      debugPrint('Failed to set cache directory: $e');
+    }
+    
     await VPN(ProviderScope.containerOf(context, listen: false)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
@@ -95,7 +105,6 @@ class _AppState extends ConsumerState<App> {
     
     // If canInitializeAdMob is already true (e.g., after migration), trigger flow
     if (adReadiness.canInitializeAdMob) {
-      debugPrint('🔄 Ad initialization needed on startup (migration/restart)');
       
       environmentAsync.whenData((environment) {
         if (environment.shouldInitializeAdMob) {
@@ -113,16 +122,13 @@ class _AppState extends ConsumerState<App> {
     coordinator.initializeAdFlow(
       onRunUMP: (shouldRequestUMP) async {
         if (shouldRequestUMP) {
-          debugPrint('🔐 Running UMP consent flow...');
           await umpService.requestConsentWithATT(
             ref: ref,
             onDone: () {
-              debugPrint('✅ UMP flow complete - marking consent done');
               coordinator.markConsentComplete();
             },
           );
         } else {
-          debugPrint('⏭️ Skipping UMP (ATT denied/restricted)');
           coordinator.markConsentComplete();
         }
       },
@@ -133,8 +139,6 @@ class _AppState extends ConsumerState<App> {
     final router = ref.watch(routerProvider);
     final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
-
-    debugPrint('🌍 Building app with locale: ${languageState.language.locale}');
 
     return ToastificationWrapper(
       config: ToastificationConfig(
@@ -182,10 +186,11 @@ class _AppState extends ConsumerState<App> {
   }
 
   Widget _appBuilder(BuildContext context, Widget? child) {
-    if (defaultTargetPlatform == TargetPlatform.windows ||
-        defaultTargetPlatform == TargetPlatform.linux) {
-      DesktopPlatformHandler.initialize();
-    }
+    // DISABLED: DesktopPlatformHandler overrides VPN channel handler in native code
+    // Desktop features (tray menu, etc.) are handled directly in native Linux/Windows code
+    // if (Platform.isWindows || Platform.isLinux) {
+    //   DesktopPlatformHandler.initialize();
+    // }
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),

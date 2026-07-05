@@ -27,6 +27,13 @@ public:
     void SendStatus(const std::string &status);
     void SendProgress(const std::string &message);
 
+    // Invoke a method on the Dart side using the SINGLE persistent method
+    // channel. Creating throwaway FlMethodChannel objects on "com.defyx.vpn"
+    // re-registers (and on unref, removes) the messenger's handler for that
+    // channel name, which silently kills HandleMethodCall. Always invoke
+    // through this helper instead. Takes ownership of `args` (may be nullptr).
+    void InvokeMethod(const std::string &method, FlValue *args = nullptr);
+
 private:
     static void HandleMethodCall(FlMethodChannel *channel,
                                  FlMethodCall *method_call,
