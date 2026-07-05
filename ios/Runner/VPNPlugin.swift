@@ -63,8 +63,6 @@ class VpnPlugin: VpnStatusDelegate {
             connectVPN(result)
         case "disconnect":
             disconnectVPN(result)
-        case "startTun2socks":
-            startTun2socks(result)
         case "getVpnStatus":
             getVpnStatus(result)
         case "calculatePing":
@@ -164,23 +162,166 @@ class VpnPlugin: VpnStatusDelegate {
 
     // MARK: - VPN Status Delegate
     func vpnStatusDidChange(_ status: NEVPNStatus) {
-        // Ensure we send status updates to Flutter whenever they change
         print("VPN status changed to: \(status)")
         sendVpnStatusToFlutter(status)
     }
 
-    // MARK: - Tun2Socks
-    private func startTun2socks(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "START_TUN2SOCKS"]) { response in
-            if response == "TUN2SOCKS_STARTED" {
-                result(true)
+    private func login(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let email = args["email"] as? String,
+            let password = args["password"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+        goQueue.async {
+            let token = IosLogin(email, password)
+            DispatchQueue.main.async { result(token) }
+        }
+    }
+
+    private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let isTest = args["isTest"] as? String,
+            let token = args["token"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
+            )
+            return
+        }
+
+        let isTestBool = Bool(isTest) ?? false
+
+        self.goQueue.async {
+            let flowline = IosGetFlowLine(isTestBool, token)
+            DispatchQueue.main.async { result(flowline) }
+        }
+    }
+
+    private func getCachedFlowLine(_ result: @escaping FlutterResult) {
+        goQueue.async {
+            let flowline = IosGetCachedFlowLine()
+            DispatchQueue.main.async { result(flowline) }
+        }
+    }
+
+    private func decodeAndVerifyFlowline(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let flowLine = args["flowLine"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
+            )
+            return
+        }
+
+        goQueue.async {
+            let decodedFlowline = IosDecodeAndVerifyFlowline(flowLine)
+            DispatchQueue.main.async { result(decodedFlowline) }
+        }
+    }
+
+    private func setCacheDir(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let cacheDir = args["cacheDir"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS",
+                    message: "Missing required parameters",
+                    details: nil
+                )
+            )
+            return
+        }
+
+        let cacheDirURL = URL(fileURLWithPath: cacheDir)
+        do {
+            try FileManager.default.createDirectory(
+                at: cacheDirURL,
+                withIntermediateDirectories: true,
+                attributes: nil
+            )
+            os_log("Created cache directory")
+        } catch {
+            os_log("Failed to create cache directory: %@", error.localizedDescription)
+        }
+
+        goQueue.async {
+            IosSetCacheDir(cacheDir)
+            DispatchQueue.main.async { result(nil) }
+        }
+    }
+
+    private func isTunnelRunning(_ result: @escaping FlutterResult) {
+        if VpnService.shared.manager == nil {
+            result(false)
+        } else {
+            if let status = VpnService.shared.manager?.connection.status {
+                var statusBool = false
+                switch status {
+                case .connected: statusBool = true
+                case .connecting: statusBool = true
+                case .disconnected: statusBool = false
+                case .disconnecting: statusBool = true
+                case .invalid: statusBool = false
+                case .reasserting: statusBool = true
+                @unknown default: statusBool = false
+                }
+                result(statusBool)
             } else {
                 result(false)
             }
         }
     }
 
-    // MARK: - Directory
+    private func getIsTunnelRunning() -> Bool {
+        guard let manager = VpnService.shared.manager else {
+            return false
+        }
+
+        let status = manager.connection.status
+        switch status {
+        case .connected,
+            .connecting,
+            .disconnecting,
+            .reasserting:
+            return true
+
+        case .disconnected,
+            .invalid:
+            return false
+
+        @unknown default:
+            return false
+        }
+    }
+
+    private func prepareVPN(_ result: @escaping FlutterResult) {
+        VpnService.shared.prepareVPN { prepareResult in
+            switch prepareResult {
+            case .success:
+                result(true)
+            case .failure(let error):
+                print("VPN Prepare failed: \(error)")
+                result(false)
+            }
+        }
+    }
+
     private func getSharedDirectory() -> String {
         if let groupURL = FileManager.default.containerURL(
             forSecurityApplicationGroupIdentifier: "group.de.unboundtech.defyxvpn")
@@ -267,168 +408,6 @@ class VpnPlugin: VpnStatusDelegate {
         }
         let timezoneFloat = Float(timezone) ?? 0
         IosSetTimeZone(timezoneFloat)
-    }
-
-    private func login(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        guard let args = arguments,
-            let email = args["email"] as? String,
-            let password = args["password"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
-            )
-            return
-        }
-
-        goQueue.async {
-            let token = IosLogin(email,password)
-            result(token) 
-        }
-        
-    }
-
-    
-
-    private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        guard let args = arguments,
-            let isTest = args["isTest"] as? String,
-            let token = args["token"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS",
-                    message: "Missing required parameters",
-                    details: nil
-                )
-            )
-            return
-        }
-
-        let isTestBool = Bool(isTest) ?? false
-
-        // Always call from main app process (will be routed through VPN if active)
-        // PacketTunnel extension's own traffic doesn't route through the tunnel it creates
-        self.goQueue.async {
-            let flowline = IosGetFlowLine(isTestBool, token)
-            DispatchQueue.main.async { result(flowline) }
-        }
-    }
-
-    private func getCachedFlowLine(_ result: @escaping FlutterResult) {
-        goQueue.async {
-            let flowline = IosGetCachedFlowLine()
-            DispatchQueue.main.async { result(flowline) }
-        }
-    }
-
-    private func decodeAndVerifyFlowline(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        guard let args = arguments,
-            let flowLine = args["flowLine"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS",
-                    message: "Missing required parameters",
-                    details: nil
-                )
-            )
-            return
-        }
-
-        goQueue.async {
-            let decodedFlowline = IosDecodeAndVerifyFlowline(flowLine)
-            DispatchQueue.main.async { result(decodedFlowline) }
-        }
-    }
-
-    private func setCacheDir(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        guard let args = arguments,
-            let cacheDir = args["cacheDir"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS",
-                    message: "Missing required parameters",
-                    details: nil
-                )
-            )
-            return
-        }
-
-        // Create directory if it doesn't exist
-        let cacheDirURL = URL(fileURLWithPath: cacheDir)
-        do {
-            try FileManager.default.createDirectory(
-                at: cacheDirURL,
-                withIntermediateDirectories: true,
-                attributes: nil
-            )
-            os_log("Created cache directory")
-        } catch {
-            os_log("Failed to create cache directory: %@", error.localizedDescription)
-        }
-
-        goQueue.async {
-            IosSetCacheDir(cacheDir)
-            DispatchQueue.main.async { result(nil) }
-        }
-    }
-
-    private func isTunnelRunning(_ result: @escaping FlutterResult) {
-        if VpnService.shared.manager == nil {
-            result(false)
-        } else {
-            if let status = VpnService.shared.manager?.connection.status {
-                var statusBool = false
-                switch status {
-                case .connected: statusBool = true
-                case .connecting: statusBool = true
-                case .disconnected: statusBool = false
-                case .disconnecting: statusBool = true
-                case .invalid: statusBool = false
-                case .reasserting: statusBool = true
-                @unknown default: statusBool = false
-                }
-                result(statusBool)
-            } else {
-                result(false)
-            }
-        }
-    }
-
-    private func getIsTunnelRunning() -> Bool {
-        guard let manager = VpnService.shared.manager else {
-            return false
-        }
-
-        let status = manager.connection.status
-        switch status {
-        case .connected,
-            .connecting,
-            .disconnecting,
-            .reasserting:
-            return true
-
-        case .disconnected,
-            .invalid:
-            return false
-
-        @unknown default:
-            return false
-        }
-    }
-
-    private func prepareVPN(_ result: @escaping FlutterResult) {
-        VpnService.shared.prepareVPN { prepareResult in
-            switch prepareResult {
-            case .success:
-                result(true)
-            case .failure(let error):
-                print("❌ VPN Prepare failed: \(error)")
-                result(false)
-            }
-        }
     }
 
     private func isVPNPrepared(_ result: @escaping FlutterResult) {

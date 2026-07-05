@@ -456,12 +456,10 @@ class VPN {
         await _vpnBridge.connectVpn();
         break;
       case "ios":
-        await _vpnBridge.startTun2socks();
+        await _vpnBridge.connectVpn();
         break;
       case "windows":
       case "linux":
-        // On desktop platforms (Windows/Linux), VPN runs without TUN device
-        // No tunnel creation needed
         break;
     }
   }

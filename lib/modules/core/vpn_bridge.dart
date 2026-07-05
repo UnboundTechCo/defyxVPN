@@ -25,9 +25,6 @@ class VpnBridge {
 
   Future<void> stopVPN() async => await _methodChannel.invokeMethod('stopVPN');
 
-  Future<void> stopTun2Socks() async =>
-      await _methodChannel.invokeMethod("stopTun2Socks");
-
   Future<bool?> connectVpn() async =>
       await _methodChannel.invokeMethod<bool>('connect');
 
@@ -45,9 +42,6 @@ class VpnBridge {
     "deepScan": deepScan.toString(),
     "healthCheck": healthCheck.toString(),
   });
-
-  Future<void> startTun2socks() =>
-      _methodChannel.invokeMethod("startTun2socks");
 
   Future<bool> isTunnelRunning() async =>
       (await _methodChannel.invokeMethod<bool>("isTunnelRunning")) ?? false;
@@ -99,6 +93,7 @@ class VpnBridge {
       return false;
     }
   }
+
   Future<String> login(String email, String password) async =>
       (await _methodChannel.invokeMethod<String>('login', {
         "email": email,

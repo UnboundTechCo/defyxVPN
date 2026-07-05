@@ -1,6 +1,5 @@
 import IosDXcore
 import NetworkExtension
-import Tun2SocksKit
 import os.log
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
@@ -16,66 +15,32 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     override func startTunnel(
         options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void
     ) {
-        // Default values
-        var port: Int32 = 5000
-        var address = "127.0.0.1"
-        var mtu = 1280
-
-        // Read from provider configuration
-        if let providerConfig = (protocolConfiguration as? NETunnelProviderProtocol)?
-            .providerConfiguration,
-            let configData = providerConfig["config"] as? Data,
-            let config = try? JSONSerialization.jsonObject(with: configData) as? [String: Any]
-        {
-            port = Int32(config["port"] as? Int ?? Int(port))
-            address = config["address"] as? String ?? address
-            mtu = config["mtu"] as? Int ?? mtu
-        }
-
-        // Override with options if provided
-        if let optPort = (options?["port"] as? NSNumber)?.int32Value { port = optPort }
-        if let optAddress = options?["address"] as? String { address = optAddress }
-        if let optMtu = (options?["mtu"] as? NSNumber)?.intValue { mtu = optMtu }
-
-        // Network settings
-        let networkSettings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: "240.0.0.10")
-        networkSettings.mtu = NSNumber(value: mtu)
-
-        networkSettings.ipv4Settings = NEIPv4Settings(
-            addresses: ["240.0.0.2"],
-            subnetMasks: ["255.255.255.0"]
-        )
-        networkSettings.ipv4Settings?.includedRoutes = [NEIPv4Route.default()]
-
-        networkSettings.ipv6Settings = NEIPv6Settings(
-            addresses: ["FC00::0001"],
-            networkPrefixLengths: [64]
-        )
-        networkSettings.ipv6Settings?.includedRoutes = [NEIPv6Route.default()]
-
-        networkSettings.dnsSettings = NEDNSSettings(servers: ["1.1.1.1", "8.8.8.8"])
-
-        os_log("Applying Tunnel Network Settings...")
-
-        setTunnelNetworkSettings(networkSettings) { error in
-            if let error = error {
-                os_log("❌ Failed to set network settings: %@", error.localizedDescription)
-                completionHandler(error)
-                return
-            }
-            os_log("✅ Network settings applied successfully.")
+        os_log("Starting sing-box tunnel...")
+        
+        let success = IosStartTunnel()
+        
+        if success {
+            os_log("Tunnel started successfully")
             completionHandler(nil)
+        } else {
+            os_log("Failed to start tunnel")
+            let error = NSError(
+                domain: "PacketTunnelProvider",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "Failed to start sing-box tunnel"]
+            )
+            completionHandler(error)
         }
     }
 
     override func stopTunnel(
         with reason: NEProviderStopReason, completionHandler: @escaping () -> Void
     ) {
-        os_log("⏹ VPN stopped with reason: %d", reason.rawValue)
-        os_log("⏹ Stopping VPN tunnel...")
-        Socks5Tunnel.quit()
+        os_log("VPN stopped with reason: %d", reason.rawValue)
+        os_log("Stopping VPN tunnel...")
+        IosStopTunnel()
         IosStopVPN()
-        os_log("✅ Tunnel stopped successfully.")
+        os_log("Tunnel stopped successfully.")
         completionHandler()
     }
 
@@ -84,20 +49,19 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             let dict = json as? [String: String],
             let command = dict["command"]
         else {
-            os_log("❌ Invalid JSON or missing command.")
+            os_log("Invalid JSON or missing command.")
             completionHandler?(nil)
             return
         }
 
-        os_log("📩 Received command: %@", command)
+        os_log("Received command: %@", command)
 
         switch command {
-        case "START_TUN2SOCKS":
-            startTun2socks { result in
-                let response = result ? "TUN2SOCKS_STARTED" : "TUN2SOCKS_ERROR"
-                os_log("✅ Tun2Socks: \(result)")
-                completionHandler?(response.data(using: .utf8))
-            }
+        case "START_TUNNEL":
+            let success = IosStartTunnel()
+            let response = success ? "TUNNEL_STARTED" : "TUNNEL_ERROR"
+            os_log("Tunnel: %{public}@", response)
+            completionHandler?(response.data(using: .utf8))
 
         case "MEASURE_PING":
             do {
@@ -204,11 +168,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
                 let response: String
                 if success {
-                    os_log("✅ local time zone set successfully")
+                    os_log("local time zone set successfully")
                     response = "LOCAL_TIMEZONE_SET"
                 } else {
                     os_log(
-                        "❌ Failed to set local time zone: %{public}@", String(describing: success))
+                        "Failed to set local time zone: %{public}@", String(describing: success))
                     response = "LOCAL_TIMEZONE_ERROR: \(success)"
                 }
 
@@ -231,7 +195,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 let isTest = dict["isTest"] ?? "false"
                 let isTestBool = Bool(isTest) ?? false
                 let token = dict["token"] ?? ""
-                let flowLine = IosGetFlowLine(isTestBool,token)
+                let flowLine = IosGetFlowLine(isTestBool, token)
                 let response: String = flowLine
 
                 if let data = response.data(using: .utf8) {
@@ -354,38 +318,6 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 "[DXcore] ERROR: Writing Log File: %@", log: .default, type: .error,
                 error.localizedDescription)
         }
-    }
-
-    private func startTun2socks(completionHandler: @escaping (Bool) -> Void) {
-
-        let config = """
-            tunnel:
-                mtu: 1280
-                ipv4: 198.18.0.1
-                ipv6: 'fc00::1'
-
-            socks5:
-                port: 5000
-                address: 127.0.0.1
-                udp: 'udp'
-                pipeline: true
-
-            misc:
-                task-stack-size: 2048
-                tcp-buffer-size: 1024
-                connect-timeout: 5000
-                read-write-timeout: 5000
-                log-file: stderr
-                log-level: warn
-            """
-
-        os_log("✅ Starting Tunnel")
-
-        Socks5Tunnel.run(withConfig: .string(content: config)) { result in
-            NSLog("Tunnel Code: \(result)")
-            NSLog("tunnel started...")
-        }
-        completionHandler(true)
     }
 }
 

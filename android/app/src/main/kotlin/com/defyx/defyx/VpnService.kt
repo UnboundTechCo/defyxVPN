@@ -21,9 +21,7 @@ class DefyxVpnService : VpnService() {
         private const val CHANNEL_ID = "defyx_vpn_channel"
         @Volatile private lateinit var instance: DefyxVpnService
         fun getInstance(): DefyxVpnService = instance
-        private var vpnInterface: ParcelFileDescriptor? = null
         private var listener: ((String) -> Unit)? = null
-        private var tunnelFd = -1
         private var isServiceRunning = false
         private var isVpnConnected = false
         private var connectionMethod: String? = ""
@@ -165,57 +163,16 @@ class DefyxVpnService : VpnService() {
                 notifyVpnStatus("connecting")
                 startAsForeground("DefyxVPN", "Connecting...")
 
-                val builder =
-                        Builder()
-                                .setSession("DefyxVPN")
-                                .addAddress("10.0.0.2", 32)
-                                .addRoute("0.0.0.0", 0)
-                                .addDnsServer("1.1.1.1")
-                                .allowFamily(android.system.OsConstants.AF_INET)
-                                .setMtu(1500)
-                                .setBlocking(true)
-                                .allowBypass()
-
-                try {
-                    builder.addDisallowedApplication(context.packageName)
-                } catch (_: Exception) {}
+                val success = Android.startTunnel()
                 
-                vpnInterface?.close()
-                vpnInterface = builder.establish()
-                Log.d(TAG, "vpnInterface: $vpnInterface")
-
-                isVpnConnected = vpnInterface != null
+                isVpnConnected = success
                 withContext(Dispatchers.Main) { saveVpnState(isVpnConnected) }
 
-                if (vpnInterface != null) {
-                    try {
-                        val fd = vpnInterface?.detachFd() ?: -1
-                        Log.d(TAG, "Tunnel fd: $fd")
-
-                        if (fd > 0) {
-                            tunnelFd = fd
-                            vpnInterface = null
-                            try {
-                                Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
-                                updateNotification("DefyxVPN", "Connected by " + connectionMethod)
-                                notifyVpnStatus("connected")
-                            } catch (e: Exception) {
-                                Log.e(TAG, "T2S failed: ${e.message}", e)
-                                updateNotification("DefyxVPN", "Connection failed")
-                                notifyVpnStatus("disconnected")
-                            }
-                        } else {
-                            tunnelFd = -1
-                            updateNotification("DefyxVPN", "Connection failed")
-                            notifyVpnStatus("disconnected")
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "detachFd failed: ${e.message}", e)
-                        updateNotification("DefyxVPN", "Connection failed")
-                        notifyVpnStatus("disconnected")
-                    }
+                if (success) {
+                    updateNotification("DefyxVPN", "Connected by $connectionMethod")
+                    notifyVpnStatus("connected")
                 } else {
-                    Log.e(TAG, "vpnInterface is null")
+                    Log.e(TAG, "Tunnel start failed")
                     updateNotification("DefyxVPN", "Connection failed")
                     notifyVpnStatus("disconnected")
                 }
@@ -237,16 +194,9 @@ class DefyxVpnService : VpnService() {
                 }
 
                 Android.stopVPN()
+                Android.stopTunnel()
 
-                try {
-                    vpnInterface?.close()
-                } catch (_: Exception) {}
-                vpnInterface = null
-
-                stopTun2Socks()
-                tunnelFd = -1
                 isVpnConnected = false
-
                 saveVpnState(false)
 
                 withContext(Dispatchers.Main) {
@@ -264,14 +214,6 @@ class DefyxVpnService : VpnService() {
 
     fun stopVpn() {
         disconnectVpn()
-    }
-
-    fun stopTun2Socks() {
-        try {
-            Android.stopT2S()
-        } catch (e: Exception) {
-            log("Stop T2S failed: ${e.message}")
-        }
     }
 
     fun measurePing(): Long {
@@ -368,7 +310,7 @@ class DefyxVpnService : VpnService() {
 
     fun getVpnStatus(): String = if (isVpnConnected) "connected" else "disconnected"
 
-    fun isTunnelRunning(): Boolean = tunnelFd > 0
+    fun isTunnelRunning(): Boolean = isVpnConnected
 
     override fun onTaskRemoved(rootIntent: Intent?) {
         super.onTaskRemoved(rootIntent)
