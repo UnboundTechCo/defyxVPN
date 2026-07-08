@@ -33,13 +33,21 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
   bool _isLoading = false;
 
   Future<void> _handleGotIt() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
+    try {
+      if (_isLoading) return;
+      setState(() => _isLoading = true);
 
-    final accepted = await widget.onAccept();
-    setState(() => _isLoading = false);
-    if (accepted && mounted) {
-      Navigator.of(context).pop();
+      final accepted = await widget.onAccept();
+      setState(() => _isLoading = false);
+      if (accepted && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint('Error in _handleGotIt: $e');
+      setState(() => _isLoading = false);
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
