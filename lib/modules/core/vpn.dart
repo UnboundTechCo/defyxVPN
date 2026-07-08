@@ -520,10 +520,8 @@ class VPN {
     await _container
         ?.read(flowlineServiceProvider)
         .saveFlowline(offlineMode: true);
-    await _vpnBridge.setAsnName();
-    await _container
-        ?.read(flowlineServiceProvider)
-        .saveFlowline(offlineMode: false);
+    _vpnBridge.setAsnName();
+    _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
     _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 
