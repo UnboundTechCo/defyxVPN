@@ -126,6 +126,24 @@ namespace
         }
     };
 
+    struct AsyncGatewayTask
+    {
+        FlMethodCall *method_call;
+
+        AsyncGatewayTask(FlMethodCall *call) : method_call(call)
+        {
+            g_object_ref(method_call);
+        }
+
+        ~AsyncGatewayTask()
+        {
+            if (method_call)
+            {
+                g_object_unref(method_call);
+            }
+        }
+    };
+
     gboolean DeliverPingResult(gpointer user_data)
     {
         auto *data = static_cast<std::pair<AsyncPingTask *, int> *>(user_data);
@@ -187,6 +205,29 @@ namespace
 
         auto *result_data = new std::pair<AsyncPingTask *, int>(task, ping_result);
         g_idle_add(DeliverPingResult, result_data);
+    }
+
+    gboolean DeliverGatewayResult(gpointer user_data)
+    {
+        auto *data = static_cast<std::pair<AsyncGatewayTask *, bool> *>(user_data);
+        auto *task = data->first;
+        bool result = data->second;
+        FinishWithBool(task->method_call, result);
+        delete task;
+        delete data;
+        return FALSE;
+    }
+
+    void ExecuteGatewayHandshakeInBackground(AsyncGatewayTask *task)
+    {
+        bool ok = false;
+        try
+        {
+            ok = defyx_core::PerformGatewayHandshake();
+        }
+        catch (...) {}
+        auto *result_data = new std::pair<AsyncGatewayTask *, bool>(task, ok);
+        g_idle_add(DeliverGatewayResult, result_data);
     }
 
     void ExecuteFlagInBackground(AsyncFlagTask *task)
@@ -768,6 +809,11 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             proxy::ResetSystemProxy();
             FinishWithBool(method_call, true);
+        }
+        else if (strcmp(method, "verifyGateway") == 0)
+        {
+            auto *gateway_task = new AsyncGatewayTask(method_call);
+            std::thread(ExecuteGatewayHandshakeInBackground, gateway_task).detach();
         }
         else
         {

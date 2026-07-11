@@ -1,0 +1,5 @@
+#pragma once
+#ifndef LINUX_GATEWAY_KEY_H
+#define LINUX_GATEWAY_KEY_H
+static const char kLinuxGatewayKey[] = "@LINUX_GATEWAY_KEY_STRIPPED@";
+#endif

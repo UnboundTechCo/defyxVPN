@@ -34,4 +34,8 @@ void RegisterProgressHandler(std::function<void(std::string)> handler);
 // Returns true if the shared library was loaded and entrypoints found.
 bool LoadCoreDll(const std::string& dllPath = "");
 void UnloadCoreDll();
+
+// Performs the two-step HMAC-SHA256 gateway handshake with libdxcore_amd64.so.
+// Returns true only if both sides verify successfully. Must be called after LoadCoreDll.
+bool PerformGatewayHandshake();
 } // namespace defyx_core

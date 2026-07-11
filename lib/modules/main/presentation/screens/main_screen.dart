@@ -60,7 +60,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       // On Windows, verify the DXcore gateway before doing anything else.
-      if (Platform.isWindows && !_gatewayVerified) {
+      if ((Platform.isWindows || Platform.isLinux) && !_gatewayVerified) {
         _gatewayVerified = true;
         final gatewayOk = await VpnBridge().verifyGateway();
         if (!mounted) return;

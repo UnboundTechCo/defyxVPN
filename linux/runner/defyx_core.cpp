@@ -9,6 +9,9 @@
 #include <dlfcn.h>
 #include <unistd.h>
 #include <limits.h>
+#include <openssl/hmac.h>
+#include <openssl/evp.h>
+#include "linux_key_generated.h"
 
 extern "C" {
 typedef int (*dx_start_vpn_fn)(const char* cacheDir, const char* flowLine, const char* pattern, int deepScan, int healthCheck);
@@ -30,6 +33,8 @@ typedef void (*dx_free_string_fn)(char*);
 typedef void (*dx_set_connection_method_fn)(const char*);
 typedef void (*dx_set_cache_dir_fn)(const char*);
 typedef int (*dx_is_tunnel_running_fn)();
+typedef char* (*dx_request_handshake_fn)(char*, char*);
+typedef char* (*dx_complete_handshake_fn)(char*);
 }
 
 static void* g_dx_dll = nullptr;
@@ -53,6 +58,8 @@ static dx_free_string_fn g_free_string = nullptr;
 static dx_set_connection_method_fn g_set_connection_method = nullptr;
 static dx_set_cache_dir_fn g_set_cache_dir = nullptr;
 static dx_is_tunnel_running_fn g_is_tunnel_running = nullptr;
+static dx_request_handshake_fn g_request_handshake = nullptr;
+static dx_complete_handshake_fn g_complete_handshake = nullptr;
 
 // Helper: get directory of current executable
 static std::string GetExeDir() {
@@ -160,6 +167,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_set_connection_method = (dx_set_connection_method_fn)dlsym(g_dx_dll, "SetConnectionMethod");
   g_set_cache_dir = (dx_set_cache_dir_fn)dlsym(g_dx_dll, "SetCacheDir");
   g_is_tunnel_running = (dx_is_tunnel_running_fn)dlsym(g_dx_dll, "IsTunnelRunning");
+  g_request_handshake = (dx_request_handshake_fn)dlsym(g_dx_dll, "RequestHandshake");
+  g_complete_handshake = (dx_complete_handshake_fn)dlsym(g_dx_dll, "CompleteHandshake");
 
   auto check = [](const char* name, auto fn) {
     if (!fn) {
@@ -213,6 +222,8 @@ void UnloadCoreDll() {
     g_free_string = nullptr;
   g_set_connection_method = nullptr;
   g_is_tunnel_running = nullptr;
+  g_request_handshake = nullptr;
+  g_complete_handshake = nullptr;
 
     // Clear progress handler
     g_progress_handler = nullptr;
@@ -466,6 +477,103 @@ bool IsTunnelRunning() {
     }
   } catch (...) {}
   return false;
+}
+
+// --- Gateway handshake helpers (file-scope, not exported) --------------------
+
+static std::string GatewayHexEncode(const std::vector<uint8_t>& data) {
+  static const char kHex[] = "0123456789abcdef";
+  std::string out;
+  out.reserve(data.size() * 2);
+  for (uint8_t b : data) {
+    out.push_back(kHex[b >> 4]);
+    out.push_back(kHex[b & 0xf]);
+  }
+  return out;
+}
+
+static bool GatewayHexDecode(const std::string& hex, std::vector<uint8_t>& out) {
+  if (hex.size() % 2 != 0) return false;
+  out.resize(hex.size() / 2);
+  for (size_t i = 0; i < out.size(); ++i) {
+    auto val = [](char c) -> int {
+      if (c >= '0' && c <= '9') return c - '0';
+      if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+      if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+      return -1;
+    };
+    int hi = val(hex[i * 2]), lo = val(hex[i * 2 + 1]);
+    if (hi < 0 || lo < 0) return false;
+    out[i] = static_cast<uint8_t>((hi << 4) | lo);
+  }
+  return true;
+}
+
+static std::vector<uint8_t> GatewayHmacSha256(
+    const std::vector<uint8_t>& key, const std::vector<uint8_t>& message) {
+  unsigned char result[32];
+  unsigned int len = 32;
+  HMAC(EVP_sha256(), key.data(), static_cast<int>(key.size()),
+       message.data(), message.size(), result, &len);
+  return std::vector<uint8_t>(result, result + 32);
+}
+
+static bool GatewayGenRandom32(std::vector<uint8_t>& out) {
+  out.resize(32);
+  std::ifstream urandom("/dev/urandom", std::ios::binary);
+  if (!urandom) return false;
+  urandom.read(reinterpret_cast<char*>(out.data()), 32);
+  return urandom.good() && urandom.gcount() == 32;
+}
+
+bool defyx_core::PerformGatewayHandshake() {
+  if (!g_dx_dll) LoadCoreDll("");
+  if (!g_request_handshake || !g_complete_handshake) return false;
+
+  // Step 1: generate 32 random bytes for the app side
+  std::vector<uint8_t> app_random;
+  if (!GatewayGenRandom32(app_random)) return false;
+  std::string app_random_hex = GatewayHexEncode(app_random);
+
+  // Step 2: request handshake — DLL returns hex-encoded 32-byte core random
+  char* kernel_cstr = g_request_handshake(
+      const_cast<char*>("1"),
+      const_cast<char*>(app_random_hex.c_str()));
+  if (!kernel_cstr) return false;
+  std::string kernel_hex(kernel_cstr);
+  if (g_free_string) g_free_string(kernel_cstr);
+  if (kernel_hex.size() != 64) return false;
+
+  std::vector<uint8_t> core_random;
+  if (!GatewayHexDecode(kernel_hex, core_random) || core_random.size() != 32)
+    return false;
+
+  // Step 3: HMAC-SHA256(key=appRandom||coreRandom, message=embeddedKey)
+  const char* embedded = kLinuxGatewayKey;
+  std::vector<uint8_t> embedded_bytes(embedded, embedded + strlen(embedded));
+
+  std::vector<uint8_t> client_key;
+  client_key.insert(client_key.end(), app_random.begin(), app_random.end());
+  client_key.insert(client_key.end(), core_random.begin(), core_random.end());
+  std::string client_hash_hex = GatewayHexEncode(GatewayHmacSha256(client_key, embedded_bytes));
+
+  // Step 4: complete handshake — DLL returns its hex-encoded HMAC
+  char* server_cstr = g_complete_handshake(
+      const_cast<char*>(client_hash_hex.c_str()));
+  if (!server_cstr) return false;
+  std::string server_hex(server_cstr);
+  if (g_free_string) g_free_string(server_cstr);
+  if (server_hex.size() != 64) return false;
+
+  std::vector<uint8_t> server_hash;
+  if (!GatewayHexDecode(server_hex, server_hash)) return false;
+
+  // Step 5: verify — HMAC-SHA256(key=coreRandom||appRandom, message=embeddedKey)
+  std::vector<uint8_t> verify_key;
+  verify_key.insert(verify_key.end(), core_random.begin(), core_random.end());
+  verify_key.insert(verify_key.end(), app_random.begin(), app_random.end());
+  std::vector<uint8_t> expected = GatewayHmacSha256(verify_key, embedded_bytes);
+  return server_hash == expected;
 }
 
 } // namespace defyx_core
