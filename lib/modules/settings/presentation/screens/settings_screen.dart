@@ -89,6 +89,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool _isWidgetVisibleInHorizontalScroll(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        return true;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+
+      // Get the scroll position
+      final scrollOffset = _horizontalSliderScrollController.offset;
+
+      // The widget's center in content coordinates
+      final widgetCenterInContent = offset.dx + scrollOffset + (size.width / 2);
+
+      // Get the viewport bounds
+      final viewportLeft = scrollOffset;
+      final viewportRight =
+          scrollOffset +
+          _horizontalSliderScrollController.position.viewportDimension;
+
+      // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
+      final isVisible =
+          widgetCenterInContent >= viewportLeft &&
+          widgetCenterInContent <= viewportRight;
+
+      return isVisible;
+    } catch (e) {
+      return true;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
@@ -229,6 +263,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ],
     );
+  }
+
+  void _scrollToShowWidget(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        return;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = _horizontalSliderScrollController.offset;
+      final viewportWidth =
+          _horizontalSliderScrollController.position.viewportDimension;
+
+      // Widget's position in content coordinates
+      final widgetLeftInContent = offset.dx + scrollOffset;
+      final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
+
+      // Calculate scroll offset to center the widget
+      final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
+
+      _horizontalSliderScrollController.animateTo(
+        newScrollOffset.clamp(
+          _horizontalSliderScrollController.position.minScrollExtent,
+          _horizontalSliderScrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } catch (e) {
+      debugPrint('[Scroll] Error: $e');
+    }
   }
 
   bool _handlePremiumWidgetTap() {
