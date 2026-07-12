@@ -1,3 +1,5 @@
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -18,6 +20,9 @@ class SettingsScreen extends ConsumerStatefulWidget {
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _scrollController;
+  late final ScrollController _horizontalSliderScrollController;
+  final GlobalKey _premiumWidgetKey = GlobalKey();
+  final GlobalKey _donateWidgetKey = GlobalKey();
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
@@ -26,6 +31,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
+    _horizontalSliderScrollController = ScrollController();
   }
 
   @override
@@ -45,6 +51,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    _horizontalSliderScrollController.dispose();
     super.dispose();
   }
 
@@ -126,7 +133,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             children: [
                               SizedBox(height: 45.h),
                               _buildHeaderSection(),
-                              SizedBox(height: 60.h),
+                              SizedBox(height: 30.h),
+                              _buildSliderSection(),
+                              SizedBox(height: 30.h),
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 130.h),
                             ],
@@ -219,6 +228,64 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           },
         ),
       ],
+    );
+  }
+
+  bool _handlePremiumWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_premiumWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_premiumWidgetKey);
+      return false;
+    }
+  }
+
+  bool _handleDonateWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_donateWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_donateWidgetKey);
+      return false;
+    }
+  }
+
+  Widget _buildSliderSection() {
+    return Listener(
+      onPointerMove: (event) {},
+      onPointerSignal: (event) {},
+      child: NotificationListener<ScrollUpdateNotification>(
+        onNotification: (notification) {
+          return false;
+        },
+        child: SingleChildScrollView(
+          controller: _horizontalSliderScrollController,
+          scrollDirection: Axis.horizontal,
+          child: IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  key: _premiumWidgetKey,
+                  child: SettingsPremiumWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handlePremiumWidgetTap,
+                  ),
+                ),
+                SizedBox(width: 15.w),
+                Container(
+                  key: _donateWidgetKey,
+                  child: SettingsDonateWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleDonateWidgetTap,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 
