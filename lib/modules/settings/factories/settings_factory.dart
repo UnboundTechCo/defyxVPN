@@ -42,7 +42,7 @@ class SettingsFactory {
     bool isPremium = false,
   }) {
     return SettingsItem(
-      id: label,
+      id: label + sortOrder.toString(),
       title: label,
       isEnabled: isEnabled,
       isAccessible: true,
