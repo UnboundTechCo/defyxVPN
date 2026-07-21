@@ -384,7 +384,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
             .toList()
           ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
-    return items.map((item) => item.id).join(',');
+    return items.map((item) => item.title).join(',');
   }
 
   String getPattern() => getConnectionMethodPattern();
