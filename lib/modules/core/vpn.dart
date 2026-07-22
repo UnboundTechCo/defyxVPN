@@ -120,6 +120,10 @@ class VPN {
     final ref = _container!;
     final loggerNotifier = ref.read(loggerStateProvider.notifier);
     final groupNotifier = ref.read(groupStateProvider.notifier);
+    final connectionState = ref.read(connectionStateProvider);
+
+    final connectionStateIsError =
+        connectionState.status == ConnectionStatus.error;
 
     if (msg.startsWith("Data: Config index: ")) {
       final configIndex = msg.replaceAll("Data: Config index: ", "");
@@ -144,13 +148,13 @@ class VPN {
       _onFailerConnect();
     }
     if (msg.startsWith("Data: VPN cancelled")) {
-      _closeTunnel();
+      _closeTunnel(keepConnectionStatus: connectionStateIsError);
     }
     if (msg.startsWith("Data: VPN group failed")) {
       loggerNotifier.setSwitchingMethod();
     }
     if (msg.startsWith("Data: VPN stopped")) {
-      _closeTunnel();
+      _closeTunnel(keepConnectionStatus: connectionStateIsError);
     }
     if (msg.startsWith("Data: VPN connecting")) {
       _onLoading();
@@ -410,17 +414,22 @@ class VPN {
     analyticsService.logVpnDisconnected();
   }
 
-  Future<void> _closeTunnel() async {
+  Future<void> _closeTunnel({bool keepConnectionStatus = false}) async {
     final connectionNotifier = _container?.read(
       connectionStateProvider.notifier,
     );
     final vpnData = await _container?.read(vpnDataProvider.future);
-    connectionNotifier?.setDisconnecting();
+
+    if (!keepConnectionStatus) {
+      connectionNotifier?.setDisconnecting();
+    }
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
     await vpnData?.disableVPN();
-    connectionNotifier?.setDisconnected();
+    if (!keepConnectionStatus) {
+      connectionNotifier?.setDisconnected();
+    }
     analyticsService.logVpnDisconnected();
     _isReconnectMode = false;
   }
