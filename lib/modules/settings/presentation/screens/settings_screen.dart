@@ -23,9 +23,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _horizontalSliderScrollController;
   final GlobalKey _premiumWidgetKey = GlobalKey();
   final GlobalKey _donateWidgetKey = GlobalKey();
-  final double _scrollSpeedFactor = 0.35;
-  final double _touchScrollSpeedFactor = 0.5;
-  double _lastTouchPosition = 0;
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
@@ -56,19 +53,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     _scrollController.dispose();
     _horizontalSliderScrollController.dispose();
     super.dispose();
-  }
-
-  void _handlePointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
-      final double scrollDelta = event.scrollDelta.dy * _scrollSpeedFactor;
-      final double newOffset = _scrollController.offset + scrollDelta;
-      _scrollController.jumpTo(
-        newOffset.clamp(
-          _scrollController.position.minScrollExtent,
-          _scrollController.position.maxScrollExtent,
-        ),
-      );
-    }
   }
 
   void _onPointerDown(PointerDownEvent event) {
@@ -105,25 +89,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
-  void _onVerticalDragStart(DragStartDetails details) {
-    _lastTouchPosition = details.globalPosition.dy;
-  }
-
-  void _onVerticalDragUpdate(DragUpdateDetails details) {
-    final double delta =
-        (_lastTouchPosition - details.globalPosition.dy) *
-        _touchScrollSpeedFactor;
-    _lastTouchPosition = details.globalPosition.dy;
-
-    final double newOffset = _scrollController.offset + delta;
-    _scrollController.jumpTo(
-      newOffset.clamp(
-        _scrollController.position.minScrollExtent,
-        _scrollController.position.maxScrollExtent,
-      ),
-    );
-  }
-
   bool _isWidgetVisibleInHorizontalScroll(GlobalKey key) {
     try {
       final RenderBox? renderBox =
@@ -134,7 +99,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       final size = renderBox.size;
       final offset = renderBox.localToGlobal(Offset.zero);
-      
+
       // Get the scroll position
       final scrollOffset = _horizontalSliderScrollController.offset;
 
@@ -143,47 +108,18 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Get the viewport bounds
       final viewportLeft = scrollOffset;
-      final viewportRight = scrollOffset + _horizontalSliderScrollController.position.viewportDimension;
+      final viewportRight =
+          scrollOffset +
+          _horizontalSliderScrollController.position.viewportDimension;
 
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
-      final isVisible = widgetCenterInContent >= viewportLeft && widgetCenterInContent <= viewportRight;
+      final isVisible =
+          widgetCenterInContent >= viewportLeft &&
+          widgetCenterInContent <= viewportRight;
 
       return isVisible;
     } catch (e) {
       return true;
-    }
-  }
-
-  void _scrollToShowWidget(GlobalKey key) {
-    try {
-      final RenderBox? renderBox =
-          key.currentContext?.findRenderObject() as RenderBox?;
-      if (renderBox == null) {
-        return;
-      }
-
-      final size = renderBox.size;
-      final offset = renderBox.localToGlobal(Offset.zero);
-      final scrollOffset = _horizontalSliderScrollController.offset;
-      final viewportWidth = _horizontalSliderScrollController.position.viewportDimension;
-
-      // Widget's position in content coordinates
-      final widgetLeftInContent = offset.dx + scrollOffset;
-      final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
-
-      // Calculate scroll offset to center the widget
-      final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
-
-      _horizontalSliderScrollController.animateTo(
-        newScrollOffset.clamp(
-          _horizontalSliderScrollController.position.minScrollExtent,
-          _horizontalSliderScrollController.position.maxScrollExtent,
-        ),
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    } catch (e) {
-      debugPrint('[Scroll] Error: $e');
     }
   }
 
@@ -199,23 +135,30 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           builder: (context, constraints) {
             return SizedBox(
               height: double.infinity,
-              child: GestureDetector(
-                onVerticalDragStart: _onVerticalDragStart,
-                onVerticalDragUpdate: _onVerticalDragUpdate,
-                child: Listener(
-                  onPointerSignal: _handlePointerSignal,
-                  onPointerDown: _onPointerDown,
-                  onPointerUp: _onPointerUp,
-                  onPointerMove: _onPointerMove,
-                  child: Scrollbar(
-                    controller: _scrollController,
-                    thumbVisibility: false,
-                    thickness: 6.0,
-                    radius: const Radius.circular(8.0),
-                    interactive: true,
+              child: Listener(
+                onPointerDown: _onPointerDown,
+                onPointerUp: _onPointerUp,
+                onPointerMove: _onPointerMove,
+                child: Scrollbar(
+                  controller: _scrollController,
+                  thumbVisibility: false,
+                  thickness: 6.0,
+                  radius: const Radius.circular(8.0),
+                  interactive: true,
+                  child: ScrollConfiguration(
+                    behavior: ScrollConfiguration.of(context).copyWith(
+                      dragDevices: {
+                        PointerDeviceKind.touch,
+                        PointerDeviceKind.mouse,
+                        PointerDeviceKind.stylus,
+                        PointerDeviceKind.trackpad,
+                      },
+                    ),
                     child: SingleChildScrollView(
                       controller: _scrollController,
-                      physics: const NeverScrollableScrollPhysics(),
+                      physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics(),
+                      ),
                       child: Center(
                         child: Padding(
                           padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -320,6 +263,40 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         ),
       ],
     );
+  }
+
+  void _scrollToShowWidget(GlobalKey key) {
+    try {
+      final RenderBox? renderBox =
+          key.currentContext?.findRenderObject() as RenderBox?;
+      if (renderBox == null) {
+        return;
+      }
+
+      final size = renderBox.size;
+      final offset = renderBox.localToGlobal(Offset.zero);
+      final scrollOffset = _horizontalSliderScrollController.offset;
+      final viewportWidth =
+          _horizontalSliderScrollController.position.viewportDimension;
+
+      // Widget's position in content coordinates
+      final widgetLeftInContent = offset.dx + scrollOffset;
+      final widgetCenterInContent = widgetLeftInContent + (size.width / 2);
+
+      // Calculate scroll offset to center the widget
+      final newScrollOffset = widgetCenterInContent - (viewportWidth / 2);
+
+      _horizontalSliderScrollController.animateTo(
+        newScrollOffset.clamp(
+          _horizontalSliderScrollController.position.minScrollExtent,
+          _horizontalSliderScrollController.position.maxScrollExtent,
+        ),
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } catch (e) {
+      debugPrint('[Scroll] Error: $e');
+    }
   }
 
   bool _handlePremiumWidgetTap() {

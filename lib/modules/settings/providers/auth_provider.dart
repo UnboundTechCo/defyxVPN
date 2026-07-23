@@ -9,8 +9,9 @@ class AuthData {
   AuthData({required this.email, required this.isLoggedIn});
 }
 
-final authProvider =
-    AsyncNotifierProvider<AuthNotifier, AuthData>(AuthNotifier.new);
+final authProvider = AsyncNotifierProvider<AuthNotifier, AuthData>(
+  AuthNotifier.new,
+);
 
 class AuthNotifier extends AsyncNotifier<AuthData> {
   @override
@@ -18,14 +19,16 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     final storage = ref.read(secureStorageProvider);
 
     final token = await storage.read(premiumTokenKey);
+    final email = await storage.read(premiumEmailKey) ?? '';
 
-    return AuthData(email: '', isLoggedIn: token?.isNotEmpty ?? false);
+    return AuthData(email: email, isLoggedIn: token?.isNotEmpty ?? false);
   }
 
   Future<void> login(String email, String token) async {
     final storage = ref.read(secureStorageProvider);
 
     await storage.write(premiumTokenKey, token);
+    await storage.write(premiumEmailKey, email);
 
     state = AsyncData(AuthData(email: email, isLoggedIn: true));
   }
@@ -34,6 +37,7 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     final storage = ref.read(secureStorageProvider);
 
     await storage.delete(premiumTokenKey);
+    await storage.delete(premiumEmailKey);
 
     state = AsyncData(AuthData(email: '', isLoggedIn: false));
   }
