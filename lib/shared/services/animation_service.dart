@@ -30,9 +30,16 @@ class AnimationService {
     return shouldAnimate() ? originalDuration : Duration.zero;
   }
 
-  void conditionalRepeat(AnimationController controller,
-      {bool reverse = false}) {
-    if (shouldAnimate()) {
+  bool _canStartController(AnimationController controller) {
+    final duration = controller.duration;
+    return shouldAnimate() && duration != null && duration > Duration.zero;
+  }
+
+  void conditionalRepeat(
+    AnimationController controller, {
+    bool reverse = false,
+  }) {
+    if (_canStartController(controller)) {
       controller.repeat(reverse: reverse);
     } else {
       controller.stop();
@@ -40,7 +47,7 @@ class AnimationService {
   }
 
   void conditionalForward(AnimationController controller, {double? from}) {
-    if (shouldAnimate()) {
+    if (_canStartController(controller)) {
       controller.forward(from: from);
     } else {
       controller.stop();
