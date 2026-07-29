@@ -125,3 +125,64 @@ connect_pid=""
 grep -q "health check failed for Bad" "$health_log"
 grep -q "Health check passed for Mock" "$health_log"
 grep -q "Trying the next connection method" "$health_log"
+
+health_count="$runtime_dir/health-count"
+runtime_health_log="$runtime_dir/runtime-health.log"
+cat >"$fake_bin/curl" <<'EOF'
+#!/usr/bin/env bash
+count=0
+if [[ -f "$MOCK_HEALTH_COUNT_FILE" ]]; then
+  read -r count <"$MOCK_HEALTH_COUNT_FILE"
+fi
+count=$((count + 1))
+printf '%s\n' "$count" >"$MOCK_HEALTH_COUNT_FILE"
+if (( count == 1 )); then
+  printf '200 65536\n'
+  exit 0
+fi
+printf '000 0\n'
+exit 28
+EOF
+chmod +x "$fake_bin/curl"
+
+PATH="$fake_bin:$PATH" MOCK_HEALTH_COUNT_FILE="$health_count" \
+  "$managed_cli" connect \
+    --core-lib "$core" \
+    --cache-dir "$runtime_dir" \
+    --pattern "Mock" \
+    --listen-address 127.0.0.1 \
+    --listen-port 18080 \
+    --health-check \
+    --health-check-url https://example.com/check \
+    --health-check-interval 1 \
+    --health-check-failures 2 \
+    --timeout 5 >"$runtime_health_log" 2>&1 &
+connect_pid="$!"
+
+for _ in $(seq 1 80); do
+  if ! kill -0 "$connect_pid" 2>/dev/null; then
+    break
+  fi
+  sleep 0.1
+done
+
+if kill -0 "$connect_pid" 2>/dev/null; then
+  cat "$runtime_health_log"
+  echo "runtime health monitor did not stop the unhealthy connection" >&2
+  exit 1
+fi
+
+set +e
+wait "$connect_pid"
+runtime_health_status="$?"
+set -e
+connect_pid=""
+
+if [[ "$runtime_health_status" -ne 4 ]]; then
+  cat "$runtime_health_log"
+  echo "runtime health failure returned $runtime_health_status, expected 4" >&2
+  exit 1
+fi
+grep -q "runtime health check failed for Mock (1/2)" "$runtime_health_log"
+grep -q "runtime health check failed for Mock (2/2)" "$runtime_health_log"
+grep -q "failed 2 consecutive runtime health checks" "$runtime_health_log"

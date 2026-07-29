@@ -27,6 +27,8 @@ struct Options {
       "https://speed.cloudflare.com/__down?bytes=65536";
   int health_check_min_bytes = 65536;
   int health_check_timeout_seconds = 20;
+  int health_check_interval_seconds = 60;
+  int health_check_failures = 2;
   bool cached_flowline = false;
   bool test_flowline = false;
   bool verbose = false;

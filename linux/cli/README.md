@@ -135,8 +135,13 @@ only after the validation transfer completes:
 The default probe downloads exactly 64 KiB over HTTPS from
 `https://speed.cloudflare.com/__down?bytes=65536`. A truncated response,
 TLS failure, non-2xx status, timeout, or smaller download rejects that method
-and advances to the next label. This is a startup validation; DXcore's own
-runtime health monitor remains enabled after a method passes.
+and advances to the next label.
+
+After a method passes startup validation, the CLI repeats the same end-to-end
+probe every 60 seconds. Two consecutive failures mark the method unhealthy and
+advance to the next label. A successful probe resets the failure counter. If no
+methods remain, the CLI exits with code `4`; the provided systemd unit then
+restarts it after five seconds and begins again with the first method.
 
 Networks that cannot reach the default endpoint can use another deterministic
 HTTPS response:
@@ -146,12 +151,16 @@ HTTPS response:
   --health-check \
   --health-check-url https://example.net/health.bin \
   --health-check-min-bytes 65536 \
-  --health-check-timeout 30
+  --health-check-timeout 30 \
+  --health-check-interval 60 \
+  --health-check-failures 2
 ```
 
 The probe runs `curl` directly without a shell, forces remote DNS through the
 SOCKS5 proxy, follows HTTPS redirects only, and uses the operating system's
-normal CA certificate store.
+normal CA certificate store. Set `--health-check-interval 0` to keep startup
+method validation but disable the CLI's periodic checks. DXcore's own internal
+health monitor remains enabled independently.
 
 ## systemd
 

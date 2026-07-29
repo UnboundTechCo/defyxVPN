@@ -154,6 +154,7 @@ class RuntimeTracker {
     std::unique_lock<std::mutex> lock(mutex_);
     ++attempt_generation_;
     core_connected_ = false;
+    connected_ = false;
     terminal_event_ = defyx_cli::ProgressEvent::none;
     status_.state = "connecting";
     std::string ignored;
@@ -498,7 +499,7 @@ int Connect(const defyx_cli::Options& options) {
     std::cout << std::flush;
   }
 
-  const auto connection_started = std::chrono::steady_clock::now();
+  auto connection_started = std::chrono::steady_clock::now();
   int result = 0;
   bool connection_ready = false;
   uint64_t active_generation = 0;
@@ -507,6 +508,17 @@ int Connect(const defyx_cli::Options& options) {
     defyx_core::RegisterProgressHandler(nullptr);
     defyx_core::StopVPN();
     std::this_thread::sleep_for(std::chrono::milliseconds(150));
+  };
+
+  const auto run_health_check = [&options]() {
+    defyx_cli::HealthCheckSettings settings;
+    settings.proxy_address = kCoreProxyAddress;
+    settings.proxy_port = kCoreProxyPort;
+    settings.url = options.health_check_url;
+    settings.minimum_bytes =
+        static_cast<uint64_t>(options.health_check_min_bytes);
+    settings.timeout_seconds = options.health_check_timeout_seconds;
+    return defyx_cli::RunHttpsHealthCheck(settings);
   };
 
   for (size_t method_index = 0;
@@ -531,6 +543,7 @@ int Connect(const defyx_cli::Options& options) {
     bool attempt_failed = !request_accepted;
     bool timed_out = false;
     bool health_checker_failed = false;
+    bool runtime_failed = false;
     auto next_status_poll = std::chrono::steady_clock::now();
 
     if (!request_accepted) {
@@ -594,16 +607,8 @@ int Connect(const defyx_cli::Options& options) {
           std::cout << "Checking HTTPS connectivity through " << method
                     << "..." << std::endl;
         }
-        defyx_cli::HealthCheckSettings health_settings;
-        health_settings.proxy_address = kCoreProxyAddress;
-        health_settings.proxy_port = kCoreProxyPort;
-        health_settings.url = options.health_check_url;
-        health_settings.minimum_bytes =
-            static_cast<uint64_t>(options.health_check_min_bytes);
-        health_settings.timeout_seconds =
-            options.health_check_timeout_seconds;
         const defyx_cli::HealthCheckResult health =
-            defyx_cli::RunHttpsHealthCheck(health_settings);
+            run_health_check();
 
         if (health.healthy) {
           if (!options.quiet) {
@@ -634,6 +639,81 @@ int Connect(const defyx_cli::Options& options) {
       tracker.WaitForUpdate(std::chrono::milliseconds(250));
     }
 
+    if (connection_ready) {
+      int consecutive_health_failures = 0;
+      const auto health_check_interval = std::chrono::seconds(
+          options.health_check_interval_seconds);
+      auto next_health_check =
+          std::chrono::steady_clock::now() + health_check_interval;
+
+      while (connection_ready && g_shutdown_signal == 0) {
+        const defyx_cli::ProgressEvent terminal_event =
+            tracker.terminal_event(active_generation);
+        if (terminal_event == defyx_cli::ProgressEvent::failed ||
+            terminal_event == defyx_cli::ProgressEvent::stopped) {
+          std::cerr
+              << (terminal_event == defyx_cli::ProgressEvent::failed
+                      ? "Connection failed."
+                      : "DXcore stopped unexpectedly.")
+              << std::endl;
+          runtime_failed = true;
+          connection_ready = false;
+          break;
+        }
+
+        const auto now = std::chrono::steady_clock::now();
+        if (options.health_check &&
+            options.health_check_interval_seconds > 0 &&
+            now >= next_health_check) {
+          const defyx_cli::HealthCheckResult health =
+              run_health_check();
+          next_health_check =
+              std::chrono::steady_clock::now() + health_check_interval;
+
+          if (health.healthy) {
+            if (consecutive_health_failures > 0) {
+              std::cout << "Runtime health check recovered for " << method
+                        << "." << std::endl;
+            }
+            consecutive_health_failures = 0;
+            continue;
+          }
+
+          ++consecutive_health_failures;
+          std::cerr << "warning: runtime health check failed for " << method
+                    << " (" << consecutive_health_failures << "/"
+                    << options.health_check_failures << "): "
+                    << health.error;
+          if (health.http_status != 0 ||
+              health.downloaded_bytes != 0) {
+            std::cerr << " (HTTP " << health.http_status << ", "
+                      << health.downloaded_bytes << " bytes)";
+          }
+          std::cerr << std::endl;
+
+          if (health.exit_code < 0) {
+            health_checker_failed = true;
+            result = 2;
+            connection_ready = false;
+            break;
+          }
+          if (consecutive_health_failures >=
+              options.health_check_failures) {
+            std::cerr << "Connection method " << method << " failed "
+                      << consecutive_health_failures
+                      << " consecutive runtime health checks."
+                      << std::endl;
+            runtime_failed = true;
+            connection_ready = false;
+            break;
+          }
+          continue;
+        }
+
+        tracker.WaitForUpdate(std::chrono::milliseconds(250));
+      }
+    }
+
     if (connection_ready || g_shutdown_signal != 0 ||
         timed_out || health_checker_failed || result == 2) {
       break;
@@ -643,27 +723,14 @@ int Connect(const defyx_cli::Options& options) {
         method_index + 1 < connection_methods.size();
     if (has_next_method) {
       stop_attempt();
+      if (runtime_failed) {
+        connection_started = std::chrono::steady_clock::now();
+      }
       std::cerr << "Trying the next connection method." << std::endl;
       continue;
     }
 
     result = kConnectionFailureExitCode;
-  }
-
-  while (connection_ready && g_shutdown_signal == 0) {
-    const defyx_cli::ProgressEvent terminal_event =
-        tracker.terminal_event(active_generation);
-    if (terminal_event == defyx_cli::ProgressEvent::failed ||
-        terminal_event == defyx_cli::ProgressEvent::stopped) {
-      std::cerr
-          << (terminal_event == defyx_cli::ProgressEvent::failed
-                  ? "Connection failed."
-                  : "DXcore stopped unexpectedly.")
-          << std::endl;
-      result = kConnectionFailureExitCode;
-      break;
-    }
-    tracker.WaitForUpdate(std::chrono::milliseconds(250));
   }
 
   tracker.MarkStopping();

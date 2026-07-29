@@ -135,6 +135,21 @@ Options OptionsFromEnvironment() {
        options.health_check_timeout_seconds == 0)) {
     options.health_check_timeout_seconds = 0;
   }
+  const std::string health_check_interval =
+      GetEnvironment("DEFYX_HEALTH_CHECK_INTERVAL");
+  if (!health_check_interval.empty() &&
+      !ParseNonNegativeInteger(health_check_interval,
+                               &options.health_check_interval_seconds)) {
+    options.health_check_interval_seconds = -1;
+  }
+  const std::string health_check_failures =
+      GetEnvironment("DEFYX_HEALTH_CHECK_FAILURES");
+  if (!health_check_failures.empty() &&
+      (!ParseNonNegativeInteger(health_check_failures,
+                                &options.health_check_failures) ||
+       options.health_check_failures == 0)) {
+    options.health_check_failures = 0;
+  }
   options.cached_flowline = ParseBoolean(
       GetEnvironment("DEFYX_CACHED_FLOWLINE"), options.cached_flowline);
   options.test_flowline =
@@ -267,6 +282,33 @@ ParseResult ParseOptions(const std::vector<std::string>& arguments,
       }
       continue;
     }
+    if (argument == "--health-check-interval") {
+      std::string value;
+      if (!ReadValue(arguments, &index, argument, &value, &result.error)) {
+        return result;
+      }
+      if (!ParseNonNegativeInteger(
+              value, &result.options.health_check_interval_seconds)) {
+        result.error =
+            "--health-check-interval must be a non-negative number of seconds";
+        return result;
+      }
+      continue;
+    }
+    if (argument == "--health-check-failures") {
+      std::string value;
+      if (!ReadValue(arguments, &index, argument, &value, &result.error)) {
+        return result;
+      }
+      if (!ParseNonNegativeInteger(
+              value, &result.options.health_check_failures) ||
+          result.options.health_check_failures == 0) {
+        result.error =
+            "--health-check-failures must be a positive number";
+        return result;
+      }
+      continue;
+    }
     if (argument == "--cached-flowline") {
       result.options.cached_flowline = true;
       continue;
@@ -333,6 +375,14 @@ ParseResult ParseOptions(const std::vector<std::string>& arguments,
     result.error =
         "--health-check-timeout must be a positive number of seconds";
   }
+  if (result.options.health_check_interval_seconds < 0) {
+    result.error =
+        "--health-check-interval must be a non-negative number of seconds";
+  }
+  if (result.options.health_check_failures <= 0) {
+    result.error =
+        "--health-check-failures must be a positive number";
+  }
   return result;
 }
 
@@ -361,6 +411,10 @@ Connect options:
                          Minimum complete response size (default: 65536)
   --health-check-timeout SECONDS
                          Per-check timeout (default: 20)
+  --health-check-interval SECONDS
+                         Runtime check interval; 0 disables it (default: 60)
+  --health-check-failures N
+                         Consecutive failures before failover (default: 2)
   --timeout SECONDS      Stop if not connected in time (0 means no timeout)
   --verbose              Enable verbose DXcore logging
   --quiet                Only print state changes and errors
@@ -371,7 +425,8 @@ The same settings can be supplied with DEFYX_CORE_LIB, DEFYX_CACHE_DIR,
 DEFYX_FLOWLINE_FILE, DEFYX_PATTERN, DEFYX_CACHED_FLOWLINE,
 DEFYX_TEST_FLOWLINE, DEFYX_DEEP_SCAN, DEFYX_HEALTH_CHECK,
 DEFYX_HEALTH_CHECK_URL, DEFYX_HEALTH_CHECK_MIN_BYTES,
-DEFYX_HEALTH_CHECK_TIMEOUT,
+DEFYX_HEALTH_CHECK_TIMEOUT, DEFYX_HEALTH_CHECK_INTERVAL,
+DEFYX_HEALTH_CHECK_FAILURES,
 DEFYX_LISTEN_ADDRESS, DEFYX_LISTEN_PORT, DEFYX_CONNECT_TIMEOUT,
 DEFYX_VERBOSE, and DEFYX_QUIET.
 )";

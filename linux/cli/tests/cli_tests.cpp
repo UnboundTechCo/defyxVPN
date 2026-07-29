@@ -87,6 +87,7 @@ void TestOptions() {
        "Warp,Psiphon", "--deep-scan", "--health-check", "--timeout", "45",
        "--health-check-url", "https://example.com/check",
        "--health-check-min-bytes", "4096", "--health-check-timeout", "12",
+       "--health-check-interval", "30", "--health-check-failures", "3",
        "--quiet"},
       defaults);
 
@@ -105,6 +106,10 @@ void TestOptions() {
         "health-check minimum size should be parsed");
   Check(result.options.health_check_timeout_seconds == 12,
         "health-check timeout should be parsed");
+  Check(result.options.health_check_interval_seconds == 30,
+        "health-check interval should be parsed");
+  Check(result.options.health_check_failures == 3,
+        "health-check failure threshold should be parsed");
   Check(result.options.timeout_seconds == 45, "timeout should be parsed");
   Check(result.options.quiet, "quiet should be enabled");
 
@@ -148,6 +153,25 @@ void TestOptions() {
           {"connect", "--health-check-timeout", "0"}, defaults);
   Check(!invalid_health_timeout.ok(),
         "zero health-check timeout should be rejected");
+
+  const defyx_cli::ParseResult disabled_runtime_health =
+      defyx_cli::ParseOptions(
+          {"connect", "--health-check-interval", "0"}, defaults);
+  Check(disabled_runtime_health.ok() &&
+            disabled_runtime_health.options.health_check_interval_seconds == 0,
+        "zero runtime health-check interval should disable periodic checks");
+
+  const defyx_cli::ParseResult invalid_health_interval =
+      defyx_cli::ParseOptions(
+          {"connect", "--health-check-interval", "-1"}, defaults);
+  Check(!invalid_health_interval.ok(),
+        "negative health-check interval should be rejected");
+
+  const defyx_cli::ParseResult invalid_health_failures =
+      defyx_cli::ParseOptions(
+          {"connect", "--health-check-failures", "0"}, defaults);
+  Check(!invalid_health_failures.ok(),
+        "zero health-check failure threshold should be rejected");
 }
 
 void TestFlowLines() {
