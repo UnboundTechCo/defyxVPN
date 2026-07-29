@@ -62,7 +62,8 @@ Requirements:
 
 Prebuilt release archives only require the json-c runtime library
 (`libjson-c5` on current Debian and Ubuntu releases); they do not require a
-compiler, CMake, Flutter, or GTK.
+compiler, CMake, Flutter, or GTK. The optional `--health-check` mode also
+requires the `curl` command.
 
 On Debian or Ubuntu:
 
@@ -116,6 +117,41 @@ time.
 
 Run `defyxvpn-cli --help` for every option and its environment-variable
 equivalent.
+
+### Connection health checks
+
+DXcore can report a method as connected even when that route cannot complete
+normal HTTPS transfers. With `--health-check`, the CLI starts the
+comma-separated connection methods one at a time and validates each method
+through DXcore's SOCKS5 endpoint. It reports the public proxy as connected
+only after the validation transfer completes:
+
+```bash
+./defyxvpn-cli connect \
+  --pattern "Hive,Xray,Outline,Masque" \
+  --health-check
+```
+
+The default probe downloads exactly 64 KiB over HTTPS from
+`https://speed.cloudflare.com/__down?bytes=65536`. A truncated response,
+TLS failure, non-2xx status, timeout, or smaller download rejects that method
+and advances to the next label. This is a startup validation; DXcore's own
+runtime health monitor remains enabled after a method passes.
+
+Networks that cannot reach the default endpoint can use another deterministic
+HTTPS response:
+
+```bash
+./defyxvpn-cli connect \
+  --health-check \
+  --health-check-url https://example.net/health.bin \
+  --health-check-min-bytes 65536 \
+  --health-check-timeout 30
+```
+
+The probe runs `curl` directly without a shell, forces remote DNS through the
+SOCKS5 proxy, follows HTTPS redirects only, and uses the operating system's
+normal CA certificate store.
 
 ## systemd
 

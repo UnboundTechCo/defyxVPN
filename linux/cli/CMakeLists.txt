@@ -32,6 +32,7 @@ endfunction()
 add_library(defyx_cli_support STATIC
   src/cli_options.cpp
   src/flowline.cpp
+  src/health_check.cpp
   src/progress.cpp
   src/status_file.cpp
   src/tcp_forwarder.cpp

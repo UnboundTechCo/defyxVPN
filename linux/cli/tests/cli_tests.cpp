@@ -1,5 +1,6 @@
 #include "cli_options.h"
 #include "flowline.h"
+#include "health_check.h"
 #include "progress.h"
 #include "status_file.h"
 #include "tcp_forwarder.h"
@@ -8,6 +9,7 @@
 #include <cerrno>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <thread>
@@ -16,6 +18,7 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -82,6 +85,8 @@ void TestOptions() {
   const defyx_cli::ParseResult result = defyx_cli::ParseOptions(
       {"connect", "--cache-dir", "/tmp/custom", "--pattern",
        "Warp,Psiphon", "--deep-scan", "--health-check", "--timeout", "45",
+       "--health-check-url", "https://example.com/check",
+       "--health-check-min-bytes", "4096", "--health-check-timeout", "12",
        "--quiet"},
       defaults);
 
@@ -94,6 +99,12 @@ void TestOptions() {
         "pattern should be parsed");
   Check(result.options.deep_scan, "deep scan should be enabled");
   Check(result.options.health_check, "health check should be enabled");
+  Check(result.options.health_check_url == "https://example.com/check",
+        "health-check URL should be parsed");
+  Check(result.options.health_check_min_bytes == 4096,
+        "health-check minimum size should be parsed");
+  Check(result.options.health_check_timeout_seconds == 12,
+        "health-check timeout should be parsed");
   Check(result.options.timeout_seconds == 45, "timeout should be parsed");
   Check(result.options.quiet, "quiet should be enabled");
 
@@ -125,6 +136,18 @@ void TestOptions() {
   Check(alias.ok() &&
             alias.options.command == defyx_cli::Command::disconnect,
         "stop alias should select disconnect");
+
+  const defyx_cli::ParseResult invalid_health_url =
+      defyx_cli::ParseOptions(
+          {"connect", "--health-check-url", "http://example.com"}, defaults);
+  Check(!invalid_health_url.ok(),
+        "non-HTTPS health-check URL should be rejected");
+
+  const defyx_cli::ParseResult invalid_health_timeout =
+      defyx_cli::ParseOptions(
+          {"connect", "--health-check-timeout", "0"}, defaults);
+  Check(!invalid_health_timeout.ok(),
+        "zero health-check timeout should be rejected");
 }
 
 void TestFlowLines() {
@@ -173,6 +196,60 @@ void TestProgressEvents() {
   Check(defyx_cli::ParseProgressEvent("Data: VPN cancelled") ==
             defyx_cli::ProgressEvent::stopped,
         "cancelled progress should be recognized");
+}
+
+void TestHealthCheck() {
+  const std::vector<std::string> methods =
+      defyx_cli::SplitConnectionMethods(
+          " Hive, Xray, Hive, ,Outline ");
+  Check(methods ==
+            std::vector<std::string>({"Hive", "Xray", "Outline"}),
+        "connection methods should be trimmed and deduplicated");
+
+  const std::filesystem::path directory =
+      std::filesystem::temp_directory_path() /
+      ("defyxvpn-health-test-" +
+       std::to_string(static_cast<long long>(getpid())));
+  std::error_code filesystem_error;
+  std::filesystem::create_directories(directory, filesystem_error);
+  const std::filesystem::path fake_curl = directory / "curl";
+
+  {
+    std::ofstream script(fake_curl);
+    script << "#!/bin/sh\nprintf '200 65536\\n'\n";
+  }
+  chmod(fake_curl.c_str(), 0700);
+
+  defyx_cli::HealthCheckSettings settings;
+  settings.url = "https://example.com/check";
+  settings.minimum_bytes = 65536;
+  settings.timeout_seconds = 2;
+  settings.curl_executable = fake_curl.string();
+
+  const defyx_cli::HealthCheckResult healthy =
+      defyx_cli::RunHttpsHealthCheck(settings);
+  Check(healthy.healthy, "complete HTTPS transfer should pass health check");
+  Check(healthy.http_status == 200,
+        "health check should capture HTTP status");
+  Check(healthy.downloaded_bytes == 65536,
+        "health check should capture transfer size");
+
+  {
+    std::ofstream script(fake_curl, std::ios::trunc);
+    script << "#!/bin/sh\nprintf '200 1024\\n'\nexit 18\n";
+  }
+  chmod(fake_curl.c_str(), 0700);
+
+  const defyx_cli::HealthCheckResult truncated =
+      defyx_cli::RunHttpsHealthCheck(settings);
+  Check(!truncated.healthy,
+        "truncated HTTPS transfer should fail health check");
+  Check(truncated.exit_code == 18,
+        "health check should preserve curl's partial-transfer exit code");
+  Check(truncated.downloaded_bytes == 1024,
+        "failed health check should preserve downloaded byte count");
+
+  std::filesystem::remove_all(directory, filesystem_error);
 }
 
 void TestStatusRoundTrip() {
@@ -324,6 +401,7 @@ int main() {
   TestOptions();
   TestFlowLines();
   TestProgressEvents();
+  TestHealthCheck();
   TestStatusRoundTrip();
   TestTcpForwarder();
 

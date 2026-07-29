@@ -23,6 +23,10 @@ struct Options {
   int listen_port = 5000;
   bool deep_scan = false;
   bool health_check = false;
+  std::string health_check_url =
+      "https://speed.cloudflare.com/__down?bytes=65536";
+  int health_check_min_bytes = 65536;
+  int health_check_timeout_seconds = 20;
   bool cached_flowline = false;
   bool test_flowline = false;
   bool verbose = false;

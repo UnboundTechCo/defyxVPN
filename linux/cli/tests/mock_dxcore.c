@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 
 typedef void (*progress_callback)(char*);
@@ -22,11 +23,21 @@ int StartVPN(const char* cache_dir, const char* flow_line, const char* pattern,
   (void)deep_scan;
   (void)health_check;
 
-  if (pattern == NULL || strcmp(pattern, "Mock") != 0) {
+  if (pattern == NULL ||
+      (strcmp(pattern, "Mock") != 0 && strcmp(pattern, "Bad") != 0)) {
     if (current_callback != NULL) {
       current_callback("Data: VPN failed");
     }
     return 0;
+  }
+
+  const char* method_file = getenv("MOCK_DXCORE_METHOD_FILE");
+  if (method_file != NULL) {
+    FILE* stream = fopen(method_file, "w");
+    if (stream != NULL) {
+      fputs(pattern, stream);
+      fclose(stream);
+    }
   }
 
   if (current_callback != NULL) {

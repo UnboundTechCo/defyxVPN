@@ -55,6 +55,10 @@ bool ParsePort(const std::string& value, int* result) {
   return true;
 }
 
+bool IsHttpsUrl(const std::string& value) {
+  return value.size() > 8 && value.compare(0, 8, "https://") == 0;
+}
+
 std::string DefaultCacheDirectory() {
   std::string cache_home = GetEnvironment("XDG_CACHE_HOME");
   if (!cache_home.empty()) {
@@ -111,6 +115,26 @@ Options OptionsFromEnvironment() {
       ParseBoolean(GetEnvironment("DEFYX_DEEP_SCAN"), options.deep_scan);
   options.health_check =
       ParseBoolean(GetEnvironment("DEFYX_HEALTH_CHECK"), options.health_check);
+  const std::string health_check_url =
+      GetEnvironment("DEFYX_HEALTH_CHECK_URL");
+  if (!health_check_url.empty()) {
+    options.health_check_url = health_check_url;
+  }
+  const std::string health_check_min_bytes =
+      GetEnvironment("DEFYX_HEALTH_CHECK_MIN_BYTES");
+  if (!health_check_min_bytes.empty() &&
+      !ParseNonNegativeInteger(health_check_min_bytes,
+                               &options.health_check_min_bytes)) {
+    options.health_check_min_bytes = -1;
+  }
+  const std::string health_check_timeout =
+      GetEnvironment("DEFYX_HEALTH_CHECK_TIMEOUT");
+  if (!health_check_timeout.empty() &&
+      (!ParseNonNegativeInteger(health_check_timeout,
+                                &options.health_check_timeout_seconds) ||
+       options.health_check_timeout_seconds == 0)) {
+    options.health_check_timeout_seconds = 0;
+  }
   options.cached_flowline = ParseBoolean(
       GetEnvironment("DEFYX_CACHED_FLOWLINE"), options.cached_flowline);
   options.test_flowline =
@@ -209,6 +233,40 @@ ParseResult ParseOptions(const std::vector<std::string>& arguments,
       result.options.health_check = true;
       continue;
     }
+    if (argument == "--health-check-url") {
+      if (!ReadValue(arguments, &index, argument,
+                     &result.options.health_check_url, &result.error)) {
+        return result;
+      }
+      continue;
+    }
+    if (argument == "--health-check-min-bytes") {
+      std::string value;
+      if (!ReadValue(arguments, &index, argument, &value, &result.error)) {
+        return result;
+      }
+      if (!ParseNonNegativeInteger(
+              value, &result.options.health_check_min_bytes)) {
+        result.error =
+            "--health-check-min-bytes must be a non-negative number";
+        return result;
+      }
+      continue;
+    }
+    if (argument == "--health-check-timeout") {
+      std::string value;
+      if (!ReadValue(arguments, &index, argument, &value, &result.error)) {
+        return result;
+      }
+      if (!ParseNonNegativeInteger(
+              value, &result.options.health_check_timeout_seconds) ||
+          result.options.health_check_timeout_seconds == 0) {
+        result.error =
+            "--health-check-timeout must be a positive number of seconds";
+        return result;
+      }
+      continue;
+    }
     if (argument == "--cached-flowline") {
       result.options.cached_flowline = true;
       continue;
@@ -264,6 +322,17 @@ ParseResult ParseOptions(const std::vector<std::string>& arguments,
       result.options.listen_port > 65535) {
     result.error = "--listen-port must be a number from 1 to 65535";
   }
+  if (!IsHttpsUrl(result.options.health_check_url)) {
+    result.error = "--health-check-url must use https://";
+  }
+  if (result.options.health_check_min_bytes < 0) {
+    result.error =
+        "--health-check-min-bytes must be a non-negative number";
+  }
+  if (result.options.health_check_timeout_seconds <= 0) {
+    result.error =
+        "--health-check-timeout must be a positive number of seconds";
+  }
   return result;
 }
 
@@ -286,7 +355,12 @@ Connect options:
   --cached-flowline      Use DXcore's cached flowline
   --test-flowline        Request the test flowline
   --deep-scan            Keep scanning connection methods
-  --health-check         Enable DXcore health checks
+  --health-check         Verify HTTPS and try each method until one passes
+  --health-check-url URL HTTPS endpoint used for validation
+  --health-check-min-bytes N
+                         Minimum complete response size (default: 65536)
+  --health-check-timeout SECONDS
+                         Per-check timeout (default: 20)
   --timeout SECONDS      Stop if not connected in time (0 means no timeout)
   --verbose              Enable verbose DXcore logging
   --quiet                Only print state changes and errors
@@ -296,6 +370,8 @@ Connect options:
 The same settings can be supplied with DEFYX_CORE_LIB, DEFYX_CACHE_DIR,
 DEFYX_FLOWLINE_FILE, DEFYX_PATTERN, DEFYX_CACHED_FLOWLINE,
 DEFYX_TEST_FLOWLINE, DEFYX_DEEP_SCAN, DEFYX_HEALTH_CHECK,
+DEFYX_HEALTH_CHECK_URL, DEFYX_HEALTH_CHECK_MIN_BYTES,
+DEFYX_HEALTH_CHECK_TIMEOUT,
 DEFYX_LISTEN_ADDRESS, DEFYX_LISTEN_PORT, DEFYX_CONNECT_TIMEOUT,
 DEFYX_VERBOSE, and DEFYX_QUIET.
 )";

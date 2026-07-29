@@ -1,5 +1,6 @@
 #include "cli_options.h"
 #include "flowline.h"
+#include "health_check.h"
 #include "progress.h"
 #include "status_file.h"
 #include "tcp_forwarder.h"
@@ -133,8 +134,10 @@ defyx_cli::FlowLineResult ResolveFlowLine(
 class RuntimeTracker {
  public:
   RuntimeTracker(std::string cache_directory, bool quiet,
-                 std::string endpoint)
-      : cache_directory_(std::move(cache_directory)), quiet_(quiet) {
+                 std::string endpoint, bool requires_health_check)
+      : cache_directory_(std::move(cache_directory)),
+        quiet_(quiet),
+        requires_health_check_(requires_health_check) {
     status_.pid = static_cast<int64_t>(getpid());
     status_.started_at = static_cast<int64_t>(std::time(nullptr));
     status_.state = "starting";
@@ -147,12 +150,26 @@ class RuntimeTracker {
     return WriteStatusLocked(error);
   }
 
-  void HandleProgress(const std::string& message) {
+  uint64_t BeginAttempt() {
+    std::unique_lock<std::mutex> lock(mutex_);
+    ++attempt_generation_;
+    core_connected_ = false;
+    terminal_event_ = defyx_cli::ProgressEvent::none;
+    status_.state = "connecting";
+    std::string ignored;
+    WriteStatusLocked(&ignored);
+    const uint64_t generation = attempt_generation_;
+    lock.unlock();
+    condition_.notify_all();
+    return generation;
+  }
+
+  void HandleProgress(const std::string& message, uint64_t generation) {
     const defyx_cli::ProgressEvent event =
         defyx_cli::ParseProgressEvent(message);
 
     std::unique_lock<std::mutex> lock(mutex_);
-    if (!active_) {
+    if (!active_ || generation != attempt_generation_) {
       return;
     }
     if (!quiet_ || event != defyx_cli::ProgressEvent::none) {
@@ -164,7 +181,7 @@ class RuntimeTracker {
         status_.state = "connecting";
         break;
       case defyx_cli::ProgressEvent::connected:
-        SetConnectedLocked();
+        SetCoreConnectedLocked();
         break;
       case defyx_cli::ProgressEvent::failed:
         status_.state = "failed";
@@ -184,17 +201,31 @@ class RuntimeTracker {
     condition_.notify_all();
   }
 
-  void MarkConnecting() {
-    UpdateState("connecting", defyx_cli::ProgressEvent::none);
+  void MarkCoreConnected(uint64_t generation) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!active_ || generation != attempt_generation_ ||
+        terminal_event_ != defyx_cli::ProgressEvent::none) {
+      return;
+    }
+    SetCoreConnectedLocked();
+    std::string ignored;
+    WriteStatusLocked(&ignored);
+    lock.unlock();
+    condition_.notify_all();
   }
 
-  void MarkConnected() {
+  bool MarkHealthy(uint64_t generation) {
     std::unique_lock<std::mutex> lock(mutex_);
+    if (!active_ || generation != attempt_generation_ ||
+        terminal_event_ != defyx_cli::ProgressEvent::none) {
+      return false;
+    }
     SetConnectedLocked();
     std::string ignored;
     WriteStatusLocked(&ignored);
     lock.unlock();
     condition_.notify_all();
+    return true;
   }
 
   void MarkStopping() {
@@ -211,8 +242,16 @@ class RuntimeTracker {
     return connected_;
   }
 
-  defyx_cli::ProgressEvent terminal_event() const {
+  bool core_connected(uint64_t generation) const {
     std::lock_guard<std::mutex> lock(mutex_);
+    return generation == attempt_generation_ && core_connected_;
+  }
+
+  defyx_cli::ProgressEvent terminal_event(uint64_t generation) const {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (generation != attempt_generation_) {
+      return defyx_cli::ProgressEvent::none;
+    }
     return terminal_event_;
   }
 
@@ -222,6 +261,15 @@ class RuntimeTracker {
   }
 
  private:
+  void SetCoreConnectedLocked() {
+    core_connected_ = true;
+    if (requires_health_check_) {
+      status_.state = "checking";
+    } else {
+      SetConnectedLocked();
+    }
+  }
+
   void SetConnectedLocked() {
     status_.state = "connected";
     if (!connected_) {
@@ -251,11 +299,14 @@ class RuntimeTracker {
 
   std::string cache_directory_;
   bool quiet_;
+  bool requires_health_check_;
   mutable std::mutex mutex_;
   std::condition_variable condition_;
   defyx_cli::RuntimeStatus status_;
   defyx_cli::ProgressEvent terminal_event_ =
       defyx_cli::ProgressEvent::none;
+  uint64_t attempt_generation_ = 0;
+  bool core_connected_ = false;
   bool connected_ = false;
   bool active_ = true;
 };
@@ -367,7 +418,7 @@ int Connect(const defyx_cli::Options& options) {
   }
 
   RuntimeTracker tracker(options.cache_directory, options.quiet,
-                         proxy_endpoint);
+                         proxy_endpoint, options.health_check);
   if (!tracker.Initialize(&error)) {
     std::cerr << "error: " << error << std::endl;
     return 2;
@@ -391,7 +442,9 @@ int Connect(const defyx_cli::Options& options) {
 
   defyx_core::EnableVerboseLogs(options.verbose);
   defyx_core::RegisterProgressHandler(
-      [&tracker](std::string message) { tracker.HandleProgress(message); });
+      [&tracker](std::string message) {
+        tracker.HandleProgress(message, 0);
+      });
   defyx_core::SetCacheDir(options.cache_directory);
   defyx_core::SetTimeZone(LocalUtcOffsetHours());
   defyx_core::SetAsnName();
@@ -424,6 +477,18 @@ int Connect(const defyx_cli::Options& options) {
     return 2;
   }
 
+  const std::vector<std::string> connection_methods =
+      options.health_check
+          ? defyx_cli::SplitConnectionMethods(pattern)
+          : std::vector<std::string> {pattern};
+  if (connection_methods.empty()) {
+    std::cerr << "error: --pattern does not contain a connection method"
+              << std::endl;
+    detach_progress();
+    remove_status();
+    return 2;
+  }
+
   if (!options.quiet) {
     std::cout << "Starting DefyxVPN in the foreground. Press Ctrl+C to stop."
               << '\n';
@@ -432,55 +497,171 @@ int Connect(const defyx_cli::Options& options) {
     }
     std::cout << std::flush;
   }
-  tracker.MarkConnecting();
-
-  if (!defyx_core::StartVPN(options.cache_directory, flowline.value,
-                            pattern, options.deep_scan,
-                            options.health_check)) {
-    std::cerr << "error: DXcore rejected the connection request";
-    const std::string core_error = defyx_core::GetLastError();
-    if (!core_error.empty()) {
-      std::cerr << ": " << core_error;
-    }
-    std::cerr << std::endl;
-    detach_progress();
-    remove_status();
-    return 2;
-  }
 
   const auto connection_started = std::chrono::steady_clock::now();
-  auto next_status_poll = connection_started;
   int result = 0;
+  bool connection_ready = false;
+  uint64_t active_generation = 0;
 
-  while (g_shutdown_signal == 0) {
-    const defyx_cli::ProgressEvent terminal_event = tracker.terminal_event();
-    if (terminal_event == defyx_cli::ProgressEvent::failed) {
-      std::cerr << "Connection failed." << std::endl;
-      result = kConnectionFailureExitCode;
-      break;
-    }
-    if (terminal_event == defyx_cli::ProgressEvent::stopped) {
-      std::cerr << "DXcore stopped unexpectedly." << std::endl;
-      result = kConnectionFailureExitCode;
-      break;
+  const auto stop_attempt = []() {
+    defyx_core::RegisterProgressHandler(nullptr);
+    defyx_core::StopVPN();
+    std::this_thread::sleep_for(std::chrono::milliseconds(150));
+  };
+
+  for (size_t method_index = 0;
+       method_index < connection_methods.size() &&
+       g_shutdown_signal == 0;
+       ++method_index) {
+    const std::string& method = connection_methods[method_index];
+    active_generation = tracker.BeginAttempt();
+    defyx_core::RegisterProgressHandler(
+        [&tracker, active_generation](std::string message) {
+          tracker.HandleProgress(message, active_generation);
+        });
+
+    if (options.health_check) {
+      std::cout << "Trying connection method: " << method << std::endl;
     }
 
-    const auto now = std::chrono::steady_clock::now();
-    if (!tracker.connected() && options.timeout_seconds > 0 &&
-        now - connection_started >=
-            std::chrono::seconds(options.timeout_seconds)) {
-      std::cerr << "Connection timed out after " << options.timeout_seconds
-                << " seconds." << std::endl;
-      result = kConnectionFailureExitCode;
-      break;
-    }
+    const bool request_accepted =
+        defyx_core::StartVPN(options.cache_directory, flowline.value,
+                             method, options.deep_scan,
+                             options.health_check);
+    bool attempt_failed = !request_accepted;
+    bool timed_out = false;
+    bool health_checker_failed = false;
+    auto next_status_poll = std::chrono::steady_clock::now();
 
-    if (now >= next_status_poll) {
-      const std::string core_status = defyx_core::GetVpnStatus();
-      if (core_status == "connected" && !tracker.connected()) {
-        tracker.MarkConnected();
+    if (!request_accepted) {
+      std::cerr << (options.health_check ? "warning: " : "error: ")
+                << "DXcore rejected "
+                << (options.health_check ? method : "the connection request");
+      const std::string core_error = defyx_core::GetLastError();
+      if (!core_error.empty()) {
+        std::cerr << ": " << core_error;
       }
-      next_status_poll = now + std::chrono::seconds(2);
+      std::cerr << std::endl;
+      if (!options.health_check) {
+        result = 2;
+      }
+    }
+
+    while (!attempt_failed && g_shutdown_signal == 0) {
+      const defyx_cli::ProgressEvent terminal_event =
+          tracker.terminal_event(active_generation);
+      if (terminal_event == defyx_cli::ProgressEvent::failed ||
+          terminal_event == defyx_cli::ProgressEvent::stopped) {
+        std::cerr
+            << (options.health_check ? "warning: " : "")
+            << (terminal_event == defyx_cli::ProgressEvent::failed
+                    ? "Connection failed"
+                    : "DXcore stopped unexpectedly");
+        if (options.health_check) {
+          std::cerr << " for " << method;
+        }
+        std::cerr << "." << std::endl;
+        attempt_failed = true;
+        break;
+      }
+
+      const auto now = std::chrono::steady_clock::now();
+      if (options.timeout_seconds > 0 &&
+          now - connection_started >=
+              std::chrono::seconds(options.timeout_seconds)) {
+        std::cerr << "Connection timed out after "
+                  << options.timeout_seconds << " seconds." << std::endl;
+        result = kConnectionFailureExitCode;
+        timed_out = true;
+        break;
+      }
+
+      if (now >= next_status_poll) {
+        if (defyx_core::GetVpnStatus() == "connected" &&
+            !tracker.core_connected(active_generation)) {
+          tracker.MarkCoreConnected(active_generation);
+        }
+        next_status_poll = now + std::chrono::seconds(2);
+      }
+
+      if (tracker.core_connected(active_generation)) {
+        if (!options.health_check) {
+          connection_ready = tracker.connected();
+          break;
+        }
+
+        if (!options.quiet) {
+          std::cout << "Checking HTTPS connectivity through " << method
+                    << "..." << std::endl;
+        }
+        defyx_cli::HealthCheckSettings health_settings;
+        health_settings.proxy_address = kCoreProxyAddress;
+        health_settings.proxy_port = kCoreProxyPort;
+        health_settings.url = options.health_check_url;
+        health_settings.minimum_bytes =
+            static_cast<uint64_t>(options.health_check_min_bytes);
+        health_settings.timeout_seconds =
+            options.health_check_timeout_seconds;
+        const defyx_cli::HealthCheckResult health =
+            defyx_cli::RunHttpsHealthCheck(health_settings);
+
+        if (health.healthy) {
+          if (!options.quiet) {
+            std::cout << "Health check passed for " << method << ": HTTP "
+                      << health.http_status << ", "
+                      << health.downloaded_bytes << " bytes." << std::endl;
+          }
+          connection_ready =
+              tracker.MarkHealthy(active_generation);
+        } else {
+          std::cerr << "warning: health check failed for " << method
+                    << ": " << health.error;
+          if (health.http_status != 0 ||
+              health.downloaded_bytes != 0) {
+            std::cerr << " (HTTP " << health.http_status << ", "
+                      << health.downloaded_bytes << " bytes)";
+          }
+          std::cerr << std::endl;
+          attempt_failed = true;
+          health_checker_failed = health.exit_code < 0;
+          if (health_checker_failed) {
+            result = 2;
+          }
+        }
+        break;
+      }
+
+      tracker.WaitForUpdate(std::chrono::milliseconds(250));
+    }
+
+    if (connection_ready || g_shutdown_signal != 0 ||
+        timed_out || health_checker_failed || result == 2) {
+      break;
+    }
+
+    const bool has_next_method =
+        method_index + 1 < connection_methods.size();
+    if (has_next_method) {
+      stop_attempt();
+      std::cerr << "Trying the next connection method." << std::endl;
+      continue;
+    }
+
+    result = kConnectionFailureExitCode;
+  }
+
+  while (connection_ready && g_shutdown_signal == 0) {
+    const defyx_cli::ProgressEvent terminal_event =
+        tracker.terminal_event(active_generation);
+    if (terminal_event == defyx_cli::ProgressEvent::failed ||
+        terminal_event == defyx_cli::ProgressEvent::stopped) {
+      std::cerr
+          << (terminal_event == defyx_cli::ProgressEvent::failed
+                  ? "Connection failed."
+                  : "DXcore stopped unexpectedly.")
+          << std::endl;
+      result = kConnectionFailureExitCode;
+      break;
     }
     tracker.WaitForUpdate(std::chrono::milliseconds(250));
   }
@@ -489,6 +670,7 @@ int Connect(const defyx_cli::Options& options) {
   if (!options.quiet) {
     std::cout << "Stopping DefyxVPN..." << std::endl;
   }
+  defyx_core::RegisterProgressHandler(nullptr);
   defyx_core::StopVPN();
   defyx_core::Stop();
   std::this_thread::sleep_for(std::chrono::milliseconds(100));
