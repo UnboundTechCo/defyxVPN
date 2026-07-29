@@ -286,8 +286,16 @@ void TcpForwarder::ForwardConnection(int client_socket) {
       {client_socket, POLLIN, 0},
       {target_socket, POLLIN, 0},
   };
+  bool read_open[2] = {true, true};
 
-  while (!stopping_.load()) {
+  // A FIN closes one direction only; let the peer drain the other direction.
+  const auto finish_read_direction = [&sockets, &read_open](size_t index) {
+    read_open[index] = false;
+    sockets[index].events = 0;
+    shutdown(sockets[1U - index].fd, SHUT_WR);
+  };
+
+  while (!stopping_.load() && (read_open[0] || read_open[1])) {
     const int result = poll(sockets, 2, 500);
     if (result < 0) {
       if (errno == EINTR) {
@@ -301,20 +309,38 @@ void TcpForwarder::ForwardConnection(int client_socket) {
 
     bool relay_failed = false;
     for (size_t index = 0; index < 2; ++index) {
+      if (!read_open[index]) {
+        continue;
+      }
       const short events = sockets[index].revents;
       if ((events & POLLIN) != 0) {
-        const ssize_t received =
-            recv(sockets[index].fd, buffer.data(), buffer.size(), 0);
+        ssize_t received = 0;
+        do {
+          received =
+              recv(sockets[index].fd, buffer.data(), buffer.size(), 0);
+        } while (received < 0 && errno == EINTR);
+
         const int destination = sockets[1U - index].fd;
-        if (received <= 0 ||
+        if (received > 0 &&
             !SendAll(destination, buffer.data(),
                      static_cast<size_t>(received))) {
           relay_failed = true;
           break;
         }
+        if (received == 0) {
+          finish_read_direction(index);
+        } else if (received < 0) {
+          relay_failed = true;
+          break;
+        }
       }
-      if ((events & (POLLERR | POLLHUP | POLLNVAL)) != 0 &&
-          (events & POLLIN) == 0) {
+      if (!read_open[index]) {
+        continue;
+      }
+      if ((events & POLLHUP) != 0 && (events & POLLIN) == 0) {
+        finish_read_direction(index);
+      } else if ((events & (POLLERR | POLLNVAL)) != 0 &&
+                 (events & POLLIN) == 0) {
         relay_failed = true;
         break;
       }

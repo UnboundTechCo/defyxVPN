@@ -62,6 +62,20 @@ bool ReceiveAllForTest(int socket, char* data, size_t size) {
   return true;
 }
 
+bool ReceiveEofForTest(int socket) {
+  char data = '\0';
+  while (true) {
+    const ssize_t result = recv(socket, &data, sizeof(data), 0);
+    if (result == 0) {
+      return true;
+    }
+    if (result < 0 && errno == EINTR) {
+      continue;
+    }
+    return false;
+  }
+}
+
 void TestOptions() {
   defyx_cli::Options defaults;
   defaults.cache_directory = "/tmp/default";
@@ -252,7 +266,8 @@ void TestTcpForwarder() {
     if (client >= 0) {
       char buffer[sizeof(kRelayMessage)] {};
       if (ReceiveAllForTest(client, buffer, sizeof(buffer)) &&
-          SendAllForTest(client, buffer, sizeof(buffer))) {
+          ReceiveEofForTest(client) &&
+          SendAllForTest(client, kRelayMessage, sizeof(kRelayMessage))) {
         echo_ok.store(true);
       }
       close(client);
@@ -283,6 +298,9 @@ void TestTcpForwarder() {
       !SendAllForTest(client, kRelayMessage, sizeof(kRelayMessage))) {
     relay_ok = false;
   }
+  if (relay_ok && shutdown(client, SHUT_WR) != 0) {
+    relay_ok = false;
+  }
 
   char response[sizeof(kRelayMessage)] {};
   if (relay_ok) {
@@ -297,7 +315,7 @@ void TestTcpForwarder() {
   forwarder.Stop();
   echo_thread.join();
   Check(relay_ok && echo_ok.load(),
-        "TCP forwarder should relay data in both directions");
+        "TCP forwarder should preserve responses after a half-close");
 }
 
 }  // namespace
