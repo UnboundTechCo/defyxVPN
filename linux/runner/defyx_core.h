@@ -34,4 +34,5 @@ void RegisterProgressHandler(std::function<void(std::string)> handler);
 // Returns true if the shared library was loaded and entrypoints found.
 bool LoadCoreDll(const std::string& dllPath = "");
 void UnloadCoreDll();
+std::string GetLastError();
 } // namespace defyx_core

@@ -71,6 +71,7 @@ jobs:
             ninja-build \
             pkg-config \
             libgtk-3-dev \
+            libjson-c-dev \
             liblzma-dev \
             libayatana-appindicator3-dev \
             libgstreamer1.0-dev \
@@ -96,6 +97,25 @@ jobs:
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           fastforge release --name=production
 
+      - name: Build headless Linux CLI
+        run: |
+          cmake -S linux/cli -B build/linux-cli -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON \
+            -DDEFYX_DXCORE_LIB="$GITHUB_WORKSPACE/linux/runner/libdxcore_amd64.so"
+          cmake --build build/linux-cli
+          ctest --test-dir build/linux-cli --output-on-failure
+
+          CLI_DIST="$GITHUB_WORKSPACE/build/linux-cli-dist"
+          mkdir -p "$CLI_DIST"
+          cp build/linux-cli/bin/defyxvpn-cli "$CLI_DIST/"
+          cp linux/runner/libdxcore_amd64.so "$CLI_DIST/"
+          cp linux/cli/README.md "$CLI_DIST/"
+          cp linux/cli/defyxvpn-cli.service "$CLI_DIST/"
+          cp linux/cli/defyxvpn-cli.env.example "$CLI_DIST/"
+          tar -C "$CLI_DIST" -czf \
+            "$GITHUB_WORKSPACE/build/DefyxVPN-CLI-Linux-x86_64.tar.gz" .
+
       - name: Rename Linux artifacts
         run: |
           shopt -s globstar nullglob
@@ -115,4 +135,5 @@ jobs:
             build/**/*.AppImage
             build/**/*.deb
             build/**/*.rpm
+            build/**/*.tar.gz
           if-no-files-found: error
