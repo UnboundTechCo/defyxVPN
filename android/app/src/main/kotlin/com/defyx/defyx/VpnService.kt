@@ -1,6 +1,7 @@
 package de.unboundtech.defyxvpn
 
 import android.Android
+import android.SocketProtector
 import android.app.*
 import android.content.Context
 import android.content.Intent
@@ -21,7 +22,9 @@ class DefyxVpnService : VpnService() {
         private const val CHANNEL_ID = "defyx_vpn_channel"
         @Volatile private lateinit var instance: DefyxVpnService
         fun getInstance(): DefyxVpnService = instance
+        private var vpnInterface: ParcelFileDescriptor? = null
         private var listener: ((String) -> Unit)? = null
+        private var tunnelFd = -1
         private var isServiceRunning = false
         private var isVpnConnected = false
         private var connectionMethod: String? = ""
@@ -41,6 +44,10 @@ class DefyxVpnService : VpnService() {
     }
 
     override fun onDestroy() {
+        try {
+            vpnInterface?.close()
+        } catch (_: Exception) {}
+        vpnInterface = null
         super.onDestroy()
         log("VPN Service Destroyed")
     }
@@ -163,8 +170,43 @@ class DefyxVpnService : VpnService() {
                 notifyVpnStatus("connecting")
                 startAsForeground("DefyxVPN", "Connecting...")
 
-                val success = Android.startTunnel()
-                
+                val builder =
+                        Builder()
+                                .setSession("DefyxVPN")
+                                .addAddress("172.18.0.1", 30)
+                                .addRoute("0.0.0.0", 0)
+                                .addDnsServer("1.1.1.1")
+                                .setMtu(9000)
+                                .setBlocking(false)
+
+                try {
+                    builder.addDisallowedApplication(context.packageName)
+                } catch (_: Exception) {}
+
+                vpnInterface?.close()
+                vpnInterface = builder.establish()
+
+                val fd = vpnInterface?.fd ?: -1
+
+                if (fd <= 0) {
+                    Log.e(TAG, "Failed to establish tun interface")
+                    tunnelFd = -1
+                    isVpnConnected = false
+                    withContext(Dispatchers.Main) { saveVpnState(false) }
+                    updateNotification("DefyxVPN", "Connection failed")
+                    notifyVpnStatus("disconnected")
+                    return@launch
+                }
+
+                tunnelFd = fd
+                Android.setSocketProtector(
+                        object : SocketProtector {
+                            override fun protect(fileDescriptor: Int): Boolean =
+                                    this@DefyxVpnService.protect(fileDescriptor)
+                        }
+                )
+                val success = Android.startTunnel(fd.toLong())
+
                 isVpnConnected = success
                 withContext(Dispatchers.Main) { saveVpnState(isVpnConnected) }
 
@@ -173,6 +215,7 @@ class DefyxVpnService : VpnService() {
                     notifyVpnStatus("connected")
                 } else {
                     Log.e(TAG, "Tunnel start failed")
+                    tunnelFd = -1
                     updateNotification("DefyxVPN", "Connection failed")
                     notifyVpnStatus("disconnected")
                 }
@@ -193,10 +236,17 @@ class DefyxVpnService : VpnService() {
                     updateNotification("DefyxVPN", "Disconnecting...")
                 }
 
+                try {
+                    vpnInterface?.close()
+                } catch (_: Exception) {}
+                vpnInterface = null
+
                 Android.stopVPN()
                 Android.stopTunnel()
 
+                tunnelFd = -1
                 isVpnConnected = false
+                isServiceRunning = false
                 saveVpnState(false)
 
                 withContext(Dispatchers.Main) {
@@ -205,6 +255,7 @@ class DefyxVpnService : VpnService() {
                     val notificationManager =
                             getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(NOTIFICATION_ID)
+                    stopSelf()
                 }
             } catch (e: Exception) {
                 log("Error stopping VPN: ${e.message}")
@@ -320,6 +371,7 @@ class DefyxVpnService : VpnService() {
     override fun onRevoke() {
         super.onRevoke()
         Log.d("VPN_SERVICE", "Revoked")
+        disconnectVpn()
     }
 
     private fun saveVpnState(isRunning: Boolean) {
