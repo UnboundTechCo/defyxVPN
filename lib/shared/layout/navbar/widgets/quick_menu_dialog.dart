@@ -36,7 +36,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(bottom: 20.h),
@@ -72,7 +72,11 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
                         title: l10n.privacyPolicy,
                         onTap: () {
@@ -87,7 +91,11 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
                         title: l10n.termsAndConditions,
                         onTap: () {
@@ -95,14 +103,19 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => CustomWebViewScreen(
-                                url: 'https://defyxvpn.com/terms-and-conditions',
+                                url:
+                                    'https://defyxvpn.com/terms-and-conditions',
                                 title: l10n.termsAndConditions,
                               ),
                             ),
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       SizedBox(
                         height: 44,
                         child: Row(
@@ -128,7 +141,8 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                             ),
                             SocialIconButton(
                               iconPath: AppIcons.facebookPath,
-                              url: 'https://www.facebook.com/profile.php?id=61584237212686',
+                              url:
+                                  'https://www.facebook.com/profile.php?id=61584237212686',
                               enable: true,
                             ),
                             SocialIconButton(
@@ -140,31 +154,58 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           ],
                         ),
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
                         title: l10n.marketplace,
                         leadingIcon: AppIcons.shop(
                           width: 18.w,
                           height: 18.w,
-                          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                          colorFilter: const ColorFilter.mode(
+                            Colors.black,
+                            BlendMode.srcIn,
+                          ),
+                        ),
+                        onTap: () {
+                          Navigator.of(context).pop();
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CustomWebViewScreen(
+                                url: 'https://market.defyxvpn.com',
+                                title: l10n.marketplace,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
+                      QuickMenuItem(
+                        title: l10n.telegramBot,
+                        leadingIcon: AppIcons.telegramBot(
+                          width: 18.w,
+                          height: 18.w,
                         ),
                         onTap: () async {
                           Navigator.of(context).pop();
-                          final uri = Uri.parse('https://market.defyxvpn.com');
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
-                        },
-                      ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
-                      QuickMenuItem(
-                        title: l10n.telegramBot,
-                        leadingIcon: AppIcons.telegramBot(width: 18.w, height: 18.w),
-                        onTap: () async {
-                          Navigator.of(context).pop();
                           final uri = Uri.parse('https://t.me/DefyxVPN_bot');
-                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       Container(
                         height: 44,
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
