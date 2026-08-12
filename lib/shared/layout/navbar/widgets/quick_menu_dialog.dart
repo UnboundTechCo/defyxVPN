@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class QuickMenuDialog extends StatefulWidget {
@@ -131,25 +132,36 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                               enable: true,
                             ),
                             SocialIconButton(
-                              iconPath: AppIcons.linkedinPath,
-                              url: 'https://www.linkedin.com/products/unboundtechco-defyxvpn/',
+                              iconPath: AppIcons.websitePath,
+                              url: 'https://defyxvpn.com',
+                              iconWidth: 20.w,
+                              iconHeight: 20.w,
                             ),
                           ],
                         ),
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
                       QuickMenuItem(
-                        title: l10n.ourWebsite,
-                        onTap: () {
+                        title: l10n.marketplace,
+                        leadingIcon: AppIcons.shop(
+                          width: 18.w,
+                          height: 18.w,
+                          colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+                        ),
+                        onTap: () async {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => CustomWebViewScreen(
-                                url: 'https://defyxvpn.com/contact',
-                                title: l10n.ourWebsite,
-                              ),
-                            ),
-                          );
+                          final uri = Uri.parse('https://market.defyxvpn.com');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
+                        },
+                      ),
+                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      QuickMenuItem(
+                        title: l10n.telegramBot,
+                        leadingIcon: AppIcons.telegramBot(width: 18.w, height: 18.w),
+                        onTap: () async {
+                          Navigator.of(context).pop();
+                          final uri = Uri.parse('https://t.me/DefyxVPN_bot');
+                          await launchUrl(uri, mode: LaunchMode.externalApplication);
                         },
                       ),
                       Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),

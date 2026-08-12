@@ -26,6 +26,8 @@ class AppIcons {
   static const String xPath = 'assets/icons/x.svg';
   static const String facebookPath = 'assets/icons/facebook.svg';
   static const String linkedinPath = 'assets/icons/linkedin.svg';
+  static const String websitePath = 'assets/icons/website.svg';
+  static const String telegramBotPath = 'assets/icons/telegram_bot.svg';
 
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
@@ -126,6 +128,14 @@ class AppIcons {
     return SvgPicture.asset(linkedinPath, width: width, height: height);
   }
 
+  static SvgPicture website({double? width, double? height}) {
+    return SvgPicture.asset(websitePath, width: width, height: height);
+  }
+
+  static SvgPicture telegramBot({double? width, double? height}) {
+    return SvgPicture.asset(telegramBotPath, width: width, height: height);
+  }
+
   static SvgPicture importConfig({double? width, double? height}) {
     return SvgPicture.asset(importConfigPath, width: width, height: height);
   }
@@ -134,11 +144,12 @@ class AppIcons {
     return SvgPicture.asset(vpnCloudPath, width: width, height: height);
   }
 
-  static SvgPicture shop({double? width, double? height}) {
+  static SvgPicture shop({double? width, double? height, ColorFilter? colorFilter}) {
     return SvgPicture.asset(
       shopPath,
       width: width,
       height: height,
+      colorFilter: colorFilter,
     );
   }
 
