@@ -129,7 +129,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     state = const SpeedTestState();
 
-    debugPrint('🛑 Speed test stopped and reset');
+    debugPrint('Speed test stopped and reset');
   }
 
   void _stopTestOnly() {
@@ -146,7 +146,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _uploadSpeeds.clear();
     _latencies.clear();
 
-    debugPrint('🛑 Speed test stopped (without state reset)');
+    debugPrint('Speed test stopped (without state reset)');
   }
 
   Future<void> startTest() async {
@@ -155,7 +155,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     }
 
     _isTestCanceled = false;
-    debugPrint('🚀 Cloudflare Speed Test Started');
+    debugPrint('Cloudflare Speed Test Started');
     _measurementId = _generateMeasurementId();
 
     state = state.copyWith(
@@ -179,17 +179,17 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       await _runMeasurementSequence();
 
       if (_isTestCanceled) {
-        debugPrint('🛑 Speed test was canceled');
+        debugPrint('Speed test was canceled');
         _stopConnectionMonitoring();
         return;
       }
 
       _calculateFinalResults();
       _checkConnectionStability();
-      debugPrint('🏁 Speed test completed successfully');
+      debugPrint('Speed test completed successfully');
       _stopConnectionMonitoring();
     } catch (e) {
-      debugPrint('❌ Speed test error: $e');
+      debugPrint('Speed test error: $e');
       _stopConnectionMonitoring();
       _alertService.error();
       state = state.copyWith(
@@ -208,10 +208,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       connectionStateProvider,
       (previous, next) {
         final status = next.status;
-        debugPrint('🔍 Connection status during test: $status');
+        debugPrint('Connection status during test: $status');
 
         if (!_isConnectionValid(status) && _isTestRunning()) {
-          debugPrint('🛑 Connection became invalid during speed test, stopping...');
+          debugPrint('Connection became invalid during speed test, stopping...');
           stopAndResetTest();
         }
       },
@@ -238,7 +238,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
 
     for (int i = 0; i < SpeedMeasurementConfig.measurements.length; i++) {
       if (_isTestCanceled) {
-        debugPrint('🛑 Measurement sequence canceled');
+        debugPrint('Measurement sequence canceled');
         return;
       }
 
@@ -268,7 +268,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         await Future.delayed(const Duration(milliseconds: 1200));
 
         if (_isTestCanceled) {
-          debugPrint('🛑 Measurement sequence canceled during transition');
+          debugPrint('Measurement sequence canceled during transition');
           return;
         }
       }
@@ -278,7 +278,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       }
 
       debugPrint(
-          '📊 Running measurement ${i + 1}/${SpeedMeasurementConfig.totalMeasurements}: $type');
+          'Running measurement ${i + 1}/${SpeedMeasurementConfig.totalMeasurements}: $type');
 
       switch (type) {
         case 'latency':

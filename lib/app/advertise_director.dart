@@ -20,16 +20,16 @@ class AdvertiseDirector {
       final isIran = currentTimeZone == 'Asia/Tehran';
       return isIran;
     } catch (e) {
-      debugPrint('⚠️ Error detecting timezone: $e');
+      debugPrint('Error detecting timezone: $e');
       return false;
     }
   }
 
   static Future<bool> shouldUseInternalAds(Ref ref) async {
     // STRATEGY SELECTION (for backward compatibility with desktop):
-    // - Desktop (Windows/macOS/Linux) → InternalAdStrategy only (no AdMob support)
-    // - Iranian users → InternalAdStrategy only (AdMob disabled for Iran)
-    // - Mobile (Android/iOS) → DUAL strategy approach:
+    // - Desktop (Windows/macOS/Linux) -> InternalAdStrategy only (no AdMob support)
+    // - Iranian users -> InternalAdStrategy only (AdMob disabled for Iran)
+    // - Mobile (Android/iOS) -> DUAL strategy approach:
     //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
     //     * InternalAdStrategy handles internal ads (connected state ONLY)
     //     * AdsWidget coordinates between the two strategies
@@ -65,7 +65,7 @@ class AdvertiseDirector {
 
   static Future<Map<String, String>> getRandomCustomAd(Ref ref) async {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Getting ad for timezone: $currentTimeZone');
+    debugPrint('Ad Manager - Getting ad for timezone: $currentTimeZone');
 
     final adversies =
         await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
@@ -76,14 +76,14 @@ class AdvertiseDirector {
       // Try timezone-specific ads first
       if (advertiseMap.containsKey(currentTimeZone)) {
         final adsData = advertiseMap[currentTimeZone] as List<dynamic>;
-        debugPrint('📍 Ad Manager - Found ${adsData.length} timezone-specific ads');
+        debugPrint('Ad Manager - Found ${adsData.length} timezone-specific ads');
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);
           final selectedAd = adsData[randomIndex] as List<dynamic>;
 
           if (selectedAd.length >= 2) {
-            debugPrint('📍 Ad Manager - Selected timezone ad #$randomIndex');
+            debugPrint('Ad Manager - Selected timezone ad #$randomIndex');
             return {
               'imageUrl': selectedAd[0] as String,
               'clickUrl': selectedAd[1] as String,
@@ -95,14 +95,14 @@ class AdvertiseDirector {
       // Fallback to "General" ads if no timezone-specific ads
       if (advertiseMap.containsKey('General')) {
         final adsData = advertiseMap['General'] as List<dynamic>;
-        debugPrint('📍 Ad Manager - Using "General" fallback ads (${adsData.length} available)');
+        debugPrint('Ad Manager - Using"General"fallback ads (${adsData.length} available)');
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);
           final selectedAd = adsData[randomIndex] as List<dynamic>;
 
           if (selectedAd.length >= 2) {
-            debugPrint('📍 Ad Manager - Selected General ad #$randomIndex');
+            debugPrint('Ad Manager - Selected General ad #$randomIndex');
             return {
               'imageUrl': selectedAd[0] as String,
               'clickUrl': selectedAd[1] as String,

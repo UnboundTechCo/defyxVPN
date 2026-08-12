@@ -126,7 +126,7 @@ class AdStrategyManager {
       next,
     ) {
       debugPrint(
-        '🔔 Connection listener FIRED: ${previous?.status.name ?? "null"} → ${next.status.name}',
+        'Connection changed: ${previous?.status.name ?? "none"} -> ${next.status.name}',
       );
 
       final prevStatus = previous?.status ?? conn.ConnectionStatus.disconnected;
@@ -184,7 +184,7 @@ class AdStrategyManager {
       );
     }
     // When leaving connected state: Clean up internal ads immediately
-    // This handles: connected → disconnecting, connected → disconnected
+    // This handles: connected -> disconnecting, connected -> disconnected
     else if (previous == conn.ConnectionStatus.connected &&
         current != conn.ConnectionStatus.connected) {
 
@@ -198,7 +198,7 @@ class AdStrategyManager {
     }
 
     // When reaching disconnected state: Load AdMob ad (if available)
-    // This handles: disconnecting → disconnected, connected → disconnected, anything → disconnected
+    // This handles: disconnecting -> disconnected, connected -> disconnected, anything -> disconnected
     if (current == conn.ConnectionStatus.disconnected &&
         previous != conn.ConnectionStatus.disconnected) {
       if (_hasGoogleStrategy) {
@@ -256,19 +256,19 @@ class AdStrategyManager {
   /// This is called when consent flow completes and user is still disconnected
   void retryGoogleAdLoad() {
     if (!_hasGoogleStrategy) {
-      debugPrint('⚠️ Cannot retry - Google strategy not available');
+      debugPrint('Cannot retry - Google strategy not available');
       return;
     }
 
     final currentConnectionState = _ref.read(conn.connectionStateProvider);
     if (currentConnectionState.status != conn.ConnectionStatus.disconnected) {
       debugPrint(
-        '⚠️ Cannot retry - not disconnected (${currentConnectionState.status.name})',
+        'Cannot retry - not disconnected (${currentConnectionState.status.name})',
       );
       return;
     }
 
-    debugPrint('🔄 Retrying Google ad load after consent');
+    debugPrint('Retrying Google ad load after consent');
     final googleStrategy = _googleStrategy!;
     googleStrategy.onConnectionStateChanged(
       ref: _ref,
@@ -281,11 +281,11 @@ class AdStrategyManager {
 
   /// Dispose strategies and subscriptions
   void dispose() {
-    debugPrint('🧹 AdStrategyManager - Disposing');
+    debugPrint('AdStrategyManager - Disposing');
     _connectionSubscription?.close();
     _internalStrategy.dispose();
     _googleStrategy?.dispose();
-    debugPrint('✅ AdStrategyManager - Disposed');
+    debugPrint('AdStrategyManager - Disposed');
   }
 
   InternalAdStrategy get internalStrategy => _internalStrategy;

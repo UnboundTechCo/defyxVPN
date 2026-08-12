@@ -62,19 +62,19 @@ class LanguageNotifier extends StateNotifier<LanguageState> {
       final selectedLang = deviceLocale.languageCode == 'zh' ? 'zh' : 'en';
       return selectedLang;
     } catch (e) {
-      debugPrint('🌍 Error detecting device language: $e');
+      debugPrint('Error detecting device language: $e');
       // Fallback to English if detection fails
       return 'en';
     }
   }
 
   Future<void> changeLanguage(AppLanguage language) async {
-    debugPrint('🌍 Changing language to: ${language.code} (${language.nativeName})');
+    debugPrint('Changing language to: ${language.code} (${language.nativeName})');
     state = state.copyWith(isLoading: true);
     await _prefs.setString(_languageKey, language.code);
-    debugPrint('🌍 Language saved to SharedPreferences');
+    debugPrint('Language saved to SharedPreferences');
     state = state.copyWith(language: language, isLoading: false);
-    debugPrint('🌍 Language state updated to: ${state.language.code}');
+    debugPrint('Language state updated to: ${state.language.code}');
   }
 
   Locale get currentLocale => state.language.locale;

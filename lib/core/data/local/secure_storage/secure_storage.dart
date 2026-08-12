@@ -24,12 +24,9 @@ final class WindowsSecureStorage implements ISecureStorage {
   Future<void> write(String key, String value) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final success = await prefs.setString('$_prefix$key', value);
-      debugPrint(
-        'WindowsSecureStorage.write($key): success=$success, length=${value.length}',
-      );
+      await prefs.setString('$_prefix$key', value);
     } catch (e) {
-      debugPrint('Error writing to Windows storage: $e');
+      debugPrint('Failed to write $key to secure storage: $e');
       rethrow;
     }
   }
