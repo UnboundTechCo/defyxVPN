@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:defyx_vpn/firebase_options.dart';
+import 'package:defyx_vpn/modules/core/desktop_tunnel/tunnel_process.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +13,13 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 
-void main() async {
+void main(List<String> arguments) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (TunnelProcess.matches(arguments)) {
+    await TunnelProcess.run(arguments);
+    return;
+  }
 
   // Silence Dart console logging in release builds.
   // Debug builds keep logs so developers can still trace issues.

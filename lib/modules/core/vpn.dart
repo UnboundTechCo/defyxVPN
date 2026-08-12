@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/modules/core/desktop_tunnel/desktop_tunnel.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -64,6 +65,10 @@ class VPN {
     _container?.read(settingsProvider.notifier).saveState();
 
     alertService.init();
+    DesktopTunnel.instance.onLog = (message) {
+      log.addLog('[TUN] $message');
+      debugPrint('[TUN] $message');
+    };
     _loadChangeRootListener();
     log.logAppVersion();
     final now = DateTime.now();
@@ -211,7 +216,7 @@ class VPN {
       crashReportingService.setCustomKey('crash_platform', platform);
 
       debugPrint(
-        '🔥 Go panic reported to Crashlytics: $functionName - $errorMessage',
+        'Go panic reported to Crashlytics: $functionName - $errorMessage',
       );
     } catch (e) {
       debugPrint('Error handling crash event: $e');
@@ -398,6 +403,7 @@ class VPN {
   Future<void> _stopVPN(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
+    await _stopDesktopTunnel();
     await _vpnBridge.stopVPN();
     _clearData(ref);
     connectionNotifier.setDisconnected();
@@ -407,6 +413,7 @@ class VPN {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier.setDisconnecting();
+    await _stopDesktopTunnel();
     await _vpnBridge.disconnectVpn();
     _clearData(ref);
     await vpnData?.disableVPN();
@@ -423,6 +430,7 @@ class VPN {
     if (!keepConnectionStatus) {
       connectionNotifier?.setDisconnecting();
     }
+    await _stopDesktopTunnel();
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
@@ -453,7 +461,7 @@ class VPN {
         return await _vpnBridge.connectVpn();
       case "windows":
       case "linux":
-        return await _vpnBridge.grantVpnPermission();
+        return await _prepareDesktopTunnel();
       default:
         return false;
     }
@@ -469,8 +477,47 @@ class VPN {
         break;
       case "windows":
       case "linux":
+        await _startDesktopTunnel();
         break;
     }
+  }
+
+  Future<bool> _prepareDesktopTunnel() async {
+    final granted = await _vpnBridge.grantVpnPermission() ?? false;
+    if (!granted) {
+      return false;
+    }
+    if (!await _vpnBridge.isVpnModeEnabled()) {
+      return true;
+    }
+
+    final isReady = await DesktopTunnel.instance.prepare();
+    if (!isReady) {
+      log.addLog(
+        '[ERROR] Tunnel privileges refused: ${DesktopTunnel.instance.lastError}',
+      );
+    }
+    return isReady;
+  }
+
+  Future<void> _startDesktopTunnel() async {
+    if (!await _vpnBridge.isVpnModeEnabled()) {
+      return;
+    }
+
+    final isStarted = await DesktopTunnel.instance.start();
+    if (!isStarted) {
+      log.addLog(
+        '[ERROR] Failed to start tunnel: ${DesktopTunnel.instance.lastError}',
+      );
+    }
+  }
+
+  Future<void> _stopDesktopTunnel() async {
+    if (!DesktopTunnel.instance.isSupported) {
+      return;
+    }
+    await DesktopTunnel.instance.stop();
   }
 
   void _setConnectionStep(int step) {

@@ -23,6 +23,8 @@ class DXCoreBridge {
   void StartVPN(const std::string& cache_dir, const std::string& flow_line,
                 const std::string& pattern, const bool deepScan, const bool health_check);
   int StopVPN();
+  int StartTunnel();
+  void StopTunnel();
   void SetAsnName();
   int SetTimeZone(float tz);
   std::string GetFlowLine(bool is_test, const std::string& token);
@@ -50,6 +52,8 @@ class DXCoreBridge {
   using WinGetFlag_t = const char* (*)();
   using WinStartVPN_t = void (*)(const char*, const char*, const char*, int, int);
   using WinStopVPN_t = int (*)();
+  using WinStartTunnel_t = int (*)();
+  using WinStopTunnel_t = void (*)();
   using WinSetAsnName_t = void (*)();
   using WinSetTimeZone_t = int (*)(float);
   using WinGetFlowLine_t = const char* (*)(int, const char*);
@@ -70,6 +74,8 @@ class DXCoreBridge {
   WinGetFlag_t pGetFlag_ = nullptr;
   WinStartVPN_t pStartVPN_ = nullptr;
   WinStopVPN_t pStopVPN_ = nullptr;
+  WinStartTunnel_t pStartTunnel_ = nullptr;
+  WinStopTunnel_t pStopTunnel_ = nullptr;
   WinSetAsnName_t pSetAsnName_ = nullptr;
   WinSetTimeZone_t pSetTimeZone_ = nullptr;
   WinGetFlowLine_t pGetFlowLine_ = nullptr;

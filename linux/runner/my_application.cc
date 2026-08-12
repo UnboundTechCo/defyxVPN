@@ -27,6 +27,7 @@ struct _MyApplication
   GtkApplication parent_instance;
   char **dart_entrypoint_arguments;
   gboolean start_minimized;
+  gboolean tunnel_mode;
 };
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
@@ -228,6 +229,12 @@ static gboolean on_window_delete_event(GtkWidget *widget, GdkEvent *event, gpoin
   return FALSE; // Allow destruction
 }
 
+static gboolean hide_tunnel_window(gpointer data)
+{
+  gtk_widget_hide(GTK_WIDGET(data));
+  return FALSE;
+}
+
 // Implements GApplication::activate.
 static void my_application_activate(GApplication *application)
 {
@@ -244,7 +251,7 @@ static void my_application_activate(GApplication *application)
   // in case the window manager does more exotic layout, e.g. tiling.
   // If running on Wayland assume the header bar will work (may need changing
   // if future cases occur).
-  gboolean use_header_bar = TRUE;
+  gboolean use_header_bar = !self->tunnel_mode;
 #ifdef GDK_WINDOWING_X11
   GdkScreen *screen = gtk_window_get_screen(window);
   if (GDK_IS_X11_SCREEN(screen))
@@ -269,26 +276,40 @@ static void my_application_activate(GApplication *application)
     gtk_window_set_title(window, "DefyxVPN");
   }
 
-  // Set window size to match Windows (400x700)
-  gtk_window_set_default_size(window, 400, 700);
+  if (self->tunnel_mode)
+  {
+    gtk_window_set_decorated(window, FALSE);
+    gtk_window_set_skip_taskbar_hint(window, TRUE);
+    gtk_window_set_skip_pager_hint(window, TRUE);
+    gtk_window_set_default_size(window, 1, 1);
+    gtk_window_move(window, -32000, -32000);
+  }
+  else
+  {
+    // Set window size to match Windows (400x700)
+    gtk_window_set_default_size(window, 400, 700);
 
-  // Disable window resizing (like Windows: ~WS_THICKFRAME)
-  gtk_window_set_resizable(window, FALSE);
+    // Disable window resizing (like Windows: ~WS_THICKFRAME)
+    gtk_window_set_resizable(window, FALSE);
 
-  // Disable maximize button (like Windows: ~WS_MAXIMIZEBOX)
-  GdkGeometry geometry;
-  geometry.max_width = 400;
-  geometry.max_height = 700;
-  geometry.min_width = 400;
-  geometry.min_height = 700;
-  gtk_window_set_geometry_hints(window, nullptr, &geometry,
-                                static_cast<GdkWindowHints>(GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE));
+    // Disable maximize button (like Windows: ~WS_MAXIMIZEBOX)
+    GdkGeometry geometry;
+    geometry.max_width = 400;
+    geometry.max_height = 700;
+    geometry.min_width = 400;
+    geometry.min_height = 700;
+    gtk_window_set_geometry_hints(window, nullptr, &geometry,
+                                  static_cast<GdkWindowHints>(GDK_HINT_MIN_SIZE | GDK_HINT_MAX_SIZE));
+  }
 
-  // Initialize settings manager
-  g_settings_manager = new SettingsManager();
+  if (!self->tunnel_mode)
+  {
+    g_settings_manager = new SettingsManager();
+  }
 
-  // Check if window should start minimized
-  bool should_show_window = !g_settings_manager->GetStartMinimized() && !self->start_minimized;
+  bool should_show_window = !self->tunnel_mode &&
+                            !g_settings_manager->GetStartMinimized() &&
+                            !self->start_minimized;
 
   // Connect delete event handler for minimize to tray
   g_signal_connect(G_OBJECT(window), "delete-event",
@@ -309,6 +330,12 @@ static void my_application_activate(GApplication *application)
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
 
+  if (self->tunnel_mode)
+  {
+    gtk_widget_show(GTK_WIDGET(window));
+    g_timeout_add(400, hide_tunnel_window, window);
+  }
+
   defyx_core::LogMessage("my_application: Plugins registered");
 
   // Load the DXcore library
@@ -321,13 +348,15 @@ static void my_application_activate(GApplication *application)
 
   defyx_core::LogMessage("my_application: Got messenger");
 
-  // Initialize system tray
-  g_system_tray = new SystemTray();
-  g_system_tray->Initialize(window, HandleTrayAction);
-  g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
-  g_system_tray->UpdateTooltip("DefyxVPN - Ready");
+  if (!self->tunnel_mode)
+  {
+    g_system_tray = new SystemTray();
+    g_system_tray->Initialize(window, HandleTrayAction);
+    g_system_tray->UpdateIcon(SystemTray::TrayIconStatus::Standby);
+    g_system_tray->UpdateTooltip("DefyxVPN - Ready");
 
-  defyx_core::LogMessage("my_application: System tray initialized");
+    defyx_core::LogMessage("my_application: System tray initialized");
+  }
 
   // Initialize VPN channel handler with system tray.
   //
@@ -345,6 +374,11 @@ static void my_application_activate(GApplication *application)
   // platform message from Dart.
   g_vpn_channel_handler = new VPNChannelHandler(messenger, g_main_window, g_system_tray);
   g_vpn_channel_handler->SetupChannels();
+
+  if (self->tunnel_mode)
+  {
+    return;
+  }
 
   // Load preferences from settings
   g_system_tray->SetLaunchOnStartup(g_settings_manager->IsLaunchOnStartupEnabled());
@@ -410,14 +444,17 @@ static gboolean my_application_local_command_line(GApplication *application, gch
   // Strip out the first argument as it is the binary name.
   self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
 
-  // Check for --startup argument
   self->start_minimized = FALSE;
+  self->tunnel_mode = FALSE;
   for (gchar **arg = self->dart_entrypoint_arguments; arg && *arg; ++arg)
   {
     if (g_strcmp0(*arg, "--startup") == 0)
     {
       self->start_minimized = TRUE;
-      break;
+    }
+    else if (g_strcmp0(*arg, "--tun") == 0)
+    {
+      self->tunnel_mode = TRUE;
     }
   }
 

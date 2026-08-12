@@ -239,6 +239,23 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "isVpnModeEnabled") {
+          result->Success(flutter::EncodableValue(
+              system_tray_ ? system_tray_->GetVPNMode() : false));
+          return;
+        }
+
+        if (method == "startTunnel") {
+          result->Success(flutter::EncodableValue(dxcore_->StartTunnel() != 0));
+          return;
+        }
+
+        if (method == "stopTunnel") {
+          dxcore_->StopTunnel();
+          result->Success(flutter::EncodableValue(true));
+          return;
+        }
+
         if (method == "getVpnStatus") {
           result->Success(flutter::EncodableValue(vpn_status_));
           return;

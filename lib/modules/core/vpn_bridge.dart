@@ -46,6 +46,21 @@ class VpnBridge {
   Future<bool> isTunnelRunning() async =>
       (await _methodChannel.invokeMethod<bool>("isTunnelRunning")) ?? false;
 
+  Future<bool> startTunnel() async =>
+      (await _methodChannel.invokeMethod<bool>("startTunnel")) ?? false;
+
+  Future<void> stopTunnel() async =>
+      await _methodChannel.invokeMethod("stopTunnel");
+
+  Future<bool> isVpnModeEnabled() async {
+    try {
+      return (await _methodChannel.invokeMethod<bool>("isVpnModeEnabled")) ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> setConnectionMethod(String method) async => await _methodChannel
       .invokeMethod("setConnectionMethod", {"method": method});
   Future<String> getFlowLine(String token) async {
