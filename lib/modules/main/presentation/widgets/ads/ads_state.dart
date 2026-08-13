@@ -315,16 +315,10 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
     debugPrint('Ad loaded: $isLoaded');
-    debugPrint(
-      'State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
-    );
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
       adLoadedAt: isLoaded ? DateTime.now() : null,
-    );
-    debugPrint(
-      'State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
     );
   }
 
@@ -336,9 +330,6 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// NOTE: This does NOT set nativeAdIsLoaded flag. That flag belongs to GoogleAdStrategy.
   void setCustomAdData(String imageUrl, String clickUrl) {
     debugPrint('Custom ad loaded: $imageUrl');
-    debugPrint(
-      'State BEFORE: customImageUrl=${state.customImageUrl}, nativeAdIsLoaded=${state.nativeAdIsLoaded}',
-    );
     state = state.copyWith(
       customImageUrl: imageUrl,
       customClickUrl: clickUrl,
@@ -346,9 +337,6 @@ class AdsNotifier extends StateNotifier<AdsState> {
       adLoadFailed: false,
       adLoadedAt: DateTime.now(),
       customImageLoadFailed: false,
-    );
-    debugPrint(
-      'State AFTER: customImageUrl set, nativeAdIsLoaded=${state.nativeAdIsLoaded} (unchanged)',
     );
   }
 
@@ -361,17 +349,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Clear internal/custom ad data (for switching to AdMob ads)
   void clearCustomAdData() {
     debugPrint('Clearing internal ad data');
-    debugPrint(
-      'State BEFORE: customImageUrl=${state.customImageUrl != null && state.customImageUrl!.isNotEmpty ?"set":"null"}, nativeAdIsLoaded=${state.nativeAdIsLoaded}',
-    );
     state = state.copyWith(
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
       nativeAdIsLoaded: false, // Clear this flag to prevent showing empty ad container
-    );
-    debugPrint(
-      'State AFTER: customImageUrl cleared, nativeAdIsLoaded=false',
     );
   }
 
