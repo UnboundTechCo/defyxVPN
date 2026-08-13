@@ -348,7 +348,11 @@ class VPN {
     }
 
     if (!_isReconnectMode) {
-      await _createTunnel();
+      final isTunnelReady = await _createTunnel();
+      if (!isTunnelReady) {
+        await _onTunnelFailed(DesktopTunnel.instance.lastError);
+        return;
+      }
       _isReconnectMode = true;
     }
     connectionNotifier?.setConnected();
@@ -467,18 +471,19 @@ class VPN {
     }
   }
 
-  Future<void> _createTunnel() async {
+  Future<bool> _createTunnel() async {
     switch (Platform.operatingSystem) {
       case 'android':
         await _vpnBridge.connectVpn();
-        break;
+        return true;
       case "ios":
         await _vpnBridge.connectVpn();
-        break;
+        return true;
       case "windows":
       case "linux":
-        await _startDesktopTunnel();
-        break;
+        return await _startDesktopTunnel();
+      default:
+        return true;
     }
   }
 
@@ -496,13 +501,33 @@ class VPN {
       log.addLog(
         '[ERROR] Tunnel privileges refused: ${DesktopTunnel.instance.lastError}',
       );
+      await _onTunnelFailed(DesktopTunnel.instance.lastError);
     }
     return isReady;
   }
 
-  Future<void> _startDesktopTunnel() async {
+  Future<void> _onTunnelFailed(String? reason) async {
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
+
+    log.addLog('[ERROR] Tunnel not created: ${reason ?? "unknown reason"}');
+    await _vpnBridge.stopVPN();
+    _setConnectionTotalSteps(0);
+    _setConnectionStep(0);
+    connectionNotifier?.setError();
+    alertService.error();
+
+    crashReportingService.recordVpnError(
+      Exception('Tunnel not created: ${reason ?? "unknown reason"}'),
+      StackTrace.current,
+      vpnState: 'tunnel_failed',
+    );
+  }
+
+  Future<bool> _startDesktopTunnel() async {
     if (!await _vpnBridge.isVpnModeEnabled()) {
-      return;
+      return true;
     }
 
     final isStarted = await DesktopTunnel.instance.start();
@@ -511,6 +536,7 @@ class VPN {
         '[ERROR] Failed to start tunnel: ${DesktopTunnel.instance.lastError}',
       );
     }
+    return isStarted;
   }
 
   Future<void> _stopDesktopTunnel() async {

@@ -62,6 +62,7 @@ class TunnelProcess {
       try {
         switch (name) {
           case 'start':
+            await _verifyGatewayOnce(bridge);
             ok = await bridge.startTunnel();
             if (!ok) error = 'the core refused to start the tunnel';
             break;
@@ -85,6 +86,16 @@ class TunnelProcess {
     }
 
     await _stopAndExit(bridge, link);
+  }
+
+  static bool _gatewayChecked = false;
+
+  static Future<void> _verifyGatewayOnce(VpnBridge bridge) async {
+    if (_gatewayChecked) return;
+    _gatewayChecked = true;
+    try {
+      await bridge.verifyGateway();
+    } catch (_) {}
   }
 
   static void _forwardCoreLogs(TunnelLink link) {
@@ -156,6 +167,10 @@ class TunnelProcess {
       await bridge.stopTunnel();
     } catch (_) {}
     await link.dispose();
+    try {
+      await _lockHandle?.unlock();
+      await _lockHandle?.close();
+    } catch (_) {}
     exit(0);
   }
 

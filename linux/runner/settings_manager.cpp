@@ -410,7 +410,7 @@ bool SettingsManager::SetSoundEffect(bool value)
 
 int SettingsManager::GetServiceMode() const
 {
-    return ReadIntValue("ServiceMode", 1);
+    return ReadIntValue("ServiceMode", 2);
 }
 
 bool SettingsManager::SetServiceMode(int mode)
