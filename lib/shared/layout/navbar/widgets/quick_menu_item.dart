@@ -8,6 +8,7 @@ class QuickMenuItem extends StatelessWidget {
   final bool? topBorderRadius;
   final bool? bottomBorderRadius;
   final Widget? icon;
+  final Widget? leadingIcon;
 
   const QuickMenuItem({
     super.key,
@@ -16,6 +17,7 @@ class QuickMenuItem extends StatelessWidget {
     this.topBorderRadius = false,
     this.bottomBorderRadius = false,
     this.icon,
+    this.leadingIcon,
     this.titleStyle,
   });
 
@@ -38,13 +40,21 @@ class QuickMenuItem extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              title,
-              style: titleStyle ?? TextStyle(
-                fontSize: 17.sp,
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
+            Row(
+              children: [
+                if (leadingIcon != null) ...[
+                  leadingIcon!,
+                  SizedBox(width: 10.w),
+                ],
+                Text(
+                  title,
+                  style: titleStyle ?? TextStyle(
+                    fontSize: 17.sp,
+                    color: Colors.black,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
             ?icon,
           ],
