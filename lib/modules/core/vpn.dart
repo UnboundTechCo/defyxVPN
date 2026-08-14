@@ -595,10 +595,24 @@ class VPN {
   void _sendCoreFirebaseMessage(String message) {
     Map<String, dynamic> jsonData = jsonDecode(message);
     final title = jsonData["title"] ?? "Unknown";
+    const allowedEvents = {
+      'config_updated',
+      'core_started',
+      'core_stopped',
+      'vpn_state_changed',
+    };
+    if (title is! String || !allowedEvents.contains(title)) {
+      return;
+    }
+
     jsonData.remove("title");
-    final Map<String, String> stringMap = jsonData.map(
-      (key, value) => MapEntry(key, value.toString()),
-    );
+    const allowedParameters = {'status', 'version'};
+    final stringMap = <String, String>{};
+    for (final entry in jsonData.entries) {
+      if (allowedParameters.contains(entry.key) && entry.value is String) {
+        stringMap[entry.key] = entry.value as String;
+      }
+    }
     analyticsService.logCoreData(title, stringMap);
   }
 }

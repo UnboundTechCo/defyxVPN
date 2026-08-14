@@ -5,24 +5,59 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:defyx_vpn/modules/main/presentation/widgets/privacy_notice_dialog.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:defyx_vpn/app/app.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const App());
+  testWidgets('telemetry is opt-in by default in the privacy notice', (
+    tester,
+  ) async {
+    bool? selectedTelemetry;
 
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(375, 812),
+        builder: (_, __) => MaterialApp(
+          home: PrivacyNoticeDialog(
+            onAccept: (telemetryOptIn) async {
+              selectedTelemetry = telemetryOptIn;
+              return true;
+            },
+          ),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    expect(find.byType(CheckboxListTile), findsOneWidget);
+    expect(
+      tester.widget<CheckboxListTile>(find.byType(CheckboxListTile)).value,
+      isFalse,
+    );
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Got it'));
+    await tester.pumpAndSettle();
+
+    expect(selectedTelemetry, isFalse);
+  });
+
+  test('telemetry consent persists explicit choices', () async {
+    SharedPreferences.setMockInitialValues({});
+    final telemetry = TelemetryConsentService();
+
+    await telemetry.initialize();
+    expect(telemetry.consent, TelemetryConsent.undecided);
+
+    await telemetry.grant();
+    expect(telemetry.consent, TelemetryConsent.granted);
+
+    await telemetry.deny();
+    expect(telemetry.consent, TelemetryConsent.denied);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString('telemetry_consent_v1'), 'denied');
   });
 }

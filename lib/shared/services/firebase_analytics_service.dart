@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 
+import 'telemetry_consent_service.dart';
+
 class FirebaseAnalyticsService {
   FirebaseAnalyticsService._internal();
   static final FirebaseAnalyticsService _instance =
@@ -10,27 +12,29 @@ class FirebaseAnalyticsService {
   factory FirebaseAnalyticsService() => _instance;
 
   FirebaseAnalytics? _analytics;
+  final _telemetry = TelemetryConsentService();
 
   bool get _isDesktopPlatform {
     return !(Platform.isAndroid || Platform.isIOS);
   }
 
   FirebaseAnalytics? get _analyticsInstance {
-    if (_isDesktopPlatform) return null;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return null;
     _analytics ??= FirebaseAnalytics.instance;
     return _analytics;
   }
 
   FirebaseAnalyticsObserver getAnalyticsObserver() {
-    if (_isDesktopPlatform) {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) {
       throw UnsupportedError(
-          'Firebase Analytics is not supported on desktop platforms');
+        'Firebase Analytics requires telemetry consent on a mobile platform',
+      );
     }
     return FirebaseAnalyticsObserver(analytics: _analyticsInstance!);
   }
 
   Future<void> logVpnConnectAttempt(String connectionMethod) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(
         name: 'vpn_connect_attempt',
@@ -42,8 +46,11 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logVpnConnected(
-      String connectionMethod, String? server, int durationSeconds) async {
-    if (_isDesktopPlatform) return;
+    String connectionMethod,
+    String? server,
+    int durationSeconds,
+  ) async {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(
         name: 'vpn_connected',
@@ -59,8 +66,11 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logVpnConnectionFailed(
-      String connectionMethod, String? server, int durationSeconds) async {
-    if (_isDesktopPlatform) return;
+    String connectionMethod,
+    String? server,
+    int durationSeconds,
+  ) async {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(
         name: 'vpn_connection_failed',
@@ -76,7 +86,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logVpnDisconnected() async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(name: 'vpn_disconnected');
     } catch (e) {
@@ -85,7 +95,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logConnectionMethodChanged(String newMethod) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(
         name: 'connection_method_changed',
@@ -97,7 +107,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logServerSelected(String serverName) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(
         name: 'server_selected',
@@ -109,7 +119,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> setUserId(String? userId) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.setUserId(id: userId);
     } catch (e) {
@@ -118,7 +128,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logCoreData(String event, Map<String, String> parameters) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(name: event, parameters: parameters);
     } catch (e) {
@@ -127,7 +137,7 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> setUserProperty(String name, String? value) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.setUserProperty(name: name, value: value);
     } catch (e) {
@@ -140,7 +150,7 @@ class FirebaseAnalyticsService {
     required String name,
     Map<String, String>? parameters,
   }) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
     try {
       await _analyticsInstance?.logEvent(name: name, parameters: parameters);
     } catch (e) {
