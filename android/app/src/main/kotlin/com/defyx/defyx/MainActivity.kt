@@ -132,7 +132,9 @@ class MainActivity : FlutterActivity() {
     private fun connectVpn(result: MethodChannel.Result) {
         pendingVpnResult = result
 
-        // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
+        DefyxVpnService.setVpnStatusListener { status ->
+            runOnUiThread { sendVpnStatusToFlutter(status) }
+        }
 
         val vpnIntent = VpnService.prepare(this)
         if (vpnIntent != null) {
@@ -142,8 +144,19 @@ class MainActivity : FlutterActivity() {
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance().startVpn(this)
-            result.success(true)
+            DefyxVpnService.getInstance().startVpn(
+                    this,
+                    onConnected = { runOnUiThread { result.success(true) } },
+                    onFailure = { error ->
+                        runOnUiThread {
+                            result.error(
+                                    "VPN_FOREGROUND_ERROR",
+                                    "Failed to start VPN foreground service",
+                                    error.message
+                            )
+                        }
+                    }
+            )
         }
     }
 
@@ -275,7 +288,7 @@ class MainActivity : FlutterActivity() {
     private fun stopVPN(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                DefyxVpnService.getInstance().disconnectVPN()
+                DefyxVpnService.getInstance().stopVpn()
                 result.success(true)
             } catch (e: Exception) {
                 Log.e("Stop VPN", "Stop VPN failed: ${e.message}", e)
