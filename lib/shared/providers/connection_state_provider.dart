@@ -73,21 +73,20 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
 
             // Always update the UI based on the actual VPN status
             debugPrint('VPN status : $vpnStatus');
-            // Update the state based on the VPN status from iOS
-            switch (state.status) {
-              case ConnectionStatus.analyzing:
-                break;
-              case ConnectionStatus.error:
-                break;
-              case ConnectionStatus.noInternet:
-                break;
-              case ConnectionStatus.connected:
-                if (vpnStatus == "disconnected") {
-                  debugPrint('VPN status is disconnected from case');
-                  setDisconnected();
+            switch (vpnStatus) {
+              case 'connecting':
+                if (state.status != ConnectionStatus.connected) {
+                  setLoading();
                 }
                 break;
-              default:
+              case 'connected':
+                setConnected();
+                break;
+              case 'disconnecting':
+                setDisconnecting();
+                break;
+              case 'disconnected':
+                setDisconnected();
                 break;
             }
           }
@@ -103,8 +102,12 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
 
   // Save the current connection state to SharedPreferences
   Future<void> _saveState() async {
-    // coreDown is transient — never persist it across launches.
-    if (state.status == ConnectionStatus.coreDown) return;
+    if (state.status == ConnectionStatus.loading ||
+        state.status == ConnectionStatus.analyzing ||
+        state.status == ConnectionStatus.disconnecting ||
+        state.status == ConnectionStatus.coreDown) {
+      return;
+    }
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_connectionStatusKey, state.status.toInt());

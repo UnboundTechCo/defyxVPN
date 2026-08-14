@@ -45,7 +45,7 @@ class DefyxVpnService : VpnService() {
 
         private var vpnState = VpnState.DISCONNECTED
 
-        fun setVpnStatusListener(l: (String) -> Unit) {
+        fun setVpnStatusListener(l: ((String) -> Unit)?) {
             listener = l
         }
         fun notifyVpnStatus(status: String) {
@@ -57,11 +57,21 @@ class DefyxVpnService : VpnService() {
         super.onCreate()
         instance = this
         createNotificationChannel()
+        if (getSharedPreferences("defyx_vpn_prefs", Context.MODE_PRIVATE)
+                        .getBoolean("vpn_running", false)) {
+            log("Clearing stale VPN running state after service restart")
+            saveVpnState(false)
+        }
     }
 
     override fun onDestroy() {
         log("VPN Service Destroyed")
-        disconnectVpn()
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Service destroy cleanup timed out: ${e.message}")
+        }
+        serviceScope.cancel()
         super.onDestroy()
     }
 
@@ -72,6 +82,25 @@ class DefyxVpnService : VpnService() {
             }
         }
         return START_STICKY
+    }
+
+    private suspend fun disconnectVpnAndWait() {
+        operationMutex.withLock {
+            if (vpnState == VpnState.DISCONNECTED) {
+                return
+            }
+
+            vpnState = VpnState.DISCONNECTING
+            notifyVpnStatus("disconnecting")
+            try {
+                withTimeout(VPN_OPERATION_TIMEOUT_MS) {
+                    cleanupVpn("disconnected")
+                }
+            } catch (e: Throwable) {
+                log("Error stopping VPN: ${e.message}")
+                throw e
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -247,26 +276,19 @@ class DefyxVpnService : VpnService() {
             onFailure: (Throwable) -> Unit = {}
     ) {
         serviceScope.launch {
-            operationMutex.withLock {
-                vpnState = VpnState.DISCONNECTING
-                notifyVpnStatus("disconnecting")
-                updateNotification("DefyxVPN", "Disconnecting...")
-
-                try {
-                    withTimeout(VPN_OPERATION_TIMEOUT_MS) {
-                        cleanupVpn("disconnected")
-                    }
-                    onComplete()
-                } catch (e: Throwable) {
-                    log("Error stopping VPN: ${e.message}")
-                    onFailure(e)
-                }
+            try {
+                disconnectVpnAndWait()
+                onComplete()
+            } catch (e: Throwable) {
+                log("Error stopping VPN: ${e.message}")
+                onFailure(e)
             }
         }
     }
 
     private suspend fun cleanupVpn(status: String) {
-            val shouldNotify = vpnState != VpnState.DISCONNECTED
+        val shouldNotify = vpnState != VpnState.DISCONNECTED
+        try {
             try {
                 Android.stopVPN()
             } catch (e: Exception) {
@@ -283,33 +305,41 @@ class DefyxVpnService : VpnService() {
                 vpnInterface?.close()
             } catch (e: Exception) {
                 log("Close VPN interface failed during cleanup: ${e.message}")
-            } finally {
-                vpnInterface = null
-                if (tunnelFd > 0 && !tunnelFdPassedToCore) {
-                    try {
-                        ParcelFileDescriptor.adoptFd(tunnelFd).close()
-                    } catch (e: Exception) {
-                        log("Close detached VPN descriptor failed during cleanup: ${e.message}")
-                    }
+            }
+        } finally {
+            vpnInterface = null
+            if (tunnelFd > 0 && !tunnelFdPassedToCore) {
+                try {
+                    ParcelFileDescriptor.adoptFd(tunnelFd).close()
+                } catch (e: Exception) {
+                    log("Close detached VPN descriptor failed during cleanup: ${e.message}")
                 }
-                tunnelFd = -1
-                tunnelFdPassedToCore = false
-                isVpnConnected = false
-                isServiceRunning = false
-                connectionMethod = ""
+            }
+            tunnelFd = -1
+            tunnelFdPassedToCore = false
+            isVpnConnected = false
+            isServiceRunning = false
+            connectionMethod = ""
+            vpnState = VpnState.DISCONNECTED
+
+            try {
+                saveVpnState(false)
+            } catch (e: Exception) {
+                log("Persist disconnected state failed: ${e.message}")
             }
 
-            saveVpnState(false)
-            vpnState = VpnState.DISCONNECTED
             if (shouldNotify) {
                 notifyVpnStatus(status)
             }
-            withContext(Dispatchers.Main) {
-                stopForeground(STOP_FOREGROUND_REMOVE)
-                val notificationManager =
+            try {
+                    stopForeground(STOP_FOREGROUND_REMOVE)
+                    val notificationManager =
                         getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.cancel(NOTIFICATION_ID)
+                    notificationManager.cancel(NOTIFICATION_ID)
+            } catch (e: Exception) {
+                log("Remove VPN notification failed: ${e.message}")
             }
+        }
     }
 
     fun stopVpn(onComplete: () -> Unit = {}, onFailure: (Throwable) -> Unit = {}) {
@@ -421,14 +451,22 @@ class DefyxVpnService : VpnService() {
     fun isTunnelRunning(): Boolean = tunnelFd > 0
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
         Log.d(TAG, "Task removed")
-        disconnectVpn()
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Task removal cleanup timed out: ${e.message}")
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onRevoke() {
         Log.d("VPN_SERVICE", "Revoked")
-        disconnectVpn()
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Revoke cleanup timed out: ${e.message}")
+        }
         super.onRevoke()
     }
 

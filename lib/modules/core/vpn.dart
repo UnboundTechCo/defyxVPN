@@ -55,6 +55,7 @@ class VPN {
   StreamSubscription<String>? _vpnSub;
   StreamSubscription<Map<dynamic, dynamic>>? _crashSub;
   DateTime? _connectionStartTime;
+  Future<void>? _connectOperation;
 
   void _init(ProviderContainer container) {
     if (_initialized) return;
@@ -218,7 +219,22 @@ class VPN {
     }
   }
 
-  Future<void> _connect() async {
+  Future<void> _connect() {
+    final operation = _connectOperation;
+    if (operation != null) {
+      return operation;
+    }
+
+    final nextOperation = _connectInternal();
+    _connectOperation = nextOperation;
+    return nextOperation.whenComplete(() {
+      if (identical(_connectOperation, nextOperation)) {
+        _connectOperation = null;
+      }
+    });
+  }
+
+  Future<void> _connectInternal() async {
     final connectionNotifier = _container?.read(
       connectionStateProvider.notifier,
     );
@@ -362,7 +378,7 @@ class VPN {
       return;
     }
     connectionNotifier?.setConnected();
-    vpnData?.enableVPN();
+    await vpnData?.enableVPN();
     await refreshPing();
     alertService.success();
 
