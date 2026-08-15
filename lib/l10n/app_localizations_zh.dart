@@ -143,6 +143,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get chinese => '中文';
 
   @override
+  String get persian => '波斯语';
+
+  @override
+  String get russian => '俄语';
+
+  @override
   String get gotIt => '知道了';
 
   @override
@@ -234,6 +240,15 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => '重置';
+
+  @override
+  String get settingsDiagnosticsExperiments => '诊断与实验';
+
+  @override
+  String get settingsAutoDetect => '自动检测';
+
+  @override
+  String get settingsHapticFeedback => '触感反馈';
 
   @override
   String get offlineFlowlineMessage => '由于当前使用离线版本，Flowline更新已暂停。';

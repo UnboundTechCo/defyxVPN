@@ -497,3 +497,22 @@ class _LogScreenState extends ConsumerState<LogScreen> {
     return const SizedBox.shrink();
   }
 }
+
+// Shared entry point for showing the log viewer as a full-screen overlay
+void showAppLogsOverlay(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: const Color.fromARGB(13, 0, 0, 0),
+          child: const LogScreen(),
+        ),
+      );
+    },
+  );
+}

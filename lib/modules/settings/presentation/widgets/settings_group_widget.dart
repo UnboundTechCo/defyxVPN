@@ -11,6 +11,7 @@ import '../../models/settings_item.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+import '../../../../shared/providers/haptics_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SettingsGroupWidget extends ConsumerStatefulWidget {
@@ -69,7 +70,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
         _rotationController.reset();
       });
     }
-    HapticFeedback.mediumImpact();
+    if (ref.read(hapticsProvider)) {
+      HapticFeedback.mediumImpact();
+    }
     widget.onReset?.call();
   }
 
@@ -89,8 +92,10 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
         ReorderableListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          onReorder: (oldIndex, newIndex) {
-            HapticFeedback.lightImpact();
+          onReorderItem: (oldIndex, newIndex) {
+            if (ref.read(hapticsProvider)) {
+              HapticFeedback.lightImpact();
+            }
             widget.onReorder?.call(oldIndex, newIndex);
           },
           onReorderStart: (index) {
@@ -303,7 +308,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                             ),
                             SizedBox(width: 8.w),
                             Text(
-                              AppLocalizations.of(context).settingsResetToDefault,
+                              AppLocalizations.of(
+                                context,
+                              ).settingsResetToDefault,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 fontFamily: 'Lato',

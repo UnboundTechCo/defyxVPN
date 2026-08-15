@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:defyx_vpn/firebase_options.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
+import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -75,6 +76,7 @@ void main() async {
   // Initialize language provider
   final prefs = await SharedPreferences.getInstance();
   final languageNotifier = LanguageNotifier(prefs);
+  final hapticsNotifier = HapticsNotifier(prefs);
 
   // Set up error handler for zone errors (if not on Windows/Linux)
   if (!Platform.isWindows && !Platform.isLinux) {
@@ -88,7 +90,10 @@ void main() async {
   // Run app in same zone as ensureInitialized
   runApp(
     ProviderScope(
-      overrides: [languageProvider.overrideWith((ref) => languageNotifier)],
+      overrides: [
+        languageProvider.overrideWith((ref) => languageNotifier),
+        hapticsProvider.overrideWith((ref) => hapticsNotifier),
+      ],
       child: const App(),
     ),
   );

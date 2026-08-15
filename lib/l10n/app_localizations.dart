@@ -366,6 +366,18 @@ abstract class AppLocalizations {
   /// **'中文 (Chinese)'**
   String get chinese;
 
+  /// Persian language name
+  ///
+  /// In en, this message translates to:
+  /// **'Persian'**
+  String get persian;
+
+  /// Russian language name
+  ///
+  /// In en, this message translates to:
+  /// **'Russian'**
+  String get russian;
+
   /// Got it button text
   ///
   /// In en, this message translates to:
@@ -551,6 +563,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'RESET'**
   String get settingsResetToDefault;
+
+  /// Settings entry - diagnostics and experiments
+  ///
+  /// In en, this message translates to:
+  /// **'Diagnostics & Experiments'**
+  String get settingsDiagnosticsExperiments;
+
+  /// Diagnostics dialog - automatic language detection option
+  ///
+  /// In en, this message translates to:
+  /// **'Auto Detect'**
+  String get settingsAutoDetect;
+
+  /// Diagnostics dialog - haptic feedback toggle label
+  ///
+  /// In en, this message translates to:
+  /// **'Haptic Feedback'**
+  String get settingsHapticFeedback;
 
   /// Offline flowline notification message
   ///

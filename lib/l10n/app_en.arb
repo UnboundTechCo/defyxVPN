@@ -226,6 +226,16 @@
     "description": "Chinese language name"
   },
 
+  "persian": "Persian",
+  "@persian": {
+    "description": "Persian language name"
+  },
+
+  "russian": "Russian",
+  "@russian": {
+    "description": "Russian language name"
+  },
+
   "gotIt": "Got it",
   "@gotIt": {
     "description": "Got it button text"
@@ -379,6 +389,21 @@
   "settingsResetToDefault": "RESET",
   "@settingsResetToDefault": {
     "description": "Settings button - reset to default"
+  },
+
+  "settingsDiagnosticsExperiments": "Diagnostics & Experiments",
+  "@settingsDiagnosticsExperiments": {
+    "description": "Settings entry - diagnostics and experiments"
+  },
+
+  "settingsAutoDetect": "Auto Detect",
+  "@settingsAutoDetect": {
+    "description": "Diagnostics dialog - automatic language detection option"
+  },
+
+  "settingsHapticFeedback": "Haptic Feedback",
+  "@settingsHapticFeedback": {
+    "description": "Diagnostics dialog - haptic feedback toggle label"
   },
 
   "offlineFlowlineMessage": "Flowline updates have been paused because the offline version is currently being used.",

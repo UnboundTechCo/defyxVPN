@@ -144,6 +144,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chinese => '中文 (چینی)';
 
   @override
+  String get persian => 'فارسی';
+
+  @override
+  String get russian => 'Русский (روسی)';
+
+  @override
   String get gotIt => 'متوجه شدم';
 
   @override
@@ -237,6 +243,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => 'بازنشانی';
+
+  @override
+  String get settingsDiagnosticsExperiments => 'تشخیص و آزمایش‌ها';
+
+  @override
+  String get settingsAutoDetect => 'تشخیص خودکار';
+
+  @override
+  String get settingsHapticFeedback => 'بازخورد لمسی';
 
   @override
   String get offlineFlowlineMessage =>

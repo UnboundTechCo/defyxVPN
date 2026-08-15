@@ -144,6 +144,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chinese => '中文 (Китайский)';
 
   @override
+  String get persian => 'فارسی (Персидский)';
+
+  @override
+  String get russian => 'Русский';
+
+  @override
   String get gotIt => 'Понятно';
 
   @override
@@ -237,6 +243,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => 'Сброс';
+
+  @override
+  String get settingsDiagnosticsExperiments => 'Диагностика и эксперименты';
+
+  @override
+  String get settingsAutoDetect => 'Автоопределение';
+
+  @override
+  String get settingsHapticFeedback => 'Тактильная отдача';
 
   @override
   String get offlineFlowlineMessage =>
