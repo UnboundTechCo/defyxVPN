@@ -78,6 +78,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get ourWebsite => 'وب‌سایت ما';
 
   @override
+  String get marketplace => 'فروشگاه';
+
+  @override
+  String get telegramBot => 'بات تلگرام';
+
+  @override
   String get sourceCode => 'کد منبع';
 
   @override

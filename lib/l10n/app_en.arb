@@ -116,6 +116,16 @@
     "description": "Our website menu item"
   },
 
+  "marketplace": "Marketplace",
+  "@marketplace": {
+    "description": "Marketplace menu item"
+  },
+
+  "telegramBot": "Telegram Bot",
+  "@telegramBot": {
+    "description": "Telegram bot menu item"
+  },
+
   "sourceCode": "Source code",
   "@sourceCode": {
     "description": "Source code link"
