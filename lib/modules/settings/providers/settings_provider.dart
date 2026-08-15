@@ -204,17 +204,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
       final List<dynamic> mergedItems = savedItems.where((settingItem) {
         if (settingItem['itemType'] == 'navigation') return true;
         return allFlowlineItems.any(
-          (flowItem) => flowItem['label'] == settingItem['id'],
+          (flowItem) => flowItem['label'] == settingItem['title'],
         );
       }).toList();
 
       // Find max sortOrder from existing items
       int maxSortOrder = 0;
-      int minSortOrder = allFlowlineItems.length;
       for (var item in mergedItems) {
         final order = item['sortOrder'] as int? ?? 0;
         if (order > maxSortOrder) maxSortOrder = order;
-        if (order < minSortOrder) minSortOrder = order;
       }
 
       // New items go to the end (after user's ordered items)
@@ -222,24 +220,22 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         final label = flowItem['label'] as String;
         final existsInSaved = mergedItems.any(
           (settingItem) =>
-              settingItem['id'] == label ||
+              settingItem['title'] == label ||
               settingItem['itemType'] == 'navigation',
         );
-
         if (!existsInSaved) {
           final isPremium = flowItem['isPremium'] ?? false;
-          if (isPremium) {
-            maxSortOrder++;
-          } else {
-            minSortOrder--;
-          }
+
           final newItem = SettingsFactory.createFlowlineItem(
             label: label,
             description: flowItem['description'] ?? '',
-            sortOrder: isPremium ? minSortOrder : maxSortOrder,
+            sortOrder: isPremium ? -1 : maxSortOrder,
             isEnabled: flowItem['enabled'] ?? false,
             isPremium: isPremium,
           );
+          if (isPremium) {
+            maxSortOrder++;
+          }
 
           if (newItem.isPremium) {
             mergedItems.insert(0, newItem.toJson());

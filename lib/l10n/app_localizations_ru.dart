@@ -78,6 +78,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get ourWebsite => 'Наш веб-сайт';
 
   @override
+  String get marketplace => 'Магазин';
+
+  @override
+  String get telegramBot => 'Телеграм-бот';
+
+  @override
   String get sourceCode => 'Исходный код';
 
   @override

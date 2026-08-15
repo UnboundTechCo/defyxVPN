@@ -78,6 +78,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ourWebsite => 'Our Website';
 
   @override
+  String get marketplace => 'Marketplace';
+
+  @override
+  String get telegramBot => 'Telegram Bot';
+
+  @override
   String get sourceCode => 'Source code';
 
   @override
