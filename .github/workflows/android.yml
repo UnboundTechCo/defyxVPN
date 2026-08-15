@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
-  
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -58,7 +58,7 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
-    
+
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
@@ -90,6 +90,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
+          os_name: "android"
 
       - name: Create key.properties for Android signing
         run: |
@@ -123,7 +124,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
-  
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -174,7 +175,7 @@ jobs:
 
       - name: Get dependencies
         run: flutter pub get
-    
+
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
@@ -206,7 +207,7 @@ jobs:
         with:
           secret_blob: ${{ toJson(secrets) }}
           var_blob: ${{ toJson(vars) }}
-
+          os_name: "android"
       - name: Create key.properties for Android signing
         run: |
           echo "storePassword=${{ secrets.STORE_PASSWORD }}" > android/key.properties
@@ -228,6 +229,18 @@ jobs:
           4
           EOF
 
+      - name: Rename Android APKs
+        run: |
+          shopt -s nullglob
+
+          for file in build/app/outputs/flutter-apk/DefyxVPN-*.apk; do
+            dir=$(dirname "$file")
+            filename=$(basename "$file")
+
+            newname=$(echo "$filename" | sed -E 's/^DefyxVPN-[0-9]+\.[0-9]+\.[0-9]+-(.+)\.apk$/DefyxVPN-Android-\1.apk/')
+
+            mv "$file" "$dir/$newname"
+          done
       - name: Upload APKs artifact
         uses: actions/upload-artifact@v4
         with:

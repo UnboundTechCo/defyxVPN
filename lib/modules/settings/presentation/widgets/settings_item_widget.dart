@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/common/helpers/truncate_text.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
 import 'package:flutter/material.dart';
@@ -63,19 +64,25 @@ class SettingsItemWidget extends StatelessWidget {
               'assets/icons/draggable_setting_indicator.svg',
               width: 24.w,
               height: 24.h,
-              colorFilter: ColorFilter.mode(
-                Colors.grey[400]!,
-                BlendMode.srcIn,
-              ),
+              colorFilter: ColorFilter.mode(Colors.grey[400]!, BlendMode.srcIn),
             ),
           ),
         ],
         Expanded(
           child: Row(
+            // align center
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 7.w,
             children: [
+              if (item.isPremium)
+                InkWell(
+                  child: AppIcons.premium(height: 18, width: 18),
+                  onTap: () =>
+                      SettingsToastMessage.show(item.description ?? ""),
+                ),
               Text(
-                item.title.toUpperCase(),
+                truncateText(item.title.toUpperCase(), 20),
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontFamily: 'Lato',
@@ -83,7 +90,9 @@ class SettingsItemWidget extends StatelessWidget {
                   color: item.isAccessible ? Colors.white : Colors.grey[600],
                 ),
               ),
-              if (item.description != null && item.description!.isNotEmpty)
+              if (item.description != null &&
+                  item.description!.isNotEmpty &&
+                  !item.isPremium)
                 InkWell(
                   child: AppIcons.info(
                     height: 22,
@@ -95,7 +104,7 @@ class SettingsItemWidget extends StatelessWidget {
                   ),
                   onTap: () =>
                       SettingsToastMessage.show(item.description ?? ""),
-                )
+                ),
             ],
           ),
         ),
@@ -116,10 +125,7 @@ class SettingsItemWidget extends StatelessWidget {
                   color: Colors.transparent,
                 )
               : null,
-          child: Opacity(
-            opacity: 1.0,
-            child: rowContent,
-          ),
+          child: Opacity(opacity: 1.0, child: rowContent),
         ),
         if (!isLastItem && showSeparator)
           Container(
@@ -158,11 +164,7 @@ class SettingsItemWidget extends StatelessWidget {
               ),
             ),
           if (item.subtitle != null) SizedBox(width: 8.w),
-          Icon(
-            Icons.chevron_right,
-            color: Colors.grey[400],
-            size: 24.sp,
-          ),
+          Icon(Icons.chevron_right, color: Colors.grey[400], size: 24.sp),
         ],
       );
     }

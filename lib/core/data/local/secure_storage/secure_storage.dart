@@ -9,9 +9,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'secure_storage_interface.dart';
 
 final secureStorageProvider = Provider<ISecureStorage>((ref) {
-  if (Platform.isWindows) {
+  if (Platform.isWindows || Platform.isLinux) {
     return WindowsSecureStorage();
   }
+
   final storage = ref.watch(flutterSecureStorageProvider);
   return SecureStorage(storage);
 });
@@ -25,7 +26,8 @@ final class WindowsSecureStorage implements ISecureStorage {
       final prefs = await SharedPreferences.getInstance();
       final success = await prefs.setString('$_prefix$key', value);
       debugPrint(
-          'WindowsSecureStorage.write($key): success=$success, length=${value.length}');
+        'WindowsSecureStorage.write($key): success=$success, length=${value.length}',
+      );
     } catch (e) {
       debugPrint('Error writing to Windows storage: $e');
       rethrow;

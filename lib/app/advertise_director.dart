@@ -18,9 +18,6 @@ class AdvertiseDirector {
       final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
       // Asia/Tehran is the timezone for Iran
       final isIran = currentTimeZone == 'Asia/Tehran';
-      if (isIran) {
-        debugPrint('🇮🇷 Iranian user detected (timezone: $currentTimeZone) - AdMob disabled');
-      }
       return isIran;
     } catch (e) {
       debugPrint('⚠️ Error detecting timezone: $e');
@@ -39,12 +36,10 @@ class AdvertiseDirector {
     
     // Check for Iranian users first (AdMob disabled for Iran)
     if (await isIranianUser()) {
-      debugPrint('📍 Ad Manager - Iranian user detected, using InternalAdStrategy only (AdMob disabled)');
       return true;
     }
     
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      debugPrint('📍 Ad Manager - Desktop platform detected, using InternalAdStrategy only');
       return true;
     }
 
@@ -52,16 +47,8 @@ class AdvertiseDirector {
     // AdsWidget automatically initializes both and routes based on connection state:
     //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
     //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
-    debugPrint('📍 Ad Manager - Mobile platform detected, using DUAL strategy approach');
     
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Current Timezone: $currentTimeZone');
-    
-    final adversies = await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
-    if (adversies['api_advertise'] != null) {
-      final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      debugPrint('📍 Ad Manager - Available ad keys: ${advertiseMap.keys.toList()}');
-    }
+
 
     return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
   }
@@ -124,12 +111,7 @@ class AdvertiseDirector {
         }
       }
       
-      debugPrint('📍 Ad Manager - No ads for timezone: $currentTimeZone');
-      debugPrint('📍 Ad Manager - Available keys: ${advertiseMap.keys.toList()}');
     }
-    
-    debugPrint('📍 Ad Manager - Returning empty ad');
-    // Return empty map - UI will handle showing "No ads available"
     return {'imageUrl': '', 'clickUrl': ''};
   }
 }

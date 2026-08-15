@@ -318,9 +318,11 @@ void VPNChannelHandler::SetupMethodChannel() {
             auto m = std::get<flutter::EncodableMap>(*call.arguments());
             auto is_test_str = get_string_arg(m, "isTest");
             bool is_test = (is_test_str == "true" || is_test_str == "1");
-            std::thread([this, is_test, result = std::move(result)]() mutable {
+            auto token = get_string_arg(m, "token");
+
+            std::thread([this, is_test, token, result = std::move(result)]() mutable {
               try {
-                std::string fl = dxcore_->GetFlowLine(is_test);
+                std::string fl = dxcore_->GetFlowLine(is_test, token);
                 result->Success(flutter::EncodableValue(fl));
               } catch (...) {
                 result->Success(flutter::EncodableValue(std::string()));
@@ -512,6 +514,41 @@ void VPNChannelHandler::SetupMethodChannel() {
 
         if (method == "isVPNPrepared") {
           result->Success(flutter::EncodableValue(true));
+          return;
+        }
+
+        if (method == "verifyGateway") {
+          if (!dxcore_->IsLoaded()) {
+            result->Success(flutter::EncodableValue(false));
+            return;
+          }
+          std::thread([this, result = std::move(result)]() mutable {
+            bool ok = dxcore_->PerformGatewayHandshake();
+            result->Success(flutter::EncodableValue(ok));
+          }).detach();
+          return;
+        }
+
+        if (method == "login") {
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto email = get_string_arg(m, "email");
+            auto password = get_string_arg(m, "password");
+            if (!email.empty() && !password.empty()) {
+              std::thread([this, email, password, result = std::move(result)]() mutable {
+                try {
+                  std::string token = dxcore_->Login(email, password);
+                  result->Success(flutter::EncodableValue(token));
+                } catch (...) {
+                  result->Error("LOGIN_ERROR", "Failed to login");
+                }
+              }).detach();
+            } else {
+              result->Error("INVALID_ARGUMENT", "email or password is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
           return;
         }
 

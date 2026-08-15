@@ -8,6 +8,7 @@ import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -73,10 +74,14 @@ class VPN {
       _handleVPNUpdates(msg);
     });
 
-    // Listen for Go crash events and report to Crashlytics
-    crashUpdates.listen((crashData) {
-      _handleCrashEvent(crashData);
-    });
+    // Listen for Go crash events and report to Crashlytics.
+    // Only mobile platforms implement the crash_events channel natively,
+    // so skip it on desktop to avoid MissingPluginException noise.
+    if (Platform.isAndroid || Platform.isIOS) {
+      crashUpdates.listen((crashData) {
+        _handleCrashEvent(crashData);
+      });
+    }
   }
 
   void dispose() {
@@ -115,6 +120,10 @@ class VPN {
     final ref = _container!;
     final loggerNotifier = ref.read(loggerStateProvider.notifier);
     final groupNotifier = ref.read(groupStateProvider.notifier);
+    final connectionState = ref.read(connectionStateProvider);
+
+    final connectionStateIsError =
+        connectionState.status == ConnectionStatus.error;
 
     if (msg.startsWith("Data: Config index: ")) {
       final configIndex = msg.replaceAll("Data: Config index: ", "");
@@ -139,13 +148,13 @@ class VPN {
       _onFailerConnect();
     }
     if (msg.startsWith("Data: VPN cancelled")) {
-      _closeTunnel();
+      _closeTunnel(keepConnectionStatus: connectionStateIsError);
     }
     if (msg.startsWith("Data: VPN group failed")) {
       loggerNotifier.setSwitchingMethod();
     }
     if (msg.startsWith("Data: VPN stopped")) {
-      _closeTunnel();
+      _closeTunnel(keepConnectionStatus: connectionStateIsError);
     }
     if (msg.startsWith("Data: VPN connecting")) {
       _onLoading();
@@ -159,6 +168,10 @@ class VPN {
     if (msg.startsWith("Data: Config Numbers: ")) {
       final configIndex = msg.replaceAll("Data: Config Numbers: ", "");
       _setConnectionTotalSteps(int.parse(configIndex));
+    }
+
+    if (msg.startsWith("Data: Token expired")) {
+      ref.read(authProvider.notifier).logout();
     }
 
     if (msg.contains("VPN Service Destroyed")) {
@@ -401,17 +414,22 @@ class VPN {
     analyticsService.logVpnDisconnected();
   }
 
-  Future<void> _closeTunnel() async {
+  Future<void> _closeTunnel({bool keepConnectionStatus = false}) async {
     final connectionNotifier = _container?.read(
       connectionStateProvider.notifier,
     );
     final vpnData = await _container?.read(vpnDataProvider.future);
-    connectionNotifier?.setDisconnecting();
+
+    if (!keepConnectionStatus) {
+      connectionNotifier?.setDisconnecting();
+    }
     if (Platform.isIOS) {
       await _vpnBridge.disconnectVpn();
     }
     await vpnData?.disableVPN();
-    connectionNotifier?.setDisconnected();
+    if (!keepConnectionStatus) {
+      connectionNotifier?.setDisconnected();
+    }
     analyticsService.logVpnDisconnected();
     _isReconnectMode = false;
   }
@@ -434,6 +452,7 @@ class VPN {
       case "ios":
         return await _vpnBridge.connectVpn();
       case "windows":
+      case "linux":
         return await _vpnBridge.grantVpnPermission();
       default:
         return false;
@@ -447,6 +466,11 @@ class VPN {
         break;
       case "ios":
         await _vpnBridge.startTun2socks();
+        break;
+      case "windows":
+      case "linux":
+        // On desktop platforms (Windows/Linux), VPN runs without TUN device
+        // No tunnel creation needed
         break;
     }
   }
@@ -505,10 +529,8 @@ class VPN {
     await _container
         ?.read(flowlineServiceProvider)
         .saveFlowline(offlineMode: true);
-    await _vpnBridge.setAsnName();
-    await _container
-        ?.read(flowlineServiceProvider)
-        .saveFlowline(offlineMode: false);
+    _vpnBridge.setAsnName();
+    _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
     _container?.read(settingsLoadingProvider.notifier).state = false;
   }
 

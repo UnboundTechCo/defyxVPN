@@ -4,3 +4,5 @@ const String apiVersionParametersKey = 'api_version_parameters';
 const String apiVersionForceKey = 'force_update';
 const String apiAvertiseKey = 'api_advertise';
 const String apiTipsKey = 'api_tips';
+const String premiumTokenKey = 'premium_token';
+const String premiumEmailKey = 'premium_email';

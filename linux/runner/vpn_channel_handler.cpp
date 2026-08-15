@@ -259,9 +259,25 @@ VPNChannelHandler::~VPNChannelHandler()
 
 void VPNChannelHandler::SetupChannels()
 {
+    defyx_core::LogMessage("VPNChannelHandler::SetupChannels called");
     SetupStatusChannel();
     SetupProgressChannel();
     SetupMethodChannel();
+    defyx_core::LogMessage("VPNChannelHandler::SetupChannels completed");
+}
+
+void VPNChannelHandler::InvokeMethod(const std::string &method, FlValue *args)
+{
+    if (method_channel_ == nullptr)
+    {
+        if (args != nullptr)
+            fl_value_unref(args);
+        return;
+    }
+    fl_method_channel_invoke_method(method_channel_, method.c_str(), args,
+                                    nullptr, nullptr, nullptr);
+    if (args != nullptr)
+        fl_value_unref(args);
 }
 
 void VPNChannelHandler::SetupStatusChannel()
@@ -402,18 +418,14 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Disconnect);
         }
 
-        // Apply system proxy if enabled
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ProxyConfig config;
-        config.host = "127.0.0.1";
-        config.port = 1080;
-        config.scheme = "socks5";
-        proxy::ApplySystemProxy(config);
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ProxyConfig config;
+            config.host = "127.0.0.1";
+            config.port = 5000;
+            config.scheme = "socks5";
+            proxy::ApplySystemProxyAsync(config);
+        }
     }
     else if (msg.find("Data: VPN failed") != std::string::npos)
     {
@@ -429,13 +441,10 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Error);
         }
 
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ResetSystemProxyAsync();
+        }
 
         SendStatus(vpn_status_);
     }
@@ -454,13 +463,10 @@ void VPNChannelHandler::HandleProgressMessage(const std::string &msg)
             system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
         }
 
-        std::thread([this]()
-                    {
-      if (!is_active_) return;
-      if (system_tray_ && system_tray_->GetSystemProxy()) {
-        proxy::ResetSystemProxy();
-      } })
-            .detach();
+        if (system_tray_ && system_tray_->GetSystemProxy())
+        {
+            proxy::ResetSystemProxyAsync();
+        }
 
         SendStatus(vpn_status_);
     }
@@ -472,6 +478,10 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
 {
     VPNChannelHandler *self = static_cast<VPNChannelHandler *>(user_data);
     const gchar *method = fl_method_call_get_name(method_call);
+    
+    // Log every method call with details
+    std::string methodName = method ? method : "NULL";
+    defyx_core::LogMessage(std::string("VPN MethodCall received: ") + methodName);
 
     try
     {
@@ -513,13 +523,10 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
                 self->system_tray_->UpdateConnectionStatus(SystemTray::ConnectionStatus::Connect);
             }
 
-            std::thread([self]()
-                        {
-        if (!self->is_active_) return;
-        if (self->system_tray_ && self->system_tray_->GetSystemProxy()) {
-          proxy::ResetSystemProxy();
-        } })
-                .detach();
+            if (self->system_tray_ && self->system_tray_->GetSystemProxy())
+            {
+                proxy::ResetSystemProxyAsync();
+            }
 
             self->SendStatus("disconnected");
             FinishWithBool(method_call, true);
@@ -656,12 +663,16 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
             FlValue *args = fl_method_call_get_args(method_call);
             std::string flow = LookupString(args, "flowLine");
             std::string pattern = LookupString(args, "pattern");
+            std::string deepScanStr = LookupString(args, "deepScan");
+            std::string healthCheckStr = LookupString(args, "healthCheck");
+            bool deepScan = (deepScanStr == "true" || deepScanStr == "1");
+            bool healthCheck = (healthCheckStr == "true" || healthCheckStr == "1");
 
             std::string cache_dir = "/tmp/defyx";
             std::error_code ec;
             std::filesystem::create_directories(cache_dir, ec);
 
-            defyx_core::StartVPN(cache_dir, flow, pattern);
+            defyx_core::StartVPN(cache_dir, flow, pattern, deepScan, healthCheck);
 
             {
                 std::lock_guard<std::mutex> lock(self->status_mutex_);

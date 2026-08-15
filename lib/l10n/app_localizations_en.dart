@@ -190,6 +190,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get statusIsReady => 'is ready';
 
   @override
+  String get statusIsInTrouble => 'is in trouble.';
+
+  @override
+  String get statusDXcoreDown => 'DXcore down.';
+
+  @override
   String get statusToSpeedTest => 'to speed test';
 
   @override
@@ -261,4 +267,87 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get synchronization => 'Synchronization';
+
+  @override
+  String get settingsDonation => 'Donation';
+
+  @override
+  String get settingsDonationDescription =>
+      'Help us break down the walls of digital censorship and internet filtering.';
+
+  @override
+  String get authenticationRequired => 'Authentication Required';
+
+  @override
+  String get premiumLoginDescription =>
+      'To access your Premium subscription(s), you need to login or create an account through the Defyx website.';
+
+  @override
+  String get email => 'Email';
+
+  @override
+  String get emailHint => 'example@domain.com';
+
+  @override
+  String get emailValidation => 'Please enter your email';
+
+  @override
+  String get password => 'Password';
+
+  @override
+  String get passwordHint => 'Enter your password';
+
+  @override
+  String get passwordValidation => 'Please enter your password';
+
+  @override
+  String get passwordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get login => 'Login';
+
+  @override
+  String get noAccount => 'Don\'t have an account?';
+
+  @override
+  String get signUp => 'Sign up';
+
+  @override
+  String get loginFailed =>
+      'Login failed. Please check your credentials and try again.';
+
+  @override
+  String get loginSuccess => 'Login successful!';
+
+  @override
+  String get havingTrouble => 'Having trouble?';
+
+  @override
+  String get signedInAs => 'You are currently signed in with the email address';
+
+  @override
+  String get premiumImportDescription =>
+      'If your Premium subscriptions cannot be loaded due to internet restrictions and you\'re unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.';
+
+  @override
+  String get planningToExit => 'Planning to exit?';
+
+  @override
+  String get signOut => 'Sign out';
+
+  @override
+  String get signOutSuccess => 'Signed out successfully!';
+
+  @override
+  String get settingsMarketplace => 'Marketplace';
+
+  @override
+  String get marketplaceDescription =>
+      'Browse secure VPN configurations from trusted suppliers.';
+
+  @override
+  String get loggedIn => 'LOGGED IN';
+
+  @override
+  String get loginOrRegister => 'LOGIN OR REGISTER';
 }

@@ -29,6 +29,9 @@ class AppIcons {
 
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
+  static const String premiumPath = 'assets/icons/premium.svg';
+  static const String shopPath = 'assets/icons/shop.svg';
+  static const String moneyPath = 'assets/icons/money.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -82,12 +85,21 @@ class AppIcons {
     return SvgPicture.asset(copyPath, width: width, height: height);
   }
 
-  static SvgPicture chevronLeft({double? width, double? height,Color? color}) {
+  static SvgPicture chevronLeft({double? width, double? height, Color? color}) {
     return SvgPicture.asset(chevronLeftPath, width: width, height: height);
   }
 
-  static SvgPicture info({double? width, double? height,ColorFilter? colorFilter}) {
-    return SvgPicture.asset(infoPath, width: width, height: height,colorFilter: colorFilter,);
+  static SvgPicture info({
+    double? width,
+    double? height,
+    ColorFilter? colorFilter,
+  }) {
+    return SvgPicture.asset(
+      infoPath,
+      width: width,
+      height: height,
+      colorFilter: colorFilter,
+    );
   }
 
   static SvgPicture checkCircle({double? width, double? height}) {
@@ -120,6 +132,22 @@ class AppIcons {
 
   static SvgPicture vpnCloud({double? width, double? height}) {
     return SvgPicture.asset(vpnCloudPath, width: width, height: height);
+  }
+
+  static SvgPicture shop({double? width, double? height}) {
+    return SvgPicture.asset(
+      shopPath,
+      width: width,
+      height: height,
+    );
+  }
+
+  static SvgPicture premium({double? width, double? height}) {
+    return SvgPicture.asset(premiumPath, width: width, height: height);
+  }
+
+  static SvgPicture money({double? width, double? height}) {
+    return SvgPicture.asset(moneyPath, width: width, height: height);
   }
 
   static Widget shieldAnime({

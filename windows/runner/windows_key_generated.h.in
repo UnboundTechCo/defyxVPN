@@ -1,0 +1,5 @@
+#pragma once
+#ifndef WINDOWS_GATEWAY_KEY_H
+#define WINDOWS_GATEWAY_KEY_H
+static const char kWindowsGatewayKey[] = "@WINDOWS_GATEWAY_KEY_STRIPPED@";
+#endif

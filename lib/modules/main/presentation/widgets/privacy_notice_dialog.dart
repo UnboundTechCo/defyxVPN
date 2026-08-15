@@ -31,6 +31,26 @@ class PrivacyNoticeDialog extends StatefulWidget {
 
 class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
   bool _isLoading = false;
+
+  Future<void> _handleGotIt() async {
+    try {
+      if (_isLoading) return;
+      setState(() => _isLoading = true);
+
+      final accepted = await widget.onAccept();
+      setState(() => _isLoading = false);
+      if (accepted && mounted) {
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      debugPrint('Error in _handleGotIt: $e');
+      setState(() => _isLoading = false);
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = 1.sw;
@@ -84,16 +104,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ),
             SizedBox(height: 20.h),
             ElevatedButton(
-              onPressed: () async {
-                if (_isLoading) return;
-                setState(() => _isLoading = true);
-
-                final accepted = await widget.onAccept();
-                setState(() => _isLoading = false);
-                if (accepted && context.mounted) {
-                  Navigator.of(context).pop();
-                }
-              },
+              onPressed: _handleGotIt,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],
                 foregroundColor: const Color.fromARGB(255, 47, 41, 41),

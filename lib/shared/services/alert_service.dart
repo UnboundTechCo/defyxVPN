@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:vibration/vibration.dart';
+import 'package:flutter/services.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -19,9 +19,16 @@ abstract class AlertSub {
 }
 
 final class VibrationService extends AlertSub {
+  static const MethodChannel _channel = MethodChannel('com.defyx.vibration');
+
   @override
   Future<void> init() async {
-    _hasAction = await Vibration.hasVibrator();
+    try {
+      _hasAction = await _channel.invokeMethod<bool>('hasVibrator') ?? false;
+    } catch (e) {
+      debugPrint('Error checking vibrator: $e');
+      _hasAction = false;
+    }
   }
 
   @override
@@ -29,46 +36,40 @@ final class VibrationService extends AlertSub {
     _hasAction = enabled;
   }
 
+  Future<void> _vibrate(int duration) async {
+    if (!_hasAction) return;
+
+    try {
+      await _channel.invokeMethod('vibrate', {'duration': duration});
+    } catch (e) {
+      debugPrint('Error in vibration: $e');
+    }
+  }
+
   @override
   Future<void> success() async {
-    try {
-      await Vibration.vibrate(duration: 75);
-    } catch (e) {
-      debugPrint('Error in success vibration: $e');
-    }
+    await _vibrate(75);
   }
 
   @override
   Future<void> heartbeat() async {
-    try {
-      await Vibration.vibrate(duration: 35);
-    } catch (e) {
-      debugPrint('Error in heartbeat vibration: $e');
-    }
+    await _vibrate(35);
   }
 
   @override
   Future<void> error() async {
-    try {
-      await Vibration.vibrate(duration: 100);
-    } catch (e) {
-      debugPrint('Error in error vibration: $e');
-    }
+    await _vibrate(100);
   }
 
   @override
   Future<void> short() async {
-    try {
-      await Vibration.vibrate(duration: 50);
-    } catch (e) {
-      debugPrint('Error in short vibration: $e');
-    }
+    await _vibrate(50);
   }
 
   @override
   Future<void> cancel() async {
     try {
-      await Vibration.cancel();
+      await _channel.invokeMethod('cancel');
     } catch (e) {
       debugPrint('Error canceling vibration: $e');
     }
@@ -104,11 +105,18 @@ final class AudioService extends AlertSub {
     try {
       if (!kIsWeb &&
           (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
-        unawaited(_audioPlayer.stop().then((_) {
-          return _audioPlayer.play(AssetSource('sounds/notification.wav'));
-        }).catchError((e) {
-          debugPrint('Error playing sound on desktop: $e');
-        }));
+        unawaited(
+          _audioPlayer
+              .stop()
+              .then((_) {
+                return _audioPlayer.play(
+                  AssetSource('sounds/notification.wav'),
+                );
+              })
+              .catchError((e) {
+                debugPrint('Error playing sound on desktop: $e');
+              }),
+        );
       } else {
         if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.idle) {
           await _audioPlayer.stop();

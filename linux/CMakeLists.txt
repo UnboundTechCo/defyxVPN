@@ -4,7 +4,13 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "defyxvpn")
+#
+# IMPORTANT: This MUST match the `name:` field in pubspec.yaml (defyx_vpn).
+# fastforge's AppImage maker generates AppRun/.desktop using the pubspec name
+# (appName), while the built executable is named after BINARY_NAME. If the two
+# differ, the AppImage's AppRun calls a binary that does not exist and fails
+# with "No such file or directory".
+set(BINARY_NAME "defyx_vpn")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
 set(APPLICATION_ID "de.unboundtech.defyxvpn")
@@ -123,6 +129,13 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     COMPONENT Runtime)
 endforeach(bundled_library)
 
+# Install DXcore library
+set(DXCORE_LIB "${CMAKE_CURRENT_SOURCE_DIR}/libdxcore_amd64.so")
+if(NOT DEFYX_DXCORE_LIB_SOURCE AND EXISTS "${DXCORE_LIB}")
+  set(DEFYX_DXCORE_LIB_SOURCE "${DXCORE_LIB}")
+  message(STATUS "Using DXcore library from source directory: ${DXCORE_LIB}")
+endif()
+
 if(DEFYX_DXCORE_LIB_SOURCE AND EXISTS "${DEFYX_DXCORE_LIB_SOURCE}")
   install(FILES "${DEFYX_DXCORE_LIB_SOURCE}"
     DESTINATION "${CMAKE_INSTALL_PREFIX}"
@@ -130,8 +143,9 @@ if(DEFYX_DXCORE_LIB_SOURCE AND EXISTS "${DEFYX_DXCORE_LIB_SOURCE}")
   install(FILES "${DEFYX_DXCORE_LIB_SOURCE}"
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
+  message(STATUS "DXcore library will be installed from: ${DEFYX_DXCORE_LIB_SOURCE}")
 else()
-  message(STATUS "DXcore library not available for installation; skipping bundle copy.")
+  message(WARNING "DXcore library not found at ${DXCORE_LIB}; skipping bundle copy.")
 endif()
 
 # Copy the native assets provided by the build.dart from all packages.

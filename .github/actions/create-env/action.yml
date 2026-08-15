@@ -6,6 +6,8 @@ inputs:
     required: true
   var_blob:
     required: true
+  os_name:
+    required: true
 
 runs:
   using: composite
@@ -15,4 +17,5 @@ runs:
       run: |
         INPUT_SECRET_BLOB='${{ inputs.secret_blob }}' \
         INPUT_VAR_BLOB='${{ inputs.var_blob }}' \
+        INPUT_OS_NAME='${{ inputs.os_name }}' \
         node "$GITHUB_ACTION_PATH/writer.js"
