@@ -176,7 +176,7 @@ class DefyxVpnService : VpnService() {
                                 .addAddress("172.18.0.1", 30)
                                 .addRoute("0.0.0.0", 0)
                                 .addDnsServer("1.1.1.1")
-                                .setMtu(9000)
+                                .setMtu(1500)
                                 .setBlocking(false)
 
                 try {
