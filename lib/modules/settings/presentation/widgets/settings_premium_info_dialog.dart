@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,6 +36,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = 1.sw;
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
@@ -55,7 +57,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Connection Required',
+              l10n.connectionRequired,
               style: TextStyle(
                 fontFamily: 'Lato',
                 fontSize: fontSize * 1.4,
@@ -65,7 +67,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ),
             SizedBox(height: 20.h),
             Text(
-              "To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.",
+              l10n.connectionRequiredDescription,
               style: TextStyle(
                 fontSize: fontSize,
                 fontFamily: 'Lato',
@@ -75,7 +77,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             ),
             SizedBox(height: 20.h),
             AppButton(
-              label: "Got it",
+              label: l10n.gotIt,
               onPressed: _handleGotIt,
               size: AppButtonSize.small,
               variant: AppButtonVariant.secondary,

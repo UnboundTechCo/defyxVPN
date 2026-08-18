@@ -6,14 +6,24 @@ PODS:
     - FlutterMacOS
   - connectivity_plus (0.0.1):
     - FlutterMacOS
+  - file_picker (0.0.1):
+    - FlutterMacOS
   - Firebase/CoreOnly (12.4.0):
     - FirebaseCore (~> 12.4.0)
+  - Firebase/Crashlytics (12.4.0):
+    - Firebase/CoreOnly
+    - FirebaseCrashlytics (~> 12.4.0)
   - firebase_analytics (12.0.4):
     - firebase_core
     - FirebaseAnalytics (= 12.4.0)
     - FlutterMacOS
   - firebase_core (4.2.1):
     - Firebase/CoreOnly (~> 12.4.0)
+    - FlutterMacOS
+  - firebase_crashlytics (5.0.5):
+    - Firebase/CoreOnly (~> 12.4.0)
+    - Firebase/Crashlytics (~> 12.4.0)
+    - firebase_core
     - FlutterMacOS
   - FirebaseAnalytics (12.4.0):
     - FirebaseAnalytics/Default (= 12.4.0)
@@ -37,14 +47,36 @@ PODS:
     - FirebaseCoreInternal (~> 12.4.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/Logger (~> 8.1)
+  - FirebaseCoreExtension (12.4.0):
+    - FirebaseCore (~> 12.4.0)
   - FirebaseCoreInternal (12.4.0):
     - "GoogleUtilities/NSData+zlib (~> 8.1)"
+  - FirebaseCrashlytics (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseInstallations (~> 12.4.0)
+    - FirebaseRemoteConfigInterop (~> 12.4.0)
+    - FirebaseSessions (~> 12.4.0)
+    - GoogleDataTransport (~> 10.1)
+    - GoogleUtilities/Environment (~> 8.1)
+    - nanopb (~> 3.30910.0)
+    - PromisesObjC (~> 2.4)
   - FirebaseInstallations (12.4.0):
     - FirebaseCore (~> 12.4.0)
     - GoogleUtilities/Environment (~> 8.1)
     - GoogleUtilities/UserDefaults (~> 8.1)
     - PromisesObjC (~> 2.4)
-  - flutter_secure_storage_macos (6.1.3):
+  - FirebaseRemoteConfigInterop (12.4.0)
+  - FirebaseSessions (12.4.0):
+    - FirebaseCore (~> 12.4.0)
+    - FirebaseCoreExtension (~> 12.4.0)
+    - FirebaseInstallations (~> 12.4.0)
+    - GoogleDataTransport (~> 10.1)
+    - GoogleUtilities/Environment (~> 8.1)
+    - GoogleUtilities/UserDefaults (~> 8.1)
+    - nanopb (~> 3.30910.0)
+    - PromisesSwift (~> 2.1)
+  - flutter_secure_storage_darwin (10.0.0):
+    - Flutter
     - FlutterMacOS
   - flutter_timezone (0.1.0):
     - FlutterMacOS
@@ -71,6 +103,9 @@ PODS:
     - GoogleUtilities/Network (~> 8.1)
     - "GoogleUtilities/NSData+zlib (~> 8.1)"
     - nanopb (~> 3.30910.0)
+  - GoogleDataTransport (10.1.1):
+    - nanopb (~> 3.30910.0)
+    - PromisesObjC (~> 2.4)
   - GoogleUtilities/AppDelegateSwizzler (8.1.0):
     - GoogleUtilities/Environment
     - GoogleUtilities/Logger
@@ -109,6 +144,8 @@ PODS:
     - Flutter
     - FlutterMacOS
   - PromisesObjC (2.4.0)
+  - PromisesSwift (2.4.0):
+    - PromisesObjC (= 2.4.0)
   - shared_preferences_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -122,9 +159,11 @@ DEPENDENCIES:
   - audioplayers_darwin (from `Flutter/ephemeral/.symlinks/plugins/audioplayers_darwin/darwin`)
   - battery_plus (from `Flutter/ephemeral/.symlinks/plugins/battery_plus/macos`)
   - connectivity_plus (from `Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos`)
+  - file_picker (from `Flutter/ephemeral/.symlinks/plugins/file_picker/macos`)
   - firebase_analytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
-  - flutter_secure_storage_macos (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos`)
+  - firebase_crashlytics (from `Flutter/ephemeral/.symlinks/plugins/firebase_crashlytics/macos`)
+  - flutter_secure_storage_darwin (from `Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin`)
   - flutter_timezone (from `Flutter/ephemeral/.symlinks/plugins/flutter_timezone/macos`)
   - FlutterMacOS (from `Flutter/ephemeral`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
@@ -138,12 +177,18 @@ SPEC REPOS:
     - Firebase
     - FirebaseAnalytics
     - FirebaseCore
+    - FirebaseCoreExtension
     - FirebaseCoreInternal
+    - FirebaseCrashlytics
     - FirebaseInstallations
+    - FirebaseRemoteConfigInterop
+    - FirebaseSessions
     - GoogleAppMeasurement
+    - GoogleDataTransport
     - GoogleUtilities
     - nanopb
     - PromisesObjC
+    - PromisesSwift
 
 EXTERNAL SOURCES:
   audioplayers_darwin:
@@ -152,12 +197,16 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/battery_plus/macos
   connectivity_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/connectivity_plus/macos
+  file_picker:
+    :path: Flutter/ephemeral/.symlinks/plugins/file_picker/macos
   firebase_analytics:
     :path: Flutter/ephemeral/.symlinks/plugins/firebase_analytics/macos
   firebase_core:
     :path: Flutter/ephemeral/.symlinks/plugins/firebase_core/macos
-  flutter_secure_storage_macos:
-    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_macos/macos
+  firebase_crashlytics:
+    :path: Flutter/ephemeral/.symlinks/plugins/firebase_crashlytics/macos
+  flutter_secure_storage_darwin:
+    :path: Flutter/ephemeral/.symlinks/plugins/flutter_secure_storage_darwin/darwin
   flutter_timezone:
     :path: Flutter/ephemeral/.symlinks/plugins/flutter_timezone/macos
   FlutterMacOS:
@@ -177,26 +226,34 @@ SPEC CHECKSUMS:
   audioplayers_darwin: 4f9ca89d92d3d21cec7ec580e78ca888e5fb68bd
   battery_plus: f51ad29136e025b714b96f7d096f44f604615da7
   connectivity_plus: 4adf20a405e25b42b9c9f87feff8f4b6fde18a4e
+  file_picker: 7584aae6fa07a041af2b36a2655122d42f578c1a
   Firebase: f07b15ae5a6ec0f93713e30b923d9970d144af3e
   firebase_analytics: 09241c4796c1c42a02349ef8bf30025f5b640f0e
   firebase_core: e054894ab56033ef9bcbe2d9eac9395e5306e2fc
+  firebase_crashlytics: add6934cf4413d6c1307ca5251dbdbfe580e4caf
   FirebaseAnalytics: 0fc2b20091f0ddd21bf73397cf8f0eb5346dc24f
   FirebaseCore: bb595f3114953664e3c1dc032f008a244147cfd3
+  FirebaseCoreExtension: 7e1f7118ee970e001a8013719fb90950ee5e0018
   FirebaseCoreInternal: d7f5a043c2cd01a08103ab586587c1468047bca6
+  FirebaseCrashlytics: a6ece278a837c7e88de2d9b5da0a3542f2342395
   FirebaseInstallations: ae9f4902cb5bf1d0c5eaa31ec1f4e5495a0714e2
-  flutter_secure_storage_macos: 7f45e30f838cf2659862a4e4e3ee1c347c2b3b54
+  FirebaseRemoteConfigInterop: 1e31ec72b89c9924367c59bfb5ec9ab60d1d6766
+  FirebaseSessions: ba7c7a7ca8696a8d540eb3fe3800fbe98c79786d
+  flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
   flutter_timezone: d59eea86178cbd7943cd2431cc2eaa9850f935d8
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   GoogleAppMeasurement: 1e718274b7e015cefd846ac1fcf7820c70dc017d
+  GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   package_info_plus: f0052d280d17aa382b932f399edf32507174e870
   path_provider_foundation: bb55f6dbba17d0dccd6737fe6f7f34fbd0376880
   PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  PromisesSwift: 9d77319bbe72ebf6d872900551f7eeba9bce2851
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   url_launcher_macos: f87a979182d112f911de6820aefddaf56ee9fbfd
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
 PODFILE CHECKSUM: 180da7a1dbc1d932db021ebc8007656e7c46dd99
 
-COCOAPODS: 1.16.2
+COCOAPODS: 1.17.0
