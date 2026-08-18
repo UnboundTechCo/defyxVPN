@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
+import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
@@ -11,20 +12,6 @@ class AdvertiseDirector {
   final WidgetRef ref;
 
   AdvertiseDirector(this.ref);
-
-  /// Check if user is from Iran based on device timezone
-  /// Iranian users should not see AdMob ads (only internal ads)
-  static Future<bool> isIranianUser() async {
-    try {
-      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-      // Asia/Tehran is the timezone for Iran
-      final isIran = currentTimeZone == 'Asia/Tehran';
-      return isIran;
-    } catch (e) {
-      debugPrint('⚠️ Error detecting timezone: $e');
-      return false;
-    }
-  }
 
   static Future<bool> shouldUseInternalAds(Ref ref) async {
     // STRATEGY SELECTION (for backward compatibility with desktop):

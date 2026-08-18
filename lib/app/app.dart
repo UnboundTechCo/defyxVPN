@@ -8,7 +8,6 @@ import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -46,7 +45,7 @@ class _AppState extends ConsumerState<App> {
             _initializeAdFlow();
           } else {
             debugPrint(
-              '📱 Using internal ads only (${environment.isIranian ? "Iranian user" : "desktop platform"})',
+              '📱 Using internal ads only (${environment.adMobIsDisabled ? "Iranian user" : "desktop platform"})',
             );
           }
         });

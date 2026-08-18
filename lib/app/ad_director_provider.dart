@@ -14,19 +14,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Cached environment details to avoid repeated timezone/platform detection.
 /// This is computed once at app startup and used throughout the app lifecycle.
 class AdEnvironment {
-  final bool isIranian;
+  final bool adMobIsDisabled;
   final bool isMobilePlatform;
   final bool shouldInitializeAdMob;
 
   const AdEnvironment({
-    required this.isIranian,
+    required this.adMobIsDisabled,
     required this.isMobilePlatform,
     required this.shouldInitializeAdMob,
   });
 
   @override
   String toString() =>
-      'AdEnvironment(isIranian: $isIranian, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
+      'AdEnvironment(isIranian: $adMobIsDisabled, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
 }
 
 /// Provider for ad environment configuration
@@ -39,12 +39,12 @@ class AdEnvironment {
 /// - Desktop platforms: Don't initialize AdMob, only use internal ads
 /// - Mobile non-Iranian: Initialize AdMob, use both strategies
 final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
-  final isIranian = await AdvertiseDirector.isIranianUser();
+  final adMobIsDisabled = await AdvertiseDirector.shouldUseInternalAds(ref);
   final isMobile = Platform.isAndroid || Platform.isIOS;
-  final shouldInitAdMob = isMobile && !isIranian;
+  final shouldInitAdMob = isMobile && !adMobIsDisabled;
 
   final environment = AdEnvironment(
-    isIranian: isIranian,
+    adMobIsDisabled: adMobIsDisabled,
     isMobilePlatform: isMobile,
     shouldInitializeAdMob: shouldInitAdMob,
   );
