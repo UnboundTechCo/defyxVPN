@@ -77,6 +77,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ourWebsite => '我们的网站';
 
   @override
+  String get marketplace => '市场';
+
+  @override
+  String get telegramBot => 'Telegram 机器人';
+
+  @override
   String get sourceCode => '源代码';
 
   @override

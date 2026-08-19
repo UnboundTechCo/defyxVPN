@@ -234,6 +234,18 @@ abstract class AppLocalizations {
   /// **'Our Website'**
   String get ourWebsite;
 
+  /// Marketplace menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get marketplace;
+
+  /// Telegram bot menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram Bot'**
+  String get telegramBot;
+
   /// Source code link
   ///
   /// In en, this message translates to:

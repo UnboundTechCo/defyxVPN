@@ -303,7 +303,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                             ),
                             SizedBox(width: 8.w),
                             Text(
-                              AppLocalizations.of(context).settingsResetToDefault,
+                              AppLocalizations.of(
+                                context,
+                              ).settingsResetToDefault,
                               style: TextStyle(
                                 fontSize: 12.sp,
                                 fontFamily: 'Lato',

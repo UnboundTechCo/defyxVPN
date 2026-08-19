@@ -7,6 +7,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class QuickMenuDialog extends StatefulWidget {
@@ -35,7 +36,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(bottom: 20.h),
@@ -71,7 +72,11 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
                         title: l10n.privacyPolicy,
                         onTap: () {
@@ -86,7 +91,11 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
                         title: l10n.termsAndConditions,
                         onTap: () {
@@ -94,14 +103,19 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => CustomWebViewScreen(
-                                url: 'https://defyxvpn.com/terms-and-conditions',
+                                url:
+                                    'https://defyxvpn.com/terms-and-conditions',
                                 title: l10n.termsAndConditions,
                               ),
                             ),
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       SizedBox(
                         height: 44,
                         child: Row(
@@ -127,32 +141,71 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                             ),
                             SocialIconButton(
                               iconPath: AppIcons.facebookPath,
-                              url: 'https://www.facebook.com/profile.php?id=61584237212686',
+                              url:
+                                  'https://www.facebook.com/profile.php?id=61584237212686',
                               enable: true,
                             ),
                             SocialIconButton(
-                              iconPath: AppIcons.linkedinPath,
-                              url: 'https://www.linkedin.com/products/unboundtechco-defyxvpn/',
+                              iconPath: AppIcons.websitePath,
+                              url: 'https://defyxvpn.com',
+                              iconWidth: 20.w,
+                              iconHeight: 20.w,
                             ),
                           ],
                         ),
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       QuickMenuItem(
-                        title: l10n.ourWebsite,
+                        title: l10n.marketplace,
+                        leadingIcon: AppIcons.shop(
+                          width: 18.w,
+                          height: 18.w,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.black,
+                            BlendMode.srcIn,
+                          ),
+                        ),
                         onTap: () {
                           Navigator.of(context).pop();
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => CustomWebViewScreen(
-                                url: 'https://defyxvpn.com/contact',
-                                title: l10n.ourWebsite,
+                                url: 'https://market.defyxvpn.com',
+                                title: l10n.marketplace,
                               ),
                             ),
                           );
                         },
                       ),
-                      Divider(height: 1.h, thickness: 1, color: const Color(0x8080808C)),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
+                      QuickMenuItem(
+                        title: l10n.telegramBot,
+                        leadingIcon: AppIcons.telegramBot(
+                          width: 18.w,
+                          height: 18.w,
+                        ),
+                        onTap: () async {
+                          Navigator.of(context).pop();
+                          final uri = Uri.parse('https://t.me/DefyxVPN_bot');
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
+                          );
+                        },
+                      ),
+                      Divider(
+                        height: 1.h,
+                        thickness: 1,
+                        color: const Color(0x8080808C),
+                      ),
                       Container(
                         height: 44,
                         padding: EdgeInsets.symmetric(horizontal: 16.w),
