@@ -85,7 +85,6 @@ class DXCoreBridge {
   WinRequestHandshake_t pRequestHandshake_ = nullptr;
   WinCompleteHandshake_t pCompleteHandshake_ = nullptr;
   WinLogin_t pLogin_ = nullptr;
-  WinLogin_t pLogin_ = nullptr;
   WinLoginByCode_t pLoginByCode_ = nullptr;
   static void __stdcall ProgressTrampoline(const char* msg);
   static DXCoreBridge* s_instance_;
