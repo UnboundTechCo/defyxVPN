@@ -33,6 +33,14 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     state = AsyncData(AuthData(email: email, isLoggedIn: true));
   }
 
+  Future<void> loginByCode(String token) async {
+    final storage = ref.read(secureStorageProvider);
+
+    await storage.write(premiumTokenKey, token);
+
+    state = AsyncData(AuthData(email: "", isLoggedIn: true));
+  }
+
   Future<void> logout() async {
     final storage = ref.read(secureStorageProvider);
 

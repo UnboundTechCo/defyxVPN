@@ -62,7 +62,7 @@ class _SettingsPremiumLoginByCodeDialogState
         return;
       }
 
-      await widget.ref.read(authProvider.notifier).login(code, token);
+      await widget.ref.read(authProvider.notifier).loginByCode(token);
 
       await widget.ref
           .read(flowlineServiceProvider)
