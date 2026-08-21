@@ -14,19 +14,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Cached environment details to avoid repeated timezone/platform detection.
 /// This is computed once at app startup and used throughout the app lifecycle.
 class AdEnvironment {
-  final bool isIranian;
+  final bool adMobIsDisabled;
   final bool isMobilePlatform;
   final bool shouldInitializeAdMob;
 
   const AdEnvironment({
-    required this.isIranian,
+    required this.adMobIsDisabled,
     required this.isMobilePlatform,
     required this.shouldInitializeAdMob,
   });
 
   @override
   String toString() =>
-      'AdEnvironment(isIranian: $isIranian, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
+      'AdEnvironment(isIranian: $adMobIsDisabled, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
 }
 
 /// Provider for ad environment configuration
@@ -39,13 +39,12 @@ class AdEnvironment {
 /// - Desktop platforms: Don't initialize AdMob, only use internal ads
 /// - Mobile non-Iranian: Initialize AdMob, use both strategies
 final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
-
-  final isIranian = await AdvertiseDirector.isIranianUser();
+  final adMobIsDisabled = await AdvertiseDirector.shouldUseInternalAds(ref);
   final isMobile = Platform.isAndroid || Platform.isIOS;
-  final shouldInitAdMob = isMobile && !isIranian;
+  final shouldInitAdMob = isMobile && !adMobIsDisabled;
 
   final environment = AdEnvironment(
-    isIranian: isIranian,
+    adMobIsDisabled: adMobIsDisabled,
     isMobilePlatform: isMobile,
     shouldInitializeAdMob: shouldInitAdMob,
   );
@@ -63,7 +62,6 @@ final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
 /// - Manages connection state listener lifecycle
 class AdStrategyManager {
   final Ref _ref;
-  final AdEnvironment _environment;
   final InternalAdStrategy _internalStrategy;
   final GoogleAdStrategy? _googleStrategy; // null for Iranian/desktop users
   final bool _hasGoogleStrategy;
@@ -77,7 +75,6 @@ class AdStrategyManager {
     required InternalAdStrategy internalStrategy,
     required GoogleAdStrategy? googleStrategy,
   }) : _ref = ref,
-       _environment = environment,
        _internalStrategy = internalStrategy,
        _googleStrategy = googleStrategy,
        _hasGoogleStrategy = googleStrategy != null;
@@ -89,7 +86,6 @@ class AdStrategyManager {
     Color backgroundColor = const Color(0xFF19312F),
     double cornerRadius = 10.0,
   }) {
-
     // Create InternalAdStrategy (always needed)
     final internalStrategy = InternalAdStrategy(
       backgroundColor: backgroundColor,
@@ -119,7 +115,6 @@ class AdStrategyManager {
 
   /// Initialize connection state listener
   void _initializeConnectionListener() {
-
     // Listen to connection changes and delegate to strategies
     _connectionSubscription = _ref.listen(conn.connectionStateProvider, (
       previous,
@@ -170,8 +165,6 @@ class AdStrategyManager {
     required conn.ConnectionStatus previous,
     required conn.ConnectionStatus current,
   }) {
-
-
     // When connecting: notify internal strategy
     if (current == conn.ConnectionStatus.connected &&
         previous != conn.ConnectionStatus.connected) {
@@ -187,7 +180,6 @@ class AdStrategyManager {
     // This handles: connected → disconnecting, connected → disconnected
     else if (previous == conn.ConnectionStatus.connected &&
         current != conn.ConnectionStatus.connected) {
-
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -202,7 +194,6 @@ class AdStrategyManager {
     if (current == conn.ConnectionStatus.disconnected &&
         previous != conn.ConnectionStatus.disconnected) {
       if (_hasGoogleStrategy) {
-  
         _googleStrategy!.onConnectionStateChanged(
           ref: _ref,
           previous: previous,
@@ -210,7 +201,7 @@ class AdStrategyManager {
           hasInitialized: true,
           onRefreshNeeded: () => _googleStrategy.loadAd(ref: _ref),
         );
-      } 
+      }
     }
   }
 
@@ -225,10 +216,8 @@ class AdStrategyManager {
     // This handles the case where app starts in disconnected state (no state change)
     final initialConnectionState = _ref.read(conn.connectionStateProvider);
 
-
     if (initialConnectionState.status == conn.ConnectionStatus.disconnected &&
         _hasGoogleStrategy) {
-
       // Simulate a state change to trigger ad load
       final googleStrategy = _googleStrategy!;
       googleStrategy.onConnectionStateChanged(
@@ -240,7 +229,6 @@ class AdStrategyManager {
       );
     } else if (initialConnectionState.status ==
         conn.ConnectionStatus.connected) {
-  
       // Simulate a state change to trigger internal ad load
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
@@ -305,15 +293,12 @@ class AdStrategyManager {
 /// - Session-scoped provider (NOT autoDispose) to prevent recreation churn
 /// - Manager holds static NativeAd which should persist across widget rebuilds
 /// - ref.onDispose: Ensures manager.dispose() is called on app exit
-final adStrategyManagerProvider = Provider<AdStrategyManager?>((
-  ref,
-) {
+final adStrategyManagerProvider = Provider<AdStrategyManager?>((ref) {
   // Wait for environment to be ready
   final environmentAsync = ref.watch(adEnvironmentProvider);
 
   return environmentAsync.when(
     data: (environment) {
-
       // Create manager with environment
       final manager = AdStrategyManager.create(
         ref: ref,

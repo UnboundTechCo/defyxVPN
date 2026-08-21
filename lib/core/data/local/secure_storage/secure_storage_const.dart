@@ -6,3 +6,4 @@ const String apiAvertiseKey = 'api_advertise';
 const String apiTipsKey = 'api_tips';
 const String premiumTokenKey = 'premium_token';
 const String premiumEmailKey = 'premium_email';
+const String flowlineSettingsKey = 'flowline_settings';
