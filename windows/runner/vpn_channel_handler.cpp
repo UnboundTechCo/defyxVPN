@@ -552,6 +552,28 @@ void VPNChannelHandler::SetupMethodChannel() {
           return;
         }
 
+        if (method == "loginByCode") {
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            auto code = get_string_arg(m, "code");
+            if (!code.empty()) {
+              std::thread([this, code, result = std::move(result)]() mutable {
+                try {
+                  std::string token = dxcore_->LoginByCode(code);
+                  result->Success(flutter::EncodableValue(token));
+                } catch (...) {
+                  result->Error("LOGIN_ERROR", "Failed to login by code");
+                }
+              }).detach();
+            } else {
+              result->Error("INVALID_ARGUMENT", "code is missing or empty");
+            }
+          } else {
+            result->Error("INVALID_ARGUMENT", "missing args");
+          }
+          return;
+        }
+
         result->NotImplemented();
       });
 }
