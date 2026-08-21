@@ -99,7 +99,7 @@ class VpnPlugin: VpnStatusDelegate {
             isVPNPrepared(result)
         case "login":
             login(call.arguments as? [String: Any], result)
-        case "loginByCode"
+        case "loginByCode":
             loginByCode(call.arguments as? [String: Any], result)
         default:
             result(FlutterMethodNotImplemented)
