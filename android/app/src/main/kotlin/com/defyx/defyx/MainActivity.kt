@@ -113,6 +113,7 @@ class MainActivity : FlutterActivity() {
                 "setConnectionMethod" ->
                         setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 "login" -> login(call.arguments as? Map<String, Any>, result)
+                "loginByCode" -> loginByCode(call.arguments as? Map<String, Any>, result)
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -470,6 +471,31 @@ class MainActivity : FlutterActivity() {
                 Log.e("Login", "Login failed: ${e.message}", e)
                 withContext(Dispatchers.Main) {
                     result.error("LOGIN_ERROR", "Failed to login", e.localizedMessage)
+                }
+            }
+        }
+    }
+
+    private fun loginByCode(args: Map<String, Any>?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val code = args?.get("code") as? String
+                if (code.isNullOrEmpty()) {
+                    withContext(Dispatchers.Main) {
+                        result.error(
+                                "INVALID_ARGUMENT",
+                                "code is missing or empty",
+                                null
+                        )
+                    }
+                    return@launch
+                }
+                val loginResult = DefyxVpnService.getInstance().loginByCode(code)
+                result.success(loginResult)
+            } catch (e: Exception) {
+                Log.e("Login by code", "Login failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("LOGIN_ERROR", "Failed to login by code", e.localizedMessage)
                 }
             }
         }

@@ -326,6 +326,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loginSuccess => 'Login successful!';
 
   @override
+  String get code => 'Code';
+
+  @override
+  String get codeHint => 'Enter your access code';
+
+  @override
+  String get codeValidation => 'Please enter your code';
+
+  @override
+  String get premiumLoginByCodeDescription =>
+      'To access your Premium subscription(s), enter the access code provided to you.';
+
+  @override
   String get havingTrouble => 'Having trouble?';
 
   @override
@@ -356,4 +369,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get loginOrRegister => 'LOGIN OR REGISTER';
+
+  @override
+  String get loginByCode => 'Login by code';
+
+  @override
+  String get backToLoginByEmail => 'Back to login by email';
+
+  @override
+  String get connectionRequired => 'Connection Required';
+
+  @override
+  String get connectionRequiredDescription =>
+      'To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.';
 }

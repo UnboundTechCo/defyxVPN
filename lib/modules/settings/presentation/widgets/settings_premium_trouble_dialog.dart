@@ -90,25 +90,28 @@ class _SettingsPremiumTroubleDialogState
                 fontWeight: FontWeight.w700,
               ),
             ),
-            SizedBox(height: 18.h),
-            RichText(
-              text: TextSpan(
-                style: TextStyle(
-                  fontSize: fontSize,
-                  fontFamily: 'Lato',
-                  color: Colors.black.withValues(alpha: 0.5),
-                  height: 1.4,
-                ),
-                children: [
-                  TextSpan(text: '${l10n.signedInAs} '),
-                  TextSpan(
-                    text: widget.email,
-                    style: const TextStyle(color: Color(0xFF5374BD)),
+            if (widget.email.isNotEmpty) ...[
+              SizedBox(height: 18.h),
+
+              RichText(
+                text: TextSpan(
+                  style: TextStyle(
+                    fontSize: fontSize,
+                    fontFamily: 'Lato',
+                    color: Colors.black.withValues(alpha: 0.5),
+                    height: 1.4,
                   ),
-                  const TextSpan(text: '.'),
-                ],
+                  children: [
+                    TextSpan(text: '${l10n.signedInAs} '),
+                    TextSpan(
+                      text: widget.email,
+                      style: const TextStyle(color: Color(0xFF5374BD)),
+                    ),
+                    const TextSpan(text: '.'),
+                  ],
+                ),
               ),
-            ),
+            ],
             SizedBox(height: 18.h),
             Text(
               l10n.premiumImportDescription,
