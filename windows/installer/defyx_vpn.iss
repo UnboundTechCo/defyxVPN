@@ -32,6 +32,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 OutputDir={#MyAppOutputDir}
 OutputBaseFilename=DefyxVPN-Windows-Installer-x64
+SetupIconFile=..\runner\resources\app_icon.ico
 Compression=lzma2
 SolidCompression=yes
 ArchitecturesAllowed=x64compatible
