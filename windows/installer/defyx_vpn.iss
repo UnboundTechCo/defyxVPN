@@ -1,6 +1,6 @@
 #define MyAppName "Defyx VPN"
 #define MyAppPublisher "UnboundTech UG"
-#define MyAppExeName "defyx_vpn.exe"
+#define MyAppExeName "DefyxVPN.exe"
 
 #ifndef MyAppVersion
   #define MyAppVersion "0.0.0"

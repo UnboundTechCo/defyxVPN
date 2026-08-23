@@ -83,7 +83,7 @@ jobs:
           }
 
           $releaseDirectory = (Resolve-Path "build/windows/x64/runner/Release").Path
-          $appExecutable = Join-Path $releaseDirectory "defyx_vpn.exe"
+          $appExecutable = Join-Path $releaseDirectory "DefyxVPN.exe"
           if (-not (Test-Path $appExecutable)) {
             throw "Flutter Windows executable was not generated: $appExecutable"
           }
