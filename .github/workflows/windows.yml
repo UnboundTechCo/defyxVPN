@@ -92,12 +92,17 @@ jobs:
           $versionInfo = $version -replace '\+', '.'
           $installerDirectory = Join-Path (Resolve-Path "build/windows").Path "installer"
           New-Item -ItemType Directory -Force -Path $installerDirectory | Out-Null
+          $vcRedist = Join-Path $installerDirectory "vc_redist.x64.exe"
+          Invoke-WebRequest -Uri "https://aka.ms/vc14/vc_redist.x64.exe" -OutFile $vcRedist
+          if (-not (Test-Path $vcRedist) -or (Get-Item $vcRedist).Length -eq 0) {
+            throw "Visual C++ Redistributable download failed"
+          }
 
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) {
             throw "Inno Setup compiler was not found: $iscc"
           }
-          & $iscc "/DMyAppVersion=$version" "/DMyAppVersionInfo=$versionInfo" "/DMyAppSourceDir=$releaseDirectory" "/DMyAppOutputDir=$installerDirectory" "windows/installer/defyx_vpn.iss"
+          & $iscc "/DMyAppVersion=$version" "/DMyAppVersionInfo=$versionInfo" "/DMyAppSourceDir=$releaseDirectory" "/DMyAppOutputDir=$installerDirectory" "/DMyVcRedistPath=$vcRedist" "windows/installer/defyx_vpn.iss"
           if ($LASTEXITCODE -ne 0) {
             throw "Inno Setup compilation failed"
           }
