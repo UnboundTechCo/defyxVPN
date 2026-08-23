@@ -5,8 +5,9 @@ permissions:
 
 on:
   push:
-    branches: 
+    branches:
       - release
+      - add-exe-installer
 
 jobs:
   android:
