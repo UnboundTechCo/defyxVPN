@@ -82,7 +82,7 @@
           </a>
           <br />
           <a
-            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Windows-Installer-x64.msix">
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Windows-Installer-x64.exe">
             <img
               src="https://img.shields.io/badge/Windows-Installer-0C88D8.svg?logo=windows" />
           </a>

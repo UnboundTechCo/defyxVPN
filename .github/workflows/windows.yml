@@ -76,31 +76,41 @@ jobs:
       - name: Build Windows Installer
         shell: pwsh
         run: |
-          $pubspecPath = "pubspec.yaml"
-          $pubspec = Get-Content $pubspecPath -Raw
+          $pubspec = Get-Content "pubspec.yaml" -Raw
           $versionMatch = [regex]::Match($pubspec, '(?m)^version:\s*(\d+\.\d+\.\d+)\+(\d+)\s*$')
           if (-not $versionMatch.Success) {
             throw "Could not find a Flutter version in pubspec.yaml"
           }
-          $msixVersion = "$($versionMatch.Groups[1].Value).$($versionMatch.Groups[2].Value)"
-          $pubspec = [regex]::Replace(
-            $pubspec,
-            '(?m)^  msix_version:\s*.*$',
-            "  msix_version: $msixVersion"
-          )
-          Set-Content -Path $pubspecPath -Value $pubspec -NoNewline
 
-          dart run msix:create
-
-          $installerDirectory = "build/windows/installer"
-          New-Item -ItemType Directory -Force -Path $installerDirectory | Out-Null
-          $msix = Get-ChildItem -Path "build/windows" -Filter "*.msix" -Recurse |
-            Where-Object { $_.FullName -notlike "*\installer\*" } |
-            Select-Object -First 1
-          if ($null -eq $msix) {
-            throw "MSIX package was not generated"
+          $releaseDirectory = (Resolve-Path "build/windows/x64/runner/Release").Path
+          $appExecutable = Join-Path $releaseDirectory "DefyxVPN.exe"
+          if (-not (Test-Path $appExecutable)) {
+            throw "Flutter Windows executable was not generated: $appExecutable"
           }
-          Move-Item $msix.FullName "$installerDirectory\DefyxVPN-Windows-Installer-x64.msix" -Force
+
+          $version = $versionMatch.Groups[0].Value.Split(':', 2)[1].Trim()
+          $versionInfo = $version -replace '\+', '.'
+          $installerDirectory = Join-Path (Resolve-Path "build/windows").Path "installer"
+          New-Item -ItemType Directory -Force -Path $installerDirectory | Out-Null
+          $vcRedist = Join-Path $installerDirectory "vc_redist.x64.exe"
+          Invoke-WebRequest -Uri "https://aka.ms/vc14/vc_redist.x64.exe" -OutFile $vcRedist
+          if (-not (Test-Path $vcRedist) -or (Get-Item $vcRedist).Length -eq 0) {
+            throw "Visual C++ Redistributable download failed"
+          }
+
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup compiler was not found: $iscc"
+          }
+          & $iscc "/DMyAppVersion=$version" "/DMyAppVersionInfo=$versionInfo" "/DMyAppSourceDir=$releaseDirectory" "/DMyAppOutputDir=$installerDirectory" "/DMyVcRedistPath=$vcRedist" "windows/installer/defyx_vpn.iss"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Inno Setup compilation failed"
+          }
+
+          $installer = Join-Path $installerDirectory "DefyxVPN-Windows-Installer-x64.exe"
+          if (-not (Test-Path $installer)) {
+            throw "Installer was not generated: $installer"
+          }
 
       - name: Upload Windows Release Artifacts
         uses: actions/upload-artifact@v4
@@ -108,4 +118,4 @@ jobs:
           name: windows-release
           path: |
             build/windows/DefyxVPN-Windows-Portable-x64.zip
-            build/windows/installer/DefyxVPN-Windows-Installer-x64.msix
+            build/windows/installer/DefyxVPN-Windows-Installer-x64.exe
