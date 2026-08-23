@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - release
-      - add-exe-installer
 
 jobs:
   android:
