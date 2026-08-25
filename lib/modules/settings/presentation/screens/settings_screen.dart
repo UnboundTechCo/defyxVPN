@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -340,15 +342,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onTapBefore: _handlePremiumWidgetTap,
                   ),
                 ),
-                SizedBox(width: 15.w),
-                Container(
-                  key: _donateWidgetKey,
-                  child: SettingsDonateWidget(
-                    ref: ref,
-                    shouldExecuteAction: true,
-                    onTapBefore: _handleDonateWidgetTap,
+                if (!Platform.isIOS) ...[
+                  SizedBox(width: 15.w),
+                  Container(
+                    key: _donateWidgetKey,
+                    child: SettingsDonateWidget(
+                      ref: ref,
+                      shouldExecuteAction: true,
+                      onTapBefore: _handleDonateWidgetTap,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
