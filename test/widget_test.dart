@@ -5,24 +5,46 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/material.dart';
 
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/app/app.dart';
+import 'package:defyx_vpn/shared/providers/language_provider.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    await tester.pumpWidget(const App());
+  testWidgets('App builds inside its Riverpod scope', (
+    WidgetTester tester,
+  ) async {
+    SharedPreferences.setMockInitialValues({});
+    final preferences = await SharedPreferences.getInstance();
+    final testRouter = GoRouter(
+      initialLocation: '/test',
+      routes: [
+        GoRoute(
+          path: '/test',
+          builder: (context, state) => const SizedBox.shrink(),
+        ),
+      ],
+    );
 
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          routerProvider.overrideWithValue(testRouter),
+          languageProvider.overrideWith((ref) => LanguageNotifier(preferences)),
+        ],
+        child: App(),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(App), findsOneWidget);
+    testRouter.dispose();
   });
 }

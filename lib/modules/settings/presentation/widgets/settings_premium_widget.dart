@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
@@ -5,6 +7,7 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_trouble_dialog.dart';
+import 'package:defyx_vpn/modules/settings/presentation/screens/premium_purchase_screen.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +35,11 @@ class SettingsPremiumWidget extends ConsumerWidget {
   });
 
   void _handleOpenLoginDialog(BuildContext context, WidgetRef ref) {
+    if (Platform.isIOS) {
+      PremiumPurchaseScreen.show(context, ref);
+      return;
+    }
+
     final connectionState = ref.read(connectionStateProvider);
 
     if (connectionState.status == ConnectionStatus.connected) {
