@@ -62,6 +62,14 @@ class PremiumPurchaseScreen extends ConsumerWidget {
               'Subscriptions renew automatically until canceled.',
             ),
             const SizedBox(height: 20),
+            OutlinedButton.icon(
+              onPressed: () => SettingsPremiumLoginDialog.show(context, ref),
+              icon: const Icon(Icons.login),
+              label: const Text('Load existing Premium configuration'),
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 20),
             if (purchaseState.isLoading && purchaseState.products.isEmpty)
               const Center(child: CircularProgressIndicator())
             else if (!purchaseState.isAvailable)
@@ -87,11 +95,6 @@ class PremiumPurchaseScreen extends ConsumerWidget {
                   ? null
                   : notifier.restorePurchases,
               child: const Text('Restore Purchases'),
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: () => SettingsPremiumLoginDialog.show(context, ref),
-              child: const Text('Already subscribed? Sign in'),
             ),
             if (purchaseState.errorMessage != null) ...[
               const SizedBox(height: 12),
