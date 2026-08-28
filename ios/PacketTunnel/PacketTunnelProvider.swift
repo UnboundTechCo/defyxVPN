@@ -4,6 +4,11 @@ import os.log
 
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
+    private let tunnelAddress = "172.18.0.1"
+    private let tunnelMask = "255.255.255.252"
+    private let tunnelDns = "1.1.1.1"
+    private let tunnelMtu = 1500
+
     private var logTimer: Timer?
 
     override init() {
@@ -16,21 +21,45 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void
     ) {
         os_log("Starting sing-box tunnel...")
-        
-        let success = IosStartTunnel()
-        
-        if success {
-            os_log("Tunnel started successfully")
-            completionHandler(nil)
-        } else {
-            os_log("Failed to start tunnel")
-            let error = NSError(
-                domain: "PacketTunnelProvider",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to start sing-box tunnel"]
-            )
-            completionHandler(error)
+
+        setTunnelNetworkSettings(tunnelSettings()) { error in
+            if let error = error {
+                os_log("Failed to apply tunnel settings: %{public}@", error.localizedDescription)
+                completionHandler(error)
+                return
+            }
+
+            let success = IosStartTunnel(0)
+
+            if success {
+                os_log("Tunnel started successfully")
+                completionHandler(nil)
+            } else {
+                os_log("Failed to start tunnel")
+                let startError = NSError(
+                    domain: "PacketTunnelProvider",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Failed to start sing-box tunnel"]
+                )
+                completionHandler(startError)
+            }
         }
+    }
+
+    private func tunnelSettings() -> NEPacketTunnelNetworkSettings {
+        let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: tunnelAddress)
+
+        let ipv4 = NEIPv4Settings(addresses: [tunnelAddress], subnetMasks: [tunnelMask])
+        ipv4.includedRoutes = [NEIPv4Route.default()]
+        settings.ipv4Settings = ipv4
+
+        let dns = NEDNSSettings(servers: [tunnelDns])
+        dns.matchDomains = [""]
+        settings.dnsSettings = dns
+
+        settings.mtu = NSNumber(value: tunnelMtu)
+
+        return settings
     }
 
     override func stopTunnel(
@@ -58,7 +87,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         switch command {
         case "START_TUNNEL":
-            let success = IosStartTunnel()
+            let success = IosStartTunnel(0)
             let response = success ? "TUNNEL_STARTED" : "TUNNEL_ERROR"
             os_log("Tunnel: %{public}@", response)
             completionHandler?(response.data(using: .utf8))
