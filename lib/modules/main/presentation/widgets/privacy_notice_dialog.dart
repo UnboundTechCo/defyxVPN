@@ -5,24 +5,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PrivacyNoticeDialog extends StatefulWidget {
-  final Future<bool> Function() onAccept;
+  final Future<bool> Function(bool telemetryOptIn) onAccept;
+  final bool telemetryOnly;
 
-  const PrivacyNoticeDialog({super.key, required this.onAccept});
+  const PrivacyNoticeDialog({
+    super.key,
+    required this.onAccept,
+    this.telemetryOnly = false,
+  });
 
   @override
   State<PrivacyNoticeDialog> createState() => _PrivacyNoticeDialogState();
 
   static Future<void> show(
     BuildContext context,
-    Future<bool> Function() onAccept,
-  ) {
+    Future<bool> Function(bool telemetryOptIn) onAccept, {
+    bool telemetryOnly = false,
+  }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return PopScope(
           canPop: false,
-          child: PrivacyNoticeDialog(onAccept: onAccept),
+          child: PrivacyNoticeDialog(
+            onAccept: onAccept,
+            telemetryOnly: telemetryOnly,
+          ),
         );
       },
     );
@@ -31,13 +40,14 @@ class PrivacyNoticeDialog extends StatefulWidget {
 
 class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
   bool _isLoading = false;
+  bool _telemetryOptIn = false;
 
   Future<void> _handleGotIt() async {
     try {
       if (_isLoading) return;
       setState(() => _isLoading = true);
 
-      final accepted = await widget.onAccept();
+      final accepted = await widget.onAccept(_telemetryOptIn);
       setState(() => _isLoading = false);
       if (accepted && mounted) {
         Navigator.of(context).pop();
@@ -58,15 +68,13 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
     final ratio = screenWidth / baseScreenWidth;
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
 
-    String message =
-        'This app does not collect, store, or transmit any personal information to its servers.\n\n'
-        'Only a small amount of non-personal data (such as your internet provider\'s name) may be stored locally on your device to improve connection performance for future sessions.\n';
+    String message = widget.telemetryOnly
+        ? 'You previously accepted the VPN setup notice. Please choose separately whether Defyx may send diagnostic and usage telemetry.'
+        : 'Defyx needs your permission to install and use the VPN profile. VPN operation may process account, IP address, server, and connection information.';
 
     if (Platform.isIOS || Platform.isAndroid) {
-      message += '\nBy continuing, you agree to install the VPN profile';
       message +=
-          ' and may be asked for consent to personalize ads based on your preferences';
-      message += '.';
+          '\nAdMob and its consent form are handled separately after this notice.';
     }
 
     return Dialog(
@@ -101,6 +109,35 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
                 color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),
+            ),
+            SizedBox(height: 12.h),
+            CheckboxListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _telemetryOptIn,
+              onChanged: _isLoading
+                  ? null
+                  : (value) {
+                      setState(() => _telemetryOptIn = value ?? false);
+                    },
+              title: Text(
+                'Allow telemetry',
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontFamily: 'Lato',
+                  color: Colors.black,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              subtitle: Text(
+                'Optional: Firebase Analytics, Crashlytics, Sessions, VPN diagnostics, and Cloudflare speed-test measurements. You can revoke this choice later in Settings.',
+                style: TextStyle(
+                  fontSize: fontSize * 0.82,
+                  fontFamily: 'Lato',
+                  color: Colors.black.withValues(alpha: 0.5),
+                  height: 1.3,
+                ),
+              ),
+              controlAffinity: ListTileControlAffinity.leading,
             ),
             SizedBox(height: 20.h),
             ElevatedButton(

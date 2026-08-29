@@ -55,6 +55,7 @@ class VPN {
   StreamSubscription<String>? _vpnSub;
   StreamSubscription<Map<dynamic, dynamic>>? _crashSub;
   DateTime? _connectionStartTime;
+  Future<void>? _connectOperation;
 
   void _init(ProviderContainer container) {
     if (_initialized) return;
@@ -218,7 +219,22 @@ class VPN {
     }
   }
 
-  Future<void> _connect() async {
+  Future<void> _connect() {
+    final operation = _connectOperation;
+    if (operation != null) {
+      return operation;
+    }
+
+    final nextOperation = _connectInternal();
+    _connectOperation = nextOperation;
+    return nextOperation.whenComplete(() {
+      if (identical(_connectOperation, nextOperation)) {
+        _connectOperation = null;
+      }
+    });
+  }
+
+  Future<void> _connectInternal() async {
     final connectionNotifier = _container?.read(
       connectionStateProvider.notifier,
     );
@@ -342,12 +358,27 @@ class VPN {
       return;
     }
 
-    if (!_isReconnectMode) {
-      await _createTunnel();
-      _isReconnectMode = true;
+    try {
+      if (!_isReconnectMode) {
+        await _createTunnel();
+        _isReconnectMode = true;
+      }
+    } catch (e, stack) {
+      connectionNotifier?.setError();
+      await vpnData?.disableVPN();
+      try {
+        await _vpnBridge.disconnectVpn();
+      } catch (_) {}
+      crashReportingService.recordVpnError(
+        e,
+        stack,
+        vpnState: 'tunnel_start_failed',
+      );
+      alertService.error();
+      return;
     }
     connectionNotifier?.setConnected();
-    vpnData?.enableVPN();
+    await vpnData?.enableVPN();
     await refreshPing();
     alertService.success();
 
@@ -398,20 +429,28 @@ class VPN {
   Future<void> _stopVPN(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     connectionNotifier.setDisconnecting();
-    await _vpnBridge.stopVPN();
-    _clearData(ref);
-    connectionNotifier.setDisconnected();
+    try {
+      await _vpnBridge.stopVPN();
+    } catch (e, stack) {
+      crashReportingService.recordVpnError(e, stack, vpnState: 'stopping');
+    } finally {
+      _clearData(ref);
+      connectionNotifier.setDisconnected();
+    }
   }
 
   Future<void> _disconnect(WidgetRef ref) async {
     final connectionNotifier = ref.read(connectionStateProvider.notifier);
     final vpnData = await _container?.read(vpnDataProvider.future);
     connectionNotifier.setDisconnecting();
-    await _vpnBridge.disconnectVpn();
-    _clearData(ref);
-    await vpnData?.disableVPN();
-    connectionNotifier.setDisconnected();
-    analyticsService.logVpnDisconnected();
+    try {
+      await _vpnBridge.disconnectVpn();
+    } finally {
+      _clearData(ref);
+      await vpnData?.disableVPN();
+      connectionNotifier.setDisconnected();
+      analyticsService.logVpnDisconnected();
+    }
   }
 
   Future<void> _closeTunnel({bool keepConnectionStatus = false}) async {
@@ -423,15 +462,18 @@ class VPN {
     if (!keepConnectionStatus) {
       connectionNotifier?.setDisconnecting();
     }
-    if (Platform.isIOS) {
-      await _vpnBridge.disconnectVpn();
+    try {
+      if (Platform.isIOS || Platform.isAndroid) {
+        await _vpnBridge.disconnectVpn();
+      }
+    } finally {
+      await vpnData?.disableVPN();
+      if (!keepConnectionStatus) {
+        connectionNotifier?.setDisconnected();
+      }
+      analyticsService.logVpnDisconnected();
+      _isReconnectMode = false;
     }
-    await vpnData?.disableVPN();
-    if (!keepConnectionStatus) {
-      connectionNotifier?.setDisconnected();
-    }
-    analyticsService.logVpnDisconnected();
-    _isReconnectMode = false;
   }
 
   Future<void> _onTunnelClosed() async {
@@ -440,9 +482,12 @@ class VPN {
     );
     connectionNotifier?.setDisconnecting();
     final vpnData = await _container?.read(vpnDataProvider.future);
-    await _vpnBridge.stopVPN();
-    await vpnData?.disableVPN();
-    connectionNotifier?.setDisconnected();
+    try {
+      await _vpnBridge.stopVPN();
+    } finally {
+      await vpnData?.disableVPN();
+      connectionNotifier?.setDisconnected();
+    }
   }
 
   Future<bool?> _grantVpnPermission() async {
@@ -462,7 +507,10 @@ class VPN {
   Future<void> _createTunnel() async {
     switch (Platform.operatingSystem) {
       case 'android':
-        await _vpnBridge.connectVpn();
+        final isConnected = await _vpnBridge.connectVpn();
+        if (isConnected != true) {
+          throw StateError('Android VPN tunnel did not become ready');
+        }
         break;
       case "ios":
         await _vpnBridge.startTun2socks();
@@ -547,10 +595,24 @@ class VPN {
   void _sendCoreFirebaseMessage(String message) {
     Map<String, dynamic> jsonData = jsonDecode(message);
     final title = jsonData["title"] ?? "Unknown";
+    const allowedEvents = {
+      'config_updated',
+      'core_started',
+      'core_stopped',
+      'vpn_state_changed',
+    };
+    if (title is! String || !allowedEvents.contains(title)) {
+      return;
+    }
+
     jsonData.remove("title");
-    final Map<String, String> stringMap = jsonData.map(
-      (key, value) => MapEntry(key, value.toString()),
-    );
+    const allowedParameters = {'status', 'version'};
+    final stringMap = <String, String>{};
+    for (final entry in jsonData.entries) {
+      if (allowedParameters.contains(entry.key) && entry.value is String) {
+        stringMap[entry.key] = entry.value as String;
+      }
+    }
     analyticsService.logCoreData(title, stringMap);
   }
 }

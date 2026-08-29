@@ -4,6 +4,7 @@ import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent_service.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
+  bool _isUpdatingTelemetry = false;
 
   @override
   void initState() {
@@ -365,39 +367,62 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
     final groups = settingsState.groupList;
+    final telemetry = TelemetryConsentService();
     return Column(
-      children: groups
-          .map(
-            (group) => SettingsGroupWidget(
-              key: ValueKey(group.id),
-              group: group,
-              showSeparators: true,
-              onToggle: (groupId, itemId) {
-                settingsNotifier.toggleSetting(groupId, itemId, context);
-              },
-              onReorder: group.isDraggable
-                  ? (oldIndex, newIndex) {
-                      settingsNotifier.reorderItems(
-                        group.id,
-                        oldIndex,
-                        newIndex,
-                      );
-                    }
-                  : null,
-              onReset: group.id == SettingsGroupId.connectionMethod
-                  ? () {
-                      settingsNotifier.resetGroupToDefault(
-                        group.id,
-                        context: context,
-                      );
-                    }
-                  : null,
-              onNavigate: (route) {
-                Navigator.pushNamed(context, route);
-              },
-            ),
-          )
-          .toList(),
+      children: [
+        ...groups.map(
+          (group) => SettingsGroupWidget(
+            key: ValueKey(group.id),
+            group: group,
+            showSeparators: true,
+            onToggle: (groupId, itemId) {
+              settingsNotifier.toggleSetting(groupId, itemId, context);
+            },
+            onReorder: group.isDraggable
+                ? (oldIndex, newIndex) {
+                    settingsNotifier.reorderItems(group.id, oldIndex, newIndex);
+                  }
+                : null,
+            onReset: group.id == SettingsGroupId.connectionMethod
+                ? () {
+                    settingsNotifier.resetGroupToDefault(
+                      group.id,
+                      context: context,
+                    );
+                  }
+                : null,
+            onNavigate: (route) {
+              Navigator.pushNamed(context, route);
+            },
+          ),
+        ),
+        SizedBox(height: 24.h),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text(
+            'Allow telemetry',
+            style: TextStyle(color: Colors.white, fontFamily: 'Lato'),
+          ),
+          subtitle: const Text(
+            'Firebase diagnostics, VPN operational events, and Cloudflare speed-test measurements',
+            style: TextStyle(color: Colors.white70, fontFamily: 'Lato'),
+          ),
+          value: telemetry.isGranted,
+          onChanged: _isUpdatingTelemetry
+              ? null
+              : (enabled) async {
+                  setState(() => _isUpdatingTelemetry = true);
+                  if (enabled) {
+                    await telemetry.grant();
+                  } else {
+                    await telemetry.deny();
+                  }
+                  if (mounted) {
+                    setState(() => _isUpdatingTelemetry = false);
+                  }
+                },
+        ),
+      ],
     );
   }
 }

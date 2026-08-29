@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
+import 'telemetry_consent_service.dart';
+
 class CrashReportingService {
   CrashReportingService._internal();
   static final CrashReportingService _instance =
@@ -10,13 +12,14 @@ class CrashReportingService {
   factory CrashReportingService() => _instance;
 
   FirebaseCrashlytics? _crashlytics;
+  final _telemetry = TelemetryConsentService();
 
   bool get _isDesktopPlatform {
     return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
 
   FirebaseCrashlytics? get _crashlyticsInstance {
-    if (_isDesktopPlatform) return null;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return null;
     _crashlytics ??= FirebaseCrashlytics.instance;
     return _crashlytics;
   }
@@ -29,7 +32,7 @@ class CrashReportingService {
     bool fatal = false,
     Iterable<Object> information = const [],
   }) async {
-    if (_isDesktopPlatform) {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) {
       debugPrint('Crashlytics error (desktop): $exception');
       return;
     }
@@ -53,18 +56,15 @@ class CrashReportingService {
     StackTrace? stack, {
     String? reason,
   }) async {
-    return recordError(
-      exception,
-      stack,
-      reason: reason,
-      fatal: true,
-    );
+    return recordError(exception, stack, reason: reason, fatal: true);
   }
 
   /// Record a Flutter error (from FlutterErrorDetails)
   Future<void> recordFlutterFatalError(FlutterErrorDetails errorDetails) async {
-    if (_isDesktopPlatform) {
-      debugPrint('Crashlytics Flutter error (desktop): ${errorDetails.exception}');
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) {
+      debugPrint(
+        'Crashlytics Flutter error (desktop): ${errorDetails.exception}',
+      );
       return;
     }
 
@@ -77,7 +77,7 @@ class CrashReportingService {
 
   /// Set a custom key-value pair for debugging context
   Future<void> setCustomKey(String key, Object value) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
 
     try {
       await _crashlyticsInstance?.setCustomKey(key, value);
@@ -88,7 +88,7 @@ class CrashReportingService {
 
   /// Set user identifier for crash reports
   Future<void> setUserId(String userId) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
 
     try {
       await _crashlyticsInstance?.setUserIdentifier(userId);
@@ -99,7 +99,7 @@ class CrashReportingService {
 
   /// Log a message to Crashlytics (appears in crash reports as breadcrumb)
   Future<void> log(String message) async {
-    if (_isDesktopPlatform) {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) {
       debugPrint('Crashlytics log (desktop): $message');
       return;
     }
@@ -120,7 +120,7 @@ class CrashReportingService {
     String? protocol,
     String? connectionMethod,
   }) async {
-    if (_isDesktopPlatform) return;
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) return;
 
     try {
       // Set VPN context as custom keys
@@ -149,7 +149,7 @@ class CrashReportingService {
     String errorMessage,
     String stackTrace,
   ) async {
-    if (_isDesktopPlatform) {
+    if (_isDesktopPlatform || !_telemetry.isCollectionEnabled) {
       debugPrint('Go panic (desktop): $functionName - $errorMessage');
       return;
     }
@@ -157,7 +157,7 @@ class CrashReportingService {
     try {
       await setCustomKey('go_panic_function', functionName);
       await log('Go panic in $functionName: $errorMessage');
-      
+
       // Record as non-fatal since we recovered from it
       await recordError(
         'Go panic in $functionName: $errorMessage',

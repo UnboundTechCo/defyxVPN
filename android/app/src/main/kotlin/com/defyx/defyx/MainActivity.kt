@@ -18,10 +18,13 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.net.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.*
+import kotlin.coroutines.resume
 
 private const val VPN_REQUEST_CODE = 1000
 private const val TAG = "MainActivity"
+private const val VPN_OPERATION_TIMEOUT_MS = 30_000L
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.defyx.vpn"
@@ -83,8 +86,18 @@ class MainActivity : FlutterActivity() {
         super.onCreate(savedInstanceState)
 
         val intent = Intent(this, DefyxVpnService::class.java)
+        DefyxVpnService.setVpnStatusListener { status ->
+            runOnUiThread { sendVpnStatusToFlutter(status) }
+        }
         grantNotificationPermission()
         startService(intent)
+    }
+
+    override fun onDestroy() {
+        DefyxVpnService.setVpnStatusListener(null)
+        eventSink = null
+        clearPendingVpnResult()
+        super.onDestroy()
     }
 
     private suspend fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
@@ -131,20 +144,33 @@ class MainActivity : FlutterActivity() {
         }
     }
     private fun connectVpn(result: MethodChannel.Result) {
-        pendingVpnResult = result
-
-        // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
-
+        if (pendingVpnResult != null) {
+            result.error("VPN_OPERATION_IN_PROGRESS", "Another VPN permission request is pending", null)
+            return
+        }
         val vpnIntent = VpnService.prepare(this)
         if (vpnIntent != null) {
+            pendingVpnResult = result
             try {
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } catch (e: Exception) {
+                pendingVpnResult = null
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance().startVpn(this)
-            result.success(true)
+            DefyxVpnService.getInstance().startVpn(
+                    this,
+                    onConnected = { runOnUiThread { result.success(true) } },
+                    onFailure = { error ->
+                        runOnUiThread {
+                            result.error(
+                                    "VPN_FOREGROUND_ERROR",
+                                    "Failed to start VPN foreground service",
+                                    error.message
+                            )
+                        }
+                    }
+            )
         }
     }
 
@@ -181,14 +207,59 @@ class MainActivity : FlutterActivity() {
         }
     }
 
-    private fun disconnectVpn(result: MethodChannel.Result) =
-            try {
-                DefyxVpnService.getInstance().stopVpn()
-                sendVpnStatusToFlutter("disconnected")
-                result.success(true)
-            } catch (e: Exception) {
-                result.error("VPN_STOP_ERROR", "Failed to stop VPN", e.message)
+    private suspend fun disconnectVpn(result: MethodChannel.Result) {
+        val completed = AtomicBoolean(false)
+        try {
+            withTimeout(VPN_OPERATION_TIMEOUT_MS) {
+                suspendCancellableCoroutine<Unit> { continuation ->
+                    fun complete(block: () -> Unit) {
+                        if (completed.compareAndSet(false, true)) {
+                            block()
+                            continuation.resume(Unit)
+                        }
+                    }
+
+                    try {
+                        DefyxVpnService.getInstance().stopVpn(
+                                onComplete = {
+                                    runOnUiThread { complete { result.success(true) } }
+                                },
+                                onFailure = { error ->
+                                    runOnUiThread {
+                                        complete {
+                                            result.error(
+                                                    "VPN_STOP_ERROR",
+                                                    "Failed to stop VPN",
+                                                    error.message
+                                            )
+                                        }
+                                    }
+                                }
+                        )
+                    } catch (e: Exception) {
+                        complete { result.error("VPN_STOP_ERROR", "Failed to stop VPN", e.message) }
+                    }
+                }
             }
+        } catch (e: TimeoutCancellationException) {
+            completed.set(true)
+            result.error("VPN_STOP_TIMEOUT", "VPN teardown timed out", e.message)
+        } catch (e: Exception) {
+            completed.set(true)
+            result.error("VPN_STOP_ERROR", "Failed to stop VPN", e.message)
+        }
+    }
+
+    private fun clearPendingVpnResult() {
+        pendingVpnResult = null
+    }
+
+    override fun onBackPressed() {
+        if (pendingVpnResult != null) {
+            clearPendingVpnResult()
+        }
+        super.onBackPressed()
+    }
 
     private fun getVpnStatus(result: MethodChannel.Result) =
             try {
@@ -274,17 +345,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private fun stopVPN(result: MethodChannel.Result) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                DefyxVpnService.getInstance().disconnectVPN()
-                result.success(true)
-            } catch (e: Exception) {
-                Log.e("Stop VPN", "Stop VPN failed: ${e.message}", e)
-                withContext(Dispatchers.Main) {
-                    result.error("PING_ERROR", "Failed to Stop VPN", e.localizedMessage)
-                }
-            }
-        }
+        lifecycleScope.launch { disconnectVpn(result) }
     }
 
     private fun getFlag(result: MethodChannel.Result) {

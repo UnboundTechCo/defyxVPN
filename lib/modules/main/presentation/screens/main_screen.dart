@@ -20,6 +20,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/game.dart';
@@ -74,8 +75,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
       // Check if privacy notice should be shown using coordinator
       final adReadiness = ref.read(adReadinessCoordinatorProvider);
-      if (adReadiness.canShowPrivacyDialog) {
-        _showPrivacyNoticeDialog();
+      final telemetryConsent = TelemetryConsentService();
+      if (adReadiness.canShowPrivacyDialog ||
+          telemetryConsent.consent == TelemetryConsent.undecided) {
+        _showPrivacyNoticeDialog(
+          telemetryOnly: !adReadiness.canShowPrivacyDialog,
+        );
       }
 
       _checkInitialConnectionState();
@@ -153,14 +158,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     _secretTapHandler.handleSecretTap(context);
   }
 
-  void _showPrivacyNoticeDialog() {
-    PrivacyNoticeDialog.show(context, () async {
+  void _showPrivacyNoticeDialog({bool telemetryOnly = false}) {
+    PrivacyNoticeDialog.show(context, (telemetryOptIn) async {
       if (ref.context.mounted) {
-        // 1. Prepare VPN profile
-        final vpnBridge = VpnBridge();
-        final result = await vpnBridge.prepareVpn();
+        if (!telemetryOnly) {
+          // 1. Prepare VPN profile
+          final vpnBridge = VpnBridge();
+          final result = await vpnBridge.prepareVpn();
 
-        if (result && ref.context.mounted) {
+          if (!result || !ref.context.mounted) return false;
+
           // 2. Initialize VPN
           final vpn = VPN(ProviderScope.containerOf(ref.context));
           await vpn.initVPN();
@@ -168,7 +175,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           // 3. Save settings
           await ref.read(settingsProvider.notifier).saveState();
 
-          // 4. Mark privacy accepted in coordinator (replaces old scattered state)
+          // 4. Mark VPN/privacy acceptance in coordinator
           await ref
               .read(adReadinessCoordinatorProvider.notifier)
               .markPrivacyAccepted();
@@ -176,11 +183,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           if (!(Platform.isAndroid || Platform.isIOS)) {
             await _logic.triggerAutoConnectIfEnabled();
           }
-          return true;
         }
+
+        final telemetry = TelemetryConsentService();
+        if (telemetryOptIn) {
+          await telemetry.grant();
+        } else {
+          await telemetry.deny();
+        }
+        return true;
       }
       return false;
-    });
+    }, telemetryOnly: telemetryOnly);
   }
 
   @override

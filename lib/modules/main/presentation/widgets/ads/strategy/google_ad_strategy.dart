@@ -52,6 +52,21 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   GoogleAdStrategy({required this.backgroundColor, required this.cornerRadius});
 
+  Future<void> _loadAdAndStartCountdown(
+    Ref ref, {
+    required String source,
+  }) async {
+    try {
+      final result = await loadAd(ref: ref);
+      if (result.success && _nativeAd != null) {
+        debugPrint('⏰ $source loaded - starting countdown');
+        ref.read(adsProvider.notifier).startCountdownTimer();
+      }
+    } catch (e) {
+      debugPrint('❌ Error during $source load flow: $e');
+    }
+  }
+
   @override
   String get strategyName => 'Google AdMob';
 
@@ -126,7 +141,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       }
       _nativeAd = null;
     }
-    
+
     // Also dispose pre-loaded ad if exists
     if (_nextAd != null) {
       try {
@@ -145,7 +160,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   /// Rotate to the next pre-loaded ad (carousel pattern)
   void _rotateToNextAd(Ref ref) {
     debugPrint('🔄 Rotating to next pre-loaded ad');
-    
+
     if (_nextAd == null) {
       debugPrint('⚠️ No pre-loaded ad available for rotation');
       return;
@@ -197,7 +212,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     try {
       debugPrint('📦 Starting pre-load of next ad');
       final result = await _loadAdInstance(ref, isPreload: true);
-      
+
       if (result.success && _nextAd != null) {
         ref.read(adsProvider.notifier).setNextAdReady(true);
         debugPrint('✅ Next ad pre-loaded successfully');
@@ -215,10 +230,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   Future<AdLoadResult> loadAd({required Ref ref}) async {
     // Reset rotation count at start of new connection cycle
     ref.read(adsProvider.notifier).resetRotationCount();
-    
+
     // Load the first ad
     final result = await _loadAdInstance(ref, isPreload: false);
-    
+
     // If first ad loaded successfully, start pre-loading the next one
     if (result.success && _nativeAd != null) {
       final currentRotation = ref.read(adsProvider).rotationCount;
@@ -230,14 +245,17 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         });
       }
     }
-    
+
     return result;
   }
 
   /// Internal method to load a NativeAd instance (for current or pre-load)
-  Future<AdLoadResult> _loadAdInstance(Ref ref, {required bool isPreload}) async {
+  Future<AdLoadResult> _loadAdInstance(
+    Ref ref, {
+    required bool isPreload,
+  }) async {
     final logPrefix = isPreload ? '📦 [PRELOAD]' : '📱 [LOAD]';
-    
+
     // CRITICAL: Wait for AdMob SDK to be initialized first
     try {
       final versionString = await MobileAds.instance.getVersionString();
@@ -310,12 +328,14 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (adUnitId.isEmpty) {
         debugPrint('$logPrefix No ad unit ID configured for this platform');
         if (!isPreload) _isLoading = false;
-        
+
         if (!isPreload) {
-          ref.read(adsProvider.notifier).setAdLoadFailed(
-            errorCode: 'NO_AD_UNIT_ID',
-            errorMessage: 'No ad unit ID configured',
-          );
+          ref
+              .read(adsProvider.notifier)
+              .setAdLoadFailed(
+                errorCode: 'NO_AD_UNIT_ID',
+                errorMessage: 'No ad unit ID configured',
+              );
         }
 
         return AdLoadResult.failure(
@@ -331,10 +351,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         debugPrint('$logPrefix No network connectivity');
         if (!isPreload) {
           _isLoading = false;
-          ref.read(adsProvider.notifier).setAdLoadFailed(
-            errorCode: '2',
-            errorMessage: 'Network unavailable',
-          );
+          ref
+              .read(adsProvider.notifier)
+              .setAdLoadFailed(
+                errorCode: '2',
+                errorMessage: 'Network unavailable',
+              );
         }
         return AdLoadResult.failure(
           errorCode: '2',
@@ -346,7 +368,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       final analytics = FirebaseAnalyticsService();
       await analytics.logEvent(
         name: isPreload ? 'ad_preload_attempt' : 'ad_load_attempt',
-        parameters: {'rotation_position': ref.read(adsProvider).rotationCount.toString()},
+        parameters: {
+          'rotation_position': ref.read(adsProvider).rotationCount.toString(),
+        },
       );
 
       // Create template style
@@ -388,7 +412,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         listener: NativeAdListener(
           onAdLoaded: (ad) {
             debugPrint('$logPrefix Ad loaded successfully');
-            
+
             if (isPreload) {
               // Store in pre-load slot
               _nextAd = ad as NativeAd;
@@ -403,7 +427,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             // Log success
             analytics.logEvent(
               name: isPreload ? 'ad_preload_success' : 'ad_load_success',
-              parameters: {'rotation_position': ref.read(adsProvider).rotationCount.toString()},
+              parameters: {
+                'rotation_position': ref
+                    .read(adsProvider)
+                    .rotationCount
+                    .toString(),
+              },
             );
 
             if (!completer.isCompleted) {
@@ -411,15 +440,19 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             }
           },
           onAdFailedToLoad: (ad, error) {
-            debugPrint('$logPrefix Ad failed to load: ${error.code} - ${error.message}');
+            debugPrint(
+              '$logPrefix Ad failed to load: ${error.code} - ${error.message}',
+            );
             ad.dispose();
-            
+
             if (!isPreload) {
               _isLoading = false;
-              ref.read(adsProvider.notifier).setAdLoadFailed(
-                errorCode: error.code.toString(),
-                errorMessage: error.message,
-              );
+              ref
+                  .read(adsProvider.notifier)
+                  .setAdLoadFailed(
+                    errorCode: error.code.toString(),
+                    errorMessage: error.message,
+                  );
             }
 
             // Log failure
@@ -428,7 +461,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               parameters: {
                 'error_code': error.code.toString(),
                 'error_message': error.message,
-                'rotation_position': ref.read(adsProvider).rotationCount.toString(),
+                'rotation_position': ref
+                    .read(adsProvider)
+                    .rotationCount
+                    .toString(),
               },
             );
 
@@ -468,9 +504,11 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             final rotationPosition = ref.read(adsProvider).rotationCount;
             final revenueUsd = valueMicros / 1000000.0;
             final eCPM = revenueUsd * 1000;
-            
-            debugPrint('💰 Ad revenue earned: \$$revenueUsd USD (eCPM: \$$eCPM, rotation: $rotationPosition)');
-            
+
+            debugPrint(
+              '💰 Ad revenue earned: \$$revenueUsd USD (eCPM: \$$eCPM, rotation: $rotationPosition)',
+            );
+
             analytics.logEvent(
               name: 'ad_revenue',
               parameters: {
@@ -599,12 +637,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
         // Load fresh AdMob ad with real IP
         debugPrint('📱 Loading fresh AdMob ad with real IP');
-        loadAd(ref: ref).then((result) {
-          if (result.success && _nativeAd != null) {
-            debugPrint('⏰ Fresh AdMob ad loaded - starting countdown');
-            ref.read(adsProvider.notifier).startCountdownTimer();
-          }
-        });
+        unawaited(_loadAdAndStartCountdown(ref, source: 'Fresh AdMob ad'));
       }
       // Initial disconnected state or coming from other states
       else {
@@ -622,12 +655,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           }
 
           debugPrint('📱 Loading AdMob ad with real IP');
-          loadAd(ref: ref).then((result) {
-            if (result.success && _nativeAd != null) {
-              debugPrint('⏰ AdMob ad loaded - starting countdown');
-              ref.read(adsProvider.notifier).startCountdownTimer();
-            }
-          });
+          unawaited(_loadAdAndStartCountdown(ref, source: 'AdMob ad'));
         } else {
           debugPrint('✅ Already have valid ad - starting countdown');
           ref.read(adsProvider.notifier).startCountdownTimer();

@@ -13,8 +13,14 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import java.io.File
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+
+private const val VPN_OPERATION_TIMEOUT_MS = 30_000L
 
 class DefyxVpnService : VpnService() {
+    private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     companion object {
         private const val TAG = "DefyxVpnService"
         private const val NOTIFICATION_ID = 1
@@ -23,12 +29,23 @@ class DefyxVpnService : VpnService() {
         fun getInstance(): DefyxVpnService = instance
         private var vpnInterface: ParcelFileDescriptor? = null
         private var listener: ((String) -> Unit)? = null
-        private var tunnelFd = -1
-        private var isServiceRunning = false
-        private var isVpnConnected = false
+        private val operationMutex = Mutex()
+        @Volatile private var tunnelFd = -1
+        @Volatile private var tunnelFdPassedToCore = false
+        @Volatile private var isServiceRunning = false
+        @Volatile private var isVpnConnected = false
         private var connectionMethod: String? = ""
 
-        fun setVpnStatusListener(l: (String) -> Unit) {
+        private enum class VpnState {
+            DISCONNECTED,
+            CONNECTING,
+            CONNECTED,
+            DISCONNECTING
+        }
+
+        private var vpnState = VpnState.DISCONNECTED
+
+        fun setVpnStatusListener(l: ((String) -> Unit)?) {
             listener = l
         }
         fun notifyVpnStatus(status: String) {
@@ -40,11 +57,22 @@ class DefyxVpnService : VpnService() {
         super.onCreate()
         instance = this
         createNotificationChannel()
+        if (getSharedPreferences("defyx_vpn_prefs", Context.MODE_PRIVATE)
+                        .getBoolean("vpn_running", false)) {
+            log("Clearing stale VPN running state after service restart")
+            saveVpnState(false)
+        }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         log("VPN Service Destroyed")
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Service destroy cleanup timed out: ${e.message}")
+        }
+        serviceScope.cancel()
+        super.onDestroy()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -54,6 +82,25 @@ class DefyxVpnService : VpnService() {
             }
         }
         return START_STICKY
+    }
+
+    private suspend fun disconnectVpnAndWait() {
+        operationMutex.withLock {
+            if (vpnState == VpnState.DISCONNECTED) {
+                return
+            }
+
+            vpnState = VpnState.DISCONNECTING
+            notifyVpnStatus("disconnecting")
+            try {
+                withTimeout(VPN_OPERATION_TIMEOUT_MS) {
+                    cleanupVpn("disconnected")
+                }
+            } catch (e: Throwable) {
+                log("Error stopping VPN: ${e.message}")
+                throw e
+            }
+        }
     }
 
     private fun createNotificationChannel() {
@@ -75,31 +122,25 @@ class DefyxVpnService : VpnService() {
 
     private fun startAsForeground(title: String, contentText: String) {
         val notification = buildNotification(title, contentText, isVpnConnected)
-        try {
-            if (Build.VERSION.SDK_INT >= 34) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            try {
                 startForeground(
                         NOTIFICATION_ID,
                         notification,
                         ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 )
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(
-                        NOTIFICATION_ID,
-                        notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
-                )
-            } else {
-                startForeground(NOTIFICATION_ID, notification)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to promote VPN service to foreground", e)
+                throw ForegroundPromotionException(e)
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Failed to start foreground: ${e.message}", e)
-            try {
-                startForeground(NOTIFICATION_ID, notification)
-            } catch (e2: Exception) {
-                Log.e(TAG, "Fallback failed: ${e2.message}", e2)
-            }
+        } else {
+            startForeground(NOTIFICATION_ID, notification)
         }
+        isServiceRunning = true
     }
+
+    private class ForegroundPromotionException(cause: Throwable) :
+            IllegalStateException("Failed to promote VPN service to foreground", cause)
 
     private fun updateNotification(title: String, contentText: String) {
         val notification = buildNotification(title, contentText, isVpnConnected)
@@ -158,112 +199,151 @@ class DefyxVpnService : VpnService() {
         return builder.build()
     }
 
-    fun startVpn(context: Context) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Log.d(TAG, "startVpn called")
-            try {
+        fun startVpn(
+            context: Context,
+            onConnected: () -> Unit = {},
+            onFailure: (Throwable) -> Unit = {}
+        ) {
+        serviceScope.launch {
+            operationMutex.withLock {
+                if (vpnState == VpnState.CONNECTED) {
+                    onConnected()
+                    return@withLock
+                }
+                if (vpnState == VpnState.CONNECTING || vpnState == VpnState.DISCONNECTING) {
+                    onFailure(IllegalStateException("VPN operation already in progress"))
+                    return@withLock
+                }
+
+                vpnState = VpnState.CONNECTING
                 notifyVpnStatus("connecting")
-                startAsForeground("DefyxVPN", "Connecting...")
-
-                val builder =
-                        Builder()
-                                .setSession("DefyxVPN")
-                                .addAddress("10.0.0.2", 32)
-                                .addRoute("0.0.0.0", 0)
-                                .addDnsServer("1.1.1.1")
-                                .allowFamily(android.system.OsConstants.AF_INET)
-                                .setMtu(1500)
-                                .setBlocking(true)
-                                .allowBypass()
-
                 try {
-                    builder.addDisallowedApplication(context.packageName)
-                } catch (_: Exception) {}
+                    withTimeout(VPN_OPERATION_TIMEOUT_MS) {
+                        startAsForeground("DefyxVPN", "Connecting...")
+
+                        val builder =
+                                Builder()
+                                        .setSession("DefyxVPN")
+                                        .addAddress("10.0.0.2", 32)
+                                        .addRoute("0.0.0.0", 0)
+                                        .addDnsServer("1.1.1.1")
+                                        .allowFamily(android.system.OsConstants.AF_INET)
+                                        .setMtu(1500)
+                                        .setBlocking(true)
+                                        .allowBypass()
+
+                        try {
+                            builder.addDisallowedApplication(context.packageName)
+                        } catch (_: Exception) {}
                 
-                vpnInterface?.close()
-                vpnInterface = builder.establish()
-                Log.d(TAG, "vpnInterface: $vpnInterface")
+                        vpnInterface?.close()
+                        vpnInterface = builder.establish()
+                        Log.d(TAG, "vpnInterface: $vpnInterface")
 
-                isVpnConnected = vpnInterface != null
-                withContext(Dispatchers.Main) { saveVpnState(isVpnConnected) }
+                        if (vpnInterface == null) {
+                            throw IllegalStateException("VPN interface could not be established")
+                        }
 
-                if (vpnInterface != null) {
-                    try {
                         val fd = vpnInterface?.detachFd() ?: -1
                         Log.d(TAG, "Tunnel fd: $fd")
 
-                        if (fd > 0) {
-                            tunnelFd = fd
-                            vpnInterface = null
-                            try {
-                                Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
-                                updateNotification("DefyxVPN", "Connected by " + connectionMethod)
-                                notifyVpnStatus("connected")
-                            } catch (e: Exception) {
-                                Log.e(TAG, "T2S failed: ${e.message}", e)
-                                updateNotification("DefyxVPN", "Connection failed")
-                                notifyVpnStatus("disconnected")
-                            }
-                        } else {
-                            tunnelFd = -1
-                            updateNotification("DefyxVPN", "Connection failed")
-                            notifyVpnStatus("disconnected")
+                        if (fd <= 0) {
+                            throw IllegalStateException("VPN tunnel descriptor is invalid")
                         }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "detachFd failed: ${e.message}", e)
-                        updateNotification("DefyxVPN", "Connection failed")
-                        notifyVpnStatus("disconnected")
+
+                        tunnelFd = fd
+                        vpnInterface = null
+                        Android.startT2S(tunnelFd.toLong(), "127.0.0.1:5000")
+                        tunnelFdPassedToCore = true
+                        isVpnConnected = true
+                        vpnState = VpnState.CONNECTED
+                        saveVpnState(true)
+                        updateNotification("DefyxVPN", "Connected by " + connectionMethod)
+                        notifyVpnStatus("connected")
                     }
-                } else {
-                    Log.e(TAG, "vpnInterface is null")
-                    updateNotification("DefyxVPN", "Connection failed")
-                    notifyVpnStatus("disconnected")
+                    onConnected()
+                } catch (e: Throwable) {
+                    Log.e(TAG, "startVpn failed: ${e.message}", e)
+                    withContext(NonCancellable) { cleanupVpn("disconnected") }
+                    onFailure(e)
                 }
-            } catch (e: Exception) {
-                Log.e(TAG, "startVpn failed: ${e.message}", e)
-                updateNotification("DefyxVPN", "Connection failed")
-                notifyVpnStatus("disconnected")
-                withContext(Dispatchers.Main) { saveVpnState(false) }
             }
         }
     }
 
-    private fun disconnectVpn() {
-        CoroutineScope(Dispatchers.IO).launch {
+    private fun disconnectVpn(
+            onComplete: () -> Unit = {},
+            onFailure: (Throwable) -> Unit = {}
+    ) {
+        serviceScope.launch {
             try {
-                withContext(Dispatchers.Main) {
-                    notifyVpnStatus("disconnecting")
-                    updateNotification("DefyxVPN", "Disconnecting...")
-                }
+                disconnectVpnAndWait()
+                onComplete()
+            } catch (e: Throwable) {
+                log("Error stopping VPN: ${e.message}")
+                onFailure(e)
+            }
+        }
+    }
 
+    private suspend fun cleanupVpn(status: String) {
+        val shouldNotify = vpnState != VpnState.DISCONNECTED
+        try {
+            try {
                 Android.stopVPN()
+            } catch (e: Exception) {
+                log("Stop VPN failed during cleanup: ${e.message}")
+            }
 
-                try {
-                    vpnInterface?.close()
-                } catch (_: Exception) {}
-                vpnInterface = null
-
+            try {
                 stopTun2Socks()
-                tunnelFd = -1
-                isVpnConnected = false
+            } catch (e: Exception) {
+                log("Stop T2S failed during cleanup: ${e.message}")
+            }
 
+            try {
+                vpnInterface?.close()
+            } catch (e: Exception) {
+                log("Close VPN interface failed during cleanup: ${e.message}")
+            }
+        } finally {
+            vpnInterface = null
+            if (tunnelFd > 0 && !tunnelFdPassedToCore) {
+                try {
+                    ParcelFileDescriptor.adoptFd(tunnelFd).close()
+                } catch (e: Exception) {
+                    log("Close detached VPN descriptor failed during cleanup: ${e.message}")
+                }
+            }
+            tunnelFd = -1
+            tunnelFdPassedToCore = false
+            isVpnConnected = false
+            isServiceRunning = false
+            connectionMethod = ""
+            vpnState = VpnState.DISCONNECTED
+
+            try {
                 saveVpnState(false)
+            } catch (e: Exception) {
+                log("Persist disconnected state failed: ${e.message}")
+            }
 
-                withContext(Dispatchers.Main) {
-                    notifyVpnStatus("disconnected")
+            if (shouldNotify) {
+                notifyVpnStatus(status)
+            }
+            try {
                     stopForeground(STOP_FOREGROUND_REMOVE)
                     val notificationManager =
-                            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                        getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                     notificationManager.cancel(NOTIFICATION_ID)
-                }
             } catch (e: Exception) {
-                log("Error stopping VPN: ${e.message}")
+                log("Remove VPN notification failed: ${e.message}")
             }
         }
     }
 
-    fun stopVpn() {
-        disconnectVpn()
+    fun stopVpn(onComplete: () -> Unit = {}, onFailure: (Throwable) -> Unit = {}) {
+        disconnectVpn(onComplete, onFailure)
     }
 
     fun stopTun2Socks() {
@@ -371,13 +451,23 @@ class DefyxVpnService : VpnService() {
     fun isTunnelRunning(): Boolean = tunnelFd > 0
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        super.onTaskRemoved(rootIntent)
         Log.d(TAG, "Task removed")
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Task removal cleanup timed out: ${e.message}")
+        }
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onRevoke() {
-        super.onRevoke()
         Log.d("VPN_SERVICE", "Revoked")
+        try {
+            runBlocking(Dispatchers.IO) { disconnectVpnAndWait() }
+        } catch (e: Throwable) {
+            log("Revoke cleanup timed out: ${e.message}")
+        }
+        super.onRevoke()
     }
 
     private fun saveVpnState(isRunning: Boolean) {
