@@ -64,7 +64,7 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
           onNavigationRequest: (NavigationRequest request) {
             // Clear cookies before every navigation to prevent tracking persistence
             WebViewCookieManager().clearCookies();
-            debugPrint('🍪 Cookies cleared before navigation to: ${request.url}');
+            debugPrint('Cookies cleared before navigation to: ${request.url}');
             return NavigationDecision.navigate;
           },
           onPageStarted: (String url) async {
@@ -96,7 +96,7 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
       setState(() {});
     }
     
-    debugPrint('🍪 WebView initialized: Native privacy + continuous cookie blocking');
+    debugPrint('WebView initialized: Native privacy + continuous cookie blocking');
   }
 
   Future<void> _openInBrowser() async {

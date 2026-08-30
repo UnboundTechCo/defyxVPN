@@ -17,7 +17,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 /// This coordinator:
 /// 1. Loads persisted state on creation
 /// 2. Provides computed properties for flow control
-/// 3. Orchestrates ATT → UMP → AdMob initialization
+/// 3. Orchestrates ATT -> UMP -> AdMob initialization
 /// 4. Handles state persistence atomically
 /// 5. Provides error recovery mechanisms
 class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
@@ -60,7 +60,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       final oldAttStatus = prefs.getInt('ad_personalization_state_att_status');
       
       if (oldPrivacyShown || oldVpnSetup || oldAttStatus != null) {
-        debugPrint('🔄 Migrating old ad state to new format...');
+        debugPrint('Migrating old ad state to new format...');
         
         // Merge old state into new format
         state = AdReadinessState(
@@ -79,7 +79,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
         await prefs.remove('ad_personalization_state_att_status');
         await prefs.remove('ad_personalization_state_can_personalize');
         
-        debugPrint('✅ Migration complete: $state');
+        debugPrint('Migration complete: $state');
       } else {
         // Fresh install - Android defaults to authorized
         if (!Platform.isIOS) {
@@ -91,7 +91,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
         } 
       }
     } catch (e, stack) {
-      debugPrint('⚠️ Failed to load ad readiness state: $e');
+      debugPrint('Failed to load ad readiness state: $e');
       debugPrint(stack.toString());
     }
   }
@@ -112,7 +112,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_storageKey, state.toJsonString());
     } catch (e) {
-      debugPrint('⚠️ Failed to persist ad readiness state: $e');
+      debugPrint('Failed to persist ad readiness state: $e');
     }
   }
 
@@ -129,7 +129,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     
     await _persistState();
     
-    debugPrint('🔓 Privacy gate unlocked - can now initialize AdMob');
+    debugPrint('Privacy gate unlocked - can now initialize AdMob');
   }
 
   // === ATT Flow (iOS) ===
@@ -150,9 +150,9 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       );
       
       await _persistState();
-      debugPrint('📱 ATT status checked: ${status.name}');
+      debugPrint('ATT status checked: ${status.name}');
     } catch (e) {
-      debugPrint('⚠️ Failed to check ATT status: $e');
+      debugPrint('Failed to check ATT status: $e');
     }
   }
 
@@ -161,12 +161,12 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     if (!Platform.isIOS) return;
     
     if (state.attStatus != TrackingStatus.notDetermined) {
-      debugPrint('ℹ️ ATT already determined: ${state.attStatus.name}');
+      debugPrint('ℹ ATT already determined: ${state.attStatus.name}');
       return;
     }
 
     try {
-      debugPrint('📱 Requesting ATT authorization...');
+      debugPrint('Requesting ATT authorization...');
       final status = await AppTrackingTransparency.requestTrackingAuthorization();
       
       state = state.copyWith(
@@ -175,9 +175,9 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       );
       
       await _persistState();
-      debugPrint('✅ ATT authorization result: ${status.name}');
+      debugPrint('ATT authorization result: ${status.name}');
     } catch (e) {
-      debugPrint('⚠️ Failed to request ATT authorization: $e');
+      debugPrint('Failed to request ATT authorization: $e');
       state = state.copyWith(lastError: 'ATT request failed: $e');
       await _persistState();
     }
@@ -185,22 +185,22 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
 
   // === Consent & AdMob Initialization Flow ===
 
-  /// Main initialization flow: ATT → UMP → AdMob
+  /// Main initialization flow: ATT -> UMP -> AdMob
   /// Called when canInitializeAdMob becomes true
   Future<void> initializeAdFlow({
     required Future<void> Function(bool shouldRequestUMP) onRunUMP,
   }) async {
     if (!state.canInitializeAdMob) {
-      debugPrint('⏸️ Cannot initialize AdMob yet: $state');
+      debugPrint('Cannot initialize AdMob yet: $state');
       return;
     }
 
     if (state.adMobInitialized) {
-      debugPrint('ℹ️ AdMob already initialized');
+      debugPrint('ℹ AdMob already initialized');
       return;
     }
 
-    debugPrint('🚀 Starting ad initialization flow...');
+    debugPrint('Starting ad initialization flow...');
     
     state = state.copyWith(
       initAttempts: state.initAttempts + 1,
@@ -221,7 +221,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
 
       // Step 2: Determine if UMP should run
       final shouldRequestUMP = _shouldRequestUMP();
-      debugPrint('🔍 Should request UMP: $shouldRequestUMP (ATT: ${state.attStatus.name})');
+      debugPrint('Should request UMP: $shouldRequestUMP (ATT: ${state.attStatus.name})');
 
       // Step 3: Run UMP flow (external - handled by caller)
       await onRunUMP(shouldRequestUMP);
@@ -229,7 +229,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       // onRunUMP will call markConsentComplete when done
       
     } catch (e, stack) {
-      debugPrint('❌ Ad initialization flow failed: $e');
+      debugPrint('Ad initialization flow failed: $e');
       debugPrint(stack.toString());
       
       state = state.copyWith(
@@ -244,12 +244,12 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   /// Mark consent flow as complete and initialize AdMob SDK
   Future<void> markConsentComplete() async {
     if (state.consentComplete) {
-      debugPrint('ℹ️ Consent already marked complete');
+      debugPrint('ℹ Consent already marked complete');
       return;
     }
 
     try {
-      debugPrint('🎉 Marking consent complete - Initializing AdMob SDK...');
+      debugPrint('Marking consent complete - Initializing AdMob SDK...');
       
       // Initialize AdMob SDK
       await MobileAds.instance.initialize();
@@ -263,9 +263,9 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       
       await _persistState();
       
-      debugPrint('✅ AdMob initialized successfully - ads can now load');
+      debugPrint('AdMob initialized successfully - ads can now load');
     } catch (e, stack) {
-      debugPrint('❌ Failed to initialize AdMob: $e');
+      debugPrint('Failed to initialize AdMob: $e');
       debugPrint(stack.toString());
       
       state = state.copyWith(
@@ -306,7 +306,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   /// Reset initialization state to allow retry
   /// Used when initialization is stuck or failed multiple times
   Future<void> resetInitializationState() async {
-    debugPrint('🔄 Resetting initialization state...');
+    debugPrint('Resetting initialization state...');
     
     state = state.copyWith(
       consentComplete: false,
@@ -317,12 +317,12 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     
     await _persistState();
     
-    debugPrint('✅ Initialization state reset - ready to retry');
+    debugPrint('Initialization state reset - ready to retry');
   }
 
   /// Full reset (for debugging/testing)
   Future<void> resetAll() async {
-    debugPrint('🔄 FULL RESET - clearing all ad state...');
+    debugPrint('FULL RESET - clearing all ad state...');
     
     state = AdReadinessState.initial();
     
@@ -335,7 +335,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     
     await _persistState();
     
-    debugPrint('✅ Full reset complete');
+    debugPrint('Full reset complete');
   }
 }
 

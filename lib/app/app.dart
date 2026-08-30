@@ -55,7 +55,7 @@ class _AppState extends ConsumerState<App> {
       if (next.canLoadAds && !previous.canLoadAds) {
         final connectionState = ref.read(conn.connectionStateProvider).status;
         if (connectionState == conn.ConnectionStatus.disconnected) {
-          debugPrint('✅ Consent complete & disconnected - triggering ad load');
+          debugPrint('Consent complete & disconnected - triggering ad load');
           Future.delayed(const Duration(milliseconds: 100), () {
             ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
           });

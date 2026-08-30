@@ -100,7 +100,7 @@ class CircuitBreaker {
       case CircuitBreakerState.halfOpen:
         _successCount++;
         debugPrint(
-          '🔄 Circuit breaker half-open: $_successCount/${config.successThreshold} successes',
+          'Circuit breaker half-open: $_successCount/${config.successThreshold} successes',
         );
         if (_successCount >= config.successThreshold) {
           _transitionToClosed();
@@ -120,7 +120,7 @@ class CircuitBreaker {
       case CircuitBreakerState.closed:
         _failureCount++;
         debugPrint(
-          '⚠️ Circuit breaker failure: $_failureCount/${config.failureThreshold}',
+          'Circuit breaker failure: $_failureCount/${config.failureThreshold}',
         );
         if (_failureCount >= config.failureThreshold) {
           _transitionToOpen();
@@ -129,7 +129,7 @@ class CircuitBreaker {
 
       case CircuitBreakerState.halfOpen:
         // Failed during test, back to open
-        debugPrint('❌ Circuit breaker test failed, reopening');
+        debugPrint('Circuit breaker test failed, reopening');
         _transitionToOpen();
         break;
 
@@ -149,7 +149,7 @@ class CircuitBreaker {
 
   /// Transition to closed state
   void _transitionToClosed() {
-    debugPrint('✅ Circuit breaker closed - normal operation');
+    debugPrint('Circuit breaker closed - normal operation');
     _state = CircuitBreakerState.closed;
     _failureCount = 0;
     _successCount = 0;
@@ -159,7 +159,7 @@ class CircuitBreaker {
   /// Transition to open state
   void _transitionToOpen() {
     debugPrint(
-      '🚨 Circuit breaker OPEN - blocking requests for ${config.resetTimeout.inSeconds}s',
+      'Circuit breaker OPEN - blocking requests for ${config.resetTimeout.inSeconds}s',
     );
     _state = CircuitBreakerState.open;
     _openedAt = DateTime.now();
@@ -168,14 +168,14 @@ class CircuitBreaker {
 
   /// Transition to half-open state
   void _transitionToHalfOpen() {
-    debugPrint('🔄 Circuit breaker half-open - testing recovery');
+    debugPrint('Circuit breaker half-open - testing recovery');
     _state = CircuitBreakerState.halfOpen;
     _successCount = 0;
   }
 
   /// Reset circuit breaker to closed state (manual override)
   void reset() {
-    debugPrint('🔧 Circuit breaker manually reset');
+    debugPrint('Circuit breaker manually reset');
     _transitionToClosed();
   }
 

@@ -183,11 +183,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
       if (startTimeMillis != null) {
         // Simply clear any persisted countdown on app start
         // Countdown should only start when VPN connects (handled by strategies)
-        debugPrint('🗑️ Clearing persisted countdown from previous session');
+        debugPrint('Clearing persisted countdown from previous session');
         await _clearPersistedCountdown();
       }
     } catch (e) {
-      debugPrint('⚠️ Error loading persisted countdown: $e');
+      debugPrint('Error loading persisted countdown: $e');
     }
   }
 
@@ -199,9 +199,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
         _countdownStartKey,
         DateTime.now().millisecondsSinceEpoch,
       );
-      debugPrint('💾 Saved countdown start time');
+      debugPrint('Saved countdown start time');
     } catch (e) {
-      debugPrint('⚠️ Error saving countdown start time: $e');
+      debugPrint('Error saving countdown start time: $e');
     }
   }
 
@@ -210,26 +210,19 @@ class AdsNotifier extends StateNotifier<AdsState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_countdownStartKey);
-      debugPrint('🗑️ Cleared persisted countdown');
+      debugPrint('Cleared persisted countdown');
     } catch (e) {
-      debugPrint('⚠️ Error clearing countdown: $e');
+      debugPrint('Error clearing countdown: $e');
     }
   }
 
   /// Start the countdown timer after ad is loaded and VPN connects
   /// Restarts to 25 seconds on each connection (optimized for ad rotation)
   void startCountdownTimer() {
-    debugPrint('▶️ Starting new countdown timer ($countdownDuration seconds)');
-    debugPrint(
-      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}, rotation=${state.rotationCount}',
-    );
     _countdownTimer?.cancel();
 
     // Update state immediately (synchronous)
     state = state.copyWith(countdown: countdownDuration, showCountdown: true);
-    debugPrint(
-      '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
-    );
 
     // Clear old and save new start time in background (async)
     _clearPersistedCountdown().then((_) {
@@ -242,17 +235,10 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Stop the countdown timer and clear persisted state
   /// Called when VPN disconnects
   void stopCountdownTimer() {
-    debugPrint('⏸️ Stopping countdown timer');
-    debugPrint(
-      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
-    );
     _countdownTimer?.cancel();
 
     // Update state immediately (synchronous)
     state = state.copyWith(showCountdown: false, countdown: countdownDuration);
-    debugPrint(
-      '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
-    );
 
     // Clear persisted data in background (async)
     _clearPersistedCountdown();
@@ -262,26 +248,22 @@ class AdsNotifier extends StateNotifier<AdsState> {
   void _startCountdownFromValue(int startValue) {
     _countdownTimer?.cancel();
 
-    debugPrint('⏱️ Timer starting from $startValue seconds');
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
-        final newCount = state.countdown - 1;
-        debugPrint('⏱️ Countdown: $newCount, rotation=${state.rotationCount}/$maxAdRotations');
-        state = state.copyWith(countdown: newCount);
+        state = state.copyWith(countdown: state.countdown - 1);
       } else {
-        debugPrint('⏱️ Countdown finished - rotation=${state.rotationCount}/$maxAdRotations');
 
         // Check if we should rotate to next ad or dispose
         if (state.rotationCount < maxAdRotations && state.nextAdReady) {
-          debugPrint('🔄 Rotating to next ad (${state.rotationCount + 1}/$maxAdRotations)');
+          debugPrint('Rotating to next ad (${state.rotationCount + 1}/$maxAdRotations)');
           
           // Trigger rotation callback
           _onAdShouldRotate?.call();
-          debugPrint('🔄 Ad rotation callback triggered');
+          debugPrint('Ad rotation callback triggered');
           
           // Note: Don't cancel timer - rotation callback will restart it with new ad
         } else {
-          debugPrint('⏱️ Max rotations reached or no next ad - disposing and clearing state');
+          debugPrint('Max rotations reached or no next ad - disposing and clearing state');
 
           // Clear all ad flags to hide the ad box completely
           state = state.copyWith(
@@ -295,7 +277,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
           // Notify strategies to dispose their ad instances
           _onAdShouldDispose?.call();
-          debugPrint('🗑️ Ad disposal callback triggered');
+          debugPrint('Ad disposal callback triggered');
 
           timer.cancel();
           _clearPersistedCountdown();
@@ -307,14 +289,14 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   /// Mark that next ad is ready for rotation (pre-loaded)
   void setNextAdReady(bool ready) {
-    debugPrint('📦 Next ad ready: $ready');
+    debugPrint('Next ad ready: $ready');
     state = state.copyWith(nextAdReady: ready);
   }
 
   /// Increment rotation count and update timestamp
   void incrementRotationCount() {
     final newCount = state.rotationCount + 1;
-    debugPrint('🔄 Incrementing rotation count: ${state.rotationCount} → $newCount');
+    debugPrint('Incrementing rotation count: ${state.rotationCount} -> $newCount');
     state = state.copyWith(
       rotationCount: newCount,
       lastRotationAt: DateTime.now(),
@@ -323,7 +305,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   /// Reset rotation count (called when connection state changes)
   void resetRotationCount() {
-    debugPrint('🔄 Resetting rotation count to 0');
+    debugPrint('Resetting rotation count to 0');
     state = state.copyWith(
       rotationCount: 0,
       nextAdReady: false,
@@ -332,17 +314,11 @@ class AdsNotifier extends StateNotifier<AdsState> {
   }
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
-    debugPrint('✅ Ad loaded: $isLoaded');
-    debugPrint(
-      '   📊 State BEFORE: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
-    );
+    debugPrint('Ad loaded: $isLoaded');
     state = state.copyWith(
       nativeAdIsLoaded: isLoaded,
       adLoadFailed: false,
       adLoadedAt: isLoaded ? DateTime.now() : null,
-    );
-    debugPrint(
-      '   📊 State AFTER: nativeAdIsLoaded=${state.nativeAdIsLoaded}, showCountdown=${state.showCountdown}',
     );
   }
 
@@ -353,10 +329,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
   ///
   /// NOTE: This does NOT set nativeAdIsLoaded flag. That flag belongs to GoogleAdStrategy.
   void setCustomAdData(String imageUrl, String clickUrl) {
-    debugPrint('✅ Custom ad loaded: $imageUrl');
-    debugPrint(
-      '   📊 State BEFORE: customImageUrl=${state.customImageUrl}, nativeAdIsLoaded=${state.nativeAdIsLoaded}',
-    );
+    debugPrint('Custom ad loaded: $imageUrl');
     state = state.copyWith(
       customImageUrl: imageUrl,
       customClickUrl: clickUrl,
@@ -365,63 +338,54 @@ class AdsNotifier extends StateNotifier<AdsState> {
       adLoadedAt: DateTime.now(),
       customImageLoadFailed: false,
     );
-    debugPrint(
-      '   📊 State AFTER: customImageUrl set, nativeAdIsLoaded=${state.nativeAdIsLoaded} (unchanged)',
-    );
   }
 
   /// Mark custom image load as failed
   void setCustomImageLoadFailed() {
-    debugPrint('❌ Custom ad image failed to load');
+    debugPrint('Custom ad image failed to load');
     state = state.copyWith(customImageLoadFailed: true, adLoadFailed: true);
   }
 
   /// Clear internal/custom ad data (for switching to AdMob ads)
   void clearCustomAdData() {
-    debugPrint('🗑️ Clearing internal ad data');
-    debugPrint(
-      '   📊 State BEFORE: customImageUrl=${state.customImageUrl != null && state.customImageUrl!.isNotEmpty ? "set" : "null"}, nativeAdIsLoaded=${state.nativeAdIsLoaded}',
-    );
+    debugPrint('Clearing internal ad data');
     state = state.copyWith(
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
       nativeAdIsLoaded: false, // Clear this flag to prevent showing empty ad container
     );
-    debugPrint(
-      '   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false',
-    );
   }
 
   /// Register a callback to be notified when ads should be disposed
   /// This allows strategies to clean up their ad instances (e.g., dispose NativeAd)
   void setAdDisposalCallback(VoidCallback callback) {
-    debugPrint('📌 Registered ad disposal callback');
+    debugPrint('Registered ad disposal callback');
     _onAdShouldDispose = callback;
   }
 
   /// Register a callback to be notified when ad should rotate to next
   /// This allows strategies to swap to pre-loaded ad (carousel pattern)
   void setAdRotationCallback(VoidCallback callback) {
-    debugPrint('📌 Registered ad rotation callback');
+    debugPrint('Registered ad rotation callback');
     _onAdShouldRotate = callback;
   }
 
   /// Unregister the ad disposal callback
   void clearAdDisposalCallback() {
-    debugPrint('📌 Cleared ad disposal callback');
+    debugPrint('Cleared ad disposal callback');
     _onAdShouldDispose = null;
   }
 
   /// Unregister the ad rotation callback
   void clearAdRotationCallback() {
-    debugPrint('📌 Cleared ad rotation callback');
+    debugPrint('Cleared ad rotation callback');
     _onAdShouldRotate = null;
   }
 
   /// Set fallback status to internal ads
   void setFallenBackToInternal(bool hasFallenBack) {
-    debugPrint('🔄 Fallen back to internal ads: $hasFallenBack');
+    debugPrint('Fallen back to internal ads: $hasFallenBack');
     state = state.copyWith(hasFallenBackToInternal: hasFallenBack);
   }
 
@@ -448,7 +412,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
 
   @override
   void dispose() {
-    debugPrint('🧹 AdsNotifier disposing - stopping countdown timer');
+    debugPrint('AdsNotifier disposing - stopping countdown timer');
     _countdownTimer?.cancel();
     _countdownTimer = null;
     // Clear disposal callback

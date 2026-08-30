@@ -57,17 +57,17 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   @override
   Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
-    debugPrint('🚀 GoogleAdStrategy.initialize() called');
+    debugPrint('GoogleAdStrategy.initialize() called');
 
     if (_hasInitialized) {
-      debugPrint('   ⚠️ Already initialized, skipping');
+      debugPrint('Already initialized, skipping');
       return;
     }
 
     try {
       // Only supports mobile platforms (Android/iOS)
       if (!(Platform.isAndroid || Platform.isIOS)) {
-        debugPrint('⚠️ Google Ads only supported on Android/iOS');
+        debugPrint('Google Ads only supported on Android/iOS');
         return;
       }
 
@@ -75,15 +75,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (_nativeAd != null) {
         final adsState = ref.read(adsProvider);
         debugPrint(
-          '🔍 Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}',
+          'Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}',
         );
         if (adsState.nativeAdIsLoaded) {
-          debugPrint('✅ Using existing valid ad');
+          debugPrint('Using existing valid ad');
           _hasInitialized = true;
           return;
         } else {
           debugPrint(
-            '⚠️ Cached ad exists but state says not loaded - will reload',
+            'Cached ad exists but state says not loaded - will reload',
           );
         }
       }
@@ -95,18 +95,18 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       ref.read(adsProvider.notifier).setAdDisposalCallback(() {
         _disposeAd(ref);
       });
-      debugPrint('✅ Registered ad disposal callback');
+      debugPrint('Registered ad disposal callback');
 
       // Register rotation callback for ad carousel
       ref.read(adsProvider.notifier).setAdRotationCallback(() {
         _rotateToNextAd(ref);
       });
-      debugPrint('✅ Registered ad rotation callback');
+      debugPrint('Registered ad rotation callback');
 
       // DON'T load ad on initialization - let connection state changes handle it
       // This prevents race conditions and timing issues
       debugPrint(
-        '✅ GoogleAdStrategy initialized (ad will load on connection state change)',
+        'GoogleAdStrategy initialized (ad will load on connection state change)',
       );
     } catch (e) {
       debugPrint('Error initializing Google ads: $e');
@@ -116,13 +116,13 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   /// Dispose the current ad instance and clear state
   void _disposeAd(Ref ref) {
-    debugPrint('🗑️ Disposing AdMob ads due to countdown expiry');
+    debugPrint('Disposing AdMob ads due to countdown expiry');
     if (_nativeAd != null) {
       try {
         _nativeAd!.dispose();
-        debugPrint('✅ Current NativeAd disposed successfully');
+        debugPrint('Current NativeAd disposed successfully');
       } catch (e) {
-        debugPrint('⚠️ Error disposing current NativeAd: $e');
+        debugPrint('Error disposing current NativeAd: $e');
       }
       _nativeAd = null;
     }
@@ -131,9 +131,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     if (_nextAd != null) {
       try {
         _nextAd!.dispose();
-        debugPrint('✅ Pre-loaded NativeAd disposed successfully');
+        debugPrint('Pre-loaded NativeAd disposed successfully');
       } catch (e) {
-        debugPrint('⚠️ Error disposing pre-loaded NativeAd: $e');
+        debugPrint('Error disposing pre-loaded NativeAd: $e');
       }
       _nextAd = null;
     }
@@ -144,10 +144,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   /// Rotate to the next pre-loaded ad (carousel pattern)
   void _rotateToNextAd(Ref ref) {
-    debugPrint('🔄 Rotating to next pre-loaded ad');
+    debugPrint('Rotating to next pre-loaded ad');
     
     if (_nextAd == null) {
-      debugPrint('⚠️ No pre-loaded ad available for rotation');
+      debugPrint('No pre-loaded ad available for rotation');
       return;
     }
 
@@ -155,9 +155,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     if (_nativeAd != null) {
       try {
         _nativeAd!.dispose();
-        debugPrint('✅ Disposed previous ad');
+        debugPrint('Disposed previous ad');
       } catch (e) {
-        debugPrint('⚠️ Error disposing previous ad: $e');
+        debugPrint('Error disposing previous ad: $e');
       }
     }
 
@@ -173,39 +173,39 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     // Restart countdown for the new ad
     ref.read(adsProvider.notifier).startCountdownTimer();
 
-    debugPrint('✅ Rotation complete - restarted countdown');
+    debugPrint('Rotation complete - restarted countdown');
 
     // Pre-load next ad if haven't reached max rotations
     final currentRotation = ref.read(adsProvider).rotationCount;
     if (currentRotation < maxAdRotations) {
-      debugPrint('📦 Pre-loading next ad for rotation ${currentRotation + 1}');
+      debugPrint('Pre-loading next ad for rotation ${currentRotation + 1}');
       _preloadNextAd(ref);
     } else {
-      debugPrint('🏁 Max rotations reached - no more pre-loading');
+      debugPrint('Max rotations reached - no more pre-loading');
     }
   }
 
   /// Pre-load the next ad in the background (for carousel)
   Future<void> _preloadNextAd(Ref ref) async {
     if (_isPreloading) {
-      debugPrint('⏳ Pre-load already in progress');
+      debugPrint('Pre-load already in progress');
       return;
     }
 
     _isPreloading = true;
 
     try {
-      debugPrint('📦 Starting pre-load of next ad');
+      debugPrint('Starting pre-load of next ad');
       final result = await _loadAdInstance(ref, isPreload: true);
       
       if (result.success && _nextAd != null) {
         ref.read(adsProvider.notifier).setNextAdReady(true);
-        debugPrint('✅ Next ad pre-loaded successfully');
+        debugPrint('Next ad pre-loaded successfully');
       } else {
-        debugPrint('❌ Failed to pre-load next ad: ${result.errorMessage}');
+        debugPrint('Failed to pre-load next ad: ${result.errorMessage}');
       }
     } catch (e) {
-      debugPrint('❌ Error pre-loading next ad: $e');
+      debugPrint('Error pre-loading next ad: $e');
     } finally {
       _isPreloading = false;
     }
@@ -223,7 +223,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     if (result.success && _nativeAd != null) {
       final currentRotation = ref.read(adsProvider).rotationCount;
       if (currentRotation < maxAdRotations) {
-        debugPrint('📦 First ad loaded - scheduling pre-load of next ad');
+        debugPrint('First ad loaded - scheduling pre-load of next ad');
         // Delay pre-load slightly to avoid concurrent requests
         Future.delayed(const Duration(milliseconds: 500), () {
           _preloadNextAd(ref);
@@ -236,7 +236,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   /// Internal method to load a NativeAd instance (for current or pre-load)
   Future<AdLoadResult> _loadAdInstance(Ref ref, {required bool isPreload}) async {
-    final logPrefix = isPreload ? '📦 [PRELOAD]' : '📱 [LOAD]';
+    final logPrefix = isPreload ?'[PRELOAD]':'[LOAD]';
     
     // CRITICAL: Wait for AdMob SDK to be initialized first
     try {
@@ -443,7 +443,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           },
           onAdClicked: (ad) {
             final rotationPosition = ref.read(adsProvider).rotationCount;
-            debugPrint('👆 NativeAd clicked (rotation $rotationPosition)');
+            debugPrint('NativeAd clicked (rotation $rotationPosition)');
             analytics.logEvent(
               name: 'ad_click',
               parameters: {
@@ -454,7 +454,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           },
           onAdImpression: (ad) {
             final rotationPosition = ref.read(adsProvider).rotationCount;
-            debugPrint('👁️ NativeAd impression (rotation $rotationPosition)');
+            debugPrint('NativeAd impression (rotation $rotationPosition)');
             analytics.logEvent(
               name: 'ad_impression',
               parameters: {
@@ -469,7 +469,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             final revenueUsd = valueMicros / 1000000.0;
             final eCPM = revenueUsd * 1000;
             
-            debugPrint('💰 Ad revenue earned: \$$revenueUsd USD (eCPM: \$$eCPM, rotation: $rotationPosition)');
+            debugPrint('Ad revenue earned: \$$revenueUsd USD (eCPM: \$$eCPM, rotation: $rotationPosition)');
             
             analytics.logEvent(
               name: 'ad_revenue',
@@ -515,13 +515,13 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       );
 
       // Load ad
-      debugPrint('🚀 Loading ad from AdMob...');
+      debugPrint('Loading ad from AdMob...');
       ad.load();
 
       // Wait for result
       return await completer.future;
     } catch (e) {
-      debugPrint('❌ Error creating NativeAd: $e');
+      debugPrint('Error creating NativeAd: $e');
       _isLoading = false;
       ref
           .read(adsProvider.notifier)
@@ -541,7 +541,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       try {
         return AdWidget(ad: _nativeAd!);
       } catch (e) {
-        debugPrint('❌ Error rendering AdWidget: $e');
+        debugPrint('Error rendering AdWidget: $e');
         return const SizedBox.shrink();
       }
     }
@@ -558,7 +558,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     required Function() onRefreshNeeded,
   }) {
     debugPrint(
-      '🔌 GoogleAdStrategy - Connection: ${previous.name} → ${current.name} (hasAd: ${_nativeAd != null})',
+      'GoogleAdStrategy connection: ${previous.name} -> ${current.name} (hasAd: ${_nativeAd != null})',
     );
 
     // When user connects - do nothing (internal ads handle connected state)
@@ -578,30 +578,30 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
       // Coming from connected state - load fresh ad
       if (previous == ConnectionStatus.connected) {
-        debugPrint('🔌 Disconnected after connection - loading fresh AdMob ad');
+        debugPrint('Disconnected after connection - loading fresh AdMob ad');
 
         if (_isLoading) {
-          debugPrint('⏳ Ad load already in progress...');
+          debugPrint('Ad load already in progress...');
           return;
         }
 
         // Dispose old ad if exists (force fresh ad per disconnect cycle)
         if (_nativeAd != null) {
-          debugPrint('🗑️ Disposing old AdMob ad to load fresh one');
+          debugPrint('Disposing old AdMob ad to load fresh one');
           ref.read(adsProvider.notifier).setAdLoaded(false);
           try {
             _nativeAd!.dispose();
           } catch (e) {
-            debugPrint('⚠️ Error disposing ad: $e');
+            debugPrint('Error disposing ad: $e');
           }
           _nativeAd = null;
         }
 
         // Load fresh AdMob ad with real IP
-        debugPrint('📱 Loading fresh AdMob ad with real IP');
+        debugPrint('Loading fresh AdMob ad with real IP');
         loadAd(ref: ref).then((result) {
           if (result.success && _nativeAd != null) {
-            debugPrint('⏰ Fresh AdMob ad loaded - starting countdown');
+            debugPrint('Fresh AdMob ad loaded - starting countdown');
             ref.read(adsProvider.notifier).startCountdownTimer();
           }
         });
@@ -609,7 +609,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       // Initial disconnected state or coming from other states
       else {
         debugPrint(
-          '🔌 Disconnected (from other state) - loading AdMob ad if needed',
+          'Disconnected (from other state) - loading AdMob ad if needed',
         );
 
         // Load ad if we don't have one or it's stale
@@ -617,19 +617,19 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             !adsState.nativeAdIsLoaded ||
             adsState.needsRefresh) {
           if (_isLoading) {
-            debugPrint('⏳ Ad load already in progress...');
+            debugPrint('Ad load already in progress...');
             return;
           }
 
-          debugPrint('📱 Loading AdMob ad with real IP');
+          debugPrint('Loading AdMob ad with real IP');
           loadAd(ref: ref).then((result) {
             if (result.success && _nativeAd != null) {
-              debugPrint('⏰ AdMob ad loaded - starting countdown');
+              debugPrint('AdMob ad loaded - starting countdown');
               ref.read(adsProvider.notifier).startCountdownTimer();
             }
           });
         } else {
-          debugPrint('✅ Already have valid ad - starting countdown');
+          debugPrint('Already have valid ad - starting countdown');
           ref.read(adsProvider.notifier).startCountdownTimer();
         }
       }
@@ -651,7 +651,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   @override
   void dispose() {
-    debugPrint('🧹 GoogleAdStrategy disposed');
+    debugPrint('GoogleAdStrategy disposed');
     // Keep static _nativeAd alive for reuse
   }
 }

@@ -86,6 +86,11 @@ class FlowlineService implements IFlowlineService {
       final appBuildType = GlobalVars.appBuildType;
       final version = decoded['version']?[appBuildType];
 
+      if (decoded['flowLine'] == null) {
+        debugPrint('Flowline payload has no flowLine field, keeping the previous one');
+        return;
+      }
+
       final advertiseStorageMap = {'api_advertise': decoded['advertise']};
       final settingsStorageMap = decoded['settings'];
       await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
@@ -99,8 +104,8 @@ class FlowlineService implements IFlowlineService {
 
       final versionStorageMap = {
         'api_app_version': version,
-        'forceUpdate': decoded['forceUpdate'][version],
-        'changeLog': decoded['changeLog'][version],
+        'forceUpdate': decoded['forceUpdate']?[version],
+        'changeLog': decoded['changeLog']?[version],
       };
 
       await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);

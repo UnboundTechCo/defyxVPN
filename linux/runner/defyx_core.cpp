@@ -15,6 +15,8 @@ typedef int (*dx_start_vpn_fn)(const char* cacheDir, const char* flowLine, const
 typedef int (*dx_stop_vpn_fn)();
 typedef void (*dx_start_t2s_fn)(long long fd, const char* addr);
 typedef void (*dx_stop_t2s_fn)();
+typedef int (*dx_start_tunnel_fn)();
+typedef void (*dx_stop_tunnel_fn)();
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
@@ -38,6 +40,8 @@ static dx_start_vpn_fn g_start_vpn = nullptr;
 static dx_stop_vpn_fn g_stop_vpn = nullptr;
 static dx_start_t2s_fn g_start_t2s = nullptr;
 static dx_stop_t2s_fn g_stop_t2s = nullptr;
+static dx_start_tunnel_fn g_start_tunnel = nullptr;
+static dx_stop_tunnel_fn g_stop_tunnel = nullptr;
 static dx_stop_fn g_stop_all = nullptr;
 static dx_measure_ping_fn g_measure_ping = nullptr;
 static dx_get_flag_fn g_get_flag = nullptr;
@@ -145,6 +149,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_stop_vpn = (dx_stop_vpn_fn)dlsym(g_dx_dll, "StopVPN");
   g_start_t2s = (dx_start_t2s_fn)dlsym(g_dx_dll, "StartTun2Socks");
   g_stop_t2s = (dx_stop_t2s_fn)dlsym(g_dx_dll, "StopTun2Socks");
+  g_start_tunnel = (dx_start_tunnel_fn)dlsym(g_dx_dll, "StartTunnel");
+  g_stop_tunnel = (dx_stop_tunnel_fn)dlsym(g_dx_dll, "StopTunnel");
   g_stop_all = (dx_stop_fn)dlsym(g_dx_dll, "Stop");
   g_measure_ping = (dx_measure_ping_fn)dlsym(g_dx_dll, "MeasurePing");
   g_get_flag = (dx_get_flag_fn)dlsym(g_dx_dll, "GetFlag");
@@ -175,6 +181,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("StopVPN", g_stop_vpn);
   check("StartTun2Socks", g_start_t2s);
   check("StopTun2Socks", g_stop_t2s);
+  check("StartTunnel", g_start_tunnel);
+  check("StopTunnel", g_stop_tunnel);
   check("Stop", g_stop_all);
   check("MeasurePing", g_measure_ping);
   check("GetFlag", g_get_flag);
@@ -200,6 +208,8 @@ void UnloadCoreDll() {
     g_stop_vpn = nullptr;
     g_start_t2s = nullptr;
     g_stop_t2s = nullptr;
+    g_start_tunnel = nullptr;
+    g_stop_tunnel = nullptr;
     g_stop_all = nullptr;
     g_measure_ping = nullptr;
     g_get_flag = nullptr;
@@ -306,6 +316,28 @@ void StopTun2Socks() {
     defyx_core::LogMessage("StopTun2Socks called");
     if (!g_dx_dll) LoadCoreDll("");
     if (g_stop_t2s) { g_stop_t2s(); return; }
+  } catch (...) {}
+}
+
+bool StartTunnel() {
+  try {
+    defyx_core::LogMessage("StartTunnel called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_start_tunnel) {
+      bool started = g_start_tunnel() != 0;
+      defyx_core::LogMessage(std::string("StartTunnel returned ") + (started ? "true" : "false"));
+      return started;
+    }
+    defyx_core::LogMessage("StartTunnel unavailable: symbol missing");
+  } catch (...) {}
+  return false;
+}
+
+void StopTunnel() {
+  try {
+    defyx_core::LogMessage("StopTunnel called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_stop_tunnel) { g_stop_tunnel(); return; }
   } catch (...) {}
 }
 
