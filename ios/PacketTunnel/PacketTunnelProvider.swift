@@ -6,9 +6,12 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
     private let tunnelAddress = "172.18.0.1"
     private let tunnelMask = "255.255.255.252"
+    private let tunnelAddress6 = "fdfe:dcba:9876::1"
+    private let tunnelPrefix6: NSNumber = 126
     private let tunnelDns = "1.1.1.1"
     private let tunnelMtu = 1500
 
+    private var appliedSettings: NEPacketTunnelNetworkSettings?
     private var logTimer: Timer?
 
     override init() {
@@ -22,13 +25,16 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     ) {
         os_log("Starting sing-box tunnel...")
 
-        setTunnelNetworkSettings(tunnelSettings()) { error in
+        let settings = tunnelSettings()
+
+        setTunnelNetworkSettings(settings) { [weak self] error in
             if let error = error {
                 os_log("Failed to apply tunnel settings: %{public}@", error.localizedDescription)
                 completionHandler(error)
                 return
             }
 
+            self?.appliedSettings = settings
             os_log("Tunnel settings applied, waiting for the core to be ready")
             completionHandler(nil)
         }
@@ -41,6 +47,11 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         ipv4.includedRoutes = [NEIPv4Route.default()]
         settings.ipv4Settings = ipv4
 
+        let ipv6 = NEIPv6Settings(
+            addresses: [tunnelAddress6], networkPrefixLengths: [tunnelPrefix6])
+        ipv6.includedRoutes = [NEIPv6Route.default()]
+        settings.ipv6Settings = ipv6
+
         let dns = NEDNSSettings(servers: [tunnelDns])
         dns.matchDomains = [""]
         settings.dnsSettings = dns
@@ -48,6 +59,26 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         settings.mtu = NSNumber(value: tunnelMtu)
 
         return settings
+    }
+
+    private func clearDnsCache(completion: @escaping () -> Void) {
+        guard let settings = appliedSettings else {
+            completion()
+            return
+        }
+
+        reasserting = true
+        setTunnelNetworkSettings(nil) { [weak self] _ in
+            guard let self = self else {
+                completion()
+                return
+            }
+            self.setTunnelNetworkSettings(settings) { _ in
+                self.reasserting = false
+                os_log("System dns cache dropped")
+                completion()
+            }
+        }
     }
 
     override func stopTunnel(
@@ -78,7 +109,13 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
             let success = IosStartTunnel(0)
             let response = success ? "TUNNEL_STARTED" : "TUNNEL_ERROR"
             os_log("Tunnel: %{public}@", response)
-            completionHandler?(response.data(using: .utf8))
+            if success {
+                clearDnsCache {
+                    completionHandler?(response.data(using: .utf8))
+                }
+            } else {
+                completionHandler?(response.data(using: .utf8))
+            }
 
         case "MEASURE_PING":
             do {
