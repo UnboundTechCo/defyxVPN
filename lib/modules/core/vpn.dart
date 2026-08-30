@@ -477,8 +477,7 @@ class VPN {
         await _vpnBridge.connectVpn();
         return true;
       case "ios":
-        await _vpnBridge.connectVpn();
-        return true;
+        return await _vpnBridge.startTunnel();
       case "windows":
       case "linux":
         return await _startDesktopTunnel();

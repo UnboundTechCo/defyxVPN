@@ -29,20 +29,8 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
                 return
             }
 
-            let success = IosStartTunnel(0)
-
-            if success {
-                os_log("Tunnel started successfully")
-                completionHandler(nil)
-            } else {
-                os_log("Failed to start tunnel")
-                let startError = NSError(
-                    domain: "PacketTunnelProvider",
-                    code: -1,
-                    userInfo: [NSLocalizedDescriptionKey: "Failed to start sing-box tunnel"]
-                )
-                completionHandler(startError)
-            }
+            os_log("Tunnel settings applied, waiting for the core to be ready")
+            completionHandler(nil)
         }
     }
 

@@ -89,6 +89,8 @@ class VpnPlugin: VpnStatusDelegate {
             result("\(getSharedDirectory())/defyx")
         case "setConnectionMethod":
             print("setConnectionMethod")
+        case "startTunnel":
+            startTunnel(result)
         case "isTunnelRunning":
             isTunnelRunning(result)
         case "prepareVPN":
@@ -380,6 +382,12 @@ class VpnPlugin: VpnStatusDelegate {
             result(response)
         }
         disconnectVPN(result)
+    }
+
+    private func startTunnel(_ result: @escaping FlutterResult) {
+        VpnService.shared.sendTunnelMessage(["command": "START_TUNNEL"]) { response in
+            result(response == "TUNNEL_STARTED")
+        }
     }
     // MARK: - Get Flag
     private func getFlag(_ result: @escaping FlutterResult) {
