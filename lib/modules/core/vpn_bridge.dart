@@ -103,7 +103,8 @@ class VpnBridge {
 
   Future<bool> verifyGateway() async {
     try {
-      return (await _methodChannel.invokeMethod<bool>('verifyGateway')) ?? false;
+      return (await _methodChannel.invokeMethod<bool>('verifyGateway')) ??
+          false;
     } catch (_) {
       return false;
     }
@@ -113,6 +114,12 @@ class VpnBridge {
       (await _methodChannel.invokeMethod<String>('login', {
         "email": email,
         "password": password,
+      }) ??
+      "");
+
+  Future<String> loginByCode(String code) async =>
+      (await _methodChannel.invokeMethod<String>('loginByCode', {
+        "code": code,
       }) ??
       "");
 }

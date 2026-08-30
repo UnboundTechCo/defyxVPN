@@ -1,16 +1,13 @@
-import 'dart:io';
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
-import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,21 +37,20 @@ class _AppState extends ConsumerState<App> {
     // Single listener for ad readiness state changes
     ref.listen(adReadinessCoordinatorProvider, (previous, next) {
       if (previous == null) return;
-      
+
       // When canInitializeAdMob transitions to true, start the flow
       if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
-        
         environmentAsync.whenData((environment) {
           if (environment.shouldInitializeAdMob) {
             _initializeAdFlow();
           } else {
             debugPrint(
-              'Using internal ads only (${environment.isIranian ?"Iranian user":"desktop platform"})',
+              '📱 Using internal ads only (${environment.adMobIsDisabled ? "Iranian user" : "desktop platform"})',
             );
           }
         });
       }
-      
+
       // When consent completes and we're disconnected, retry ad load
       if (next.canLoadAds && !previous.canLoadAds) {
         final connectionState = ref.read(conn.connectionStateProvider).status;
@@ -71,10 +67,10 @@ class _AppState extends ConsumerState<App> {
       future: _initializeApp(),
       builder: (context, snapshot) {
         // Check ONCE if we need to initialize ads after app startup (e.g., after migration)
-        if (snapshot.connectionState == ConnectionState.done && 
+        if (snapshot.connectionState == ConnectionState.done &&
             !_hasCheckedInitialization) {
           _hasCheckedInitialization = true;
-          
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _checkAndInitializeAds(environmentAsync);
           });
@@ -93,7 +89,7 @@ class _AppState extends ConsumerState<App> {
     } catch (e) {
       debugPrint('Failed to set cache directory: $e');
     }
-    
+
     await VPN(ProviderScope.containerOf(context, listen: false)).getVPNStatus();
     await AlertService().init();
     await AnimationService().init();
@@ -102,10 +98,9 @@ class _AppState extends ConsumerState<App> {
   /// Check if ad initialization should happen (for migration/restart cases)
   void _checkAndInitializeAds(AsyncValue<AdEnvironment> environmentAsync) {
     final adReadiness = ref.read(adReadinessCoordinatorProvider);
-    
+
     // If canInitializeAdMob is already true (e.g., after migration), trigger flow
     if (adReadiness.canInitializeAdMob) {
-      
       environmentAsync.whenData((environment) {
         if (environment.shouldInitializeAdMob) {
           _initializeAdFlow();

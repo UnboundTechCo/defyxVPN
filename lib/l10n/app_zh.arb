@@ -23,6 +23,8 @@
   "privacyPolicy": "隐私政策",
   "termsAndConditions": "条款和条件",
   "ourWebsite": "我们的网站",
+  "marketplace": "市场",
+  "telegramBot": "Telegram 机器人",
   "sourceCode": "源代码",
   "openSourceLicenses": "开源许可证",
   "betaCommunity": "测试社区",
@@ -101,6 +103,10 @@
   "signUp": "注册",
   "loginFailed": "登录失败。请检查您的凭据并重试。",
   "loginSuccess": "登录成功！",
+  "code": "代码",
+  "codeHint": "输入您的访问代码",
+  "codeValidation": "请输入您的代码",
+  "premiumLoginByCodeDescription": "要访问您的高级订阅，请输入提供给您的访问代码。",
   "havingTrouble": "遇到问题？",
   "signedInAs": "您当前已使用电子邮件地址登录",
   "premiumImportDescription": "如果由于互联网限制无法加载您的高级订阅，并且您无法使用可用方法连接，您可以将从市场获得的文件导入应用程序。",
@@ -110,5 +116,9 @@
   "settingsMarketplace": "市场",
   "marketplaceDescription": "浏览来自可信供应商的安全VPN配置。",
   "loggedIn": "已登录",
-  "loginOrRegister": "登录或注册"
+  "loginOrRegister": "登录或注册",
+  "loginByCode": "使用代码登录",
+  "backToLoginByEmail": "返回电子邮件登录",
+  "connectionRequired": "需要连接",
+  "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。"
 }

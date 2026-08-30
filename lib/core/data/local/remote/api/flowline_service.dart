@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service_interface.dart';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_settings.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
@@ -91,7 +92,9 @@ class FlowlineService implements IFlowlineService {
       }
 
       final advertiseStorageMap = {'api_advertise': decoded['advertise']};
+      final settingsStorageMap = decoded['settings'];
       await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+      await _secureStorage.writeMap(flowlineSettingsKey, settingsStorageMap);
 
       // Save tips if available
       if (decoded['tips'] != null) {
@@ -119,5 +122,12 @@ class FlowlineService implements IFlowlineService {
     } else {
       debugPrint('Flowline is empty, cannot save');
     }
+  }
+
+  @override
+  Future<FlowlineSettings> getFlowlineSettings() async {
+    final settingsString = await _secureStorage.read(flowlineSettingsKey);
+    final decodedSettings = json.decode(settingsString ?? "");
+    return FlowlineSettings.fromJson(decodedSettings);
   }
 }

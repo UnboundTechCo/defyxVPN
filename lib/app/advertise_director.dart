@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
@@ -11,20 +12,6 @@ class AdvertiseDirector {
 
   AdvertiseDirector(this.ref);
 
-  /// Check if user is from Iran based on device timezone
-  /// Iranian users should not see AdMob ads (only internal ads)
-  static Future<bool> isIranianUser() async {
-    try {
-      final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-      // Asia/Tehran is the timezone for Iran
-      final isIran = currentTimeZone == 'Asia/Tehran';
-      return isIran;
-    } catch (e) {
-      debugPrint('Error detecting timezone: $e');
-      return false;
-    }
-  }
-
   static Future<bool> shouldUseInternalAds(Ref ref) async {
     // STRATEGY SELECTION (for backward compatibility with desktop):
     // - Desktop (Windows/macOS/Linux) -> InternalAdStrategy only (no AdMob support)
@@ -33,12 +20,21 @@ class AdvertiseDirector {
     //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
     //     * InternalAdStrategy handles internal ads (connected state ONLY)
     //     * AdsWidget coordinates between the two strategies
-    
-    // Check for Iranian users first (AdMob disabled for Iran)
-    if (await isIranianUser()) {
+    final flowlineSettings = await ref
+        .read(flowlineServiceProvider)
+        .getFlowlineSettings();
+
+    if (flowlineSettings.disabledAdmob.contains("general")) {
       return true;
     }
-    
+
+    final String currentTimeZone = (await FlutterTimezone.getLocalTimezone())
+        .toLowerCase();
+
+    if (flowlineSettings.disabledAdmob.contains(currentTimeZone)) {
+      return true;
+    }
+
     if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
       return true;
     }
@@ -47,8 +43,6 @@ class AdvertiseDirector {
     // AdsWidget automatically initializes both and routes based on connection state:
     //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
     //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
-    
-
 
     return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
   }
@@ -67,16 +61,19 @@ class AdvertiseDirector {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
     debugPrint('Ad Manager - Getting ad for timezone: $currentTimeZone');
 
-    final adversies =
-        await ref.read(secureStorageProvider).readMap(apiAvertiseKey);
+    final adversies = await ref
+        .read(secureStorageProvider)
+        .readMap(apiAvertiseKey);
 
     if (adversies['api_advertise'] != null) {
       final advertiseMap = adversies['api_advertise'] as Map<String, dynamic>;
-      
+
       // Try timezone-specific ads first
       if (advertiseMap.containsKey(currentTimeZone)) {
         final adsData = advertiseMap[currentTimeZone] as List<dynamic>;
-        debugPrint('Ad Manager - Found ${adsData.length} timezone-specific ads');
+        debugPrint(
+          '📍 Ad Manager - Found ${adsData.length} timezone-specific ads',
+        );
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);
@@ -91,11 +88,13 @@ class AdvertiseDirector {
           }
         }
       }
-      
+
       // Fallback to "General" ads if no timezone-specific ads
       if (advertiseMap.containsKey('General')) {
         final adsData = advertiseMap['General'] as List<dynamic>;
-        debugPrint('Ad Manager - Using"General"fallback ads (${adsData.length} available)');
+        debugPrint(
+          '📍 Ad Manager - Using "General" fallback ads (${adsData.length} available)',
+        );
         if (adsData.isNotEmpty) {
           final random = Random();
           final randomIndex = random.nextInt(adsData.length);
@@ -110,7 +109,6 @@ class AdvertiseDirector {
           }
         }
       }
-      
     }
     return {'imageUrl': '', 'clickUrl': ''};
   }

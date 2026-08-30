@@ -35,6 +35,7 @@ class DXCoreBridge {
   int SetSystemProxy();
   int ResetSystemProxy();
   std::string Login(const std::string& email, const std::string& password);
+  std::string LoginByCode(const std::string& code);
 
   // Gateway handshake — verifies the loaded DXcore.dll is authentic.
   // Returns true only when the full HMAC challenge-response succeeds.
@@ -67,6 +68,7 @@ class DXCoreBridge {
   using WinRequestHandshake_t = char* (*)(char*, char*);
   using WinCompleteHandshake_t = char* (*)(char*);
   using WinLogin_t = const char* (*)(const char*, const char*);
+  using WinLoginByCode_t = const char* (*)(const char*);
 
   WinSetProgressListener_t pSetProgress_ = nullptr;
   WinStop_t pStop_ = nullptr;
@@ -89,7 +91,7 @@ class DXCoreBridge {
   WinRequestHandshake_t pRequestHandshake_ = nullptr;
   WinCompleteHandshake_t pCompleteHandshake_ = nullptr;
   WinLogin_t pLogin_ = nullptr;
-
+  WinLoginByCode_t pLoginByCode_ = nullptr;
   static void __stdcall ProgressTrampoline(const char* msg);
   static DXCoreBridge* s_instance_;
   std::function<void(const std::string&)> progress_cb_;

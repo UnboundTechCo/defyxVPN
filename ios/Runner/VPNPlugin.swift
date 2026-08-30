@@ -99,6 +99,8 @@ class VpnPlugin: VpnStatusDelegate {
             isVPNPrepared(result)
         case "login":
             login(call.arguments as? [String: Any], result)
+        case "loginByCode":
+            loginByCode(call.arguments as? [String: Any], result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -185,6 +187,26 @@ class VpnPlugin: VpnStatusDelegate {
             DispatchQueue.main.async { result(token) }
         }
     }
+
+    private func loginByCode(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let code = args["code"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+
+        goQueue.async {
+            let token = IosLoginByCode(code)
+            result(token) 
+        }
+        
+    }
+
+    
 
     private func getFlowLine(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
         guard let args = arguments,

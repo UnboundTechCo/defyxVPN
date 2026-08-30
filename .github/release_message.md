@@ -80,6 +80,12 @@
             <img
               src="https://img.shields.io/badge/Windows-Portable-0C88D8.svg?logo=github" />
           </a>
+          <br />
+          <a
+            href="https://github.com/UnboundTechCo/defyxVPN/releases/download/RELEASE_TAG/DefyxVPN-Windows-Installer-x64.exe">
+            <img
+              src="https://img.shields.io/badge/Windows-Installer-0C88D8.svg?logo=windows" />
+          </a>
         </td>
         <td valign="top">10 or later</td>
       </tr>

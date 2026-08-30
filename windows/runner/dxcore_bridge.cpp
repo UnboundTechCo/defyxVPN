@@ -66,6 +66,7 @@ bool DXCoreBridge::Load() {
   load(pStartTunnel_, "WinStartTunnel");
   load(pStopTunnel_, "WinStopTunnel");
   ok &= load(pLogin_, "WinLogin");
+  ok &= load(pLoginByCode_, "WinLoginByCode");
 
   if (!ok) {
     Unload();
@@ -333,3 +334,13 @@ std::string DXCoreBridge::Login(const std::string& email, const std::string& pas
   if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
   return out;
 }
+
+std::string DXCoreBridge::LoginByCode(const std::string& code) {
+  if (!pLoginByCode_) return {};
+  const char* s = pLoginByCode_(code.c_str());
+  std::string out = s ? std::string(s) : std::string();
+  if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
+  return out;
+}
+
+

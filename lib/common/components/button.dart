@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum AppButtonVariant { primary, secondary }
+enum AppButtonVariant { primary, secondary, tertiary }
 
 enum AppButtonSize { small, medium }
 
@@ -29,6 +29,7 @@ class AppButton extends StatelessWidget {
       height: config.height,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
+
         style: ElevatedButton.styleFrom(
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -40,6 +41,7 @@ class AppButton extends StatelessWidget {
           disabledForegroundColor: _textColor,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(8.r),
+            side: BorderSide(color: _borderColor, width: 1),
           ),
         ),
         child: AnimatedSwitcher(
@@ -77,6 +79,9 @@ class AppButton extends StatelessWidget {
 
       case AppButtonVariant.secondary:
         return const Color(0xFFEAEAEA);
+
+      case AppButtonVariant.tertiary:
+        return Colors.transparent;
     }
   }
 
@@ -86,6 +91,9 @@ class AppButton extends StatelessWidget {
         return Colors.white;
 
       case AppButtonVariant.secondary:
+        return const Color(0xFF4B4B4B);
+
+      case AppButtonVariant.tertiary:
         return const Color(0xFF4B4B4B);
     }
   }
@@ -97,6 +105,21 @@ class AppButton extends StatelessWidget {
 
       case AppButtonVariant.secondary:
         return const Color(0xFF4B4B4B);
+      case AppButtonVariant.tertiary:
+        return const Color(0xFF9E9E9E);
+    }
+  }
+
+  Color get _borderColor {
+    switch (variant) {
+      case AppButtonVariant.primary:
+        return Colors.transparent;
+
+      case AppButtonVariant.secondary:
+        return Colors.transparent;
+
+      case AppButtonVariant.tertiary:
+        return const Color(0xFFEAEAEA);
     }
   }
 
