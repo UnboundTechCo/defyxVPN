@@ -409,4 +409,13 @@ class DefyxVpnService : VpnService() {
             ""
         }
     }
+
+    fun loginByCode(code: String): String {
+        return try {
+            Android.loginByCode(code)
+        } catch (e: Exception) {
+            log("Login by code failed: ${e.message}")
+            ""
+        }
+    }
 }

@@ -333,6 +333,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get loginSuccess => '登录成功！';
 
   @override
+  String get code => '代码';
+
+  @override
+  String get codeHint => '输入您的访问代码';
+
+  @override
+  String get codeValidation => '请输入您的代码';
+
+  @override
+  String get premiumLoginByCodeDescription => '要访问您的高级订阅，请输入提供给您的访问代码。';
+
+  @override
   String get havingTrouble => '遇到问题？';
 
   @override
@@ -362,4 +374,17 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get loginOrRegister => '登录或注册';
+
+  @override
+  String get loginByCode => '使用代码登录';
+
+  @override
+  String get backToLoginByEmail => '返回电子邮件登录';
+
+  @override
+  String get connectionRequired => '需要连接';
+
+  @override
+  String get connectionRequiredDescription =>
+      '要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。';
 }

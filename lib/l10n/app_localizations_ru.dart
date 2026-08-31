@@ -342,6 +342,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get loginSuccess => 'Вход выполнен успешно!';
 
   @override
+  String get code => 'Код';
+
+  @override
+  String get codeHint => 'Введите ваш код доступа';
+
+  @override
+  String get codeValidation => 'Пожалуйста, введите ваш код';
+
+  @override
+  String get premiumLoginByCodeDescription =>
+      'Для доступа к вашим премиум-подпискам введите предоставленный вам код доступа.';
+
+  @override
   String get havingTrouble => 'Возникли проблемы?';
 
   @override
@@ -373,4 +386,17 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get loginOrRegister => 'ВОЙТИ ИЛИ ЗАРЕГИСТРИРОВАТЬСЯ';
+
+  @override
+  String get loginByCode => 'Войти по коду';
+
+  @override
+  String get backToLoginByEmail => 'Вернуться к входу по электронной почте';
+
+  @override
+  String get connectionRequired => 'Требуется подключение';
+
+  @override
+  String get connectionRequiredDescription =>
+      'Чтобы завершить безопасный процесс входа или регистрации, вы должны сначала установить соединение, используя один из доступных методов подключения.';
 }

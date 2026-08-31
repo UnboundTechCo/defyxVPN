@@ -541,6 +541,26 @@
     "description": "Login success toast message"
   },
 
+  "code": "Code",
+  "@code": {
+    "description": "Code field label"
+  },
+
+  "codeHint": "Enter your access code",
+  "@codeHint": {
+    "description": "Code field hint text"
+  },
+
+  "codeValidation": "Please enter your code",
+  "@codeValidation": {
+    "description": "Code validation error message"
+  },
+
+  "premiumLoginByCodeDescription": "To access your Premium subscription(s), enter the access code provided to you.",
+  "@premiumLoginByCodeDescription": {
+    "description": "Premium login by code dialog description"
+  },
+
   "havingTrouble": "Having trouble?",
   "@havingTrouble": {
     "description": "Premium trouble dialog title"
@@ -589,5 +609,25 @@
   "loginOrRegister": "LOGIN OR REGISTER",
   "@loginOrRegister": {
     "description": "Premium widget - login/register prompt"
+  },
+
+  "loginByCode": "Login by code",
+  "@loginByCode": {
+    "description": "Login by code button text"
+  },
+
+  "backToLoginByEmail": "Back to login by email",
+  "@backToLoginByEmail": {
+    "description": "Back to email login button text"
+  },
+
+  "connectionRequired": "Connection Required",
+  "@connectionRequired": {
+    "description": "Connection required dialog title"
+  },
+
+  "connectionRequiredDescription": "To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.",
+  "@connectionRequiredDescription": {
+    "description": "Connection required dialog description"
   }
 }

@@ -341,6 +341,19 @@ class AppLocalizationsFa extends AppLocalizations {
   String get loginSuccess => 'ورود موفقیت‌آمیز بود!';
 
   @override
+  String get code => 'کد';
+
+  @override
+  String get codeHint => 'کد دسترسی خود را وارد کنید';
+
+  @override
+  String get codeValidation => 'لطفاً کد خود را وارد کنید';
+
+  @override
+  String get premiumLoginByCodeDescription =>
+      'برای دسترسی به اشتراک پرمیوم خود، کد دسترسی ارائه شده به شما را وارد کنید.';
+
+  @override
   String get havingTrouble => 'مشکل دارید؟';
 
   @override
@@ -371,4 +384,17 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get loginOrRegister => 'ورود یا ثبت نام';
+
+  @override
+  String get loginByCode => 'ورود با کد';
+
+  @override
+  String get backToLoginByEmail => 'بازگشت به ورود با ایمیل';
+
+  @override
+  String get connectionRequired => 'اتصال لازم است';
+
+  @override
+  String get connectionRequiredDescription =>
+      'برای تکمیل فرآیند امن ورود یا ثبت‌نام، ابتدا باید با استفاده از یکی از روش‌های اتصال موجود، اتصال برقرار کنید.';
 }
