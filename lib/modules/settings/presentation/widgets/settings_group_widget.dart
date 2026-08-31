@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/offline_flowline_widget.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/sync_menu_dropdown.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -152,7 +153,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                                   item.title.toString().toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 17.sp,
-                                    fontFamily: 'Lato',
+                                    fontFamily: AppTheme.fontFamily,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
@@ -313,7 +314,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                               ).settingsResetToDefault,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                fontFamily: 'Lato',
+                                fontFamily: AppTheme.fontFamily,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFFFF9A9A),
                                 letterSpacing: 0.5,

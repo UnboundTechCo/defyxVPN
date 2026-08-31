@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
@@ -38,8 +39,8 @@ class _DiagnosticsExperimentsDialogState
     switch (language) {
       case AppLanguage.english:
         return l10n.english;
-      // case AppLanguage.persian:
-      //   return l10n.persian;
+      case AppLanguage.persian:
+        return l10n.persian;
       case AppLanguage.chinese:
         return l10n.chinese;
       case AppLanguage.russian:
@@ -49,7 +50,7 @@ class _DiagnosticsExperimentsDialogState
 
   TextStyle get _labelStyle => TextStyle(
     fontSize: 14.sp,
-    fontFamily: 'Lato',
+    fontFamily: AppTheme.fontFamily,
     fontWeight: FontWeight.w600,
     color: Colors.black87,
     letterSpacing: 0.3,
@@ -79,7 +80,7 @@ class _DiagnosticsExperimentsDialogState
             Text(
               l10n.settingsDiagnosticsExperiments,
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 20.sp,
                 color: Colors.black,
                 fontWeight: FontWeight.w700,
@@ -181,7 +182,7 @@ class _DiagnosticsExperimentsDialogState
                   : _languageLabel(l10n, languageState.language),
               style: TextStyle(
                 fontSize: 14.sp,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.grey[600],
               ),
             ),
@@ -206,7 +207,7 @@ class _DiagnosticsExperimentsDialogState
           label,
           style: TextStyle(
             fontSize: 15.sp,
-            fontFamily: 'Lato',
+            fontFamily: AppTheme.fontFamily,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
             color: Colors.black87,
           ),

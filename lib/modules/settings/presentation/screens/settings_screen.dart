@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -213,7 +214,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
             Directionality(
               textDirection: TextDirection.ltr,
@@ -224,16 +226,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       text: 'D',
                       style: TextStyle(
                         fontSize: 35.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFFFFC927),
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx ',
+                      text: 'efyx',
                       style: TextStyle(
                         fontSize: 32.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w400,
                         color: const Color(0xFFFFC927),
                       ),
@@ -242,18 +244,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
             ),
+            SizedBox(width: 6.w),
             Flexible(
               child: Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
                   return Text(
                     l10n.statusIs,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.start,
                     style: TextStyle(
-                      fontSize: 32.sp,
-                      fontFamily: 'Lato',
+                      fontSize: AppTheme.statusHeadlineFontSize.sp,
+                      fontFamily: AppTheme.fontFamily,
                       fontWeight: FontWeight.w400,
                       color: Colors.white,
                     ),
@@ -268,12 +271,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final l10n = AppLocalizations.of(context);
             return Text(
               l10n.statusYoursToShape,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: TextStyle(
-                fontSize: 32.sp,
-                fontFamily: 'Lato',
+                fontSize: AppTheme.statusHeadlineFontSize.sp,
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
                 height: 1.1,

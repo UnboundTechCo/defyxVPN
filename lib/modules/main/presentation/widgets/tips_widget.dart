@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/providers/hints_provider.dart';
 import 'package:flutter/material.dart';
@@ -53,7 +54,7 @@ class TipsSlider extends ConsumerWidget {
       text: TextSpan(
         text: message,
         style: TextStyle(
-          fontFamily: 'Lato',
+          fontFamily: AppTheme.fontFamily,
           color: Colors.white70,
           fontSize: 16.sp,
           height: 1.3,
@@ -144,7 +145,7 @@ class TipsSlider extends ConsumerWidget {
                     l10n.tips,
                     textAlign: TextAlign.start,
                     style: TextStyle(
-                      fontFamily: 'Lato',
+                      fontFamily: AppTheme.fontFamily,
                       color: Colors.white,
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w400,
@@ -184,7 +185,7 @@ class TipsSlider extends ConsumerWidget {
                                     tips[index]['title']!,
                                     textAlign: TextAlign.start,
                                     style: TextStyle(
-                                      fontFamily: 'Lato',
+                                      fontFamily: AppTheme.fontFamily,
                                       color: Colors.white,
                                       fontSize: 16.sp,
                                       fontWeight: FontWeight.w600,
@@ -199,7 +200,7 @@ class TipsSlider extends ConsumerWidget {
                                       tips[index]['message']!,
                                       textAlign: TextAlign.start,
                                       style: TextStyle(
-                                        fontFamily: 'Lato',
+                                        fontFamily: AppTheme.fontFamily,
                                         color: Colors.white70,
                                         fontSize: 15.sp,
                                         height: 1.3,

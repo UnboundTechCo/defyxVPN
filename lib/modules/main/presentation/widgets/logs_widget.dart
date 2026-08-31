@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -231,11 +232,11 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                   AppLocalizations.of(context).appLogs,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
               ),
@@ -261,10 +262,10 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                         AppLocalizations.of(context).autoRefresh,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: Colors.white70,
                           fontSize: 12,
-                          fontFamily: 'Lato',
+                          fontFamily: AppTheme.fontFamily,
                         ),
                       ),
                     ),
@@ -301,11 +302,11 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (logsState.logs.isEmpty)
-                          const Text(
+                          Text(
                             'Sample log: [INFO] Connection initialized',
                             style: TextStyle(
                               color: Colors.green,
-                              fontFamily: 'Lato',
+                              fontFamily: AppTheme.fontFamily,
                               fontSize: 12,
                             ),
                           ),
@@ -331,7 +332,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                               log,
                               style: TextStyle(
                                 color: textColor,
-                                fontFamily: 'Lato',
+                                fontFamily: AppTheme.fontFamily,
                                 fontSize: 12,
                               ),
                             ),

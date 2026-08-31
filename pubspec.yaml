@@ -90,6 +90,25 @@ flutter:
           weight: 100
         - asset: assets/fonts/Lato-Black.ttf
           weight: 900
+    - family: Vazir
+      fonts:
+        - asset: assets/fonts/Vazir/Vazirmatn-Regular.ttf
+        - asset: assets/fonts/Vazir/Vazirmatn-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Vazir/Vazirmatn-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/Vazir/Vazirmatn-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/Vazir/Vazirmatn-ExtraBold.ttf
+          weight: 800
+        - asset: assets/fonts/Vazir/Vazirmatn-Black.ttf
+          weight: 900
+        - asset: assets/fonts/Vazir/Vazirmatn-Light.ttf
+          weight: 300
+        - asset: assets/fonts/Vazir/Vazirmatn-ExtraLight.ttf
+          weight: 200
+        - asset: assets/fonts/Vazir/Vazirmatn-Thin.ttf
+          weight: 100
 
 flutter_native_splash:
   color: "#ffffff"

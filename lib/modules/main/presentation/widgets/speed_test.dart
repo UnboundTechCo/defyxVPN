@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -29,7 +30,7 @@ void showWebViewBottomSheet(BuildContext context, String url) {
                     'SpeedTest',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontFamily: 'Lato',
+                      fontFamily: AppTheme.fontFamily,
                       color: Colors.black,
                     ),
                   ),

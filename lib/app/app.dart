@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -9,6 +11,7 @@ import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -149,6 +152,8 @@ class _AppState extends ConsumerState<App> {
     final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
 
+    AppTheme.updateFontFamilyForLocale(languageState.language.locale);
+
     return ToastificationWrapper(
       config: ToastificationConfig(
         maxToastLimit: 1,
@@ -177,7 +182,7 @@ class _AppState extends ConsumerState<App> {
             ],
             supportedLocales: const [
               Locale('en'),
-              // Locale('fa'),
+              Locale('fa'),
               Locale('ru'),
               Locale('zh'),
             ],

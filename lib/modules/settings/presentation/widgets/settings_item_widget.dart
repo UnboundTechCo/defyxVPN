@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/common/helpers/truncate_text.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -85,7 +86,7 @@ class SettingsItemWidget extends StatelessWidget {
                 truncateText(item.title.toUpperCase(), 20),
                 style: TextStyle(
                   fontSize: 17.sp,
-                  fontFamily: 'Lato',
+                  fontFamily: AppTheme.fontFamily,
                   fontWeight: FontWeight.w400,
                   color: item.isAccessible ? Colors.white : Colors.grey[600],
                 ),
@@ -158,7 +159,7 @@ class SettingsItemWidget extends StatelessWidget {
               item.subtitle!,
               style: TextStyle(
                 fontSize: 14.sp,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w400,
                 color: Colors.grey[500],
               ),

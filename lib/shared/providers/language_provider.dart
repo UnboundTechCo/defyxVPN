@@ -7,7 +7,7 @@ const String _autoDetectKey = 'language_auto_detect';
 
 enum AppLanguage {
   english('en', 'English'),
-  // persian('fa', 'فارسی'),
+  persian('fa', 'فارسی'),
   chinese('zh', '中文'),
   russian('ru', 'Русский');
 

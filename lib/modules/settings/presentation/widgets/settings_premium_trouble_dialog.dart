@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
@@ -84,7 +85,7 @@ class _SettingsPremiumTroubleDialogState
             Text(
               l10n.havingTrouble,
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: fontSize * 1.4,
                 color: Colors.black,
                 fontWeight: FontWeight.w700,
@@ -97,7 +98,7 @@ class _SettingsPremiumTroubleDialogState
                 text: TextSpan(
                   style: TextStyle(
                     fontSize: fontSize,
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                     color: Colors.black.withValues(alpha: 0.5),
                     height: 1.4,
                   ),
@@ -117,7 +118,7 @@ class _SettingsPremiumTroubleDialogState
               l10n.premiumImportDescription,
               style: TextStyle(
                 fontSize: fontSize,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),
@@ -129,7 +130,7 @@ class _SettingsPremiumTroubleDialogState
                   l10n.planningToExit.toUpperCase(),
                   style: TextStyle(
                     fontSize: 12.sp,
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                     height: 1.4,
                     color: Colors.black.withValues(alpha: 0.5),
                   ),
@@ -140,7 +141,7 @@ class _SettingsPremiumTroubleDialogState
                   child: Text(
                     l10n.signOut.toUpperCase(),
                     style: TextStyle(
-                      fontFamily: 'Lato',
+                      fontFamily: AppTheme.fontFamily,
                       fontSize: 12.sp,
                       height: 1.4,
                       color: const Color(0xFF17A079),

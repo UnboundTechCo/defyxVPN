@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -60,7 +61,7 @@ class AppButton extends StatelessWidget {
                   label,
                   key: const ValueKey('text'),
                   style: TextStyle(
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                     fontSize: config.fontSize,
                     fontWeight: config.fontWeight,
                     color: _textColor,
