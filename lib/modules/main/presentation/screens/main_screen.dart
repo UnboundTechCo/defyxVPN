@@ -16,7 +16,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/tips_slider_section.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/tips_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
@@ -187,6 +187,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
     final adsState = ref.watch(adsProvider);
+    final hasActiveAd = ref.watch(hasActiveAdProvider);
+    final showTips =
+        connectionState.status == ConnectionStatus.disconnected && !hasActiveAd;
 
     if (!(Platform.isAndroid || Platform.isIOS)) {
       ref.listen<int>(trayConnectionToggleTriggerProvider, (previous, next) {
@@ -289,6 +292,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     ),
                   ),
                 ),
+                if (showTips)
+                  Positioned(
+                    left: 24.w,
+                    right: 24.w,
+                    bottom: 100.h + MediaQuery.of(context).padding.bottom,
+                    child: const TipsSlider(),
+                  ),
               ],
             ),
           ),
@@ -317,10 +327,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         break;
 
       case ConnectionStatus.disconnected:
-        // DISCONNECTED: Show ad if director says so, else show tips
-        if (!hasActiveAd) {
-          mainContent = TipsSliderSection(status: status);
-        }
         break;
 
       default:
