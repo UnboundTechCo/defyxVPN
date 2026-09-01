@@ -397,4 +397,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'برای تکمیل فرآیند امن ورود یا ثبت‌نام، ابتدا باید با استفاده از یکی از روش‌های اتصال موجود، اتصال برقرار کنید.';
+
+  @override
+  String get speedTestFailed => 'تست سرعت ناموفق بود. لطفاً دوباره تلاش کنید.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'اتصال شما ناپایدار بود و تست متوقف شد.';
 }

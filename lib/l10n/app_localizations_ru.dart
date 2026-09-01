@@ -399,4 +399,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'Чтобы завершить безопасный процесс входа или регистрации, вы должны сначала установить соединение, используя один из доступных методов подключения.';
+
+  @override
+  String get speedTestFailed =>
+      'Тест скорости не удался. Пожалуйста, попробуйте снова.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'Ваше соединение было нестабильным, и тест был прерван.';
 }

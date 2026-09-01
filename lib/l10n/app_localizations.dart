@@ -851,6 +851,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.'**
   String get connectionRequiredDescription;
+
+  /// Speed test error message - generic failure
+  ///
+  /// In en, this message translates to:
+  /// **'Speed test failed. Please try again.'**
+  String get speedTestFailed;
+
+  /// Speed test error message - connection unstable
+  ///
+  /// In en, this message translates to:
+  /// **'Your connection was unstable, and the test was interrupted.'**
+  String get speedTestConnectionUnstable;
 }
 
 class _AppLocalizationsDelegate

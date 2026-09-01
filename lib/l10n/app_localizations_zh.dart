@@ -387,4 +387,10 @@ class AppLocalizationsZh extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       '要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。';
+
+  @override
+  String get speedTestFailed => '速度测试失败，请重试。';
+
+  @override
+  String get speedTestConnectionUnstable => '您的连接不稳定，测试已中断。';
 }

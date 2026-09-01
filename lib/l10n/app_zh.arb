@@ -125,5 +125,7 @@
   "loginByCode": "使用代码登录",
   "backToLoginByEmail": "返回电子邮件登录",
   "connectionRequired": "需要连接",
-  "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。"
+  "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。",
+  "speedTestFailed": "速度测试失败，请重试。",
+  "speedTestConnectionUnstable": "您的连接不稳定，测试已中断。"
 }

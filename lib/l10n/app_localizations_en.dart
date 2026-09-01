@@ -397,4 +397,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.';
+
+  @override
+  String get speedTestFailed => 'Speed test failed. Please try again.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'Your connection was unstable, and the test was interrupted.';
 }
