@@ -526,12 +526,23 @@ class VPN {
 
   Future<void> initVPN() async {
     _container?.read(settingsLoadingProvider.notifier).state = true;
-    await _container
-        ?.read(flowlineServiceProvider)
-        .saveFlowline(offlineMode: true);
-    _vpnBridge.setAsnName();
-    _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
-    _container?.read(settingsLoadingProvider.notifier).state = false;
+    try {
+      await _container
+          ?.read(flowlineServiceProvider)
+          .saveFlowline(offlineMode: true);
+      _vpnBridge.setAsnName();
+      unawaited(
+        _container
+                ?.read(flowlineServiceProvider)
+                .saveFlowline(offlineMode: false) ??
+            Future.value(),
+      );
+    } catch (e) {
+      // A saveFlowline failure must not block splash navigation to the main screen.
+      debugPrint('initVPN failed: $e');
+    } finally {
+      _container?.read(settingsLoadingProvider.notifier).state = false;
+    }
   }
 
   Future<void> _updatePing() async {

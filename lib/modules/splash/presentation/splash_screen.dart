@@ -29,23 +29,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       _onNavigate();
       return;
     });
-    // final vpnData = await ref.read(vpnDataProvider.future);
-    final vpnStatus = await VpnBridge().getVpnStatus();
+    try {
+      // final vpnData = await ref.read(vpnDataProvider.future);
+      final vpnStatus = await VpnBridge().getVpnStatus();
 
-    if (vpnStatus == "connected") {
-      _onNavigate();
-      return;
-    }
+      if (vpnStatus == "connected") {
+        _onNavigate();
+        return;
+      }
 
-    if (ref.context.mounted) {
-      final vpn = VPN(ProviderScope.containerOf(ref.context));
-      await vpn.initVPN();
+      if (ref.context.mounted) {
+        final vpn = VPN(ProviderScope.containerOf(ref.context));
+        await vpn.initVPN();
+        _onNavigate();
+        return;
+      } else {
+        await Future.delayed(const Duration(seconds: 3));
+      }
       _onNavigate();
-      return;
-    } else {
-      await Future.delayed(const Duration(seconds: 3));
+    } catch (e) {
+      // Fall through to navigation so an unexpected startup error never leaves the user stuck on splash.
+      debugPrint('Splash startup failed: $e');
+      _onNavigate();
     }
-    _onNavigate();
   }
 
   void _onNavigate() {

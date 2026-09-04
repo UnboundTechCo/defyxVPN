@@ -9,6 +9,7 @@ import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
+import 'package:defyx_vpn/shared/services/desktop_error_logger.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -81,37 +82,56 @@ class FlowlineService implements IFlowlineService {
     }
 
     if (flowLine.isNotEmpty) {
-      final decoded = json.decode(flowLine);
+      try {
+        final decoded = json.decode(flowLine);
 
-      final appBuildType = GlobalVars.appBuildType;
-      final version = decoded['version']?[appBuildType];
+        final appBuildType = GlobalVars.appBuildType;
+        final version = decoded['version']?[appBuildType];
 
-      final advertiseStorageMap = {'api_advertise': decoded['advertise']};
-      final settingsStorageMap = decoded['settings'];
-      await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
-      await _secureStorage.writeMap(flowlineSettingsKey, settingsStorageMap);
+        final advertiseStorageMap = {'api_advertise': decoded['advertise']};
+        // Cached blobs from older app versions may not have a 'settings' field.
+        final settingsStorageMap =
+            (decoded['settings'] as Map<String, dynamic>?) ??
+            <String, dynamic>{};
+        await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
+        await _secureStorage.writeMap(flowlineSettingsKey, settingsStorageMap);
 
-      // Save tips if available
-      if (decoded['tips'] != null) {
-        final tipsJson = json.encode(decoded['tips']);
-        await _secureStorage.write(apiTipsKey, tipsJson);
-      }
+        // Save tips if available
+        if (decoded['tips'] != null) {
+          final tipsJson = json.encode(decoded['tips']);
+          await _secureStorage.write(apiTipsKey, tipsJson);
+        }
 
-      final versionStorageMap = {
-        'api_app_version': version,
-        'forceUpdate': decoded['forceUpdate'][version],
-        'changeLog': decoded['changeLog'][version],
-      };
+        final versionStorageMap = {
+          'api_app_version': version,
+          'forceUpdate': (decoded['forceUpdate'] as Map?)?[version],
+          'changeLog': (decoded['changeLog'] as Map?)?[version],
+        };
 
-      await _secureStorage.writeMap(apiVersionParametersKey, versionStorageMap);
+        await _secureStorage.writeMap(
+          apiVersionParametersKey,
+          versionStorageMap,
+        );
 
-      await _secureStorage.write(flowLineKey, json.encode(decoded['flowLine']));
-      final settings = _container.read(settingsProvider.notifier);
-      await settings.updateSettingsBasedOnFlowLine();
-      if (!offlineMode) {
-        prefs.setInt(
-          lastFlowlineUpdateKey,
-          DateTime.now().millisecondsSinceEpoch,
+        await _secureStorage.write(
+          flowLineKey,
+          json.encode(decoded['flowLine']),
+        );
+        final settings = _container.read(settingsProvider.notifier);
+        await settings.updateSettingsBasedOnFlowLine();
+        if (!offlineMode) {
+          prefs.setInt(
+            lastFlowlineUpdateKey,
+            DateTime.now().millisecondsSinceEpoch,
+          );
+        }
+      } catch (e, stack) {
+        // Cached flowline may be from an incompatible older/newer schema; skip this write rather than crash startup.
+        debugPrint('Failed to parse/save flowline: $e');
+        await DesktopErrorLogger().logError(
+          'FlowlineService.saveFlowline',
+          e,
+          stack,
         );
       }
     } else {
@@ -121,8 +141,18 @@ class FlowlineService implements IFlowlineService {
 
   @override
   Future<FlowlineSettings> getFlowlineSettings() async {
-    final settingsString = await _secureStorage.read(flowlineSettingsKey);
-    final decodedSettings = json.decode(settingsString ?? "");
-    return FlowlineSettings.fromJson(decodedSettings);
+    try {
+      final settingsString = await _secureStorage.read(flowlineSettingsKey);
+      final decodedSettings = json.decode(settingsString ?? "");
+      return FlowlineSettings.fromJson(decodedSettings);
+    } catch (e, stack) {
+      debugPrint('Failed to read flowline settings: $e');
+      await DesktopErrorLogger().logError(
+        'FlowlineService.getFlowlineSettings',
+        e,
+        stack,
+      );
+      return FlowlineSettings(disabledAdmob: []);
+    }
   }
 }
