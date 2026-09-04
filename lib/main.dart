@@ -36,7 +36,7 @@ Future<void> _runApp() async {
 
   await dotenv.load();
 
-  // Initialize language provider (fetched early so it can also drive the version check below)
+  // Initialize language provider
   SharedPreferences? prefs;
   try {
     prefs = await SharedPreferences.getInstance();
@@ -47,7 +47,7 @@ Future<void> _runApp() async {
 
   // On Windows/Linux, the native VPN engine cache can hold data from an older
   // app version that the current version can't parse. Clear it on upgrade so
-  // stale cache never blocks startup (settings/login in SharedPreferences are untouched).
+  // stale cache never blocks startup (any cached offline flowline is refetched).
   if (prefs != null && (Platform.isWindows || Platform.isLinux)) {
     try {
       final currentVersion = (await PackageInfo.fromPlatform()).version;

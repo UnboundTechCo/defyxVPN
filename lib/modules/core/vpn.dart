@@ -43,6 +43,7 @@ class VPN {
   final _networkStatus = NetworkStatus();
   final _eventChannel = EventChannel("com.defyx.progress_events");
   final _crashEventChannel = EventChannel("com.defyx.crash_events");
+  DateTime? _lastTokenExpiredAt;
 
   Stream<String> get vpnUpdates =>
       _eventChannel.receiveBroadcastStream().map((event) => event.toString());
@@ -171,7 +172,18 @@ class VPN {
     }
 
     if (msg.startsWith("Data: Token expired")) {
-      ref.read(authProvider.notifier).logout();
+      // Debounce: the native engine can emit this repeatedly for one real expiry event.
+      final now = DateTime.now();
+      if (_lastTokenExpiredAt == null ||
+          now.difference(_lastTokenExpiredAt!) > const Duration(seconds: 5)) {
+        _lastTokenExpiredAt = now;
+        crashReportingService.recordError(
+          'Token expired signal received from native VPN engine',
+          null,
+          reason: 'TokenExpiredSignal',
+        );
+        ref.read(authProvider.notifier).logout();
+      }
     }
 
     if (msg.contains("VPN Service Destroyed")) {

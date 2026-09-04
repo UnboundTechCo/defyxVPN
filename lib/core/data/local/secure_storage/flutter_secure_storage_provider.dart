@@ -4,6 +4,9 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 final flutterSecureStorageProvider = Provider<FlutterSecureStorage>((ref) {
   const AndroidOptions androidOptions = AndroidOptions(
     encryptedSharedPreferences: true,
+    // Self-heal instead of every read/write throwing forever if the Keystore key is invalidated
+    // (e.g. after a backup/restore to a new device).
+    resetOnError: true,
   );
   const IOSOptions iosOptions = IOSOptions(
     accessibility: KeychainAccessibility.first_unlock,

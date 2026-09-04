@@ -85,6 +85,13 @@ class FlowlineService implements IFlowlineService {
       try {
         final decoded = json.decode(flowLine);
 
+        // A structurally-empty/placeholder blob (e.g. "{}") must never overwrite
+        // previously-saved good data (would corrupt flowLineKey with "null").
+        if (decoded is! Map || decoded['flowLine'] == null) {
+          debugPrint('Flowline payload has no flowLine data, skipping save');
+          return;
+        }
+
         final appBuildType = GlobalVars.appBuildType;
         final version = decoded['version']?[appBuildType];
 
