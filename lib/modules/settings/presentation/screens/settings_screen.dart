@@ -437,7 +437,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               l10n.settingsDiagnosticsExperiments.toUpperCase(),
               style: TextStyle(
                 fontSize: 13.sp,
-                fontFamily: 'SF Pro',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w400,
                 color: Colors.grey[400],
                 letterSpacing: 0.5,

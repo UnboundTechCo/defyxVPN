@@ -93,7 +93,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
         ReorderableListView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          onReorderItem: (oldIndex, newIndex) {
+          onReorder: (oldIndex, newIndex) {
             if (ref.read(hapticsProvider)) {
               HapticFeedback.lightImpact();
             }
@@ -251,7 +251,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                   widget.group.title,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    fontFamily: 'SF Pro',
+                    fontFamily: AppTheme.fontFamily,
                     fontWeight: FontWeight.w400,
                     color: Colors.grey[400],
                     letterSpacing: 0.5,
