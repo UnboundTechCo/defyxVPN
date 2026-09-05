@@ -234,6 +234,18 @@ abstract class AppLocalizations {
   /// **'Our Website'**
   String get ourWebsite;
 
+  /// Marketplace menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Marketplace'**
+  String get marketplace;
+
+  /// Telegram bot menu item
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram Bot'**
+  String get telegramBot;
+
   /// Source code link
   ///
   /// In en, this message translates to:
@@ -702,6 +714,30 @@ abstract class AppLocalizations {
   /// **'Login successful!'**
   String get loginSuccess;
 
+  /// Code field label
+  ///
+  /// In en, this message translates to:
+  /// **'Code'**
+  String get code;
+
+  /// Code field hint text
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your access code'**
+  String get codeHint;
+
+  /// Code validation error message
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your code'**
+  String get codeValidation;
+
+  /// Premium login by code dialog description
+  ///
+  /// In en, this message translates to:
+  /// **'To access your Premium subscription(s), enter the access code provided to you.'**
+  String get premiumLoginByCodeDescription;
+
   /// Premium trouble dialog title
   ///
   /// In en, this message translates to:
@@ -761,6 +797,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'LOGIN OR REGISTER'**
   String get loginOrRegister;
+
+  /// Login by code button text
+  ///
+  /// In en, this message translates to:
+  /// **'Login by code'**
+  String get loginByCode;
+
+  /// Back to email login button text
+  ///
+  /// In en, this message translates to:
+  /// **'Back to login by email'**
+  String get backToLoginByEmail;
+
+  /// Connection required dialog title
+  ///
+  /// In en, this message translates to:
+  /// **'Connection Required'**
+  String get connectionRequired;
+
+  /// Connection required dialog description
+  ///
+  /// In en, this message translates to:
+  /// **'To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.'**
+  String get connectionRequiredDescription;
 }
 
 class _AppLocalizationsDelegate
