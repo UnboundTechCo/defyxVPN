@@ -43,6 +43,7 @@ class VPN {
   final _networkStatus = NetworkStatus();
   final _eventChannel = EventChannel("com.defyx.progress_events");
   final _crashEventChannel = EventChannel("com.defyx.crash_events");
+  DateTime? _lastTokenExpiredAt;
 
   Stream<String> get vpnUpdates =>
       _eventChannel.receiveBroadcastStream().map((event) => event.toString());
@@ -171,7 +172,18 @@ class VPN {
     }
 
     if (msg.startsWith("Data: Token expired")) {
-      ref.read(authProvider.notifier).logout();
+      // Debounce: the native engine can emit this repeatedly for one real expiry event.
+      final now = DateTime.now();
+      if (_lastTokenExpiredAt == null ||
+          now.difference(_lastTokenExpiredAt!) > const Duration(seconds: 5)) {
+        _lastTokenExpiredAt = now;
+        crashReportingService.recordError(
+          'Token expired signal received from native VPN engine',
+          null,
+          reason: 'TokenExpiredSignal',
+        );
+        ref.read(authProvider.notifier).logout();
+      }
     }
 
     if (msg.contains("VPN Service Destroyed")) {
@@ -526,12 +538,23 @@ class VPN {
 
   Future<void> initVPN() async {
     _container?.read(settingsLoadingProvider.notifier).state = true;
-    await _container
-        ?.read(flowlineServiceProvider)
-        .saveFlowline(offlineMode: true);
-    _vpnBridge.setAsnName();
-    _container?.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
-    _container?.read(settingsLoadingProvider.notifier).state = false;
+    try {
+      await _container
+          ?.read(flowlineServiceProvider)
+          .saveFlowline(offlineMode: true);
+      _vpnBridge.setAsnName();
+      unawaited(
+        _container
+                ?.read(flowlineServiceProvider)
+                .saveFlowline(offlineMode: false) ??
+            Future.value(),
+      );
+    } catch (e) {
+      // A saveFlowline failure must not block splash navigation to the main screen.
+      debugPrint('initVPN failed: $e');
+    } finally {
+      _container?.read(settingsLoadingProvider.notifier).state = false;
+    }
   }
 
   Future<void> _updatePing() async {

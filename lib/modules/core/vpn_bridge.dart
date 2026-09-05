@@ -80,6 +80,15 @@ class VpnBridge {
     await _methodChannel.invokeMethod('setCacheDir', {"cacheDir": cacheDir});
   }
 
+  /// Wipes and recreates the native VPN engine's on-disk cache. Only implemented on Windows/Linux.
+  Future<void> clearVpnCache() async {
+    try {
+      await _methodChannel.invokeMethod('clearVpnCache');
+    } on MissingPluginException {
+      // Not implemented on this platform; nothing to clear.
+    }
+  }
+
   Future<String> getSharedDirectory() async =>
       (await _methodChannel.invokeMethod<String>('getSharedDirectory')) ?? "";
 

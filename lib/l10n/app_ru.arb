@@ -78,6 +78,9 @@
   "settingsIncluded": "ВКЛЮЧЕНО",
   "settingsAtLeastOneCoreRequired": "Должен оставаться включенным хотя бы один модуль",
   "settingsResetToDefault": "Сброс",
+  "settingsDiagnosticsExperiments": "Диагностика и эксперименты",
+  "settingsAutoDetect": "Автоопределение",
+  "settingsHapticFeedback": "Тактильная отдача",
   "offlineFlowlineMessage": "Обновления Flowline приостановлены, так как используется автономная версия.",
   "offlineFlowlineUndo": "ОТМЕНИТЬ",
   "updateMethods": "Обновить методы",
@@ -122,5 +125,7 @@
   "loginByCode": "Войти по коду",
   "backToLoginByEmail": "Вернуться к входу по электронной почте",
   "connectionRequired": "Требуется подключение",
-  "connectionRequiredDescription": "Чтобы завершить безопасный процесс входа или регистрации, вы должны сначала установить соединение, используя один из доступных методов подключения."
+  "connectionRequiredDescription": "Чтобы завершить безопасный процесс входа или регистрации, вы должны сначала установить соединение, используя один из доступных методов подключения.",
+  "speedTestFailed": "Тест скорости не удался. Пожалуйста, попробуйте снова.",
+  "speedTestConnectionUnstable": "Ваше соединение было нестабильным, и тест был прерван."
 }

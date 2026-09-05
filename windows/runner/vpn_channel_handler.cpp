@@ -4,6 +4,34 @@
 #include "dxcore_bridge.h"
 #include "system_tray.h"
 
+namespace {
+
+// Recursively deletes a directory's contents (but not the directory itself).
+void DeleteDirectoryContentsRecursive(const std::wstring& dir) {
+  std::wstring pattern = dir + L"\\*";
+  WIN32_FIND_DATAW find_data;
+  HANDLE find_handle = FindFirstFileW(pattern.c_str(), &find_data);
+  if (find_handle == INVALID_HANDLE_VALUE) return;
+
+  do {
+    const std::wstring name = find_data.cFileName;
+    if (name == L"." || name == L"..") continue;
+
+    const std::wstring full_path = dir + L"\\" + name;
+    if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+      DeleteDirectoryContentsRecursive(full_path);
+      RemoveDirectoryW(full_path.c_str());
+    } else {
+      SetFileAttributesW(full_path.c_str(), FILE_ATTRIBUTE_NORMAL);
+      DeleteFileW(full_path.c_str());
+    }
+  } while (FindNextFileW(find_handle, &find_data));
+
+  FindClose(find_handle);
+}
+
+}  // namespace
+
 VPNChannelHandler::VPNChannelHandler(flutter::BinaryMessenger* messenger,
                                      HWND window_handle,
                                      DXCoreBridge* dxcore,
@@ -403,6 +431,22 @@ void VPNChannelHandler::SetupMethodChannel() {
             return out;
           };
           result->Success(flutter::EncodableValue(WideToUtf8(shared_dir_w)));
+          return;
+        }
+
+        if (method == "clearVpnCache") {
+          wchar_t env_buf[32767];
+          DWORD n = GetEnvironmentVariableW(L"LOCALAPPDATA", env_buf, 32767);
+          std::wstring cache_dir_w;
+          if (n > 0 && n < 32767) {
+            cache_dir_w = std::wstring(env_buf) + L"\\DefyxVPN\\defyx";
+          } else {
+            cache_dir_w = L"C:\\Windows\\Temp\\DefyxVPN\\defyx";
+          }
+          DeleteDirectoryContentsRecursive(cache_dir_w);
+          CreateDirectoryW((std::wstring(cache_dir_w.substr(0, cache_dir_w.find_last_of(L"\\")))).c_str(), NULL);
+          CreateDirectoryW(cache_dir_w.c_str(), NULL);
+          result->Success(flutter::EncodableValue(true));
           return;
         }
 

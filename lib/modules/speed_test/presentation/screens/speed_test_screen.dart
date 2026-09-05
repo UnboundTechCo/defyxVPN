@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
 
@@ -149,7 +150,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       return mainContent;
     }
 
-    return _buildContentWithToast(mainContent, state.errorMessage!);
+    return _buildContentWithToast(mainContent, _errorMessage(context, state.errorType!));
   }
 
   Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
@@ -184,7 +185,17 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
   }
 
   bool _shouldShowToastOverlay(SpeedTestState state) {
-    return state.errorMessage != null && (state.step == SpeedTestStep.ready);
+    return state.errorType != null && (state.step == SpeedTestStep.ready);
+  }
+
+  String _errorMessage(BuildContext context, SpeedTestErrorType errorType) {
+    final l10n = AppLocalizations.of(context);
+    switch (errorType) {
+      case SpeedTestErrorType.testFailed:
+        return l10n.speedTestFailed;
+      case SpeedTestErrorType.connectionUnstable:
+        return l10n.speedTestConnectionUnstable;
+    }
   }
 
   Widget _buildContentWithToast(Widget mainContent, String errorMessage) {

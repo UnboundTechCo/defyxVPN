@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -55,7 +56,8 @@ class MainScreenLogic {
 
   Future<void> checkAndShowPrivacyNotice(Function showDialog) async {
     final prefs = await SharedPreferences.getInstance();
-    final bool privacyNoticeShown = prefs.getBool('privacy_notice_shown') ?? false;
+    final bool privacyNoticeShown =
+        prefs.getBool('privacy_notice_shown') ?? false;
     if (!privacyNoticeShown) {
       showDialog();
     }
@@ -84,14 +86,26 @@ class MainScreenLogic {
     final storage = ref.read(secureStorageProvider);
 
     final packageInfo = await PackageInfo.fromPlatform();
-    final apiVersionParameters = await storage.readMap('api_version_parameters');
+    final apiVersionParameters = await storage.readMap(
+      'api_version_parameters',
+    );
 
     final forceUpdate = apiVersionParameters['forceUpdate'] ?? false;
 
-    final removeBuildNumber = apiVersionParameters['api_app_version']?.split('+').first ?? '0.0.0';
+    final removeBuildNumber =
+        apiVersionParameters['api_app_version']?.split('+').first ?? '0.0.0';
 
-    final appVersion = Version.parse(packageInfo.version);
-    final apiAppVersion = Version.parse(removeBuildNumber);
+    // Cached version strings may be stale/malformed after an app upgrade; fall back to "no update".
+    Version appVersion;
+    Version apiAppVersion;
+    try {
+      appVersion = Version.parse(packageInfo.version);
+      apiAppVersion = Version.parse(removeBuildNumber);
+    } catch (e) {
+      debugPrint('Failed to parse version for update check: $e');
+      appVersion = Version.parse('0.0.0');
+      apiAppVersion = Version.parse('0.0.0');
+    }
 
     final response = {
       'update': apiAppVersion > appVersion,

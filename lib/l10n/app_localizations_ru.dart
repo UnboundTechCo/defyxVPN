@@ -144,6 +144,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get chinese => '中文 (Китайский)';
 
   @override
+  String get persian => 'فارسی (Персидский)';
+
+  @override
+  String get russian => 'Русский';
+
+  @override
   String get gotIt => 'Понятно';
 
   @override
@@ -237,6 +243,15 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => 'Сброс';
+
+  @override
+  String get settingsDiagnosticsExperiments => 'Диагностика и эксперименты';
+
+  @override
+  String get settingsAutoDetect => 'Автоопределение';
+
+  @override
+  String get settingsHapticFeedback => 'Тактильная отдача';
 
   @override
   String get offlineFlowlineMessage =>
@@ -384,4 +399,12 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'Чтобы завершить безопасный процесс входа или регистрации, вы должны сначала установить соединение, используя один из доступных методов подключения.';
+
+  @override
+  String get speedTestFailed =>
+      'Тест скорости не удался. Пожалуйста, попробуйте снова.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'Ваше соединение было нестабильным, и тест был прерван.';
 }

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:defyx_vpn/core/theme/app_colors.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -86,7 +87,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             Text(
               'Privacy Notice',
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: fontSize * 1.4,
                 color: Colors.black,
                 fontWeight: FontWeight.w700,
@@ -97,7 +98,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
               message,
               style: TextStyle(
                 fontSize: fontSize,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),
@@ -126,7 +127,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
                   : Text(
                       'Got it',
                       style: TextStyle(
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         color: const Color(0xFF4B4B4B),
                         fontSize: fontSize,
                         fontWeight: FontWeight.w500,

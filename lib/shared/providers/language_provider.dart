@@ -3,10 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const String _languageKey = 'selected_language';
+const String _autoDetectKey = 'language_auto_detect';
 
 enum AppLanguage {
   english('en', 'English'),
-  chinese('zh', '中文');
+  persian('fa', 'فارسی'),
+  chinese('zh', '中文'),
+  russian('ru', 'Русский');
 
   final String code;
   final String nativeName;
@@ -25,19 +28,23 @@ enum AppLanguage {
 
 class LanguageState {
   final AppLanguage language;
+  final bool isAutoDetect;
   final bool isLoading;
 
   const LanguageState({
     required this.language,
+    this.isAutoDetect = true,
     this.isLoading = false,
   });
 
   LanguageState copyWith({
     AppLanguage? language,
+    bool? isAutoDetect,
     bool? isLoading,
   }) {
     return LanguageState(
       language: language ?? this.language,
+      isAutoDetect: isAutoDetect ?? this.isAutoDetect,
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -46,43 +53,63 @@ class LanguageState {
 class LanguageNotifier extends StateNotifier<LanguageState> {
   final SharedPreferences _prefs;
 
-  LanguageNotifier(this._prefs)
-      : super(LanguageState(
-          language: AppLanguage.fromCode(
-            _prefs.getString(_languageKey) ?? _getDeviceLanguage(),
-          ),
-        )) {
-    final savedLang = _prefs.getString(_languageKey);
+  LanguageNotifier(this._prefs) : super(_buildInitialState(_prefs));
+
+  static LanguageState _buildInitialState(SharedPreferences prefs) {
+    final isAutoDetect = prefs.getBool(_autoDetectKey) ?? true;
+    if (isAutoDetect) {
+      return LanguageState(
+        language: _detectDeviceLanguage(),
+        isAutoDetect: true,
+      );
+    }
+    return LanguageState(
+      language: AppLanguage.fromCode(
+        prefs.getString(_languageKey) ?? AppLanguage.english.code,
+      ),
+      isAutoDetect: false,
+    );
   }
 
-  // Detect device language on first launch
-  static String _getDeviceLanguage() {
+  // Auto-detect mode: resolve against the device locale, falling back to English
+  static AppLanguage _detectDeviceLanguage() {
     try {
-      final deviceLocale = WidgetsBinding.instance.platformDispatcher.locale;
-      final selectedLang = deviceLocale.languageCode == 'zh' ? 'zh' : 'en';
-      return selectedLang;
+      final deviceCode =
+          WidgetsBinding.instance.platformDispatcher.locale.languageCode;
+      return AppLanguage.values.firstWhere(
+        (lang) => lang.code == deviceCode,
+        orElse: () => AppLanguage.english,
+      );
     } catch (e) {
       debugPrint('🌍 Error detecting device language: $e');
-      // Fallback to English if detection fails
-      return 'en';
+      return AppLanguage.english;
     }
   }
 
   Future<void> changeLanguage(AppLanguage language) async {
-    debugPrint('🌍 Changing language to: ${language.code} (${language.nativeName})');
     state = state.copyWith(isLoading: true);
+    await _prefs.setBool(_autoDetectKey, false);
     await _prefs.setString(_languageKey, language.code);
-    debugPrint('🌍 Language saved to SharedPreferences');
-    state = state.copyWith(language: language, isLoading: false);
-    debugPrint('🌍 Language state updated to: ${state.language.code}');
+    state = LanguageState(language: language, isAutoDetect: false);
+  }
+
+  Future<void> enableAutoDetect() async {
+    state = state.copyWith(isLoading: true);
+    await _prefs.setBool(_autoDetectKey, true);
+    state = LanguageState(
+      language: _detectDeviceLanguage(),
+      isAutoDetect: true,
+    );
   }
 
   Locale get currentLocale => state.language.locale;
 }
 
-final languageProvider = StateNotifierProvider<LanguageNotifier, LanguageState>((ref) {
-  throw UnimplementedError('languageProvider must be overridden');
-});
+final languageProvider = StateNotifierProvider<LanguageNotifier, LanguageState>(
+  (ref) {
+    throw UnimplementedError('languageProvider must be overridden');
+  },
+);
 
 final languageInitProvider = FutureProvider<LanguageNotifier>((ref) async {
   final prefs = await SharedPreferences.getInstance();

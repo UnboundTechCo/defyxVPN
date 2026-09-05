@@ -4,10 +4,14 @@ import android.Android
 import android.Manifest
 import android.ProgressListener
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
@@ -79,11 +83,33 @@ class MainActivity : FlutterActivity() {
             )
         }
     }
+
+    // Aggressive OEM battery managers (MIUI, Huawei, ColorOS, etc.) can kill the app in the
+    // background without this exemption; only prompt once so we don't nag on every launch.
+    private fun requestIgnoreBatteryOptimizations() {
+        val prefs = getSharedPreferences("defyx_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("battery_optimization_requested", false)) return
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) return
+
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request battery optimization exemption", e)
+        } finally {
+            prefs.edit().putBoolean("battery_optimization_requested", true).apply()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val intent = Intent(this, DefyxVpnService::class.java)
         grantNotificationPermission()
+        requestIgnoreBatteryOptimizations()
         startService(intent)
     }
 
