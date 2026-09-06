@@ -371,7 +371,7 @@
     "description": "Settings section - deep scan"
   },
 
-  "settingsHealthCheck": "HEALTH CHECK",
+  "settingsHealthCheck": "HEALTH MONITOR",
   "@settingsHealthCheck": {
     "description": "Settings section - health check"
   },

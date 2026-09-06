@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
-  String get settingsHealthCheck => 'HEALTH CHECK';
+  String get settingsHealthCheck => 'HEALTH MONITOR';
 
   @override
   String get settingsIncluded => 'INCLUDED';
