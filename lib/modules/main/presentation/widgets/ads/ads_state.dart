@@ -266,22 +266,30 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (state.countdown > 0) {
         final newCount = state.countdown - 1;
-        debugPrint('⏱️ Countdown: $newCount, rotation=${state.rotationCount}/$maxAdRotations');
+        debugPrint(
+          '⏱️ Countdown: $newCount, rotation=${state.rotationCount}/$maxAdRotations',
+        );
         state = state.copyWith(countdown: newCount);
       } else {
-        debugPrint('⏱️ Countdown finished - rotation=${state.rotationCount}/$maxAdRotations');
+        debugPrint(
+          '⏱️ Countdown finished - rotation=${state.rotationCount}/$maxAdRotations',
+        );
 
         // Check if we should rotate to next ad or dispose
         if (state.rotationCount < maxAdRotations && state.nextAdReady) {
-          debugPrint('🔄 Rotating to next ad (${state.rotationCount + 1}/$maxAdRotations)');
-          
+          debugPrint(
+            '🔄 Rotating to next ad (${state.rotationCount + 1}/$maxAdRotations)',
+          );
+
           // Trigger rotation callback
           _onAdShouldRotate?.call();
           debugPrint('🔄 Ad rotation callback triggered');
-          
+
           // Note: Don't cancel timer - rotation callback will restart it with new ad
         } else {
-          debugPrint('⏱️ Max rotations reached or no next ad - disposing and clearing state');
+          debugPrint(
+            '⏱️ Max rotations reached or no next ad - disposing and clearing state',
+          );
 
           // Clear all ad flags to hide the ad box completely
           state = state.copyWith(
@@ -304,7 +312,6 @@ class AdsNotifier extends StateNotifier<AdsState> {
     });
   }
 
-
   /// Mark that next ad is ready for rotation (pre-loaded)
   void setNextAdReady(bool ready) {
     debugPrint('📦 Next ad ready: $ready');
@@ -314,7 +321,9 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Increment rotation count and update timestamp
   void incrementRotationCount() {
     final newCount = state.rotationCount + 1;
-    debugPrint('🔄 Incrementing rotation count: ${state.rotationCount} → $newCount');
+    debugPrint(
+      '🔄 Incrementing rotation count: ${state.rotationCount} → $newCount',
+    );
     state = state.copyWith(
       rotationCount: newCount,
       lastRotationAt: DateTime.now(),
@@ -330,6 +339,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
       lastRotationAt: null,
     );
   }
+
   /// Set ad as loaded (for Google AdMob ads)
   void setAdLoaded(bool isLoaded) {
     debugPrint('✅ Ad loaded: $isLoaded');
@@ -386,7 +396,8 @@ class AdsNotifier extends StateNotifier<AdsState> {
       customImageUrl: '',
       customClickUrl: '',
       customImageLoadFailed: false,
-      nativeAdIsLoaded: false, // Clear this flag to prevent showing empty ad container
+      nativeAdIsLoaded:
+          false, // Clear this flag to prevent showing empty ad container
     );
     debugPrint(
       '   📊 State AFTER: customImageUrl cleared, nativeAdIsLoaded=false',

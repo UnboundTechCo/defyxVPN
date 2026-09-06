@@ -37,20 +37,18 @@ final class HttpClient implements IHttpClient {
 
   /// Default headers for all requests
   static Map<String, dynamic> get _defaultHeaders => {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+  };
 
   /// Setup interceptors for logging and error handling
   void _setupInterceptors() {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          _logRequest(options);
           return handler.next(options);
         },
         onResponse: (response, handler) {
-          _logResponse(response);
           return handler.next(response);
         },
         onError: (error, handler) {
@@ -61,39 +59,13 @@ final class HttpClient implements IHttpClient {
     );
   }
 
-  /// Log request details (only in debug mode)
-  void _logRequest(RequestOptions options) {
-    if (kDebugMode) {
-      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      debugPrint('🌐 REQUEST [${options.method}] => ${options.uri}');
-      debugPrint('Headers: ${options.headers}');
-      if (options.data != null) {
-        debugPrint('Body: ${options.data}');
-      }
-      if (options.queryParameters.isNotEmpty) {
-        debugPrint('Query Parameters: ${options.queryParameters}');
-      }
-      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    }
-  }
-
-  /// Log response details (only in debug mode)
-  void _logResponse(Response response) {
-    if (kDebugMode) {
-      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      debugPrint(
-          '✅ RESPONSE [${response.statusCode}] => ${response.requestOptions.uri}');
-      debugPrint('Data: ${response.data}');
-      debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    }
-  }
-
   /// Log error details (only in debug mode)
   void _logError(DioException error) {
     if (kDebugMode) {
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       debugPrint(
-          '❌ ERROR [${error.response?.statusCode}] => ${error.requestOptions.uri}');
+        '❌ ERROR [${error.response?.statusCode}] => ${error.requestOptions.uri}',
+      );
       debugPrint('Type: ${error.type}');
       debugPrint('Message: ${error.message}');
       if (error.response != null) {
@@ -271,15 +243,18 @@ final class HttpClient implements IHttpClient {
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
         return NetworkException(
-            'Connection timeout. Please check your internet connection.');
+          'Connection timeout. Please check your internet connection.',
+        );
 
       case DioExceptionType.sendTimeout:
         return NetworkException(
-            'Send timeout. The request took too long to send.');
+          'Send timeout. The request took too long to send.',
+        );
 
       case DioExceptionType.receiveTimeout:
         return NetworkException(
-            'Receive timeout. The server took too long to respond.');
+          'Receive timeout. The server took too long to respond.',
+        );
 
       case DioExceptionType.badResponse:
         return _handleBadResponse(error);
@@ -289,7 +264,8 @@ final class HttpClient implements IHttpClient {
 
       case DioExceptionType.connectionError:
         return NetworkException(
-            'Connection error. Please check your internet connection.');
+          'Connection error. Please check your internet connection.',
+        );
 
       case DioExceptionType.unknown:
         return NetworkException('An unknown error occurred: ${error.message}');

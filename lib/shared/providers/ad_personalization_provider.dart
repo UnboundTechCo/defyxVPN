@@ -185,7 +185,9 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         '${_storageKey}_vpn_profile_setup',
         state.vpnProfileSetup,
       );
-      debugPrint('💾 Persisted ATT state: ${state.attStatus.name}, vpnProfileSetup=${state.vpnProfileSetup}');
+      debugPrint(
+        '💾 Persisted ATT state: ${state.attStatus.name}, vpnProfileSetup=${state.vpnProfileSetup}',
+      );
     } catch (e) {
       debugPrint('⚠️ Failed to persist ATT state: $e');
     }

@@ -1,15 +1,13 @@
+import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
-import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_info_dialog.dart';
-import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
-import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_trouble_dialog.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
-import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 
 final isLoggedInProvider = FutureProvider<bool>((ref) async {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -31,16 +29,6 @@ class SettingsPremiumWidget extends ConsumerWidget {
     this.onTapBefore,
   });
 
-  void _handleOpenLoginDialog(BuildContext context, WidgetRef ref) {
-    final connectionState = ref.read(connectionStateProvider);
-
-    if (connectionState.status == ConnectionStatus.connected) {
-      SettingsPremiumLoginDialog.show(context, ref);
-      return;
-    }
-    SettingsPremiumInfoDialog.show(context, ref);
-  }
-
   Widget _buildLoginButton(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final authState = ref.watch(authProvider);
@@ -49,13 +37,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
       loading: () => const CircularProgressIndicator(),
       error: (e, st) => Text(l10n.error),
       data: (authData) {
-        final defaultTapHandler = authData.isLoggedIn
-            ? () => SettingsPremiumTroubleDialog.show(
-                context,
-                ref,
-                authData.email,
-              )
-            : () => _handleOpenLoginDialog(context, ref);
+        void defaultTapHandler() => context.go(DefyxVPNRoutes.premium.route);
 
         return GestureDetector(
           behavior: HitTestBehavior.translucent,

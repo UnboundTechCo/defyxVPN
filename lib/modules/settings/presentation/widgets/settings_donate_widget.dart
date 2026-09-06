@@ -23,7 +23,8 @@ class SettingsDonateWidget extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => CustomWebViewScreen(url: url!, title: l10n.settingsDonation),
+        builder: (context) =>
+            CustomWebViewScreen(url: url!, title: l10n.settingsDonation),
       ),
     );
   }
@@ -31,7 +32,7 @@ class SettingsDonateWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return  Container(
+    return Container(
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.r),

@@ -4,6 +4,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -14,7 +15,6 @@ final pingLoadingProvider = StateProvider<bool>((ref) => false);
 final flagLoadingProvider = StateProvider<bool>((ref) => false);
 
 final pingProvider = StateProvider<String>((ref) => '0');
-
 final flagProvider = FutureProvider<String>((ref) async {
   final isLoading = ref.watch(flagLoadingProvider);
   final network = NetworkStatus();

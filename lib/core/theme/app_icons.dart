@@ -10,7 +10,8 @@ class AppIcons {
   static const String defyxErrorPath = 'assets/icons/defyx_error.svg';
 
   static const String wifiPath = 'assets/icons/wifi.svg';
-  static const String arrowLeftPath = 'assets/icons/arrow_left.svg';
+  static const String arrowRightPath = 'assets/icons/arrow-right.svg';
+  static const String arrowLeftPath = 'assets/icons/arrow-left.svg';
   static const String noWifiPath = 'assets/icons/no_wifi.svg';
   static const String shieldPath = 'assets/icons/chield.svg';
   static const String sharePath = 'assets/icons/share.svg';
@@ -34,6 +35,11 @@ class AppIcons {
   static const String premiumPath = 'assets/icons/premium.svg';
   static const String shopPath = 'assets/icons/shop.svg';
   static const String moneyPath = 'assets/icons/money.svg';
+  static const String userPath = 'assets/icons/user.svg';
+  static const String plansPath = 'assets/icons/plans.svg';
+  static const String walletPath = 'assets/icons/wallet.svg';
+  static const String applePath = 'assets/icons/apple.svg';
+  static const String crownPath = 'assets/icons/crown.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -63,8 +69,21 @@ class AppIcons {
     return SvgPicture.asset(wifiPath, width: width, height: height);
   }
 
-  static SvgPicture arrowLeft({double? width, double? height}) {
-    return SvgPicture.asset(arrowLeftPath, width: width, height: height);
+  static SvgPicture arrowRight({double? width, double? height}) {
+    return SvgPicture.asset(arrowRightPath, width: width, height: height);
+  }
+
+  static SvgPicture arrowLeft({
+    double? width,
+    double? height,
+    ColorFilter? colorFilter,
+  }) {
+    return SvgPicture.asset(
+      arrowLeftPath,
+      width: width,
+      height: height,
+      colorFilter: colorFilter,
+    );
   }
 
   static SvgPicture noWifi({double? width, double? height}) {
@@ -144,7 +163,11 @@ class AppIcons {
     return SvgPicture.asset(vpnCloudPath, width: width, height: height);
   }
 
-  static SvgPicture shop({double? width, double? height, ColorFilter? colorFilter}) {
+  static SvgPicture shop({
+    double? width,
+    double? height,
+    ColorFilter? colorFilter,
+  }) {
     return SvgPicture.asset(
       shopPath,
       width: width,
@@ -159,6 +182,23 @@ class AppIcons {
 
   static SvgPicture money({double? width, double? height}) {
     return SvgPicture.asset(moneyPath, width: width, height: height);
+  }
+
+  static SvgPicture crown({double? width, double? height}) {
+    return SvgPicture.asset(crownPath, width: width, height: height);
+  }
+
+  static SvgPicture user({
+    double? width,
+    double? height,
+    ColorFilter? colorFilter,
+  }) {
+    return SvgPicture.asset(
+      userPath,
+      width: width,
+      height: height,
+      colorFilter: colorFilter,
+    );
   }
 
   static Widget shieldAnime({

@@ -86,7 +86,9 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                       _rotationController.reset();
                     });
                   }
-                  await ref.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
+                  await ref
+                      .read(flowlineServiceProvider)
+                      .saveFlowline(offlineMode: false);
                   ref
                       .read(settingsProvider.notifier)
                       .updateSettingsBasedOnFlowLine();

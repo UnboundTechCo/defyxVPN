@@ -326,6 +326,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     if (_isWidgetVisibleInHorizontalScroll(_premiumWidgetKey)) {
       return true;
     } else {
+      if (Platform.isIOS) {
+        return true;
+      }
       _scrollToShowWidget(_premiumWidgetKey);
       return false;
     }

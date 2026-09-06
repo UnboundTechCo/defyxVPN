@@ -7,7 +7,7 @@ class HapticsNotifier extends StateNotifier<bool> {
   final SharedPreferences _prefs;
 
   HapticsNotifier(this._prefs)
-      : super(_prefs.getBool(_hapticsEnabledKey) ?? true);
+    : super(_prefs.getBool(_hapticsEnabledKey) ?? true);
 
   Future<void> setEnabled(bool enabled) async {
     await _prefs.setBool(_hapticsEnabledKey, enabled);

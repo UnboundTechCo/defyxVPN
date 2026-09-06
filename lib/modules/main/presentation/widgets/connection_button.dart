@@ -63,7 +63,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 2000)),
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 2000),
+      ),
     );
     _animationService.conditionalRepeat(_animationController, reverse: true);
 
@@ -77,7 +79,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
     _shieldLoadingController = AnimationController(
       vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 1500),
+      ),
     );
 
     _shieldRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -191,7 +195,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
     final hours = _seconds ~/ 3600;
     final minutes = (_seconds % 3600) ~/ 60;
     final seconds = _seconds % 60;
-    _formattedTime = "${hours.toString().padLeft(2, '0')}:"
+    _formattedTime =
+        "${hours.toString().padLeft(2, '0')}:"
         "${minutes.toString().padLeft(2, '0')}:"
         "${seconds.toString().padLeft(2, '0')}";
   }

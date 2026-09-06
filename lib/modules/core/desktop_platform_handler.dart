@@ -144,7 +144,9 @@ class DesktopPlatformHandler {
       try {
         container.read(trayConnectionToggleTriggerProvider.notifier).state++;
       } catch (e) {
-        debugPrint('DesktopPlatformHandler: Error triggering auto-connect - $e');
+        debugPrint(
+          'DesktopPlatformHandler: Error triggering auto-connect - $e',
+        );
       }
     }
   }
@@ -166,14 +168,18 @@ class DesktopPlatformHandler {
       status = arguments['status'] as String?;
     }
 
-    debugPrint('DesktopPlatformHandler: Connection status click - status: $status');
+    debugPrint(
+      'DesktopPlatformHandler: Connection status click - status: $status',
+    );
 
     final container = ProviderScope.containerOf(context);
     final connectionState = container.read(connectionStateProvider);
 
     if (connectionState.status == ConnectionStatus.analyzing ||
         connectionState.status == ConnectionStatus.loading) {
-      debugPrint('DesktopPlatformHandler: VPN is connecting, showing home screen only');
+      debugPrint(
+        'DesktopPlatformHandler: VPN is connecting, showing home screen only',
+      );
       return;
     }
 

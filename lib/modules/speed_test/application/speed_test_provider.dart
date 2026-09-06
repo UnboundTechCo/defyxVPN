@@ -15,10 +15,7 @@ import 'services/results_calculator_service.dart';
 import 'services/speed_measurement_config.dart';
 import 'services/upload_measurement_service.dart';
 
-enum SpeedTestErrorType {
-  testFailed,
-  connectionUnstable,
-}
+enum SpeedTestErrorType { testFailed, connectionUnstable }
 
 class SpeedTestState {
   final SpeedTestStep step;
@@ -69,10 +66,11 @@ class SpeedTestState {
   }
 }
 
-final speedTestProvider = StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
-  final httpClient = ref.read(httpClientProvider);
-  return SpeedTestNotifier(httpClient, ref);
-});
+final speedTestProvider =
+    StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
+      final httpClient = ref.read(httpClientProvider);
+      return SpeedTestNotifier(httpClient, ref);
+    });
 
 class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final IHttpClient _httpClient;
@@ -91,7 +89,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   final List<double> _uploadSpeeds = [];
   final List<int> _latencies = [];
 
-  SpeedTestNotifier(this._httpClient, this._ref) : super(const SpeedTestState()) {
+  SpeedTestNotifier(this._httpClient, this._ref)
+    : super(const SpeedTestState()) {
     final dio = (_httpClient as HttpClient).dio;
 
     dio.options.connectTimeout = SpeedMeasurementConfig.connectTimeout;
@@ -216,7 +215,9 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         debugPrint('🔍 Connection status during test: $status');
 
         if (!_isConnectionValid(status) && _isTestRunning()) {
-          debugPrint('🛑 Connection became invalid during speed test, stopping...');
+          debugPrint(
+            '🛑 Connection became invalid during speed test, stopping...',
+          );
           stopAndResetTest();
         }
       },
@@ -229,7 +230,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   }
 
   bool _isConnectionValid(ConnectionStatus status) {
-    return status == ConnectionStatus.disconnected || status == ConnectionStatus.connected;
+    return status == ConnectionStatus.disconnected ||
+        status == ConnectionStatus.connected;
   }
 
   bool _isTestRunning() {
@@ -283,7 +285,8 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       }
 
       debugPrint(
-          '📊 Running measurement ${i + 1}/${SpeedMeasurementConfig.totalMeasurements}: $type');
+        '📊 Running measurement ${i + 1}/${SpeedMeasurementConfig.totalMeasurements}: $type',
+      );
 
       switch (type) {
         case 'latency':
@@ -327,7 +330,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _latencies.addAll(service.latencies);
   }
 
-  Future<void> _runDownloadMeasurement(Map<String, dynamic> config, double progress) async {
+  Future<void> _runDownloadMeasurement(
+    Map<String, dynamic> config,
+    double progress,
+  ) async {
     final bytes = config['bytes'] as int;
     final sizeLabel = SpeedMeasurementConfig.formatBytes(bytes);
 
@@ -344,17 +350,18 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       onSpeedUpdate: (speed) {
         state = state.copyWith(currentSpeed: speed);
       },
-      onMetricsUpdate: (percentileSpeed, avgSpeed, currentPing, avgLatency, jitter) {
-        state = state.copyWith(
-          currentSpeed: avgSpeed,
-          result: state.result.copyWith(
-            downloadSpeed: percentileSpeed,
-            ping: currentPing,
-            latency: avgLatency,
-            jitter: jitter,
-          ),
-        );
-      },
+      onMetricsUpdate:
+          (percentileSpeed, avgSpeed, currentPing, avgLatency, jitter) {
+            state = state.copyWith(
+              currentSpeed: avgSpeed,
+              result: state.result.copyWith(
+                downloadSpeed: percentileSpeed,
+                ping: currentPing,
+                latency: avgLatency,
+                jitter: jitter,
+              ),
+            );
+          },
       latencies: _latencies,
     );
 
@@ -362,7 +369,10 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
     _downloadSpeeds.addAll(service.downloadSpeeds);
   }
 
-  Future<void> _runUploadMeasurement(Map<String, dynamic> config, double progress) async {
+  Future<void> _runUploadMeasurement(
+    Map<String, dynamic> config,
+    double progress,
+  ) async {
     final bytes = config['bytes'] as int;
     final sizeLabel = SpeedMeasurementConfig.formatBytes(bytes);
 
@@ -412,14 +422,13 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       testCompleted: true,
     );
 
-    _logger.logResults(
-      measurementId: _measurementId,
-      result: result,
-    );
+    _logger.logResults(measurementId: _measurementId, result: result);
   }
 
   void _checkConnectionStability() {
-    final isStable = ResultsCalculatorService.checkConnectionStability(state.result);
+    final isStable = ResultsCalculatorService.checkConnectionStability(
+      state.result,
+    );
 
     if (!isStable) {
       _alertService.error();

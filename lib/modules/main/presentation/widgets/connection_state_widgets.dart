@@ -140,11 +140,7 @@ class FlagIndicator extends ConsumerWidget {
   }
 
   Widget _errorFlag() {
-    return SvgPicture.asset(
-      'assets/flags/xx.svg',
-      width: 40.w,
-      height: 30.h,
-    );
+    return SvgPicture.asset('assets/flags/xx.svg', width: 40.w, height: 30.h);
   }
 }
 
@@ -253,50 +249,55 @@ class AnalyzingContent extends ConsumerWidget {
     final animationService = AnimationService();
     return Row(
       children: [
-        Consumer(builder: (context, ref, child) {
-          final deepScanEnabled =
-              ref.read(settingsProvider.notifier).isDeepScanEnabled();
+        Consumer(
+          builder: (context, ref, child) {
+            final deepScanEnabled = ref
+                .read(settingsProvider.notifier)
+                .isDeepScanEnabled();
 
-          final flowLineState = ref.watch(flowLineProvider);
-          final currentStep = flowLineState.step;
-          final totalSteps = deepScanEnabled ? "∞" : flowLineState.totalSteps;
+            final flowLineState = ref.watch(flowLineProvider);
+            final currentStep = flowLineState.step;
+            final totalSteps = deepScanEnabled ? "∞" : flowLineState.totalSteps;
 
-          if (totalSteps == 0 || currentStep == 0) {
-            return Shimmer.fromColors(
-              baseColor: const Color(0xFF4161A6),
-              highlightColor: const Color(0xFF23499C),
-              enabled: animationService.shouldAnimate(),
-              child: StepsPlaceholder(width: 40.w),
+            if (totalSteps == 0 || currentStep == 0) {
+              return Shimmer.fromColors(
+                baseColor: const Color(0xFF4161A6),
+                highlightColor: const Color(0xFF23499C),
+                enabled: animationService.shouldAnimate(),
+                child: StepsPlaceholder(width: 40.w),
+              );
+            }
+
+            return Row(
+              children: [
+                Text(
+                  "$currentStep/",
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                    color: const Color(0xFFA7A7A7),
+                    fontSize: 16.sp,
+                    fontFamily: AppTheme.fontFamily,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+                Text(
+                  "$totalSteps",
+                  textAlign: TextAlign.start,
+                  style: TextStyle(
+                    color: const Color(0xFFA7A7A7),
+                    fontSize: deepScanEnabled ? 24.sp : 16.sp,
+                    fontFamily: AppTheme.fontFamily,
+                    fontWeight: FontWeight.w400,
+                  ),
+                ),
+              ],
             );
-          }
-
-          return Row(children: [
-            Text(
-              "$currentStep/",
-              textAlign: TextAlign.start,
-              style: TextStyle(
-                color: const Color(0xFFA7A7A7),
-                fontSize: 16.sp,
-                fontFamily: AppTheme.fontFamily,
-                fontWeight: FontWeight.w300,
-              ),
-            ),
-            Text(
-              "$totalSteps",
-              textAlign: TextAlign.start,
-              style: TextStyle(
-                color: const Color(0xFFA7A7A7),
-                fontSize: deepScanEnabled ? 24.sp : 16.sp,
-                fontFamily: AppTheme.fontFamily,
-                fontWeight: FontWeight.w400,
-              ),
-            ),
-          ]);
-        }),
+          },
+        ),
         SizedBox(width: 10.w),
-        AppIcons.arrowLeft(width: 14.w, height: 14.h),
+        AppIcons.arrowRight(width: 14.w, height: 14.h),
         SizedBox(width: 10.w),
-        LoggerStatusWidget()
+        LoggerStatusWidget(),
       ],
     );
   }
@@ -310,18 +311,23 @@ class LoggerStatusWidget extends ConsumerWidget {
     final animationService = AnimationService();
     final loggerState = ref.watch(loggerStateProvider);
     final groupState = ref.watch(groupStateProvider);
-    final statusInfo =
-        _getLoggerStatusInfo(context, loggerState.status, groupState.groupName);
+    final statusInfo = _getLoggerStatusInfo(
+      context,
+      loggerState.status,
+      groupState.groupName,
+    );
 
     return AnimatedSize(
-      duration:
-          animationService.adjustDuration(const Duration(milliseconds: 300)),
+      duration: animationService.adjustDuration(
+        const Duration(milliseconds: 300),
+      ),
       curve: Curves.easeInOut,
       alignment: AlignmentDirectional.centerStart,
       child: TweenAnimationBuilder<double>(
         key: ValueKey<String>(statusInfo.text),
-        duration:
-            animationService.adjustDuration(const Duration(milliseconds: 350)),
+        duration: animationService.adjustDuration(
+          const Duration(milliseconds: 350),
+        ),
         tween: Tween<double>(begin: 0.0, end: 1.0),
         curve: Curves.easeInOut,
         builder: (context, value, child) {
@@ -357,10 +363,13 @@ class LoggerStatusWidget extends ConsumerWidget {
   }
 
   ({String text, Color color}) _getLoggerStatusInfo(
-      BuildContext context, LoggerStatus? status, String groupName) {
+    BuildContext context,
+    LoggerStatus? status,
+    String groupName,
+  ) {
     const defaultColor = Color(0xFFA7A7A7);
     final l10n = AppLocalizations.of(context);
-    
+
     switch (status) {
       case LoggerStatus.loading:
         return (text: 'LOADING', color: defaultColor);

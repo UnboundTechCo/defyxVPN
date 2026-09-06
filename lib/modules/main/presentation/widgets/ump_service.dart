@@ -9,7 +9,7 @@ class UmpService {
   UmpService([this._cacheService]);
 
   /// Request UMP consent flow
-  /// 
+  ///
   /// The caller (AdReadinessCoordinator) determines whether this should run
   /// based on ATT status and platform. This method just executes the UMP flow.
   Future<void> requestConsentWithATT({

@@ -74,7 +74,9 @@ class UmpConsentCacheService {
       );
 
       await _storage.writeMap(_cacheKey, cache.toJson());
-      debugPrint('💾 UMP consent cached: ${status.name}, canShowAds=$canShowAds');
+      debugPrint(
+        '💾 UMP consent cached: ${status.name}, canShowAds=$canShowAds',
+      );
     } catch (e) {
       debugPrint('❌ Failed to cache UMP consent: $e');
     }
@@ -90,7 +92,7 @@ class UmpConsentCacheService {
       }
 
       final cache = ConsentCache.fromJson(json);
-      
+
       if (!cache.isValid) {
         debugPrint('⏰ Cached UMP consent expired (${cache.ageInMinutes}m old)');
         await clearCache();
@@ -124,14 +126,14 @@ class UmpConsentCacheService {
 
     // Skip if consent already obtained or not required
     return cache.status == ConsentStatus.obtained ||
-           cache.status == ConsentStatus.notRequired;
+        cache.status == ConsentStatus.notRequired;
   }
 
   /// Get cached ad show permission (fast path)
   Future<bool?> getCachedCanShowAds() async {
     final cache = await loadCachedConsentStatus();
     if (cache == null || !cache.isValid) return null;
-    
+
     return cache.canShowAds;
   }
 

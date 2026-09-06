@@ -6,6 +6,7 @@ import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
+import '../../modules/premium/presentation/screens/premium_screen.dart';
 import '../../shared/layout/navbar/defyx_navbar.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
@@ -14,7 +15,8 @@ enum DefyxVPNRoutes {
   splash("/splash"),
   main("/main"),
   settings("/settings"),
-  speedTest("/speedTest");
+  speedTest("/speedTest"),
+  premium("/premium");
 
   final String route;
   const DefyxVPNRoutes(this.route);
@@ -42,27 +44,19 @@ Widget _buildSlideTransition(
   }
 
   final slideAnimation = animation.drive(
-    Tween(begin: beginOffset, end: Offset.zero).chain(
-      CurveTween(curve: curve),
-    ),
+    Tween(begin: beginOffset, end: Offset.zero).chain(CurveTween(curve: curve)),
   );
 
   final slideOutAnimation = secondaryAnimation.drive(
-    Tween(begin: Offset.zero, end: endOffset).chain(
-      CurveTween(curve: curve),
-    ),
+    Tween(begin: Offset.zero, end: endOffset).chain(CurveTween(curve: curve)),
   );
 
   final fadeAnimation = animation.drive(
-    Tween(begin: 0.0, end: 1.0).chain(
-      CurveTween(curve: curve),
-    ),
+    Tween(begin: 0.0, end: 1.0).chain(CurveTween(curve: curve)),
   );
 
   final fadeOutAnimation = secondaryAnimation.drive(
-    Tween(begin: 1.0, end: 0.0).chain(
-      CurveTween(curve: curve),
-    ),
+    Tween(begin: 1.0, end: 0.0).chain(CurveTween(curve: curve)),
   );
 
   return Stack(
@@ -76,10 +70,7 @@ Widget _buildSlideTransition(
       ),
       Transform.translate(
         offset: slideAnimation.value,
-        child: Opacity(
-          opacity: fadeAnimation.value,
-          child: child,
-        ),
+        child: Opacity(opacity: fadeAnimation.value, child: child),
       ),
     ],
   );
@@ -97,12 +88,12 @@ CustomTransitionPage<void> _createPageAnimation(
     reverseTransitionDuration: const Duration(milliseconds: 280),
     transitionsBuilder: (context, animation, secondaryAnimation, child) =>
         _buildSlideTransition(
-      context,
-      animation,
-      secondaryAnimation,
-      child,
-      direction,
-    ),
+          context,
+          animation,
+          secondaryAnimation,
+          child,
+          direction,
+        ),
   );
 }
 
@@ -159,6 +150,14 @@ final routerProvider = Provider<GoRouter>((ref) {
               SlideDirection.leftToRight,
             ),
           ),
+          GoRoute(
+            path: DefyxVPNRoutes.premium.route,
+            pageBuilder: (context, state) => _createPageAnimation(
+              const PremiumScreen(),
+              state.pageKey,
+              SlideDirection.rightToLeft,
+            ),
+          ),
         ],
       ),
     ],
@@ -167,7 +166,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 final routeInformationProvider =
     ChangeNotifierProvider<GoRouteInformationProvider>(
-        (ref) => ref.watch(routerProvider).routeInformationProvider);
+      (ref) => ref.watch(routerProvider).routeInformationProvider,
+    );
 
-final currentRouteProvider =
-    Provider((ref) => ref.watch(routeInformationProvider).value.uri.toString());
+final currentRouteProvider = Provider(
+  (ref) => ref.watch(routeInformationProvider).value.uri.toString(),
+);
