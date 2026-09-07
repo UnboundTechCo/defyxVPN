@@ -2,6 +2,7 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/account_screen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/plans_screen.dart';
+import 'package:defyx_vpn/modules/premium/presentation/screens/support_screeen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/wallet_screen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_tab_bar.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
@@ -107,6 +108,8 @@ class PremiumScreen extends ConsumerWidget {
         return const PlansScreen();
       case PremiumTab.wallet:
         return const WalletScreen();
+      case PremiumTab.support:
+        return const SupportScreen();
     }
   }
 }

@@ -10,6 +10,7 @@ _$PlansResponseImpl _$$PlansResponseImplFromJson(Map<String, dynamic> json) =>
     _$PlansResponseImpl(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String,
+      description: json['description'] as String,
       duration_days: (json['duration_days'] as num).toInt(),
       bandwidth_limit: (json['bandwidth_limit'] as num).toInt(),
       price: (json['price'] as num).toDouble(),
@@ -19,6 +20,7 @@ Map<String, dynamic> _$$PlansResponseImplToJson(_$PlansResponseImpl instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
+      'description': instance.description,
       'duration_days': instance.duration_days,
       'bandwidth_limit': instance.bandwidth_limit,
       'price': instance.price,

@@ -8,6 +8,7 @@ class PlansResponse with _$PlansResponse {
   const factory PlansResponse({
     @JsonKey(name: "id") required int id,
     @JsonKey(name: "name") required String name,
+    @JsonKey(name: "description") required String description,
     @JsonKey(name: "duration_days") required int duration_days,
     @JsonKey(name: "bandwidth_limit") required int bandwidth_limit,
     @JsonKey(name: "price") required double price,

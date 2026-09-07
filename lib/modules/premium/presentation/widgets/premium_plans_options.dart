@@ -5,7 +5,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/modules/premium/providers/selected_plan_provider.dart';
 
 class PremiumPlanSelect extends ConsumerWidget {
-  const PremiumPlanSelect({super.key});
+  final VoidCallback navigateToDetails;
+
+  const PremiumPlanSelect({super.key, required this.navigateToDetails});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -109,10 +111,15 @@ class PremiumPlanSelect extends ConsumerWidget {
           SizedBox(height: 32.h),
           AppButton(
             label: 'Choose',
-            onPressed: () {},
+            onPressed: navigateToDetails,
             variant: AppButtonVariant.outline,
             round: AppButtonRound.circle,
             size: AppButtonSize.medium,
+            isLoading: plans.when(
+              data: (data) => false,
+              loading: () => true,
+              error: (error, stackTrace) => false,
+            ),
           ),
           SizedBox(height: 20.h),
         ],

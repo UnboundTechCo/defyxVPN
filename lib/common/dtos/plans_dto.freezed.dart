@@ -25,6 +25,8 @@ mixin _$PlansResponse {
   int get id => throw _privateConstructorUsedError;
   @JsonKey(name: "name")
   String get name => throw _privateConstructorUsedError;
+  @JsonKey(name: "description")
+  String get description => throw _privateConstructorUsedError;
   @JsonKey(name: "duration_days")
   int get duration_days => throw _privateConstructorUsedError;
   @JsonKey(name: "bandwidth_limit")
@@ -52,6 +54,7 @@ abstract class $PlansResponseCopyWith<$Res> {
   $Res call({
     @JsonKey(name: "id") int id,
     @JsonKey(name: "name") String name,
+    @JsonKey(name: "description") String description,
     @JsonKey(name: "duration_days") int duration_days,
     @JsonKey(name: "bandwidth_limit") int bandwidth_limit,
     @JsonKey(name: "price") double price,
@@ -75,6 +78,7 @@ class _$PlansResponseCopyWithImpl<$Res, $Val extends PlansResponse>
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? description = null,
     Object? duration_days = null,
     Object? bandwidth_limit = null,
     Object? price = null,
@@ -88,6 +92,10 @@ class _$PlansResponseCopyWithImpl<$Res, $Val extends PlansResponse>
             name: null == name
                 ? _value.name
                 : name // ignore: cast_nullable_to_non_nullable
+                      as String,
+            description: null == description
+                ? _value.description
+                : description // ignore: cast_nullable_to_non_nullable
                       as String,
             duration_days: null == duration_days
                 ? _value.duration_days
@@ -119,6 +127,7 @@ abstract class _$$PlansResponseImplCopyWith<$Res>
   $Res call({
     @JsonKey(name: "id") int id,
     @JsonKey(name: "name") String name,
+    @JsonKey(name: "description") String description,
     @JsonKey(name: "duration_days") int duration_days,
     @JsonKey(name: "bandwidth_limit") int bandwidth_limit,
     @JsonKey(name: "price") double price,
@@ -141,6 +150,7 @@ class __$$PlansResponseImplCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? name = null,
+    Object? description = null,
     Object? duration_days = null,
     Object? bandwidth_limit = null,
     Object? price = null,
@@ -154,6 +164,10 @@ class __$$PlansResponseImplCopyWithImpl<$Res>
         name: null == name
             ? _value.name
             : name // ignore: cast_nullable_to_non_nullable
+                  as String,
+        description: null == description
+            ? _value.description
+            : description // ignore: cast_nullable_to_non_nullable
                   as String,
         duration_days: null == duration_days
             ? _value.duration_days
@@ -178,6 +192,7 @@ class _$PlansResponseImpl implements _PlansResponse {
   const _$PlansResponseImpl({
     @JsonKey(name: "id") required this.id,
     @JsonKey(name: "name") required this.name,
+    @JsonKey(name: "description") required this.description,
     @JsonKey(name: "duration_days") required this.duration_days,
     @JsonKey(name: "bandwidth_limit") required this.bandwidth_limit,
     @JsonKey(name: "price") required this.price,
@@ -193,6 +208,9 @@ class _$PlansResponseImpl implements _PlansResponse {
   @JsonKey(name: "name")
   final String name;
   @override
+  @JsonKey(name: "description")
+  final String description;
+  @override
   @JsonKey(name: "duration_days")
   final int duration_days;
   @override
@@ -204,7 +222,7 @@ class _$PlansResponseImpl implements _PlansResponse {
 
   @override
   String toString() {
-    return 'PlansResponse(id: $id, name: $name, duration_days: $duration_days, bandwidth_limit: $bandwidth_limit, price: $price)';
+    return 'PlansResponse(id: $id, name: $name, description: $description, duration_days: $duration_days, bandwidth_limit: $bandwidth_limit, price: $price)';
   }
 
   @override
@@ -214,6 +232,8 @@ class _$PlansResponseImpl implements _PlansResponse {
             other is _$PlansResponseImpl &&
             (identical(other.id, id) || other.id == id) &&
             (identical(other.name, name) || other.name == name) &&
+            (identical(other.description, description) ||
+                other.description == description) &&
             (identical(other.duration_days, duration_days) ||
                 other.duration_days == duration_days) &&
             (identical(other.bandwidth_limit, bandwidth_limit) ||
@@ -223,8 +243,15 @@ class _$PlansResponseImpl implements _PlansResponse {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode =>
-      Object.hash(runtimeType, id, name, duration_days, bandwidth_limit, price);
+  int get hashCode => Object.hash(
+    runtimeType,
+    id,
+    name,
+    description,
+    duration_days,
+    bandwidth_limit,
+    price,
+  );
 
   /// Create a copy of PlansResponse
   /// with the given fields replaced by the non-null parameter values.
@@ -244,6 +271,7 @@ abstract class _PlansResponse implements PlansResponse {
   const factory _PlansResponse({
     @JsonKey(name: "id") required final int id,
     @JsonKey(name: "name") required final String name,
+    @JsonKey(name: "description") required final String description,
     @JsonKey(name: "duration_days") required final int duration_days,
     @JsonKey(name: "bandwidth_limit") required final int bandwidth_limit,
     @JsonKey(name: "price") required final double price,
@@ -258,6 +286,9 @@ abstract class _PlansResponse implements PlansResponse {
   @override
   @JsonKey(name: "name")
   String get name;
+  @override
+  @JsonKey(name: "description")
+  String get description;
   @override
   @JsonKey(name: "duration_days")
   int get duration_days;

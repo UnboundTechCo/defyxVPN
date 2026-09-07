@@ -62,6 +62,13 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               PremiumTab.wallet,
               !_isLoggedIn,
             ),
+            SizedBox(width: 24.w),
+            _buildTabButton(
+              AppIcons.supportPath,
+              'SUPPORT',
+              PremiumTab.support,
+              !_isLoggedIn,
+            ),
           ],
         ),
       ),

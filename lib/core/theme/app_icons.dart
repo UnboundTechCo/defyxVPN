@@ -40,6 +40,7 @@ class AppIcons {
   static const String walletPath = 'assets/icons/wallet.svg';
   static const String applePath = 'assets/icons/apple.svg';
   static const String crownPath = 'assets/icons/crown.svg';
+  static const String supportPath = 'assets/icons/support.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
