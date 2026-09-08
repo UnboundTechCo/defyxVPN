@@ -1,5 +1,7 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PremiumWalletView extends StatefulWidget {
@@ -8,17 +10,24 @@ class PremiumWalletView extends StatefulWidget {
     required this.balance,
     required this.showTopUpForm,
     required this.isLoading,
+    required this.ref,
   });
 
   final double balance;
   final VoidCallback showTopUpForm;
   final bool isLoading;
+  final WidgetRef ref;
 
   @override
   State<PremiumWalletView> createState() => _PremiumWalletViewState();
 }
 
 class _PremiumWalletViewState extends State<PremiumWalletView> {
+  Future<void> _refetchBalance(WidgetRef ref) async {
+    ref.invalidate(balanceProvider);
+    await ref.read(balanceProvider.future);
+  }
+
   @override
   Widget build(BuildContext context) {
     final symbol = '\$';
@@ -89,7 +98,7 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                           SizedBox(width: 12.w),
                           GestureDetector(
                             onTap: () {
-                              // Refresh wallet balance here.
+                              _refetchBalance(widget.ref);
                             },
                             child: Container(
                               width: 40.w,

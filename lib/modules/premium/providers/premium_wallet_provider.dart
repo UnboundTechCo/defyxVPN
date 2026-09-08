@@ -6,7 +6,7 @@ final balanceProvider = FutureProvider<double>((ref) async {
   try {
     final response = await premiumService.getBalance();
     return response.balance;
-  } catch (e) {
+  } catch (_) {
     return 0;
   }
 });

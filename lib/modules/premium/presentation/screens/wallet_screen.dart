@@ -32,12 +32,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
           balance: balance,
           isLoading: false,
           showTopUpForm: () => setState(() => _showTopUpForm = true),
+          ref: ref,
         );
       },
       loading: () => PremiumWalletView(
         balance: 0.0,
         isLoading: true,
         showTopUpForm: () => setState(() => _showTopUpForm = true),
+        ref: ref,
       ),
       error: (error, stack) => Center(
         child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
