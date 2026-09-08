@@ -90,12 +90,30 @@ class PremiumApiService {
     }
   }
 
+  Future<void> subscribeToPlan(int planId) async {
+    try {
+      final response = await _dio.post(
+        '/subscription/subscribe-app-with-balance/',
+        data: {'subscription_plan_id': planId},
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to subscribe to the plan.');
+      }
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// Handle errors and convert to user-friendly messages
   Exception _handleError(DioException error) {
     if (error.response?.statusCode == 401) {
       return Exception('Token expired. Please log in again.');
     } else if (error.response?.statusCode == 404) {
       return Exception('Resource not found.');
+    } else if (error.response?.statusCode == 500) {
+    } else if (error.response?.statusCode == 403) {
+      return Exception(error.response?.data['message'] ?? 'Access denied.');
     } else if (error.response?.statusCode == 500) {
       return Exception('Server error. Please try again later.');
     } else if (error.type == DioExceptionType.connectionTimeout ||
@@ -105,6 +123,6 @@ class PremiumApiService {
     } else if (error.type == DioExceptionType.connectionError) {
       return Exception('Connection error. Please check your network.');
     }
-    return Exception('An error occurred: ${error.message}');
+    return Exception('An error occurred: ${error.response}');
   }
 }

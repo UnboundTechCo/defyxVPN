@@ -1,21 +1,30 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/dashed_divider.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
+import 'package:defyx_vpn/core/config/api_config.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PremiumPlanDetails extends StatefulWidget {
   final PlansResponse plan;
+  final WidgetRef ref;
+  final VoidCallback onPaymentSuccess;
 
-  const PremiumPlanDetails({super.key, required this.plan});
+  const PremiumPlanDetails({
+    super.key,
+    required this.plan,
+    required this.ref,
+    required this.onPaymentSuccess,
+  });
 
   @override
   State<PremiumPlanDetails> createState() => _PremiumPlanDetailsState();
 }
 
 class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
-  String? _selectedPaymentMethod;
-
+  bool _isLoading = false;
   @override
   Widget build(BuildContext context) {
     final plan = widget.plan;
@@ -48,6 +57,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
                 variant: AppButtonVariant.blue,
                 round: AppButtonRound.circle,
                 size: AppButtonSize.medium,
+                isLoading: _isLoading,
               ),
             ],
           ),
@@ -116,52 +126,25 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
   }
 
   Future<void> _handlePayNow() async {
-    // Call your payment API here, then show success.
-    if (!mounted) return;
-
-    showDialog<void>(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: const Color(0xFF4CAF7F),
-                size: 64.w,
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                'Payment Successful',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Your subscription has been activated',
-                style: TextStyle(color: Colors.grey, fontSize: 13.sp),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24.h),
-              AppButton(
-                label: 'Continue',
-                onPressed: () {},
-                variant: AppButtonVariant.primary,
-                round: AppButtonRound.circle,
-              ),
-            ],
-          ),
-        ),
-      ),
+    setState(() {
+      _isLoading = true;
+    });
+    final premiumService = await widget.ref.watch(
+      premiumApiServiceProvider.future,
     );
+    await premiumService
+        .subscribeToPlan(widget.plan.id)
+        .then((_) {
+          ToastUtil.showToast('Successfully subscribed to the plan!');
+          widget.onPaymentSuccess();
+        })
+        .whenComplete(() {
+          setState(() {
+            _isLoading = false;
+          });
+        })
+        .catchError((error) {
+          ToastUtil.showToast(error.toString());
+        });
   }
 }
