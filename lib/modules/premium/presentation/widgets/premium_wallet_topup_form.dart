@@ -180,7 +180,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
               _buildAmountPicker(),
               SizedBox(height: 24.h),
               AppButton(
-                label: 'Pay Now',
+                label: 'Pay via Apple Pay',
                 onPressed: _handleTopUpPayment,
                 variant: AppButtonVariant.blue,
                 size: AppButtonSize.medium,

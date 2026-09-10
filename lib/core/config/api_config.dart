@@ -118,8 +118,8 @@ class PremiumApiService {
         '/iap/verify',
         data: <String, dynamic>{
           'platform': Platform.isIOS ? 'ios' : 'android',
-          'productId': purchase.productID,
-          'verificationData': proof,
+          'product_id': purchase.productID,
+          'verification_data': proof,
         },
       );
 
