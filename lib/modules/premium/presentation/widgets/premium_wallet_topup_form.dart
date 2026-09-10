@@ -1,12 +1,9 @@
 import 'package:defyx_vpn/common/components/button.dart';
-import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/purchase/purchase_service.dart';
-import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class PremiumTopUp extends StatefulWidget {
   const PremiumTopUp({
@@ -25,12 +22,11 @@ class PremiumTopUp extends StatefulWidget {
 }
 
 class _PremiumTopUpState extends State<PremiumTopUp> {
-  final _amountController = TextEditingController();
-  String _selectedPaymentMethod = 'Apple Pay';
+  final List<double> _amountOptions = [1, 2, 3, 5, 10];
+  double? _selectedAmount;
 
   @override
   void dispose() {
-    _amountController.dispose();
     super.dispose();
   }
 
@@ -40,7 +36,14 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
   }
 
   Future<void> _handleTopUpPayment() async {
-    final amount = double.tryParse(_amountController.text);
+    if (_selectedAmount == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please select an amount')));
+      return;
+    }
+
+    final amount = _selectedAmount;
     final purchaseService = BalancePurchaseService(
       ref: widget.ref,
       productIds: const {
@@ -94,7 +97,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 onPressed: () {
                   Navigator.pop(context);
                   widget.closeTopUpForm();
-                  _amountController.clear();
+                  setState(() => _selectedAmount = null);
                 },
                 variant: AppButtonVariant.primary,
                 size: AppButtonSize.medium,
@@ -106,55 +109,49 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
     );
   }
 
-  Widget _buildPaymentButton(String method, String icon) {
-    final isSelected = _selectedPaymentMethod == method;
-
-    return GestureDetector(
-      onTap: () => setState(() => _selectedPaymentMethod = method),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 14.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8.r),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xFF2563EB)
-                : Colors.grey.withValues(alpha: 0.3),
-          ),
-          color: isSelected
-              ? const Color(0xFF2563EB).withValues(alpha: 0.1)
-              : Colors.transparent,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              icon,
-              width: 24.w,
-              height: 24.w,
-              colorFilter: ColorFilter.mode(
-                isSelected ? const Color(0xFF2563EB) : Colors.black,
-                BlendMode.srcIn,
-              ),
-            ),
-            SizedBox(width: 8.w),
-            Text(
-              method,
-              style: TextStyle(
-                color: isSelected ? const Color(0xFF2563EB) : Colors.black,
-                fontSize: 11.sp,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPaymentMethods() {
+  Widget _buildAmountPicker() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [_buildPaymentButton('Apple Pay', AppIcons.applePath)],
+      children: [
+        Wrap(
+          spacing: 12.w,
+          runSpacing: 12.h,
+          children: _amountOptions.map((amount) {
+            final isSelected = _selectedAmount == amount;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedAmount = amount),
+              child: Container(
+                width: 100.w,
+                height: 80.h,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12.r),
+                  border: Border.all(
+                    color: isSelected
+                        ? const Color(0xFF2563EB)
+                        : Colors.grey.withValues(alpha: 0.3),
+                    width: isSelected ? 2 : 1,
+                  ),
+                  color: isSelected
+                      ? const Color(0xFF2563EB).withValues(alpha: 0.1)
+                      : Colors.white,
+                ),
+                child: Center(
+                  child: Text(
+                    '\$${amount.toInt()}',
+                    style: TextStyle(
+                      color: isSelected
+                          ? const Color(0xFF2563EB)
+                          : Colors.black,
+                      fontSize: 28.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
     );
   }
 
@@ -169,37 +166,15 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Please enter the wallet top-up amount:',
+                'Please select the wallet top-up amount:',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 30.sp,
                   fontWeight: FontWeight.w300,
                 ),
               ),
-              SizedBox(height: 16.h),
-              Row(
-                children: [
-                  Text(
-                    "\$",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 34.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Expanded(
-                    child: AppTextField(
-                      controller: _amountController,
-                      hintText: '100.00',
-                      variant: AppTextFieldVariant.standard,
-                      size: AppTextFieldSize.large,
-                      keyboardType: TextInputType.numberWithOptions(),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: 32.h),
-              _buildPaymentMethods(),
+              SizedBox(height: 24.h),
+              _buildAmountPicker(),
               SizedBox(height: 24.h),
               AppButton(
                 label: 'Pay Now',

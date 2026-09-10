@@ -50,7 +50,7 @@ class BalancePurchaseService extends ChangeNotifier {
       }
 
       await Future.wait(<Future<void>>[
-        loadProducts(),
+        _loadProducts(),
         Future<void>.sync(_refreshBalance),
       ]);
     } catch (error) {
@@ -61,7 +61,7 @@ class BalancePurchaseService extends ChangeNotifier {
     }
   }
 
-  Future<void> loadProducts() async {
+  Future<void> _loadProducts() async {
     final response = await _store.queryProductDetails(productIds);
 
     if (response.error != null) {
