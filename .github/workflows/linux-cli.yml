@@ -1,0 +1,58 @@
+name: Linux CLI
+
+on:
+  pull_request:
+    branches:
+      - dev
+    paths:
+      - ".github/workflows/linux-cli.yml"
+      - "linux/cli/**"
+      - "linux/runner/defyx_core.cpp"
+      - "linux/runner/defyx_core.h"
+      - "pubspec.yaml"
+  push:
+    branches:
+      - dev
+    paths:
+      - ".github/workflows/linux-cli.yml"
+      - "linux/cli/**"
+      - "linux/runner/defyx_core.cpp"
+      - "linux/runner/defyx_core.h"
+      - "pubspec.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            cmake \
+            ninja-build \
+            pkg-config \
+            libjson-c-dev
+
+      - name: Configure
+        run: |
+          cmake -S linux/cli -B build/linux-cli -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON
+
+      - name: Build
+        run: cmake --build build/linux-cli
+
+      - name: Test
+        run: ctest --test-dir build/linux-cli --output-on-failure
+
+      - name: Smoke test
+        run: |
+          build/linux-cli/bin/defyxvpn-cli --version
+          build/linux-cli/bin/defyxvpn-cli --help

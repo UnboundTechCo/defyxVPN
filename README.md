@@ -61,6 +61,15 @@ This will:
 - Clean pub cache
 - Build the IPA file
 
+### Headless Linux
+
+DefyxVPN also includes a terminal-only Linux client for servers, SSH sessions,
+containers, and systemd. It uses the same DXcore integration without requiring
+Flutter, GTK, a system tray, or a display server.
+
+Build instructions and service examples are available in
+[`linux/cli/README.md`](linux/cli/README.md).
+
 ## Usage
 
 1. Launch the app
