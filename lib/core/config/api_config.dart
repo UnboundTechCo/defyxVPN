@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/common/dtos/balance_dto.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:dio/dio.dart';
@@ -5,6 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 
 /// Provider for the Telegram API service
 final premiumApiServiceProvider =
@@ -105,7 +108,27 @@ class PremiumApiService {
     }
   }
 
-  /// Handle errors and convert to user-friendly messages
+  Future<Response<Map<String, dynamic>>> verifyAndCredit(
+    PurchaseDetails purchase,
+  ) async {
+    final proof = purchase.verificationData.serverVerificationData;
+
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/iap/verify',
+        data: <String, dynamic>{
+          'platform': Platform.isIOS ? 'ios' : 'android',
+          'productId': purchase.productID,
+          'verificationData': proof,
+        },
+      );
+
+      return response;
+    } catch (error) {
+      rethrow;
+    }
+  }
+
   Exception _handleError(DioException error) {
     if (error.response?.statusCode == 401) {
       return Exception('Token expired. Please log in again.');

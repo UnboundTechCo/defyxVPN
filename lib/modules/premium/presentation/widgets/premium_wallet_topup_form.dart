@@ -1,6 +1,8 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
+import 'package:defyx_vpn/core/purchase/purchase_service.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -32,18 +34,28 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
     super.dispose();
   }
 
+  Future<void> refreshBalance() async {
+    widget.ref.invalidate(balanceProvider);
+    await widget.ref.read(balanceProvider.future);
+  }
+
   Future<void> _handleTopUpPayment() async {
     final amount = double.tryParse(_amountController.text);
-    if (amount == null || amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter a valid amount'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
+    final purchaseService = BalancePurchaseService(
+      ref: widget.ref,
+      productIds: const {
+        'de.unboundtech.defyxvpn.balance.1',
+        'de.unboundtech.defyxvpn.balance.2',
+        'de.unboundtech.defyxvpn.balance.3',
+        'de.unboundtech.defyxvpn.balance.5',
+        'de.unboundtech.defyxvpn.balance.10',
+      },
+      refreshBalance: refreshBalance,
+    );
+    await purchaseService.initialize();
+    await purchaseService.purchase('de.unboundtech.defyxvpn.balance.$amount');
 
+    if (!mounted) return;
     showDialog(
       context: context,
       builder: (context) => Dialog(
