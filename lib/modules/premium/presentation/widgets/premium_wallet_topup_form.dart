@@ -24,6 +24,7 @@ class PremiumTopUp extends StatefulWidget {
 class _PremiumTopUpState extends State<PremiumTopUp> {
   final List<double> _amountOptions = [1, 2, 3, 5, 10];
   double? _selectedAmount;
+  bool _isProcessing = false;
 
   @override
   void dispose() {
@@ -42,6 +43,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
       ).showSnackBar(const SnackBar(content: Text('Please select an amount')));
       return;
     }
+    setState(() => _isProcessing = true);
 
     final amount = _selectedAmount;
     final purchaseService = BalancePurchaseService(
@@ -107,6 +109,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
         ),
       ),
     );
+    setState(() => _isProcessing = false);
   }
 
   Widget _buildAmountPicker() {
@@ -182,6 +185,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 variant: AppButtonVariant.blue,
                 size: AppButtonSize.medium,
                 round: AppButtonRound.circle,
+                isLoading: _isProcessing,
               ),
               SizedBox(height: 16.h),
               AppButton(
@@ -190,6 +194,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 variant: AppButtonVariant.tertiary,
                 size: AppButtonSize.medium,
                 round: AppButtonRound.circle,
+                isLoading: _isProcessing,
               ),
             ],
           ),
