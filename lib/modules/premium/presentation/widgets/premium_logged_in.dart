@@ -85,6 +85,9 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
       );
       await premiumApi.deleteAccount();
       await widget.ref.read(authProvider.notifier).logout();
+      await widget.ref
+          .read(flowlineServiceProvider)
+          .saveFlowline(offlineMode: false, forceUpdate: true);
 
       if (!mounted) return;
       ToastUtil.showToast(l10n.deleteAccountSuccess);

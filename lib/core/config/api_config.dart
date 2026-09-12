@@ -112,7 +112,7 @@ class PremiumApiService {
 
   Future<void> deleteAccount() async {
     try {
-      await _dio.delete(accountDeletionPath);
+      await _dio.delete("/customer/delete-account");
     } on DioException catch (e) {
       throw _handleError(e);
     }
