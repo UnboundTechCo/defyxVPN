@@ -373,6 +373,22 @@ class AppLocalizationsFa extends AppLocalizations {
   String get signOutSuccess => 'خروج موفقیت‌آمیز بود!';
 
   @override
+  String get cancel => 'لغو';
+
+  @override
+  String get deleteAccount => 'حذف حساب کاربری';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'این کار حساب شما را برای همیشه حذف می‌کند و قابل بازگشت نیست. ادامه می‌دهید؟';
+
+  @override
+  String get deleteAccountSuccess => 'حساب کاربری با موفقیت حذف شد.';
+
+  @override
+  String get deleteAccountFailed => 'حذف حساب کاربری ناموفق بود';
+
+  @override
   String get settingsMarketplace => 'فروشگاه';
 
   @override

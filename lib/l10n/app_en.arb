@@ -591,6 +591,31 @@
     "description": "Sign out success toast message"
   },
 
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel action"
+  },
+
+  "deleteAccount": "Delete account",
+  "@deleteAccount": {
+    "description": "Permanent account deletion action"
+  },
+
+  "deleteAccountConfirmation": "This permanently deletes your account and cannot be undone. Continue?",
+  "@deleteAccountConfirmation": {
+    "description": "Permanent account deletion confirmation"
+  },
+
+  "deleteAccountSuccess": "Account deleted successfully.",
+  "@deleteAccountSuccess": {
+    "description": "Account deletion success message"
+  },
+
+  "deleteAccountFailed": "Account deletion failed",
+  "@deleteAccountFailed": {
+    "description": "Account deletion failure message"
+  },
+
   "settingsMarketplace": "Marketplace",
   "@settingsMarketplace": {
     "description": "Premium widget - marketplace title"

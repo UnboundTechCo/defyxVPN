@@ -29,6 +29,8 @@ class PremiumApiServiceNotifier extends AsyncNotifier<PremiumApiService> {
 
 /// Premium backend API service using Dio
 class PremiumApiService {
+  static const accountDeletionPath = '/customer/delete/';
+
   late final Dio _dio;
   final String baseUrl;
   final String? token;
@@ -103,6 +105,14 @@ class PremiumApiService {
       if (response.statusCode != 201) {
         throw Exception('Failed to subscribe to the plan.');
       }
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteAccount() async {
+    try {
+      await _dio.delete(accountDeletionPath);
     } on DioException catch (e) {
       throw _handleError(e);
     }

@@ -375,6 +375,22 @@ class AppLocalizationsRu extends AppLocalizations {
   String get signOutSuccess => 'Выход выполнен успешно!';
 
   @override
+  String get cancel => 'Отмена';
+
+  @override
+  String get deleteAccount => 'Удалить аккаунт';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'Ваш аккаунт будет удален навсегда. Это действие нельзя отменить. Продолжить?';
+
+  @override
+  String get deleteAccountSuccess => 'Аккаунт успешно удален.';
+
+  @override
+  String get deleteAccountFailed => 'Не удалось удалить аккаунт';
+
+  @override
   String get settingsMarketplace => 'Маркетплейс';
 
   @override

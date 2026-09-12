@@ -804,6 +804,36 @@ abstract class AppLocalizations {
   /// **'Signed out successfully!'**
   String get signOutSuccess;
 
+  /// Cancel action
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get cancel;
+
+  /// Permanent account deletion action
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get deleteAccount;
+
+  /// Permanent account deletion confirmation
+  ///
+  /// In en, this message translates to:
+  /// **'This permanently deletes your account and cannot be undone. Continue?'**
+  String get deleteAccountConfirmation;
+
+  /// Account deletion success message
+  ///
+  /// In en, this message translates to:
+  /// **'Account deleted successfully.'**
+  String get deleteAccountSuccess;
+
+  /// Account deletion failure message
+  ///
+  /// In en, this message translates to:
+  /// **'Account deletion failed'**
+  String get deleteAccountFailed;
+
   /// Premium widget - marketplace title
   ///
   /// In en, this message translates to:

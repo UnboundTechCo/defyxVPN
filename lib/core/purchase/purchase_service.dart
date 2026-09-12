@@ -29,6 +29,7 @@ class BalancePurchaseService extends ChangeNotifier {
   double balance = 0;
   String? errorMessage;
   Set<String> missingProductIds = <String>{};
+  Completer<void>? _purchaseCompletion;
 
   List<ProductDetails> get products => List.unmodifiable(_products);
 
@@ -102,6 +103,8 @@ class BalancePurchaseService extends ChangeNotifier {
 
     isPurchasing = true;
     errorMessage = null;
+    final completion = Completer<void>();
+    _purchaseCompletion = completion;
     notifyListeners();
 
     try {
@@ -113,11 +116,21 @@ class BalancePurchaseService extends ChangeNotifier {
       if (!started) {
         throw StateError('The purchase could not be started');
       }
+
+      await completion.future.timeout(
+        const Duration(minutes: 2),
+        onTimeout: () =>
+            throw TimeoutException('The purchase verification timed out'),
+      );
     } catch (error) {
       isPurchasing = false;
       errorMessage = _messageFrom(error);
       notifyListeners();
       rethrow;
+    } finally {
+      if (identical(_purchaseCompletion, completion)) {
+        _purchaseCompletion = null;
+      }
     }
   }
 
@@ -147,13 +160,15 @@ class BalancePurchaseService extends ChangeNotifier {
       if (purchase.status == PurchaseStatus.error) {
         isPurchasing = false;
         errorMessage = purchase.error?.message ?? 'Purchase failed';
+        _completePurchaseWithError(StateError(errorMessage!));
         notifyListeners();
         continue;
       }
 
       if (purchase.status == PurchaseStatus.canceled) {
         isPurchasing = false;
-        errorMessage = null;
+        errorMessage = 'Purchase canceled';
+        _completePurchaseWithError(StateError(errorMessage!));
         notifyListeners();
         continue;
       }
@@ -186,16 +201,18 @@ class BalancePurchaseService extends ChangeNotifier {
 
       balance = value.toDouble();
 
-      if (Platform.isIOS && purchase.pendingCompletePurchase) {
+      if (purchase.pendingCompletePurchase) {
         await _store.completePurchase(purchase);
       }
 
       isPurchasing = false;
       errorMessage = null;
+      _purchaseCompletion?.complete();
       notifyListeners();
     } catch (error) {
       isPurchasing = false;
       errorMessage = _messageFrom(error);
+      _completePurchaseWithError(error);
       notifyListeners();
     } finally {
       _processing.remove(key);
@@ -205,7 +222,15 @@ class BalancePurchaseService extends ChangeNotifier {
   void _handleStreamError(Object error) {
     isPurchasing = false;
     errorMessage = _messageFrom(error);
+    _completePurchaseWithError(error);
     notifyListeners();
+  }
+
+  void _completePurchaseWithError(Object error) {
+    final completion = _purchaseCompletion;
+    if (completion != null && !completion.isCompleted) {
+      completion.completeError(error);
+    }
   }
 
   String _messageFrom(Object error) {

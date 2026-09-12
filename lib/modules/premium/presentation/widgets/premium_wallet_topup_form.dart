@@ -57,59 +57,77 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
       },
       refreshBalance: refreshBalance,
     );
-    await purchaseService.initialize();
-    await purchaseService.purchase('de.unboundtech.defyxvpn.balance.$amount');
+    try {
+      await purchaseService.initialize();
+      if (purchaseService.errorMessage != null) {
+        throw StateError(purchaseService.errorMessage!);
+      }
 
-    if (!mounted) return;
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.r),
-        ),
-        child: Padding(
-          padding: EdgeInsets.all(24.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.check_circle,
-                color: const Color(0xFF4CAF7F),
-                size: 64.w,
-              ),
-              SizedBox(height: 16.h),
-              Text(
-                'Payment Successful',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 24.sp,
-                  fontWeight: FontWeight.bold,
+      await purchaseService.purchase('de.unboundtech.defyxvpn.balance.$amount');
+
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => Dialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16.r),
+          ),
+          child: Padding(
+            padding: EdgeInsets.all(24.w),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_circle,
+                  color: const Color(0xFF4CAF7F),
+                  size: 64.w,
                 ),
-              ),
-              SizedBox(height: 8.h),
-              Text(
-                'Your wallet has been topped up',
-                style: TextStyle(color: Colors.grey, fontSize: 18.sp),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 24.h),
-              AppButton(
-                label: 'Continue',
-                onPressed: () {
-                  Navigator.pop(context);
-                  widget.closeTopUpForm();
-                  setState(() => _selectedAmount = null);
-                },
-                variant: AppButtonVariant.primary,
-                size: AppButtonSize.medium,
-              ),
-            ],
+                SizedBox(height: 16.h),
+                Text(
+                  'Payment Successful',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 24.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 8.h),
+                Text(
+                  'Your wallet has been topped up',
+                  style: TextStyle(color: Colors.grey, fontSize: 18.sp),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 24.h),
+                AppButton(
+                  label: 'Continue',
+                  onPressed: () {
+                    Navigator.pop(context);
+                    widget.closeTopUpForm();
+                    setState(() => _selectedAmount = null);
+                  },
+                  variant: AppButtonVariant.primary,
+                  size: AppButtonSize.medium,
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
-    setState(() => _isProcessing = false);
+      );
+    } catch (error) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(error.toString().replaceFirst('Bad state: ', '')),
+          ),
+        );
+      }
+    } finally {
+      purchaseService.dispose();
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
   }
 
   Widget _buildAmountPicker() {
@@ -180,7 +198,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
               _buildAmountPicker(),
               SizedBox(height: 24.h),
               AppButton(
-                label: 'Pay via Apple Pay',
+                label: 'Purchase credits',
                 onPressed: _handleTopUpPayment,
                 variant: AppButtonVariant.blue,
                 size: AppButtonSize.medium,

@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/config/api_config.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -27,6 +28,7 @@ class PremiumLoggedIn extends StatefulWidget {
 
 class _PremiumLoggedInState extends State<PremiumLoggedIn> {
   bool isSigningOut = false;
+  bool isDeletingAccount = false;
 
   Future<void> _handleSignOut() async {
     final l10n = AppLocalizations.of(context);
@@ -48,6 +50,54 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
     } finally {
       if (mounted) {
         setState(() => isSigningOut = false);
+      }
+    }
+  }
+
+  Future<void> _handleDeleteAccount() async {
+    final l10n = AppLocalizations.of(context);
+    if (isSigningOut || isDeletingAccount) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(l10n.deleteAccount),
+        content: Text(l10n.deleteAccountConfirmation),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(l10n.deleteAccount),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    try {
+      setState(() => isDeletingAccount = true);
+      final premiumApi = await widget.ref.read(
+        premiumApiServiceProvider.future,
+      );
+      await premiumApi.deleteAccount();
+      await widget.ref.read(authProvider.notifier).logout();
+
+      if (!mounted) return;
+      ToastUtil.showToast(l10n.deleteAccountSuccess);
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) {
+        ToastUtil.showToast(
+          '${l10n.deleteAccountFailed}: ${error.toString().replaceFirst('Exception: ', '')}',
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => isDeletingAccount = false);
       }
     }
   }
@@ -109,7 +159,9 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
                   ),
                   SizedBox(width: 2.w),
                   InkWell(
-                    onTap: isSigningOut ? null : _handleSignOut,
+                    onTap: isSigningOut || isDeletingAccount
+                        ? null
+                        : _handleSignOut,
                     child: Text(
                       l10n.signOut.toUpperCase(),
                       style: TextStyle(
@@ -121,6 +173,20 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
                     ),
                   ),
                 ],
+              ),
+              SizedBox(height: 18.h),
+              TextButton(
+                onPressed: isSigningOut || isDeletingAccount
+                    ? null
+                    : _handleDeleteAccount,
+                child: Text(
+                  l10n.deleteAccount.toUpperCase(),
+                  style: TextStyle(
+                    fontFamily: AppTheme.fontFamily,
+                    fontSize: 12.sp,
+                    color: const Color(0xFFFF4C4C),
+                  ),
+                ),
               ),
             ],
           ),

@@ -373,6 +373,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signOutSuccess => 'Signed out successfully!';
 
   @override
+  String get cancel => 'Cancel';
+
+  @override
+  String get deleteAccount => 'Delete account';
+
+  @override
+  String get deleteAccountConfirmation =>
+      'This permanently deletes your account and cannot be undone. Continue?';
+
+  @override
+  String get deleteAccountSuccess => 'Account deleted successfully.';
+
+  @override
+  String get deleteAccountFailed => 'Account deletion failed';
+
+  @override
   String get settingsMarketplace => 'Marketplace';
 
   @override
