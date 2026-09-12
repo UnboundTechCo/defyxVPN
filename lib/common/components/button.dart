@@ -2,7 +2,7 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum AppButtonVariant { primary, secondary, tertiary, blue, outline }
+enum AppButtonVariant { primary, secondary, tertiary, blue, outline, error }
 
 enum AppButtonSize { small, medium }
 
@@ -94,6 +94,8 @@ class AppButton extends StatelessWidget {
 
       case AppButtonVariant.blue:
         return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return const Color(0xFFEF4444);
     }
   }
 
@@ -111,6 +113,8 @@ class AppButton extends StatelessWidget {
         return Colors.white;
       case AppButtonVariant.outline:
         return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.white;
     }
   }
 
@@ -127,6 +131,8 @@ class AppButton extends StatelessWidget {
         return Colors.white;
       case AppButtonVariant.outline:
         return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.white;
     }
   }
 
@@ -144,6 +150,8 @@ class AppButton extends StatelessWidget {
         return Colors.transparent;
       case AppButtonVariant.outline:
         return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.transparent;
     }
   }
 

@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/config/api_config.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -177,19 +178,15 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
                   ),
                 ],
               ),
-              SizedBox(height: 18.h),
-              TextButton(
+              SizedBox(height: 24.h),
+              AppButton(
                 onPressed: isSigningOut || isDeletingAccount
                     ? null
                     : _handleDeleteAccount,
-                child: Text(
-                  l10n.deleteAccount.toUpperCase(),
-                  style: TextStyle(
-                    fontFamily: AppTheme.fontFamily,
-                    fontSize: 12.sp,
-                    color: const Color(0xFFFF4C4C),
-                  ),
-                ),
+                label: l10n.deleteAccount.toUpperCase(),
+                variant: AppButtonVariant.error,
+                size: AppButtonSize.small,
+                width: 100.w,
               ),
             ],
           ),
