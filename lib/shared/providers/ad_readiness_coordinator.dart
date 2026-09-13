@@ -24,8 +24,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   static const String _storageKey = 'ad_readiness_state_v1';
 
   // ignore: unused_field
-  final UmpConsentCacheService?
-  _umpCache; // Reserved for future UMP cache optimization
+  final UmpConsentCacheService? _umpCache;
 
   AdReadinessCoordinator([this._umpCache]) : super(AdReadinessState.initial()) {
     _loadPersistedState();
@@ -190,7 +189,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
 
   // === Consent & AdMob Initialization Flow ===
 
-  /// Main initialization flow: ATT → UMP → AdMob
+  /// Main initialization flow: UMP (GDPR) → ATT (iOS) → AdMob
   /// Called when canInitializeAdMob becomes true
   Future<void> initializeAdFlow({
     required Future<void> Function(bool shouldRequestUMP) onRunUMP,
@@ -214,11 +213,19 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     await _persistState();
 
     try {
-      // Step 1: ATT (iOS only)
+      // Step 1: Determine if UMP should run and run UMP flow FIRST (GDPR prompt)
+      final shouldRequestUMP = _shouldRequestUMP();
+      debugPrint(
+        '🔍 Should request UMP: $shouldRequestUMP (ATT: ${state.attStatus.name})',
+      );
+
+      await onRunUMP(shouldRequestUMP);
+
+      // Step 2: Transition delay to ensure native UMP view controller dismiss animation finishes cleanly
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // Step 3: ATT permission request SECOND (iOS only)
       if (Platform.isIOS) {
-        await Future.delayed(
-          const Duration(milliseconds: 500),
-        ); // Apple requirement
         await checkATTStatus();
 
         if (state.attStatus == TrackingStatus.notDetermined) {
@@ -226,16 +233,8 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
         }
       }
 
-      // Step 2: Determine if UMP should run
-      final shouldRequestUMP = _shouldRequestUMP();
-      debugPrint(
-        '🔍 Should request UMP: $shouldRequestUMP (ATT: ${state.attStatus.name})',
-      );
-
-      // Step 3: Run UMP flow (external - handled by caller)
-      await onRunUMP(shouldRequestUMP);
-
-      // onRunUMP will call markConsentComplete when done
+      // Step 4: Mark consent flow complete & initialize AdMob SDK
+      await markConsentComplete();
     } catch (e, stack) {
       debugPrint('❌ Ad initialization flow failed: $e');
       debugPrint(stack.toString());
