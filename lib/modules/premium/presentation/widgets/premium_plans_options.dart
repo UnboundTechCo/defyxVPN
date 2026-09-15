@@ -49,8 +49,8 @@ class PremiumPlanSelect extends ConsumerWidget {
                         child: Row(
                           children: [
                             Container(
-                              width: 24.w,
-                              height: 24.h,
+                              width: 32.w,
+                              height: 32.h,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 border: Border.all(
@@ -67,7 +67,7 @@ class PremiumPlanSelect extends ConsumerWidget {
                                   ? Icon(
                                       Icons.check,
                                       color: Colors.white,
-                                      size: 16.w,
+                                      size: 20.w,
                                     )
                                   : null,
                             ),

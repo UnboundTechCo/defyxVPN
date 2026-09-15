@@ -3,6 +3,8 @@ import 'package:defyx_vpn/common/components/dashed_divider.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:defyx_vpn/core/config/api_config.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -129,6 +131,15 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     setState(() {
       _isLoading = true;
     });
+    final auth = await widget.ref.read(authProvider.future);
+    if (!auth.isLoggedIn) {
+      ToastUtil.showToast("You need to be logged in to buy a plan.");
+      widget.ref.read(premiumTabProvider.notifier).state = PremiumTab.account;
+      setState(() {
+        _isLoading = false;
+      });
+      return;
+    }
     final premiumService = await widget.ref.watch(
       premiumApiServiceProvider.future,
     );

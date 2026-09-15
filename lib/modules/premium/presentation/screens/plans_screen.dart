@@ -19,7 +19,7 @@ class PlansScreen extends ConsumerStatefulWidget {
 class _PlansScreenState extends ConsumerState<PlansScreen> {
   PlansScreenState state = PlansScreenState.options;
 
-  void _navigateToDetails() {
+  Future<void> _navigateToDetails() async {
     setState(() {
       state = PlansScreenState.details;
     });

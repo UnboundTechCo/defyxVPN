@@ -837,13 +837,13 @@ abstract class AppLocalizations {
   /// Premium widget - marketplace title
   ///
   /// In en, this message translates to:
-  /// **'Marketplace'**
+  /// **'PREMIUM'**
   String get settingsMarketplace;
 
   /// Premium widget - marketplace description
   ///
   /// In en, this message translates to:
-  /// **'Browse secure VPN configurations from trusted suppliers.'**
+  /// **'Get premium VPN access with fast and reliable connections.'**
   String get marketplaceDescription;
 
   /// Premium widget - logged in status

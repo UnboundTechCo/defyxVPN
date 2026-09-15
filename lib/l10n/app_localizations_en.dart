@@ -389,11 +389,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deleteAccountFailed => 'Account deletion failed';
 
   @override
-  String get settingsMarketplace => 'Marketplace';
+  String get settingsMarketplace => 'PREMIUM';
 
   @override
   String get marketplaceDescription =>
-      'Browse secure VPN configurations from trusted suppliers.';
+      'Get premium VPN access with fast and reliable connections.';
 
   @override
   String get loggedIn => 'LOGGED IN';

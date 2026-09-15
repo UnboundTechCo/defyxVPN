@@ -379,10 +379,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get deleteAccountFailed => '删除账户失败';
 
   @override
-  String get settingsMarketplace => '市场';
+  String get settingsMarketplace => 'PREMIUM';
 
   @override
-  String get marketplaceDescription => '浏览来自可信供应商的安全VPN配置。';
+  String get marketplaceDescription =>
+      'Get premium VPN access with fast and reliable connections.';
 
   @override
   String get loggedIn => '已登录';

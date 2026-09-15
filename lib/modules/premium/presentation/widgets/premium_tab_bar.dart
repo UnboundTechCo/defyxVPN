@@ -53,7 +53,7 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               AppIcons.plansPath,
               'PLANS',
               PremiumTab.plans,
-              !_isLoggedIn,
+              false,
             ),
             SizedBox(width: 24.w),
             _buildTabButton(

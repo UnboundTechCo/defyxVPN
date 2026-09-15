@@ -389,11 +389,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteAccountFailed => 'حذف حساب کاربری ناموفق بود';
 
   @override
-  String get settingsMarketplace => 'فروشگاه';
+  String get settingsMarketplace => 'PREMIUM';
 
   @override
   String get marketplaceDescription =>
-      'پیکربندی‌های امن VPN را از تامین‌کنندگان قابل اعتماد مرور کنید.';
+      'Get premium VPN access with fast and reliable connections.';
 
   @override
   String get loggedIn => 'وارد شده';

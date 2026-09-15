@@ -616,12 +616,12 @@
     "description": "Account deletion failure message"
   },
 
-  "settingsMarketplace": "Marketplace",
+  "settingsMarketplace": "PREMIUM",
   "@settingsMarketplace": {
     "description": "Premium widget - marketplace title"
   },
 
-  "marketplaceDescription": "Browse secure VPN configurations from trusted suppliers.",
+  "marketplaceDescription": "Get premium VPN access with fast and reliable connections.",
   "@marketplaceDescription": {
     "description": "Premium widget - marketplace description"
   },

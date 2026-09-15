@@ -391,11 +391,11 @@ class AppLocalizationsRu extends AppLocalizations {
   String get deleteAccountFailed => 'Не удалось удалить аккаунт';
 
   @override
-  String get settingsMarketplace => 'Маркетплейс';
+  String get settingsMarketplace => 'PREMIUM';
 
   @override
   String get marketplaceDescription =>
-      'Просмотрите безопасные конфигурации VPN от проверенных поставщиков.';
+      'Get premium VPN access with fast and reliable connections.';
 
   @override
   String get loggedIn => 'ВОШЛИ В СИСТЕМУ';

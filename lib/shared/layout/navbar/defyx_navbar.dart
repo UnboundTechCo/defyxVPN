@@ -19,6 +19,10 @@ class DefyxNavBar extends ConsumerWidget {
     final currentScreen = _getCurrentScreenFromLocation(location);
     final settingsLoading = ref.watch(settingsLoadingProvider);
 
+    final isPremiumScreen = currentScreen == AppScreen.premium;
+
+    if (isPremiumScreen) return const SizedBox.shrink();
+
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(bottom: 20.h),
@@ -112,6 +116,8 @@ class DefyxNavBar extends ConsumerWidget {
         return AppScreen.settings;
       case '/speedTest':
         return AppScreen.speedTest;
+      case "/premium":
+        return AppScreen.premium;
       default:
         return AppScreen.home;
     }
