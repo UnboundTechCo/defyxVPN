@@ -65,6 +65,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
 
       await purchaseService.purchase('de.unboundtech.defyxvpn.balance.$amount');
 
+      await refreshBalance();
       if (!mounted) return;
       await showDialog<void>(
         context: context,
