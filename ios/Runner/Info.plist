@@ -2,8 +2,29 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 	<dict>
+		<key>UIApplicationSceneManifest</key>
+		<dict>
+			<key>UIApplicationSupportsMultipleScenes</key>
+			<false />
+			<key>UISceneConfigurations</key>
+			<dict>
+				<key>UIWindowSceneSessionRoleApplication</key>
+				<array>
+					<dict>
+						<key>UISceneClassName</key>
+						<string>UIWindowScene</string>
+						<key>UISceneDelegateClassName</key>
+						<string>FlutterSceneDelegate</string>
+						<key>UISceneConfigurationName</key>
+						<string>flutter</string>
+						<key>UISceneStoryboardFile</key>
+						<string>Main</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true/>
+		<true />
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -27,21 +48,33 @@
 		<key>GADApplicationIdentifier</key>
 		<string>ca-app-pub-6029472941300558~5225768298</string>
 		<key>LSRequiresIPhoneOS</key>
-		<true/>
+		<true />
 		<key>NSDocumentsFolderUsageDescription</key>
 		<string>WARP needs access to store its configuration files</string>
+		<key>NSPhotoLibraryUsageDescription</key>
+		<string>Defyx needs access to your photo library to let you select and share images, such as
+			profile pictures or VPN connection QR codes.</string>
+		<key>NSUserTrackingUsageDescription</key>
+		<string>This identifier will be used to deliver personalized ads to you. You can decline and
+			still use the app with non-personalized ads.</string>
 		<key>NSVPNConfigurationUsageDescription</key>
 		<string>Defyx needs access to VPN configurations to secure your connection.</string>
 		<key>NSUserTrackingUsageDescription</key>
-		<string>This identifier will be used to deliver personalized ads to you. You can decline and still use the app with non-personalized ads.</string>	
+		<string>This identifier will be used to deliver personalized ads to you. You can decline and
+			still use the app with non-personalized ads.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Defyx needs access to your photo library to let you select and share images, such as profile pictures or VPN connection QR codes.</string>		
+		<string>Defyx needs access to your photo library to let you select and share images, such as
+			profile pictures or VPN connection QR codes.</string>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true/>
+		<true />
+		<key>UIFileSharingEnabled</key>
+		<true />
 		<key>UILaunchStoryboardName</key>
 		<string>LaunchScreen</string>
 		<key>UIMainStoryboardFile</key>
 		<string>Main</string>
+		<key>UIStatusBarHidden</key>
+		<false />
 		<key>UISupportedInterfaceOrientations</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
@@ -53,6 +86,29 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
+		<key>UISupportsDocumentBrowser</key>
+		<true />
+		<key>UTImportedTypeDeclarations</key>
+		<array>
+			<dict>
+				<key>UTTypeConformsTo</key>
+				<array>
+					<string>public.data</string>
+					<string>public.content</string>
+				</array>
+				<key>UTTypeDescription</key>
+				<string>DefyX Configuration File</string>
+				<key>UTTypeIdentifier</key>
+				<string>de.unboundtech.defyxvpn.dfx</string>
+				<key>UTTypeTagSpecification</key>
+				<dict>
+					<key>public.filename-extension</key>
+					<array>
+						<string>dfx</string>
+					</array>
+				</dict>
+			</dict>
+		</array>
 		<key>com.apple.developer.networking.networkextension</key>
 		<array>
 			<string>packet-tunnel-provider</string>
@@ -61,39 +117,5 @@
 		<array>
 			<string>group.de.unboundtech.defyxvpn</string>
 		</array>
-		<key>NSAppTransportSecurity</key>
-		<dict>
-			<key>NSAllowsArbitraryLoads</key>
-			<true/>
-		</dict>
-		<key>UIStatusBarHidden</key>
-	<false/>
-	<key>LSSupportsOpeningDocumentsInPlace</key>
-	<true/>
-	<key>UIFileSharingEnabled</key>
-	<true/>
-	<key>UISupportsDocumentBrowser</key>
-	<true/>
-	<key>UTImportedTypeDeclarations</key>
-	<array>
-		<dict>
-			<key>UTTypeConformsTo</key>
-			<array>
-				<string>public.data</string>
-				<string>public.content</string>
-			</array>
-			<key>UTTypeDescription</key>
-			<string>DefyX Configuration File</string>
-			<key>UTTypeIdentifier</key>
-			<string>de.unboundtech.defyxvpn.dfx</string>
-			<key>UTTypeTagSpecification</key>
-			<dict>
-				<key>public.filename-extension</key>
-				<array>
-					<string>dfx</string>
-				</array>
-			</dict>
-		</dict>
-	</array>
 	</dict>
 </plist>

@@ -22,8 +22,8 @@ class PremiumTopUp extends StatefulWidget {
 }
 
 class _PremiumTopUpState extends State<PremiumTopUp> {
-  final List<double> _amountOptions = [1, 2, 3, 5, 10];
-  double? _selectedAmount;
+  final List<int> _amountOptions = [1, 2, 3, 5, 10];
+  int? _selectedAmount;
   bool _isProcessing = false;
 
   @override
