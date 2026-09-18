@@ -395,7 +395,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get marketplaceDescription =>
-      'Get premium VPN access with fast and reliable connections.';
+      'Получите премиум-доступ к VPN с\nбыстрыми и надежными подключениями.';
 
   @override
   String get loggedIn => 'ВОШЛИ В СИСТЕМУ';

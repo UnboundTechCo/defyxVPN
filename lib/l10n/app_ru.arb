@@ -124,7 +124,7 @@
   "deleteAccountSuccess": "Аккаунт успешно удален.",
   "deleteAccountFailed": "Не удалось удалить аккаунт",
   "settingsMarketplace": "PREMIUM",
-  "marketplaceDescription": "Get premium VPN access with fast and reliable connections.",
+  "marketplaceDescription": "Получите премиум-доступ к VPN с\nбыстрыми и надежными подключениями.",
   "loggedIn": "ВОШЛИ В СИСТЕМУ",
   "loginOrRegister": "ВОЙТИ ИЛИ ЗАРЕГИСТРИРОВАТЬСЯ",
   "loginByCode": "Войти по коду",

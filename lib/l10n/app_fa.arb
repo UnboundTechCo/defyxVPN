@@ -124,7 +124,7 @@
   "deleteAccountSuccess": "حساب کاربری با موفقیت حذف شد.",
   "deleteAccountFailed": "حذف حساب کاربری ناموفق بود",
   "settingsMarketplace": "PREMIUM",
-  "marketplaceDescription": "Get premium VPN access with fast and reliable connections.",
+  "marketplaceDescription": "دسترسی VPN برتر با سرعت و\nاتصالات قابل اعتماد.",
   "loggedIn": "وارد شده",
   "loginOrRegister": "ورود یا ثبت نام",
   "loginByCode": "ورود با کد",

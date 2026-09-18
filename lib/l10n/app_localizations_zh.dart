@@ -382,8 +382,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsMarketplace => 'PREMIUM';
 
   @override
-  String get marketplaceDescription =>
-      'Get premium VPN access with fast and reliable connections.';
+  String get marketplaceDescription => '获得快速可靠的高级\nVPN访问权限。';
 
   @override
   String get loggedIn => '已登录';

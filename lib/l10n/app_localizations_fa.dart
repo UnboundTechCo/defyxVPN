@@ -393,7 +393,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get marketplaceDescription =>
-      'Get premium VPN access with fast and reliable connections.';
+      'دسترسی VPN برتر با سرعت و\nاتصالات قابل اعتماد.';
 
   @override
   String get loggedIn => 'وارد شده';
