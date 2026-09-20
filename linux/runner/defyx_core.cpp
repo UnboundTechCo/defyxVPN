@@ -34,6 +34,9 @@ typedef int (*dx_is_tunnel_running_fn)();
 
 static void* g_dx_dll = nullptr;
 static std::mutex g_dx_mutex;
+static std::mutex g_error_mutex;
+static std::mutex g_progress_mutex;
+static std::string g_last_error;
 static dx_start_vpn_fn g_start_vpn = nullptr;
 static dx_stop_vpn_fn g_stop_vpn = nullptr;
 static dx_start_t2s_fn g_start_t2s = nullptr;
@@ -53,6 +56,11 @@ static dx_free_string_fn g_free_string = nullptr;
 static dx_set_connection_method_fn g_set_connection_method = nullptr;
 static dx_set_cache_dir_fn g_set_cache_dir = nullptr;
 static dx_is_tunnel_running_fn g_is_tunnel_running = nullptr;
+
+static void SetLastError(const std::string& error) {
+  std::lock_guard<std::mutex> lock(g_error_mutex);
+  g_last_error = error;
+}
 
 // Helper: get directory of current executable
 static std::string GetExeDir() {
@@ -81,19 +89,44 @@ static void DxProgressC(char* msg) {
   if (!msg) return;
   std::string s(msg);
   defyx_core::LogMessage("[DX] " + s);
-  if (g_progress_handler) g_progress_handler(s);
+  std::function<void(std::string)> handler;
+  {
+    std::lock_guard<std::mutex> lock(g_progress_mutex);
+    handler = g_progress_handler;
+  }
+  if (handler) handler(s);
 }
 
 bool LoadCoreDll(const std::string& dllPath) {
   std::lock_guard<std::mutex> lock(g_dx_mutex);
-  if (g_dx_dll) return true;
+  if (g_dx_dll) {
+    SetLastError("");
+    return true;
+  }
 
   std::string path = dllPath;
   void* dll = nullptr;
 
-  // 1) Prefer loading from the exe directory
+  // An explicit path is authoritative. This keeps service configurations
+  // deterministic when multiple DXcore versions are installed.
+  if (!path.empty()) {
+    dll = dlopen(path.c_str(), RTLD_LAZY);
+    if (!dll) {
+      const char* err = dlerror();
+      const std::string message =
+          "dlopen(" + path + ") failed: " +
+          (err ? std::string(err) : "unknown");
+      defyx_core::LogMessage(message);
+      SetLastError(message);
+      return false;
+    }
+    defyx_core::LogMessage("Loaded libdxcore_amd64.so from provided path: " +
+                           path);
+  }
+
+  // Otherwise, prefer loading from the executable directory.
   std::string exeDir = GetExeDir();
-  if (!exeDir.empty()) {
+  if (!dll && !exeDir.empty()) {
     std::string full = exeDir + "libdxcore_amd64.so";
     dll = dlopen(full.c_str(), RTLD_LAZY);
     if (!dll) {
@@ -104,7 +137,7 @@ bool LoadCoreDll(const std::string& dllPath) {
     }
   }
 
-  // 1b) If not in exe dir root, look in lib/ next to the executable (Flutter bundle layout)
+  // If not in the executable root, look in lib/ next to it.
   if (!dll && !exeDir.empty()) {
     std::string nested = exeDir + "lib/libdxcore_amd64.so";
     dll = dlopen(nested.c_str(), RTLD_LAZY);
@@ -116,23 +149,16 @@ bool LoadCoreDll(const std::string& dllPath) {
     }
   }
 
-  // 2) If caller provided a non-empty path and we didn't load yet, try it explicitly
-  if (!dll && !path.empty()) {
-    dll = dlopen(path.c_str(), RTLD_LAZY);
-    if (!dll) {
-      const char* err = dlerror();
-      defyx_core::LogMessage("dlopen failed for provided path '" + path + "' err=" + (err ? std::string(err) : "unknown"));
-    } else {
-      defyx_core::LogMessage("Loaded libdxcore_amd64.so from provided path: " + path);
-    }
-  }
-
-  // 3) As a last resort, attempt to load libdxcore_amd64.so using the default search path
+  // As a last resort, use the dynamic loader's default search path.
   if (!dll) {
     dll = dlopen("libdxcore_amd64.so", RTLD_LAZY);
     if (!dll) {
       const char* err = dlerror();
-      defyx_core::LogMessage("Final dlopen('libdxcore_amd64.so') failed err=" + (err ? std::string(err) : "unknown"));
+      const std::string message =
+          "dlopen(libdxcore_amd64.so) failed: " +
+          (err ? std::string(err) : "unknown");
+      defyx_core::LogMessage(message);
+      SetLastError(message);
       return false;
     } else {
       defyx_core::LogMessage("Loaded libdxcore_amd64.so from default search path");
@@ -188,6 +214,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("SetCacheDir", g_set_cache_dir);
   check("IsTunnelRunning", g_is_tunnel_running);
   defyx_core::LogMessage("libdxcore_amd64.so loaded and symbol lookup completed");
+  SetLastError("");
 
   return true;
 }
@@ -207,15 +234,19 @@ void UnloadCoreDll() {
     g_set_timezone = nullptr;
     g_get_flowline = nullptr;
     g_get_cached_flowline = nullptr;
+    g_decode_verify_flowline = nullptr;
     g_get_vpn_status = nullptr;
     g_set_progress_cb = nullptr;
     g_set_verbose = nullptr;
     g_free_string = nullptr;
-  g_set_connection_method = nullptr;
-  g_is_tunnel_running = nullptr;
+    g_set_connection_method = nullptr;
+    g_set_cache_dir = nullptr;
+    g_is_tunnel_running = nullptr;
 
-    // Clear progress handler
-    g_progress_handler = nullptr;
+    {
+      std::lock_guard<std::mutex> progress_lock(g_progress_mutex);
+      g_progress_handler = nullptr;
+    }
 
     dlclose(g_dx_dll);
     g_dx_dll = nullptr;
@@ -231,6 +262,11 @@ void UnloadCoreDll() {
   ::UnloadCoreDll();
 }
 
+std::string GetLastError() {
+  std::lock_guard<std::mutex> lock(g_error_mutex);
+  return g_last_error;
+}
+
 void EnableVerboseLogs(bool enable) {
   if (g_set_verbose) {
     g_set_verbose(enable ? 1 : 0);
@@ -238,7 +274,10 @@ void EnableVerboseLogs(bool enable) {
 }
 
 void RegisterProgressHandler(std::function<void(std::string)> handler) {
-  g_progress_handler = std::move(handler);
+  {
+    std::lock_guard<std::mutex> lock(g_progress_mutex);
+    g_progress_handler = std::move(handler);
+  }
   if (g_set_progress_cb) {
     g_set_progress_cb(&DxProgressC);
   }
@@ -254,11 +293,17 @@ bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const st
     if (g_start_vpn) {
       int r = g_start_vpn(cacheDir.c_str(), flowLine.c_str(), pattern.c_str(), deepScan ? 1 : 0, healthCheck ? 1 : 0);
       defyx_core::LogMessage(std::string("StartVPN returned ") + (r != 0 ? "true" : "false"));
+      if (r == 0) {
+        SetLastError("DXcore StartVPN returned false");
+      } else {
+        SetLastError("");
+      }
       return r != 0;
     }
   } catch (...) {}
   (void)cacheDir; (void)flowLine; (void)pattern;
-  return true;
+  SetLastError("DXcore does not export StartVPN");
+  return false;
 }
 
 void StartTun2Socks(long long fd, const std::string& addr) {
