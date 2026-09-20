@@ -543,7 +543,7 @@ abstract class AppLocalizations {
   /// Settings section - health check
   ///
   /// In en, this message translates to:
-  /// **'HEALTH CHECK'**
+  /// **'HEALTH MONITOR'**
   String get settingsHealthCheck;
 
   /// Settings label - included items
