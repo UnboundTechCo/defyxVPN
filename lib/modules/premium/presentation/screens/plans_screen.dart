@@ -2,6 +2,7 @@ import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_plans_details.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_plans_options.dart';
+import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/premium/providers/selected_plan_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +31,7 @@ class _PlansScreenState extends ConsumerState<PlansScreen> {
       state = PlansScreenState.options;
     });
     context.go(DefyxVPNRoutes.settings.route);
+    ref.invalidate(balanceProvider);
     await ref
         .read(flowlineServiceProvider)
         .saveFlowline(offlineMode: false, forceUpdate: true);

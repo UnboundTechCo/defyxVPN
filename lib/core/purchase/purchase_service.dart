@@ -6,6 +6,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
 
 class BalancePurchaseService extends ChangeNotifier {
   BalancePurchaseService({
@@ -38,6 +39,18 @@ class BalancePurchaseService extends ChangeNotifier {
       _handlePurchaseUpdates,
       onError: _handleStreamError,
     );
+
+    try {
+      final paymentQueue = SKPaymentQueueWrapper();
+
+      final transactions = await paymentQueue.transactions();
+
+      for (final transaction in transactions) {
+        await paymentQueue.finishTransaction(transaction);
+      }
+    } catch (e) {
+      print(e);
+    }
 
     isLoading = true;
     errorMessage = null;

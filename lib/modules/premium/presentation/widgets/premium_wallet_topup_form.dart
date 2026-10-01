@@ -124,7 +124,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
         );
       }
     } finally {
-      purchaseService.dispose();
+      // purchaseService.dispose();
       if (mounted) {
         setState(() => _isProcessing = false);
       }
