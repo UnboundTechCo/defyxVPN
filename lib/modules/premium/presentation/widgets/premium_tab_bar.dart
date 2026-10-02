@@ -1,6 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
-import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -23,19 +22,8 @@ class PremiumTabBar extends StatefulWidget {
 }
 
 class _PremiumTabBarState extends State<PremiumTabBar> {
-  bool _isLoggedIn = false;
-
   @override
   Widget build(BuildContext context) {
-    final authState = widget.ref.watch(authProvider);
-    authState.when(
-      data: (data) => setState(() {
-        _isLoggedIn = data.isLoggedIn;
-      }),
-      loading: () {},
-      error: (e, st) {},
-    );
-
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Center(
@@ -60,14 +48,14 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               AppIcons.walletPath,
               'WALLET',
               PremiumTab.wallet,
-              !_isLoggedIn,
+              false,
             ),
             SizedBox(width: 24.w),
             _buildTabButton(
               AppIcons.supportPath,
               'SUPPORT',
               PremiumTab.support,
-              !_isLoggedIn,
+              false,
             ),
           ],
         ),

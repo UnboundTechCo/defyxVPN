@@ -64,4 +64,6 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     ref.invalidate(premiumApiServiceProvider);
     ref.invalidate(balanceProvider);
   }
+
+  get isLoggedIn => state.value?.isLoggedIn ?? false;
 }
