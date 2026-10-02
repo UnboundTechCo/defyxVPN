@@ -1,6 +1,8 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/purchase/purchase_service.dart';
+import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_select_register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -37,6 +39,15 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
   }
 
   Future<void> _handleTopUpPayment() async {
+    final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
+    if (!isLoggedIn) {
+      showDialog(
+        context: context,
+        builder: (context) => PremiumSelectRegister(ref: widget.ref),
+      );
+      return;
+    }
+
     if (_selectedAmount == null) {
       ScaffoldMessenger.of(
         context,

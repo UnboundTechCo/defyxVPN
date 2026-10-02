@@ -56,16 +56,16 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                         ),
                       ),
                       SizedBox(height: 12.h),
-                      if (!widget.ref.read(authProvider.notifier).isLoggedIn)
-                        Text(
-                          '-',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 36.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      widget.isLoading
+                      !widget.ref.read(authProvider.notifier).isLoggedIn
+                          ? Text(
+                              '-',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontSize: 36.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : widget.isLoading
                           ? const Center(
                               child: CircularProgressIndicator(
                                 color: Colors.black,
@@ -100,15 +100,6 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                           AppButton(
                             label: 'Top up',
                             onPressed: () {
-                              if (!isLoggedIn) {
-                                showDialog(
-                                  context: context,
-                                  builder: (context) =>
-                                      PremiumSelectRegister(ref: widget.ref),
-                                );
-                                return;
-                              }
-
                               widget.showTopUpForm();
                             },
                             variant: AppButtonVariant.blue,
