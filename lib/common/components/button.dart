@@ -14,6 +14,7 @@ class AppButton extends StatelessWidget {
   final AppButtonVariant variant;
   final AppButtonSize size;
   final bool isLoading;
+  final bool isDisabled;
   final AppButtonRound? round;
   final double? width;
 
@@ -24,6 +25,7 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.size = AppButtonSize.medium,
     this.isLoading = false,
+    this.isDisabled = false,
     this.width = double.infinity,
     this.round,
   });
@@ -36,8 +38,7 @@ class AppButton extends StatelessWidget {
       height: config.height,
       width: width,
       child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-
+        onPressed: isDisabled || isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -81,6 +82,20 @@ class AppButton extends StatelessWidget {
   }
 
   Color get _backgroundColor {
+    if (isDisabled) {
+      switch (variant) {
+        case AppButtonVariant.outline:
+        case AppButtonVariant.tertiary:
+          return Colors.transparent;
+
+        case AppButtonVariant.primary:
+        case AppButtonVariant.secondary:
+        case AppButtonVariant.blue:
+        case AppButtonVariant.error:
+          return const Color(0xFFEAEAEA);
+      }
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return const Color(0xFF21AD86);
@@ -100,13 +115,15 @@ class AppButton extends StatelessWidget {
   }
 
   Color get _textColor {
+    if (isDisabled) {
+      return const Color(0xFF9E9E9E);
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return Colors.white;
 
       case AppButtonVariant.secondary:
-        return const Color(0xFF4B4B4B);
-
       case AppButtonVariant.tertiary:
         return const Color(0xFF4B4B4B);
       case AppButtonVariant.blue:
@@ -119,10 +136,13 @@ class AppButton extends StatelessWidget {
   }
 
   Color get _loaderColor {
+    if (isDisabled) {
+      return const Color(0xFF9E9E9E);
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return Colors.white;
-
       case AppButtonVariant.secondary:
         return const Color(0xFF4B4B4B);
       case AppButtonVariant.tertiary:
@@ -137,10 +157,22 @@ class AppButton extends StatelessWidget {
   }
 
   Color get _borderColor {
+    if (isDisabled) {
+      switch (variant) {
+        case AppButtonVariant.outline:
+        case AppButtonVariant.tertiary:
+          return const Color(0xFFD1D1D1);
+
+        case AppButtonVariant.primary:
+        case AppButtonVariant.secondary:
+        case AppButtonVariant.blue:
+        case AppButtonVariant.error:
+          return Colors.transparent;
+      }
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
-        return Colors.transparent;
-
       case AppButtonVariant.secondary:
         return Colors.transparent;
 

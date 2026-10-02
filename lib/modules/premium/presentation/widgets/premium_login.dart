@@ -1,9 +1,12 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
@@ -91,6 +94,13 @@ class _PremiumLoginState extends State<PremiumLogin> {
     widget.navigateToLoginByCode();
   }
 
+  Future<void> _loginByApple() async {
+    final register = Register(ref: widget.ref);
+    setState(() => isSubmitting = true);
+    await register.registerByApple();
+    setState(() => isSubmitting = false);
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
@@ -150,6 +160,16 @@ class _PremiumLoginState extends State<PremiumLogin> {
                   variant: AppButtonVariant.primary,
                   isLoading: isSubmitting,
                 ),
+                if (Platform.isIOS) ...[
+                  SizedBox(height: 10.h),
+                  AppButton(
+                    label: "Login by Apple",
+                    onPressed: _loginByApple,
+                    size: AppButtonSize.medium,
+                    variant: AppButtonVariant.blue,
+                    isLoading: isSubmitting,
+                  ),
+                ],
                 SizedBox(height: 10.h),
                 AppButton(
                   label: l10n.loginByCode,

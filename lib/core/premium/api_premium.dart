@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/common/dtos/balance_dto.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
+import 'package:defyx_vpn/common/dtos/login_response_dto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,8 +30,6 @@ class PremiumApiServiceNotifier extends AsyncNotifier<PremiumApiService> {
 
 /// Premium backend API service using Dio
 class PremiumApiService {
-  static const accountDeletionPath = '/customer/delete/';
-
   late final Dio _dio;
   final String baseUrl;
   final String? token;
@@ -136,6 +135,23 @@ class PremiumApiService {
       return response;
     } catch (error) {
       rethrow;
+    }
+  }
+
+  Future<LoginResponse> loginByApple(String authorizationCode) async {
+    try {
+      final response = await _dio.post(
+        '/auth/customer/apple/login',
+        data: {'authorization_code': authorizationCode},
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to login by Apple.');
+      }
+
+      return LoginResponse.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _handleError(e);
     }
   }
 

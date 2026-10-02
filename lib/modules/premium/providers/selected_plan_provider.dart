@@ -1,5 +1,5 @@
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
-import 'package:defyx_vpn/core/config/api_config.dart';
+import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final selectedPlanProvider = StateProvider<PlansResponse?>((ref) {

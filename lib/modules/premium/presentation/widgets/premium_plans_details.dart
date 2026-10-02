@@ -1,8 +1,9 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/dashed_divider.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
-import 'package:defyx_vpn/core/config/api_config.dart';
+import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_select_register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -133,8 +134,12 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     });
     final auth = await widget.ref.read(authProvider.future);
     if (!auth.isLoggedIn) {
-      ToastUtil.showToast("You need to be logged in to buy a plan.");
-      widget.ref.read(premiumTabProvider.notifier).state = PremiumTab.account;
+      // ToastUtil.showToast("You need to be logged in to buy a plan.");
+      // widget.ref.read(premiumTabProvider.notifier).state = PremiumTab.account;
+      showDialog(
+        context: context,
+        builder: (context) => PremiumSelectRegister(ref: widget.ref),
+      );
       setState(() {
         _isLoading = false;
       });

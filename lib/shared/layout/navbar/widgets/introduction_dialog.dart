@@ -9,8 +9,8 @@ class IntroductionDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    
+    final l10n = AppLocalizations.of(context);
+
     return Dialog(
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       backgroundColor: Colors.white,
@@ -33,10 +33,7 @@ class IntroductionDialog extends StatelessWidget {
             SizedBox(height: 15.h),
             Text(
               l10n.defyxGoal,
-              style: TextStyle(
-                fontSize: 15.sp,
-                color: Colors.grey,
-              ),
+              style: TextStyle(fontSize: 15.sp, color: Colors.grey),
             ),
             SizedBox(height: 10.h),
             Text(

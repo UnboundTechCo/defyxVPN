@@ -1,6 +1,6 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
-import 'package:defyx_vpn/core/config/api_config.dart';
+import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
