@@ -133,8 +133,6 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     });
     final auth = await widget.ref.read(authProvider.future);
     if (!auth.isLoggedIn) {
-      // ToastUtil.showToast("You need to be logged in to buy a plan.");
-      // widget.ref.read(premiumTabProvider.notifier).state = PremiumTab.account;
       showDialog(
         context: context,
         builder: (context) => PremiumSelectRegister(ref: widget.ref),
