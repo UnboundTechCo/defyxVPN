@@ -77,7 +77,12 @@ class _PremiumLoginState extends State<PremiumLogin> {
     }
   }
 
-  void _openSignUpPage() {
+  Future<void> _openSignUpPage() async {
+    if (Platform.isIOS) {
+      await Register(ref: widget.ref).registerByApple();
+      return;
+    }
+
     final l10n = AppLocalizations.of(context);
     final url = dotenv.env["WEBSITE_SIGN_UP"];
 
