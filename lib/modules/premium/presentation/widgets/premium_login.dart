@@ -168,7 +168,7 @@ class _PremiumLoginState extends State<PremiumLogin> {
                 if (Platform.isIOS) ...[
                   SizedBox(height: 10.h),
                   AppButton(
-                    label: "Login by Apple",
+                    label: "Continue with Apple",
                     onPressed: _loginByApple,
                     size: AppButtonSize.medium,
                     variant: AppButtonVariant.blue,
@@ -177,7 +177,7 @@ class _PremiumLoginState extends State<PremiumLogin> {
                 ],
                 SizedBox(height: 10.h),
                 AppButton(
-                  label: l10n.loginByCode,
+                  label: "Easy Login",
                   onPressed: _openLoginByCodeDialog,
                   size: AppButtonSize.medium,
                   variant: AppButtonVariant.tertiary,

@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_select_register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +33,7 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
   @override
   Widget build(BuildContext context) {
     final symbol = '\$';
+    final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -98,6 +100,15 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                           AppButton(
                             label: 'Top up',
                             onPressed: () {
+                              if (!isLoggedIn) {
+                                showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      PremiumSelectRegister(ref: widget.ref),
+                                );
+                                return;
+                              }
+
                               widget.showTopUpForm();
                             },
                             variant: AppButtonVariant.blue,
@@ -108,7 +119,9 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                           SizedBox(width: 12.w),
                           GestureDetector(
                             onTap: () {
-                              _refetchBalance(widget.ref);
+                              if (isLoggedIn) {
+                                _refetchBalance(widget.ref);
+                              }
                             },
                             child: Container(
                               width: 40.w,

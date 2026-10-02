@@ -51,7 +51,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
           SizedBox(height: 24.h),
           if (Platform.isIOS) ...[
             AppButton(
-              label: "Login by Apple",
+              label: "Continue with Apple",
               onPressed: _register,
               variant: AppButtonVariant.primary,
               size: AppButtonSize.medium,
@@ -60,7 +60,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
             SizedBox(height: 12.h),
           ],
           AppButton(
-            label: "Go to login page",
+            label: "Go to login section",
             onPressed: _goToLoginPage,
             variant: AppButtonVariant.secondary,
             size: AppButtonSize.medium,

@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/premium/api_premium.dart';
+import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -29,10 +30,15 @@ class Register {
     final authorizationCode = credential.authorizationCode;
 
     final premiumApiService = await ref.read(premiumApiServiceProvider.future);
-    final result = await premiumApiService.loginByApple(authorizationCode);
+    await premiumApiService
+        .loginByApple(authorizationCode)
+        .then((result) async {
+          final authService = ref.read(authProvider.notifier);
 
-    final authService = ref.read(authProvider.notifier);
-
-    await authService.login(credential.email ?? "", result.access_token);
+          await authService.login(credential.email ?? "", result.access_token);
+        })
+        .catchError((error) {
+          ToastUtil.showToast(error.toString());
+        });
   }
 }
