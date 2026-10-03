@@ -1,119 +1,119 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-	<dict>
-		<key>CADisableMinimumFrameDurationOnPhone</key>
-		<true />
-		<key>CFBundleDevelopmentRegion</key>
-		<string>$(DEVELOPMENT_LANGUAGE)</string>
-		<key>CFBundleDisplayName</key>
-		<string>DefyxVPN</string>
-		<key>CFBundleExecutable</key>
-		<string>$(EXECUTABLE_NAME)</string>
-		<key>CFBundleIdentifier</key>
-		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-		<key>CFBundleInfoDictionaryVersion</key>
-		<string>6.0</string>
-		<key>CFBundleName</key>
-		<string>defyx</string>
-		<key>CFBundlePackageType</key>
-		<string>APPL</string>
-		<key>CFBundleShortVersionString</key>
-		<string>$(FLUTTER_BUILD_NAME)</string>
-		<key>CFBundleSignature</key>
-		<string>????</string>
-		<key>CFBundleVersion</key>
-		<string>$(FLUTTER_BUILD_NUMBER)</string>
-		<key>GADApplicationIdentifier</key>
-		<string>ca-app-pub-6029472941300558~5225768298</string>
-		<key>LSRequiresIPhoneOS</key>
-		<true />
-		<key>NSDocumentsFolderUsageDescription</key>
-		<string>WARP needs access to store its configuration files</string>
-		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Defyx needs access to your photo library to let you select and share images, such as
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>DefyxVPN</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>defyx</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-6029472941300558~5225768298</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>WARP needs access to store its configuration files</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Defyx needs access to your photo library to let you select and share images, such as
 			profile pictures or VPN connection QR codes.</string>
-		<key>NSUserTrackingUsageDescription</key>
-		<string>This identifier will be used to deliver personalized ads to you. You can decline and
+	<key>NSUserTrackingUsageDescription</key>
+	<string>This identifier will be used to deliver personalized ads to you. You can decline and
 			still use the app with non-personalized ads.</string>
-		<key>NSVPNConfigurationUsageDescription</key>
-		<string>Defyx needs access to VPN configurations to secure your connection.</string>
-		<key>UIApplicationSceneManifest</key>
+	<key>NSVPNConfigurationUsageDescription</key>
+	<string>Defyx needs access to VPN configurations to secure your connection.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
 		<dict>
-			<key>UIApplicationSupportsMultipleScenes</key>
-			<false />
-			<key>UISceneConfigurations</key>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>FlutterSceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIFileSharingEnabled</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UIStatusBarHidden</key>
+	<false/>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportsDocumentBrowser</key>
+	<true/>
+	<key>UTImportedTypeDeclarations</key>
+	<array>
+		<dict>
+			<key>UTTypeConformsTo</key>
+			<array>
+				<string>public.data</string>
+				<string>public.content</string>
+			</array>
+			<key>UTTypeDescription</key>
+			<string>DefyX Configuration File</string>
+			<key>UTTypeIdentifier</key>
+			<string>de.unboundtech.defyxvpn.dfx</string>
+			<key>UTTypeTagSpecification</key>
 			<dict>
-				<key>UIWindowSceneSessionRoleApplication</key>
+				<key>public.filename-extension</key>
 				<array>
-					<dict>
-						<key>UISceneClassName</key>
-						<string>UIWindowScene</string>
-						<key>UISceneConfigurationName</key>
-						<string>flutter</string>
-						<key>UISceneDelegateClassName</key>
-						<string>FlutterSceneDelegate</string>
-						<key>UISceneStoryboardFile</key>
-						<string>Main</string>
-					</dict>
+					<string>dfx</string>
 				</array>
 			</dict>
 		</dict>
-		<key>UIApplicationSupportsIndirectInputEvents</key>
-		<true />
-		<key>UIFileSharingEnabled</key>
-		<true />
-		<key>UILaunchStoryboardName</key>
-		<string>LaunchScreen</string>
-		<key>UIMainStoryboardFile</key>
-		<string>Main</string>
-		<key>UIStatusBarHidden</key>
-		<false />
-		<key>UISupportedInterfaceOrientations</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-		</array>
-		<key>UISupportedInterfaceOrientations~ipad</key>
-		<array>
-			<string>UIInterfaceOrientationPortrait</string>
-			<string>UIInterfaceOrientationPortraitUpsideDown</string>
-			<string>UIInterfaceOrientationLandscapeLeft</string>
-			<string>UIInterfaceOrientationLandscapeRight</string>
-		</array>
-		<key>UISupportsDocumentBrowser</key>
-		<true />
-		<key>UTImportedTypeDeclarations</key>
-		<array>
-			<dict>
-				<key>UTTypeConformsTo</key>
-				<array>
-					<string>public.data</string>
-					<string>public.content</string>
-				</array>
-				<key>UTTypeDescription</key>
-				<string>DefyX Configuration File</string>
-				<key>UTTypeIdentifier</key>
-				<string>de.unboundtech.defyxvpn.dfx</string>
-				<key>UTTypeTagSpecification</key>
-				<dict>
-					<key>public.filename-extension</key>
-					<array>
-						<string>dfx</string>
-					</array>
-				</dict>
-			</dict>
-		</array>
-		<key>com.apple.developer.networking.networkextension</key>
-		<array>
-			<string>packet-tunnel-provider</string>
-		</array>
-		<key>com.apple.security.application-groups</key>
-		<array>
-			<string>group.de.unboundtech.defyxvpn</string>
-		</array>
-		<key>com.apple.developer.applesignin</key>
-		<array>
-			<string>Default</string>
-		</array>
-	</dict>
+	</array>
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
+	<key>com.apple.developer.networking.networkextension</key>
+	<array>
+		<string>packet-tunnel-provider</string>
+	</array>
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.de.unboundtech.defyxvpn</string>
+	</array>
+</dict>
 </plist>

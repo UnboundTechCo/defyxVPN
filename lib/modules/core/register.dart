@@ -21,24 +21,27 @@ class Register {
     }
   }
 
-  Future<void> registerByApple() async {
+  Future<bool> registerByApple() async {
     final credential = await _authorizeByApple();
     if (credential == null) {
-      return;
+      return false;
     }
 
     final authorizationCode = credential.authorizationCode;
 
     final premiumApiService = await ref.read(premiumApiServiceProvider.future);
-    await premiumApiService
+    final result = await premiumApiService
         .loginByApple(authorizationCode)
         .then((result) async {
           final authService = ref.read(authProvider.notifier);
 
           await authService.login(credential.email ?? "", result.access_token);
+          return true;
         })
         .catchError((error) {
           ToastUtil.showToast(error.toString());
+          return false;
         });
+    return result;
   }
 }

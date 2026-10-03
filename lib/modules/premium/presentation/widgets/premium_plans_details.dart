@@ -3,7 +3,7 @@ import 'package:defyx_vpn/common/components/dashed_divider.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
-import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_select_register.dart';
+import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -133,14 +133,13 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     });
     final auth = await widget.ref.read(authProvider.future);
     if (!auth.isLoggedIn) {
-      showDialog(
-        context: context,
-        builder: (context) => PremiumSelectRegister(ref: widget.ref),
-      );
-      setState(() {
-        _isLoading = false;
-      });
-      return;
+      final registered = await Register(ref: widget.ref).registerByApple();
+      if (!registered) {
+        setState(() {
+          _isLoading = false;
+        });
+        return;
+      }
     }
     final premiumService = await widget.ref.watch(
       premiumApiServiceProvider.future,

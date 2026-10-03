@@ -14,6 +14,36 @@
 	<array>
 		<string>allow-vpn</string>
 	</array>
+	<key>com.apple.developer.storekit.custom-purchase-link.allowed-regions</key>
+	<array>
+		<string>nl</string>
+		<string>lt</string>
+		<string>dk</string>
+		<string>ie</string>
+		<string>pl</string>
+		<string>lu</string>
+		<string>si</string>
+		<string>se</string>
+		<string>hr</string>
+		<string>ro</string>
+		<string>it</string>
+		<string>cy</string>
+		<string>at</string>
+		<string>hu</string>
+		<string>pt</string>
+		<string>ee</string>
+		<string>sk</string>
+		<string>bg</string>
+		<string>de</string>
+		<string>fi</string>
+		<string>lv</string>
+		<string>cz</string>
+		<string>mt</string>
+		<string>gr</string>
+		<string>es</string>
+		<string>fr</string>
+		<string>be</string>
+	</array>
 	<key>com.apple.security.application-groups</key>
 	<array>
 		<string>group.de.unboundtech.defyxvpn</string>
