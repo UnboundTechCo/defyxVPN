@@ -34,7 +34,6 @@ key.keystore
 .pub/
 *build
 .env
-lib/shared/global_vars.dart
 
 # Symbolication related
 app.*.symbols

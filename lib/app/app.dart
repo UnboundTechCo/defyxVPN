@@ -134,14 +134,7 @@ class _AppState extends ConsumerState<App> {
     coordinator.initializeAdFlow(
       onRunUMP: (shouldRequestUMP) async {
         if (shouldRequestUMP) {
-          await umpService.requestConsentWithATT(
-            ref: ref,
-            onDone: () {
-              coordinator.markConsentComplete();
-            },
-          );
-        } else {
-          coordinator.markConsentComplete();
+          await umpService.requestConsentWithATT(ref: ref, onDone: () {});
         }
       },
     );
