@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -12,6 +13,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../constants/settings_constants.dart';
 import '../../providers/settings_provider.dart';
 import '../widgets/settings_group_widget.dart';
+import '../widgets/diagnostics_experiments_dialog.dart';
+import '../../../../shared/providers/language_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -129,6 +132,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
 
+    // Re-resolve group/item titles whenever the active language changes,
+    // not just on first mount (Localizations updates after this frame commits)
+    ref.listen(languageProvider, (previous, next) {
+      if (previous != null &&
+          (previous.language != next.language ||
+              previous.isAutoDetect != next.isAutoDetect)) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(settingsProvider.notifier).applyLocalization(context);
+          }
+        });
+      }
+    });
+
     return MainScreenBackground(
       connectionStatus: connectionState.status,
       child: SafeArea(
@@ -173,6 +190,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _buildSliderSection(),
                               SizedBox(height: 30.h),
                               _buildSettingsContent(ref, context),
+                              SizedBox(height: 8.h),
+                              _buildDiagnosticsExperimentsRow(context),
                               SizedBox(height: 130.h),
                             ],
                           ),
@@ -195,7 +214,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
             Directionality(
               textDirection: TextDirection.ltr,
@@ -206,16 +226,16 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       text: 'D',
                       style: TextStyle(
                         fontSize: 35.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFFFFC927),
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx ',
+                      text: 'efyx',
                       style: TextStyle(
                         fontSize: 32.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w400,
                         color: const Color(0xFFFFC927),
                       ),
@@ -224,18 +244,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
             ),
+            SizedBox(width: 6.w),
             Flexible(
               child: Builder(
                 builder: (context) {
                   final l10n = AppLocalizations.of(context);
                   return Text(
                     l10n.statusIs,
-                    maxLines: 2,
+                    maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.start,
                     style: TextStyle(
-                      fontSize: 32.sp,
-                      fontFamily: 'Lato',
+                      fontSize: AppTheme.statusHeadlineFontSize.sp,
+                      fontFamily: AppTheme.fontFamily,
                       fontWeight: FontWeight.w400,
                       color: Colors.white,
                     ),
@@ -250,12 +271,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             final l10n = AppLocalizations.of(context);
             return Text(
               l10n.statusYoursToShape,
-              maxLines: 2,
+              maxLines: 3,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.start,
               style: TextStyle(
-                fontSize: 32.sp,
-                fontFamily: 'Lato',
+                fontSize: AppTheme.statusHeadlineFontSize.sp,
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w400,
                 color: Colors.white,
                 height: 1.1,
@@ -398,6 +419,33 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           )
           .toList(),
+    );
+  }
+
+  Widget _buildDiagnosticsExperimentsRow(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    return Padding(
+      padding: EdgeInsets.only(left: 15.w),
+      child: GestureDetector(
+        onTap: () => DiagnosticsExperimentsDialog.show(context),
+        behavior: HitTestBehavior.opaque,
+        child: Row(
+          children: [
+            Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
+            SizedBox(width: 8.w),
+            Text(
+              l10n.settingsDiagnosticsExperiments.toUpperCase(),
+              style: TextStyle(
+                fontSize: 13.sp,
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey[400],
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

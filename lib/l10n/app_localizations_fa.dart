@@ -144,6 +144,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get chinese => '中文 (چینی)';
 
   @override
+  String get persian => 'فارسی';
+
+  @override
+  String get russian => 'Русский (روسی)';
+
+  @override
   String get gotIt => 'متوجه شدم';
 
   @override
@@ -237,6 +243,15 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => 'بازنشانی';
+
+  @override
+  String get settingsDiagnosticsExperiments => 'تشخیص و آزمایش‌ها';
+
+  @override
+  String get settingsAutoDetect => 'تشخیص خودکار';
+
+  @override
+  String get settingsHapticFeedback => 'بازخورد لمسی';
 
   @override
   String get offlineFlowlineMessage =>
@@ -382,4 +397,11 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'برای تکمیل فرآیند امن ورود یا ثبت‌نام، ابتدا باید با استفاده از یکی از روش‌های اتصال موجود، اتصال برقرار کنید.';
+
+  @override
+  String get speedTestFailed => 'تست سرعت ناموفق بود. لطفاً دوباره تلاش کنید.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'اتصال شما ناپایدار بود و تست متوقف شد.';
 }

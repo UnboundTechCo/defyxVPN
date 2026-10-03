@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toastification/toastification.dart';
@@ -10,7 +11,7 @@ class ToastUtil {
         style: TextStyle(
           color: Colors.white,
           fontSize: 15.sp,
-          fontFamily: 'Lato',
+          fontFamily: AppTheme.fontFamily,
           fontWeight: FontWeight.w400,
         ),
       ),

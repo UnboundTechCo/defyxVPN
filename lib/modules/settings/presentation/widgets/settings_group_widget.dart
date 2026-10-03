@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/offline_flowline_widget.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/sync_menu_dropdown.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
@@ -11,6 +12,7 @@ import '../../models/settings_item.dart';
 import 'settings_item_widget.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+import '../../../../shared/providers/haptics_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class SettingsGroupWidget extends ConsumerStatefulWidget {
@@ -69,7 +71,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
         _rotationController.reset();
       });
     }
-    HapticFeedback.mediumImpact();
+    if (ref.read(hapticsProvider)) {
+      HapticFeedback.mediumImpact();
+    }
     widget.onReset?.call();
   }
 
@@ -90,7 +94,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
           onReorder: (oldIndex, newIndex) {
-            HapticFeedback.lightImpact();
+            if (ref.read(hapticsProvider)) {
+              HapticFeedback.lightImpact();
+            }
             widget.onReorder?.call(oldIndex, newIndex);
           },
           onReorderStart: (index) {
@@ -147,7 +153,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                                   item.title.toString().toUpperCase(),
                                   style: TextStyle(
                                     fontSize: 17.sp,
-                                    fontFamily: 'Lato',
+                                    fontFamily: AppTheme.fontFamily,
                                     fontWeight: FontWeight.w400,
                                     color: Colors.white,
                                   ),
@@ -245,7 +251,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                   widget.group.title,
                   style: TextStyle(
                     fontSize: 13.sp,
-                    fontFamily: 'SF Pro',
+                    fontFamily: AppTheme.fontFamily,
                     fontWeight: FontWeight.w400,
                     color: Colors.grey[400],
                     letterSpacing: 0.5,
@@ -308,7 +314,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                               ).settingsResetToDefault,
                               style: TextStyle(
                                 fontSize: 12.sp,
-                                fontFamily: 'Lato',
+                                fontFamily: AppTheme.fontFamily,
                                 fontWeight: FontWeight.w600,
                                 color: const Color(0xFFFF9A9A),
                                 letterSpacing: 0.5,

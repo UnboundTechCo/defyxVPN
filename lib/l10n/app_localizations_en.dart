@@ -144,6 +144,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get chinese => '中文 (Chinese)';
 
   @override
+  String get persian => 'Persian';
+
+  @override
+  String get russian => 'Russian';
+
+  @override
   String get gotIt => 'Got it';
 
   @override
@@ -237,6 +243,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsResetToDefault => 'RESET';
+
+  @override
+  String get settingsDiagnosticsExperiments => 'Diagnostics & Experiments';
+
+  @override
+  String get settingsAutoDetect => 'Auto Detect';
+
+  @override
+  String get settingsHapticFeedback => 'Haptic Feedback';
 
   @override
   String get offlineFlowlineMessage =>
@@ -382,4 +397,11 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get connectionRequiredDescription =>
       'To complete a secure login or registration process, you must first establish a connection using one of the available connection methods.';
+
+  @override
+  String get speedTestFailed => 'Speed test failed. Please try again.';
+
+  @override
+  String get speedTestConnectionUnstable =>
+      'Your connection was unstable, and the test was interrupted.';
 }

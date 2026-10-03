@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
@@ -5,9 +7,11 @@ import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ump_service.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
+import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,10 +33,20 @@ class App extends ConsumerStatefulWidget {
 class _AppState extends ConsumerState<App> {
   bool _hasCheckedInitialization = false;
 
+  bool get _isMobilePlatform =>
+      !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
   @override
   Widget build(BuildContext context) {
     // Eagerly trigger environment computation
     final environmentAsync = ref.watch(adEnvironmentProvider);
+
+    // Keep the vibration alert backend in sync with the Haptic Feedback setting
+    ref.listen(hapticsProvider, (previous, next) {
+      if (_isMobilePlatform) {
+        AlertService().setActionEnabled(next);
+      }
+    });
 
     // Single listener for ad readiness state changes
     ref.listen(adReadinessCoordinatorProvider, (previous, next) {
@@ -92,6 +106,9 @@ class _AppState extends ConsumerState<App> {
 
     await VPN(ProviderScope.containerOf(context, listen: false)).getVPNStatus();
     await AlertService().init();
+    if (_isMobilePlatform) {
+      AlertService().setActionEnabled(ref.read(hapticsProvider));
+    }
     await AnimationService().init();
   }
 
@@ -135,6 +152,8 @@ class _AppState extends ConsumerState<App> {
     final languageState = ref.watch(languageProvider);
     final designSize = _getDesignSize(context);
 
+    AppTheme.updateFontFamilyForLocale(languageState.language.locale);
+
     return ToastificationWrapper(
       config: ToastificationConfig(
         maxToastLimit: 1,
@@ -161,7 +180,12 @@ class _AppState extends ConsumerState<App> {
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
-            supportedLocales: const [Locale('en'), Locale('zh')],
+            supportedLocales: const [
+              Locale('en'),
+              Locale('fa'),
+              Locale('ru'),
+              Locale('zh'),
+            ],
           );
         },
       ),

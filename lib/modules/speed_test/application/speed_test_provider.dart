@@ -15,12 +15,17 @@ import 'services/results_calculator_service.dart';
 import 'services/speed_measurement_config.dart';
 import 'services/upload_measurement_service.dart';
 
+enum SpeedTestErrorType {
+  testFailed,
+  connectionUnstable,
+}
+
 class SpeedTestState {
   final SpeedTestStep step;
   final SpeedTestResult result;
   final double progress;
   final bool isConnectionStable;
-  final String? errorMessage;
+  final SpeedTestErrorType? errorType;
   final String currentPhase;
   final double currentSpeed;
   final bool hadError;
@@ -31,7 +36,7 @@ class SpeedTestState {
     this.result = const SpeedTestResult(),
     this.progress = 0.0,
     this.isConnectionStable = true,
-    this.errorMessage,
+    this.errorType,
     this.currentPhase = '',
     this.currentSpeed = 0.0,
     this.hadError = false,
@@ -43,7 +48,7 @@ class SpeedTestState {
     SpeedTestResult? result,
     double? progress,
     bool? isConnectionStable,
-    String? errorMessage,
+    SpeedTestErrorType? errorType,
     bool clearErrorMessage = false,
     String? currentPhase,
     double? currentSpeed,
@@ -55,7 +60,7 @@ class SpeedTestState {
       result: result ?? this.result,
       progress: progress ?? this.progress,
       isConnectionStable: isConnectionStable ?? this.isConnectionStable,
-      errorMessage: clearErrorMessage ? null : (errorMessage ?? this.errorMessage),
+      errorType: clearErrorMessage ? null : (errorType ?? this.errorType),
       currentPhase: currentPhase ?? this.currentPhase,
       currentSpeed: currentSpeed ?? this.currentSpeed,
       hadError: hadError ?? this.hadError,
@@ -164,7 +169,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       result: const SpeedTestResult(),
       currentPhase: 'Initializing...',
       currentSpeed: 0.0,
-      errorMessage: null,
+      clearErrorMessage: true,
       isConnectionStable: true,
       hadError: false,
     );
@@ -193,7 +198,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       _stopConnectionMonitoring();
       _alertService.error();
       state = state.copyWith(
-        errorMessage: 'Speed test failed. Please try again.',
+        errorType: SpeedTestErrorType.testFailed,
         step: SpeedTestStep.ready,
         isConnectionStable: false,
         currentSpeed: 0.0,
@@ -421,7 +426,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
       state = state.copyWith(
         step: SpeedTestStep.ready,
         isConnectionStable: false,
-        errorMessage: 'Your connection was unstable, and the test was interrupted.',
+        errorType: SpeedTestErrorType.connectionUnstable,
         hadError: true,
       );
     } else {
@@ -449,7 +454,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
   void completeTest() {
     state = state.copyWith(
       step: SpeedTestStep.ready,
-      errorMessage: state.hadError ? state.errorMessage : null,
+      clearErrorMessage: !state.hadError,
       hadError: false,
     );
   }

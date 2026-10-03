@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -439,7 +440,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
         style: TextStyle(
           color: Colors.white,
           fontSize: 16.sp,
-          fontFamily: 'Lato',
+          fontFamily: AppTheme.fontFamily,
           fontWeight: FontWeight.w500,
           letterSpacing: 2.0,
         ),

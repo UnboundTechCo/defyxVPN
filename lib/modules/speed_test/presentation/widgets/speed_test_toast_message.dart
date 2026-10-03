@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -25,7 +26,7 @@ class SpeedTestToastMessage extends StatelessWidget {
         message,
         style: TextStyle(
           fontSize: 16.sp,
-          fontFamily: 'Lato',
+          fontFamily: AppTheme.fontFamily,
           color: Colors.white,
           height: 1.4,
         ),

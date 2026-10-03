@@ -4,6 +4,13 @@ allprojects {
         google()
         mavenCentral()
     }
+    buildscript {
+        configurations.all {
+            resolutionStrategy {
+                force("com.android.tools.build:gradle:8.9.1")
+            }
+        }
+    }
 }
 
 val newBuildDir: Directory = rootProject.layout.buildDirectory.dir("../../build").get()

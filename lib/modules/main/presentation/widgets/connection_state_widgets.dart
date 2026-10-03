@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/shimmer.dart';
@@ -35,12 +36,12 @@ class NoInternetWidget extends StatelessWidget {
           child: Text(
             text,
             key: ValueKey<String>(text),
-            maxLines: 2,
+            maxLines: 3,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.start,
             style: TextStyle(
               fontSize: fontSize,
-              fontFamily: 'Lato',
+              fontFamily: AppTheme.fontFamily,
               fontWeight: FontWeight.w500,
               color: textColor,
               height: 1.1,
@@ -77,12 +78,12 @@ class ConnectedWidget extends StatelessWidget {
         Text(
           text,
           key: ValueKey<String>(text),
-          maxLines: 2,
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
           style: TextStyle(
             fontSize: fontSize,
-            fontFamily: 'Lato',
+            fontFamily: AppTheme.fontFamily,
             fontWeight: FontWeight.w400,
             color: textColor,
             height: 1.1,
@@ -176,7 +177,7 @@ class PingIndicator extends ConsumerWidget {
                   ping,
                   style: TextStyle(
                     fontSize: 16.sp,
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                     fontWeight: FontWeight.w500,
                     color: Colors.white,
                   ),
@@ -185,7 +186,7 @@ class PingIndicator extends ConsumerWidget {
                   ' ms',
                   style: TextStyle(
                     fontSize: 16.sp,
-                    fontFamily: 'Lato',
+                    fontFamily: AppTheme.fontFamily,
                     fontWeight: FontWeight.w300,
                     color: Colors.white,
                   ),
@@ -228,12 +229,12 @@ class DefaultStateWidget extends StatelessWidget {
     return Text(
       text,
       key: ValueKey<String>(text),
-      maxLines: 2,
+      maxLines: 3,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.start,
       style: TextStyle(
         fontSize: fontSize,
-        fontFamily: 'Lato',
+        fontFamily: AppTheme.fontFamily,
         fontWeight: status == ConnectionStatus.error
             ? FontWeight.w300
             : FontWeight.w400,
@@ -276,7 +277,7 @@ class AnalyzingContent extends ConsumerWidget {
               style: TextStyle(
                 color: const Color(0xFFA7A7A7),
                 fontSize: 16.sp,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w300,
               ),
             ),
@@ -286,7 +287,7 @@ class AnalyzingContent extends ConsumerWidget {
               style: TextStyle(
                 color: const Color(0xFFA7A7A7),
                 fontSize: deepScanEnabled ? 24.sp : 16.sp,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontWeight: FontWeight.w400,
               ),
             ),
@@ -340,12 +341,12 @@ class LoggerStatusWidget extends ConsumerWidget {
               child: Text(
                 statusInfo.text,
                 textAlign: TextAlign.start,
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 16.sp,
                   color: statusInfo.color,
-                  fontFamily: 'Lato',
+                  fontFamily: AppTheme.fontFamily,
                 ),
               ),
             ),

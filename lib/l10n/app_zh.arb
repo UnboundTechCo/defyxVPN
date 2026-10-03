@@ -45,6 +45,8 @@
   "tips": "提示",
   "english": "English (英语)",
   "chinese": "中文",
+  "persian": "波斯语",
+  "russian": "俄语",
   "gotIt": "知道了",
   "learnMore": "了解更多",
   "defyxGoal": "Defyx的目标是确保安全访问公共信息，并提供免费的浏览体验。",
@@ -76,6 +78,9 @@
   "settingsIncluded": "已包含",
   "settingsAtLeastOneCoreRequired": "至少需要保留一个核心",
   "settingsResetToDefault": "重置",
+  "settingsDiagnosticsExperiments": "诊断与实验",
+  "settingsAutoDetect": "自动检测",
+  "settingsHapticFeedback": "触感反馈",
   "offlineFlowlineMessage": "由于当前使用离线版本，Flowline更新已暂停。",
   "offlineFlowlineUndo": "撤销",
   "updateMethods": "更新方法",
@@ -120,5 +125,7 @@
   "loginByCode": "使用代码登录",
   "backToLoginByEmail": "返回电子邮件登录",
   "connectionRequired": "需要连接",
-  "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。"
+  "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。",
+  "speedTestFailed": "速度测试失败，请重试。",
+  "speedTestConnectionUnstable": "您的连接不稳定，测试已中断。"
 }
