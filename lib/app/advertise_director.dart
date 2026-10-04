@@ -29,6 +29,7 @@ class AdvertiseDirector {
     }
 
     final String currentTimeZone = (await FlutterTimezone.getLocalTimezone())
+        .identifier
         .toLowerCase();
 
     if (flowlineSettings.disabledAdmob.contains(currentTimeZone)) {
@@ -58,7 +59,8 @@ class AdvertiseDirector {
   }
 
   static Future<Map<String, String>> getRandomCustomAd(Ref ref) async {
-    final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
+    final String currentTimeZone =
+        (await FlutterTimezone.getLocalTimezone()).identifier;
     debugPrint('Ad Manager - Getting ad for timezone: $currentTimeZone');
 
     final adversies = await ref
