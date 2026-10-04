@@ -92,10 +92,10 @@ class FlowlineService implements IFlowlineService {
           return;
         }
 
+        final advertiseStorageMap = {'api_advertise': decoded['advertise']};
         final appBuildType = GlobalVars.appBuildType;
         final version = decoded['version']?[appBuildType];
 
-        final advertiseStorageMap = {'api_advertise': decoded['advertise']};
         // Cached blobs from older app versions may not have a 'settings' field.
         final settingsStorageMap =
             (decoded['settings'] as Map<String, dynamic>?) ??

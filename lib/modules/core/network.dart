@@ -52,7 +52,9 @@ class NetworkStatus {
       'se',
       'sg',
       'sk',
-      'tr'
+      'tr',
+      'us',
+      'xx',
     ];
     try {
       final flag = await _vpnBridge.getFlag();
@@ -67,8 +69,8 @@ class NetworkStatus {
   }
 
   Future<bool> checkConnectivity() async {
-    final List<ConnectivityResult> connectivityResult =
-        await (Connectivity().checkConnectivity());
+    final List<ConnectivityResult> connectivityResult = await (Connectivity()
+        .checkConnectivity());
 
     return connectivityResult.contains(ConnectivityResult.mobile) ||
         connectivityResult.contains(ConnectivityResult.wifi) ||

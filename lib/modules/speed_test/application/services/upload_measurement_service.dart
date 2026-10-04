@@ -34,7 +34,7 @@ class UploadMeasurementService {
 
     for (int i = 0; i < count; i++) {
       if (isCanceledCheck(false)) {
-        debugPrint('🛑 Upload measurement canceled');
+        debugPrint('Upload measurement canceled');
         return;
       }
 
@@ -68,11 +68,11 @@ class UploadMeasurementService {
           onMetricsUpdate(percentileSpeed, avgSpeed, jitter, packetLoss);
 
           debugPrint(
-              '   📤 Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
+              'Upload ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
-        debugPrint('   ❌ Upload measurement ${i + 1} failed: $e');
+        debugPrint('Upload measurement ${i + 1} failed: $e');
 
         if (consecutiveFailures >= SpeedMeasurementConfig.maxConsecutiveFailures) {
           throw Exception('Network connection lost during upload test.');
@@ -85,7 +85,7 @@ class UploadMeasurementService {
 
   Future<double> _measureSpeed(int bytes) async {
     if (isCanceledCheck(false)) {
-      debugPrint('   🛑 Upload measurement canceled before start');
+      debugPrint('Upload measurement canceled before start');
       return 0.0;
     }
 
@@ -132,7 +132,7 @@ class UploadMeasurementService {
         },
       ).then((_) {
         if (isCanceledCheck(false)) {
-          debugPrint('   🛑 Upload measurement canceled after completion');
+          debugPrint('Upload measurement canceled after completion');
           completer.complete(0.0);
           return;
         }
@@ -150,7 +150,7 @@ class UploadMeasurementService {
         final mbps = bps / 1000000;
         completer.complete(mbps);
       }).catchError((e) {
-        debugPrint('   ❌ Upload measurement error: $e');
+        debugPrint('Upload measurement error: $e');
         if (!streamController.isClosed) {
           streamController.close();
         }
@@ -159,7 +159,7 @@ class UploadMeasurementService {
 
       return completer.future;
     } catch (e) {
-      debugPrint('   ❌ Upload measurement error: $e');
+      debugPrint('Upload measurement error: $e');
       throw Exception('Upload failed: $e');
     }
   }

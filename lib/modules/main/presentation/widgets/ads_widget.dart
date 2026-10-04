@@ -8,9 +8,9 @@
 /// - Strategies: Handle ad loading and rendering for their specific case
 ///
 /// **Separation of Concerns:**
-/// - Business Logic → AdStrategyManager (which strategy when)
-/// - Rendering → AdsWidget (show active strategy)
-/// - Ad Loading → Strategies (how to load and display)
+/// - Business Logic -> AdStrategyManager (which strategy when)
+/// - Rendering -> AdsWidget (show active strategy)
+/// - Ad Loading -> Strategies (how to load and display)
 ///
 /// **Responsibilities:**
 /// - AdStrategyManager: Strategy selection, lifecycle, transitions

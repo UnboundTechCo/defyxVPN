@@ -80,7 +80,7 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         );
         await _persistState(); // Persist Android default
         debugPrint(
-          '📦 Android: Set ATT to authorized, vpnProfileSetup=${storedVpnSetup ?? false}',
+          'Android: Set ATT to authorized, vpnProfileSetup=${storedVpnSetup ?? false}',
         );
         return;
       }
@@ -98,15 +98,15 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         );
 
         debugPrint(
-          '📦 Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize, vpnProfileSetup=${storedVpnSetup ?? false}',
+          'Loaded persisted ATT status: ${status.name}, canPersonalize=$canPersonalize, vpnProfileSetup=${storedVpnSetup ?? false}',
         );
       } else if (storedVpnSetup != null) {
         // Load VPN setup flag even if ATT status not stored yet
         state = state.copyWith(vpnProfileSetup: storedVpnSetup);
-        debugPrint('📦 Loaded persisted VPN profile setup: $storedVpnSetup');
+        debugPrint('Loaded persisted VPN profile setup: $storedVpnSetup');
       }
     } catch (e) {
-      debugPrint('⚠️ Failed to load persisted ATT state: $e');
+      debugPrint('Failed to load persisted ATT state: $e');
     }
   }
 
@@ -135,17 +135,17 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
       await _persistState();
       debugPrint(
-        '✅ ATT status checked: ${status.name}, canPersonalize=$canPersonalize',
+        'ATT status checked: ${status.name}, canPersonalize=$canPersonalize',
       );
     } catch (e) {
-      debugPrint('❌ Failed to check ATT status: $e');
+      debugPrint('Failed to check ATT status: $e');
     }
   }
 
   /// Request ATT authorization (iOS only)
   Future<TrackingStatus> requestATT() async {
     if (!Platform.isIOS) {
-      debugPrint('📱 Skipping ATT request (not iOS)');
+      debugPrint('Skipping ATT request (not iOS)');
       return TrackingStatus.authorized;
     }
 
@@ -162,12 +162,12 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
       await _persistState();
       debugPrint(
-        '📱 ATT Authorization: ${status.name}, canPersonalize=$canPersonalize',
+        'ATT Authorization: ${status.name}, canPersonalize=$canPersonalize',
       );
 
       return status;
     } catch (e) {
-      debugPrint('❌ ATT request failed: $e');
+      debugPrint('ATT request failed: $e');
       return TrackingStatus.notDetermined;
     }
   }
@@ -185,9 +185,9 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
         '${_storageKey}_vpn_profile_setup',
         state.vpnProfileSetup,
       );
-      debugPrint('💾 Persisted ATT state: ${state.attStatus.name}, vpnProfileSetup=${state.vpnProfileSetup}');
+      debugPrint('Persisted ATT state: ${state.attStatus.name}, vpnProfileSetup=${state.vpnProfileSetup}');
     } catch (e) {
-      debugPrint('⚠️ Failed to persist ATT state: $e');
+      debugPrint('Failed to persist ATT state: $e');
     }
   }
 
@@ -203,7 +203,7 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
 
     if (!shouldRequest) {
       debugPrint(
-        '⏭️ Skipping UMP request (ATT not authorized: ${state.attStatus.name})',
+        'Skipping UMP request (ATT not authorized: ${state.attStatus.name})',
       );
     }
 
@@ -221,20 +221,20 @@ class AdPersonalizationNotifier extends StateNotifier<AdPersonalizationState> {
   /// Mark consent flow as complete (called after ATT/UMP finish)
   void markConsentFlowComplete() {
     state = state.copyWith(consentFlowComplete: true);
-    debugPrint('✅ Consent flow marked as complete');
+    debugPrint('Consent flow marked as complete');
   }
 
   /// Mark VPN profile as setup (called after privacy notice accepted and VPN initialized)
   void markVpnProfileSetup() {
     state = state.copyWith(vpnProfileSetup: true);
-    debugPrint('✅ VPN profile setup complete');
+    debugPrint('VPN profile setup complete');
     _persistState(); // Persist immediately to survive app restarts
   }
 
   /// Mark AdMob initialization as started (prevents duplicate initialization)
   void markAdMobInitializationStarted() {
     state = state.copyWith(adMobInitializationStarted: true);
-    debugPrint('🔒 AdMob initialization started');
+    debugPrint('AdMob initialization started');
   }
 }
 

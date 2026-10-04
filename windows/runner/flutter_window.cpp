@@ -13,8 +13,9 @@
 #include <flutter/standard_method_codec.h>
 #include <string>
 
-FlutterWindow::FlutterWindow(const flutter::DartProject& project)
-    : project_(project) {}
+FlutterWindow::FlutterWindow(const flutter::DartProject& project,
+                             bool tunnel_mode)
+    : project_(project), tunnel_mode_(tunnel_mode) {}
 
 FlutterWindow::~FlutterWindow() {}
 
@@ -38,7 +39,7 @@ bool FlutterWindow::OnCreate() {
 
   // Check if window should start minimized
   RegistryManager registry;
-  bool shouldShowWindow = !registry.GetStartMinimized();
+  bool shouldShowWindow = !tunnel_mode_ && !registry.GetStartMinimized();
 
   flutter_controller_->engine()->SetNextFrameCallback([&, shouldShowWindow]() {
     if (shouldShowWindow) {
@@ -58,24 +59,24 @@ bool FlutterWindow::OnCreate() {
   vpn_channel_handler_->SetupChannels();
 
   // Initialize system tray
-  system_tray_ = std::make_unique<SystemTray>();
-  system_tray_->Initialize(
-      GetHandle(),
-      GetModuleHandle(nullptr),
-      [this](SystemTray::TrayAction action) {
-        HandleTrayAction(action);
-      });
+  if (!tunnel_mode_) {
+    system_tray_ = std::make_unique<SystemTray>();
+    system_tray_->Initialize(
+        GetHandle(),
+        GetModuleHandle(nullptr),
+        [this](SystemTray::TrayAction action) {
+          HandleTrayAction(action);
+        });
 
-  g_system_tray = system_tray_.get();
+    g_system_tray = system_tray_.get();
 
-  // Update VPN channel handler with system tray reference
-  if (vpn_channel_handler_) {
-    vpn_channel_handler_ = std::make_unique<VPNChannelHandler>(
-        messenger, GetHandle(), &g_dxcore, g_system_tray);
-    vpn_channel_handler_->SetupChannels();
-  }
+    // Update VPN channel handler with system tray reference
+    if (vpn_channel_handler_) {
+      vpn_channel_handler_ = std::make_unique<VPNChannelHandler>(
+          messenger, GetHandle(), &g_dxcore, g_system_tray);
+      vpn_channel_handler_->SetupChannels();
+    }
 
-  if (system_tray_) {
     system_tray_->UpdateIcon(SystemTray::TrayIconStatus::Standby);
     system_tray_->UpdateTooltip(L"DefyxVPN - Ready");
   }

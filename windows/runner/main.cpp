@@ -2,20 +2,35 @@
 #include <flutter/flutter_view_controller.h>
 #include <windows.h>
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 #include "flutter_window.h"
 #include "utils.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
                       _In_ wchar_t *command_line, _In_ int show_command)
 {
-  HANDLE hMutex = CreateMutexW(nullptr, TRUE, L"DefyxVPN_SingleInstance");
+  std::vector<std::string> command_line_arguments = GetCommandLineArguments();
+
+  const bool tunnel_mode =
+      std::find(command_line_arguments.begin(), command_line_arguments.end(),
+                "--tun") != command_line_arguments.end();
+
+  HANDLE hMutex = CreateMutexW(nullptr, TRUE,
+                               tunnel_mode ? L"DefyxVPN_TunnelInstance"
+                                           : L"DefyxVPN_SingleInstance");
   if (GetLastError() == ERROR_ALREADY_EXISTS)
   {
-    HWND hwnd = FindWindowW(nullptr, L"DefyxVPN");
-    if (hwnd)
+    if (!tunnel_mode)
     {
-      ShowWindow(hwnd, SW_RESTORE);
-      SetForegroundWindow(hwnd);
+      HWND hwnd = FindWindowW(nullptr, L"DefyxVPN");
+      if (hwnd)
+      {
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+      }
     }
     return 0;
   }
@@ -32,15 +47,13 @@ int APIENTRY wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE prev,
 
   flutter::DartProject project(L"data");
 
-  std::vector<std::string> command_line_arguments =
-      GetCommandLineArguments();
-
   project.set_dart_entrypoint_arguments(std::move(command_line_arguments));
 
-  FlutterWindow window(project);
+  FlutterWindow window(project, tunnel_mode);
   Win32Window::Point origin(10, 10);
   Win32Window::Size size(400, 700);
-  if (!window.Create(L"DefyxVPN", origin, size))
+  if (!window.Create(tunnel_mode ? L"DefyxVPN Tunnel" : L"DefyxVPN", origin,
+                     size))
   {
     return EXIT_FAILURE;
   }

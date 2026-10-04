@@ -12,6 +12,9 @@ bool StartVPN(const std::string& cacheDir, const std::string& flowLine, const st
 bool StopVPN();
 void StartTun2Socks(long long fd, const std::string& addr);
 void StopTun2Socks();
+
+bool StartTunnel();
+void StopTunnel();
 void Stop();
 long long MeasurePing();
 std::string GetFlag();

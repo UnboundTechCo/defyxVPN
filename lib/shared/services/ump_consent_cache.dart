@@ -74,9 +74,9 @@ class UmpConsentCacheService {
       );
 
       await _storage.writeMap(_cacheKey, cache.toJson());
-      debugPrint('💾 UMP consent cached: ${status.name}, canShowAds=$canShowAds');
+      debugPrint('UMP consent cached: ${status.name}, canShowAds=$canShowAds');
     } catch (e) {
-      debugPrint('❌ Failed to cache UMP consent: $e');
+      debugPrint('Failed to cache UMP consent: $e');
     }
   }
 
@@ -85,24 +85,24 @@ class UmpConsentCacheService {
     try {
       final json = await _storage.readMap(_cacheKey);
       if (json.isEmpty) {
-        debugPrint('📭 No cached UMP consent found');
+        debugPrint('No cached UMP consent found');
         return null;
       }
 
       final cache = ConsentCache.fromJson(json);
       
       if (!cache.isValid) {
-        debugPrint('⏰ Cached UMP consent expired (${cache.ageInMinutes}m old)');
+        debugPrint('Cached UMP consent expired (${cache.ageInMinutes}m old)');
         await clearCache();
         return null;
       }
 
       debugPrint(
-        '📦 Loaded cached UMP consent: ${cache.status.name}, age: ${cache.ageInMinutes}m',
+        'Loaded cached UMP consent: ${cache.status.name}, age: ${cache.ageInMinutes}m',
       );
       return cache;
     } catch (e) {
-      debugPrint('❌ Failed to load UMP consent cache: $e');
+      debugPrint('Failed to load UMP consent cache: $e');
       return null;
     }
   }
@@ -111,9 +111,9 @@ class UmpConsentCacheService {
   Future<void> clearCache() async {
     try {
       await _storage.delete(_cacheKey);
-      debugPrint('🗑️ UMP consent cache cleared');
+      debugPrint('UMP consent cache cleared');
     } catch (e) {
-      debugPrint('❌ Failed to clear UMP consent cache: $e');
+      debugPrint('Failed to clear UMP consent cache: $e');
     }
   }
 
@@ -152,7 +152,7 @@ class UmpConsentCacheService {
         'isValid': cache.isValid,
       };
     } catch (e) {
-      debugPrint('❌ Failed to get UMP cache stats: $e');
+      debugPrint('Failed to get UMP cache stats: $e');
       return {'cached': false, 'error': e.toString()};
     }
   }

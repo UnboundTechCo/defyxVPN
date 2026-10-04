@@ -63,6 +63,8 @@ bool DXCoreBridge::Load() {
   // Handshake functions are optional — don't fail Load() if absent
   load(pRequestHandshake_, "WinRequestHandshake");
   load(pCompleteHandshake_, "WinCompleteHandshake");
+  load(pStartTunnel_, "WinStartTunnel");
+  load(pStopTunnel_, "WinStopTunnel");
   ok &= load(pLogin_, "WinLogin");
   ok &= load(pLoginByCode_, "WinLoginByCode");
 
@@ -111,6 +113,12 @@ void DXCoreBridge::StartVPN(const std::string& cache_dir,
 
 int DXCoreBridge::StopVPN() { return 
   pStopVPN_ ? pStopVPN_() : 0; }
+
+int DXCoreBridge::StartTunnel() { return pStartTunnel_ ? pStartTunnel_() : 0; }
+
+void DXCoreBridge::StopTunnel() {
+  if (pStopTunnel_) pStopTunnel_();
+}
 
 void DXCoreBridge::SetAsnName() {
   if (pSetAsnName_) pSetAsnName_();
