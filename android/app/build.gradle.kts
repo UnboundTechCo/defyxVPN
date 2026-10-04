@@ -1,4 +1,6 @@
 import java.util.Properties
+import com.android.build.api.dsl.ApplicationExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
@@ -9,13 +11,12 @@ if (keystorePropertiesFile.exists()) {
 
 plugins {
     id("com.android.application")
-    id("kotlin-android")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-android {
+extensions.configure<ApplicationExtension> {
     namespace = "de.unboundtech.defyxvpn"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.13846066"
@@ -25,9 +26,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
     defaultConfig {
         applicationId = "de.unboundtech.defyxvpn"
         minSdk = flutter.minSdkVersion
@@ -60,6 +58,12 @@ android {
                 "proguard-rules.pro"
             )
         }
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_11)
     }
 }
 

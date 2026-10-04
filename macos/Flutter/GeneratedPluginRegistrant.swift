@@ -8,7 +8,7 @@ import Foundation
 import audioplayers_darwin
 import battery_plus
 import connectivity_plus
-import file_picker
+import file_picker_darwin
 import firebase_analytics
 import firebase_core
 import firebase_crashlytics
