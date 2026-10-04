@@ -7,7 +7,7 @@ allprojects {
     buildscript {
         configurations.all {
             resolutionStrategy {
-                force("com.android.tools.build:gradle:8.9.1")
+                force("com.android.tools.build:gradle:8.13.2")
             }
         }
     }
