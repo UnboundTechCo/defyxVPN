@@ -231,32 +231,6 @@ class MainActivity : FlutterActivity() {
         eventSink?.success(mapOf("status" to status))
     }
 
-    private fun login(args: Map<String, Any>?, result: MethodChannel.Result) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val email = args?.get("email") as? String
-                val password = args?.get("password") as? String
-                if (email.isNullOrEmpty() || password.isNullOrEmpty()) {
-                    withContext(Dispatchers.Main) {
-                        result.error(
-                                "INVALID_ARGUMENT",
-                                "email or password is missing or empty",
-                                null
-                        )
-                    }
-                    return@launch
-                }
-                val loginResult = DefyxVpnService.getInstance().login(email, password)
-                result.success(loginResult)
-            } catch (e: Exception) {
-                Log.e("Login", "Login failed: ${e.message}", e)
-                withContext(Dispatchers.Main) {
-                    result.error("LOGIN_ERROR", "Failed to login", e.localizedMessage)
-                }
-            }
-        }
-    }
-
     private fun calculatePing(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {

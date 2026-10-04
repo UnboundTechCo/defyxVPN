@@ -17,6 +17,8 @@ source "$PLATFORM_DIR/windows.sh"
 source "$PLATFORM_DIR/firebase/firebase_ios.sh"
 source "$PLATFORM_DIR/firebase/firebase_android.sh"
 
+bash "$SCRIPT_DIR/prepare_firebase_builtin_kotlin.sh"
+
 echo "Using config file: $GLOBAL_VARS_FILE"
 
 validate_env_vars

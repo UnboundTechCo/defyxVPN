@@ -20,7 +20,7 @@ dependencies:
   dio_http_formatter: ^3.2.1
   shimmer: ^3.0.0
   shake: ^3.0.0
-  google_mobile_ads: ^6.0.0
+  google_mobile_ads: ^7.0.0
   app_tracking_transparency: ^2.0.5
   url_launcher: ^6.3.1
   flame: ^1.29.0
@@ -30,9 +30,9 @@ dependencies:
   freezed_annotation: ^2.4.4
   retrofit: ^4.9.0
   json_annotation: ^4.9.0
-  package_info_plus: ^8.3.0
+  package_info_plus: ^10.2.2
   version: ^3.0.2
-  flutter_timezone: ^4.1.1
+  flutter_timezone: ^5.1.1
   connectivity_plus: ^7.0.0
 
   # Frontend Packages
@@ -45,14 +45,14 @@ dependencies:
   cupertino_icons: ^1.0.8
   flutter_dotenv: ^6.0.0
   firebase_core: ^4.2.0
-  firebase_analytics: ^12.0.3
+  firebase_analytics: ^12.6.0
   firebase_crashlytics: ^5.0.5
-  battery_plus: ^7.0.0
-  audioplayers: ^6.5.1
+  battery_plus: ^7.1.2
+  audioplayers: ^6.8.1
   path_provider: ^2.1.1
   msix: ^3.16.12
   flutter_native_splash: ^2.4.7
-  file_picker: ^10.3.10
+  file_picker: ^13.1.0
 
 dev_dependencies:
   flutter_test:
@@ -64,6 +64,9 @@ dev_dependencies:
   json_serializable: ^6.8.0
   freezed: ^2.5.7
   riverpod_generator: ^2.4.3
+
+dependency_overrides:
+  sensors_plus: ^7.1.1
 
 flutter:
   generate: true

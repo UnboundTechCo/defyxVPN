@@ -1,7 +1,7 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class GlobalVars {
-  static const String appBuildType = 'appStore';
+  static const String appBuildType = 'github';
 
   static String get appStore => dotenv.env['LINK_APP_STORE'] ?? '';
   static String get testFlight => dotenv.env['LINK_TEST_FLIGHT'] ?? '';
