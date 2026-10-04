@@ -4,9 +4,11 @@ import 'dart:io';
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:in_app_purchase_storekit/store_kit_wrappers.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 
 class BalancePurchaseService extends ChangeNotifier {
   BalancePurchaseService({
@@ -20,6 +22,7 @@ class BalancePurchaseService extends ChangeNotifier {
   final Future<void> Function() _refreshBalance;
   final InAppPurchase _store = InAppPurchase.instance;
   final Set<String> _processing = <String>{};
+  late String _correlationId;
 
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   List<ProductDetails> _products = <ProductDetails>[];
@@ -35,29 +38,26 @@ class BalancePurchaseService extends ChangeNotifier {
   List<ProductDetails> get products => List.unmodifiable(_products);
 
   Future<void> initialize() async {
+    _correlationId = DateTime.now()
+        .toUtc()
+        .microsecondsSinceEpoch
+        .toRadixString(16);
     _subscription ??= _store.purchaseStream.listen(
       _handlePurchaseUpdates,
       onError: _handleStreamError,
     );
-
-    try {
-      final paymentQueue = SKPaymentQueueWrapper();
-
-      final transactions = await paymentQueue.transactions();
-
-      for (final transaction in transactions) {
-        await paymentQueue.finishTransaction(transaction);
-      }
-    } catch (e) {
-      print(e);
-    }
 
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
+      _logStage('store_availability', outcome: 'started');
       isStoreAvailable = await _store.isAvailable();
+      _logStage(
+        'store_availability',
+        outcome: isStoreAvailable ? 'available' : 'unavailable',
+      );
 
       if (!isStoreAvailable) {
         throw StateError('App Store or Google Play is unavailable');
@@ -68,6 +68,7 @@ class BalancePurchaseService extends ChangeNotifier {
         Future<void>.sync(_refreshBalance),
       ]);
     } catch (error) {
+      _logStage('initialization', error: error);
       errorMessage = _messageFrom(error);
     } finally {
       isLoading = false;
@@ -76,9 +77,11 @@ class BalancePurchaseService extends ChangeNotifier {
   }
 
   Future<void> _loadProducts() async {
+    _logStage('product_query', outcome: 'started ids=${productIds.join(',')}');
     final response = await _store.queryProductDetails(productIds);
 
     if (response.error != null) {
+      _logStage('product_query', error: response.error);
       throw StateError(response.error!.message);
     }
 
@@ -86,6 +89,11 @@ class BalancePurchaseService extends ChangeNotifier {
       ..sort((a, b) => a.rawPrice.compareTo(b.rawPrice));
 
     missingProductIds = response.notFoundIDs.toSet();
+    _logStage(
+      'product_query',
+      outcome:
+          'success returned=${_products.length} not_found=${missingProductIds.join(',')}',
+    );
     notifyListeners();
   }
 
@@ -118,6 +126,7 @@ class BalancePurchaseService extends ChangeNotifier {
     errorMessage = null;
     final completion = Completer<void>();
     _purchaseCompletion = completion;
+    _logStage('purchase_request', productId: productId, outcome: 'started');
     notifyListeners();
 
     try {
@@ -129,6 +138,7 @@ class BalancePurchaseService extends ChangeNotifier {
       if (!started) {
         throw StateError('The purchase could not be started');
       }
+      _logStage('purchase_request', productId: productId, outcome: 'accepted');
 
       await completion.future.timeout(
         const Duration(minutes: 2),
@@ -136,6 +146,7 @@ class BalancePurchaseService extends ChangeNotifier {
             throw TimeoutException('The purchase verification timed out'),
       );
     } catch (error) {
+      _logStage('purchase_request', productId: productId, error: error);
       isPurchasing = false;
       errorMessage = _messageFrom(error);
       notifyListeners();
@@ -164,6 +175,11 @@ class BalancePurchaseService extends ChangeNotifier {
   Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchases) async {
     for (final purchase in purchases) {
       if (purchase.status == PurchaseStatus.pending) {
+        _logStage(
+          'purchase_stream',
+          productId: purchase.productID,
+          outcome: 'pending',
+        );
         isPurchasing = true;
         errorMessage = null;
         notifyListeners();
@@ -171,6 +187,12 @@ class BalancePurchaseService extends ChangeNotifier {
       }
 
       if (purchase.status == PurchaseStatus.error) {
+        _logStage(
+          'purchase_stream',
+          productId: purchase.productID,
+          outcome: 'error',
+          error: purchase.error,
+        );
         isPurchasing = false;
         errorMessage = purchase.error?.message ?? 'Purchase failed';
         _completePurchaseWithError(StateError(errorMessage!));
@@ -179,6 +201,11 @@ class BalancePurchaseService extends ChangeNotifier {
       }
 
       if (purchase.status == PurchaseStatus.canceled) {
+        _logStage(
+          'purchase_stream',
+          productId: purchase.productID,
+          outcome: 'canceled',
+        );
         isPurchasing = false;
         errorMessage = 'Purchase canceled';
         _completePurchaseWithError(StateError(errorMessage!));
@@ -188,6 +215,11 @@ class BalancePurchaseService extends ChangeNotifier {
 
       if (purchase.status == PurchaseStatus.purchased ||
           purchase.status == PurchaseStatus.restored) {
+        _logStage(
+          'purchase_stream',
+          productId: purchase.productID,
+          outcome: purchase.status.name,
+        );
         await _verifyAndCredit(purchase);
       }
     }
@@ -201,21 +233,49 @@ class BalancePurchaseService extends ChangeNotifier {
       return;
     }
 
+    var failureStage = 'backend_verification';
     try {
+      _logStage(
+        'backend_verification',
+        productId: purchase.productID,
+        outcome: 'started',
+      );
       final premiumService = await ref.read(premiumApiServiceProvider.future);
       final response = await premiumService.verifyAndCredit(purchase);
 
       final data = response.data;
       final value = data?['balance'];
+      final verified = data?['success'] == true && value is num;
+      _logStage(
+        'backend_verification_response',
+        productId: purchase.productID,
+        outcome: 'http=${response.statusCode} verified=$verified',
+      );
 
-      if (data?['success'] != true || value is! num) {
+      if (!verified) {
         throw StateError('The store purchase could not be verified');
       }
 
+      _logStage(
+        'backend_verification',
+        productId: purchase.productID,
+        outcome: 'verified http=${response.statusCode}',
+      );
       balance = value.toDouble();
 
       if (purchase.pendingCompletePurchase) {
+        failureStage = 'transaction_completion';
+        _logStage(
+          failureStage,
+          productId: purchase.productID,
+          outcome: 'started',
+        );
         await _store.completePurchase(purchase);
+        _logStage(
+          'transaction_completion',
+          productId: purchase.productID,
+          outcome: 'completed',
+        );
       }
 
       isPurchasing = false;
@@ -223,6 +283,7 @@ class BalancePurchaseService extends ChangeNotifier {
       _purchaseCompletion?.complete();
       notifyListeners();
     } catch (error) {
+      _logStage(failureStage, productId: purchase.productID, error: error);
       isPurchasing = false;
       errorMessage = _messageFrom(error);
       _completePurchaseWithError(error);
@@ -233,6 +294,7 @@ class BalancePurchaseService extends ChangeNotifier {
   }
 
   void _handleStreamError(Object error) {
+    _logStage('purchase_stream', outcome: 'stream_error', error: error);
     isPurchasing = false;
     errorMessage = _messageFrom(error);
     _completePurchaseWithError(error);
@@ -258,6 +320,74 @@ class BalancePurchaseService extends ChangeNotifier {
     }
 
     return error.toString().replaceFirst('Bad state: ', '');
+  }
+
+  void _logStage(
+    String stage, {
+    String? productId,
+    Object? error,
+    String? outcome,
+  }) {
+    unawaited(_writeDiagnostic(stage, productId, error, outcome));
+  }
+
+  Future<void> _writeDiagnostic(
+    String stage,
+    String? productId,
+    Object? error,
+    String? outcome,
+  ) async {
+    var appVersion = 'unknown';
+    var buildNumber = 'unknown';
+    try {
+      final packageInfo = await PackageInfo.fromPlatform();
+      appVersion = packageInfo.version;
+      buildNumber = packageInfo.buildNumber;
+    } catch (_) {}
+
+    final fields = <String>[
+      'correlation_id=$_correlationId',
+      'stage=$stage',
+      'app_version=$appVersion',
+      'build=$buildNumber',
+      'os=${Platform.operatingSystem}',
+      'os_version="${Platform.operatingSystemVersion}"',
+      if (productId != null) 'product_id=$productId',
+      if (outcome != null) 'outcome="$outcome"',
+    ];
+
+    if (error is IAPError) {
+      fields.addAll(<String>[
+        'error_source=${error.source}',
+        'error_code=${error.code}',
+        'error_message="${error.message}"',
+        if (error.details != null) 'error_details="${error.details}"',
+      ]);
+    } else if (error is PlatformException) {
+      fields.addAll(<String>[
+        'error_code=${error.code}',
+        if (error.message != null) 'error_message="${error.message}"',
+        if (error.details != null) 'error_details="${error.details}"',
+      ]);
+    } else if (error is DioException) {
+      fields.addAll(<String>[
+        'backend_http_status=${error.response?.statusCode ?? 'none'}',
+        'error_type=${error.type.name}',
+      ]);
+    } else if (error != null) {
+      fields.add('error_type=${error.runtimeType}');
+    }
+
+    final message = '[IAP] ${fields.join(' ')}';
+    final crashReporting = CrashReportingService();
+    await crashReporting.log(message);
+    if (error != null) {
+      await crashReporting.recordError(
+        StateError('IAP stage failed: $stage'),
+        StackTrace.current,
+        reason: message,
+      );
+    }
   }
 
   @override

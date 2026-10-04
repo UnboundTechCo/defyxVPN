@@ -27,38 +27,12 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
   final List<int> _amountOptions = [1, 2, 3, 5, 10];
   int? _selectedAmount;
   bool _isProcessing = false;
+  late final BalancePurchaseService _purchaseService;
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  Future<void> refreshBalance() async {
-    widget.ref.invalidate(balanceProvider);
-    await widget.ref.read(balanceProvider.future);
-  }
-
-  Future<void> _handleTopUpPayment() async {
-    setState(() => _isProcessing = true);
-    final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
-    if (!isLoggedIn) {
-      final registered = await Register(ref: widget.ref).registerByApple();
-      if (!registered) {
-        setState(() => _isProcessing = false);
-        return;
-      }
-    }
-
-    if (_selectedAmount == null) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please select an amount')));
-      setState(() => _isProcessing = false);
-      return;
-    }
-
-    final amount = _selectedAmount;
-    final purchaseService = BalancePurchaseService(
+  void initState() {
+    super.initState();
+    _purchaseService = BalancePurchaseService(
       ref: widget.ref,
       productIds: const {
         'de.unboundtech.defyxvpn.balance.1',
@@ -69,13 +43,45 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
       },
       refreshBalance: refreshBalance,
     );
+  }
+
+  @override
+  void dispose() {
+    _purchaseService.dispose();
+    super.dispose();
+  }
+
+  Future<void> refreshBalance() async {
+    widget.ref.invalidate(balanceProvider);
+    await widget.ref.read(balanceProvider.future);
+  }
+
+  Future<void> _handleTopUpPayment() async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
     try {
-      await purchaseService.initialize();
-      if (purchaseService.errorMessage != null) {
-        throw StateError(purchaseService.errorMessage!);
+      final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
+      if (!isLoggedIn) {
+        final registered = await Register(ref: widget.ref).registerByApple();
+        if (!mounted || !registered) return;
       }
 
-      await purchaseService.purchase('de.unboundtech.defyxvpn.balance.$amount');
+      final amount = _selectedAmount;
+      if (amount == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select an amount')),
+        );
+        return;
+      }
+
+      await _purchaseService.initialize();
+      if (_purchaseService.errorMessage != null) {
+        throw StateError(_purchaseService.errorMessage!);
+      }
+
+      await _purchaseService.purchase(
+        'de.unboundtech.defyxvpn.balance.$amount',
+      );
 
       await refreshBalance();
       if (!mounted) return;
@@ -136,7 +142,6 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
         );
       }
     } finally {
-      // purchaseService.dispose();
       if (mounted) {
         setState(() => _isProcessing = false);
       }
