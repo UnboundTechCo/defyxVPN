@@ -137,13 +137,13 @@ bool RegistryManager::SetSoundEffect(bool value) {
 int RegistryManager::GetServiceMode() const {
   HKEY hKey;
   if (RegOpenKeyExW(HKEY_CURRENT_USER, kPreferencesRegPath, 0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS) {
-    DWORD value = 1;
+    DWORD value = 2;
     DWORD bufSize = sizeof(DWORD);
     RegQueryValueExW(hKey, L"ServiceMode", nullptr, nullptr, (LPBYTE)&value, &bufSize);
     RegCloseKey(hKey);
     return static_cast<int>(value);
   }
-  return 1;
+  return 2;
 }
 
 bool RegistryManager::SetServiceMode(int mode) {

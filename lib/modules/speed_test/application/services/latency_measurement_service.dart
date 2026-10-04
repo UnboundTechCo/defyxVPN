@@ -23,7 +23,7 @@ class LatencyMeasurementService {
 
     for (int i = 0; i < numPackets; i++) {
       if (isCanceledCheck(false)) {
-        debugPrint('🛑 Latency measurement canceled');
+        debugPrint('Latency measurement canceled');
         return;
       }
 
@@ -36,7 +36,7 @@ class LatencyMeasurementService {
         final latency = DateTime.now().difference(startTime).inMilliseconds;
 
         if (isCanceledCheck(false)) {
-          debugPrint('   🛑 Latency measurement canceled after completion');
+          debugPrint('Latency measurement canceled after completion');
           return;
         }
 
@@ -59,10 +59,10 @@ class LatencyMeasurementService {
         onMetricsUpdate(latency, avgLatency, jitter);
 
         debugPrint(
-            '   📡 Latency ${i + 1}/$numPackets: ${latency}ms (Avg: ${avgLatency}ms, Jitter: ${jitter}ms)');
+            'Latency ${i + 1}/$numPackets: ${latency}ms (Avg: ${avgLatency}ms, Jitter: ${jitter}ms)');
       } catch (e) {
         consecutiveFailures++;
-        debugPrint('   ❌ Latency measurement ${i + 1} failed: $e');
+        debugPrint('Latency measurement ${i + 1} failed: $e');
 
         if (consecutiveFailures >= SpeedMeasurementConfig.maxConsecutiveFailures) {
           throw Exception('Network connection failed. Please check your internet connection.');

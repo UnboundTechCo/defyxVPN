@@ -63,8 +63,6 @@ class VpnPlugin: VpnStatusDelegate {
             connectVPN(result)
         case "disconnect":
             disconnectVPN(result)
-        case "startTun2socks":
-            startTun2socks(result)
         case "getVpnStatus":
             getVpnStatus(result)
         case "calculatePing":
@@ -91,6 +89,8 @@ class VpnPlugin: VpnStatusDelegate {
             result("\(getSharedDirectory())/defyx")
         case "setConnectionMethod":
             print("setConnectionMethod")
+        case "startTunnel":
+            startTunnel(result)
         case "isTunnelRunning":
             isTunnelRunning(result)
         case "prepareVPN":
@@ -166,109 +166,8 @@ class VpnPlugin: VpnStatusDelegate {
 
     // MARK: - VPN Status Delegate
     func vpnStatusDidChange(_ status: NEVPNStatus) {
-        // Ensure we send status updates to Flutter whenever they change
         print("VPN status changed to: \(status)")
         sendVpnStatusToFlutter(status)
-    }
-
-    // MARK: - Tun2Socks
-    private func startTun2socks(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "START_TUN2SOCKS"]) { response in
-            if response == "TUN2SOCKS_STARTED" {
-                result(true)
-            } else {
-                result(false)
-            }
-        }
-    }
-
-    // MARK: - Directory
-    private func getSharedDirectory() -> String {
-        if let groupURL = FileManager.default.containerURL(
-            forSecurityApplicationGroupIdentifier: "group.de.unboundtech.defyxvpn")
-        {
-            return groupURL.path
-        }
-        return "/dev/null"
-    }
-
-    // MARK: - Measure Ping
-    private func measurePing(_ result: @escaping FlutterResult) {
-
-        goQueue.async {
-            let ping = IosMeasurePing()
-            DispatchQueue.main.async { result(ping) }
-        }
-
-    }
-
-    private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        let sharedDir = getSharedDirectory()
-        let defyxDir = URL(fileURLWithPath: sharedDir).appendingPathComponent("defyx")
-        let primaryPath = defyxDir.appendingPathComponent("primary")
-        do {
-            try FileManager.default.createDirectory(
-                at: primaryPath, withIntermediateDirectories: true)
-        } catch {
-            os_log("❌ Failed to create primary directory: %@", error.localizedDescription)
-            result(
-                FlutterError(
-                    code: "DIRECTORY_ERROR", message: "Failed to create directory",
-                    details: error.localizedDescription))
-            return
-        }
-        guard let args = arguments,
-            let flowLine = args["flowLine"] as? String,
-            let pattern = args["pattern"] as? String,
-            let deepScan = args["deepScan"] as? String,
-            let healthCheck = args["healthCheck"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
-            )
-            return
-        }
-        VpnService.shared.sendTunnelMessage([
-            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan,"healthCheck":healthCheck
-        ]) {
-            response in
-            result(response)
-        }
-    }
-    private func stopVPN(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "STOP_VPN"]) { response in
-            result(response)
-        }
-        disconnectVPN(result)
-    }
-    // MARK: - Get Flag
-    private func getFlag(_ result: @escaping FlutterResult) {
-
-        goQueue.async {
-            let flag = IosGetFlag()
-            DispatchQueue.main.async { result(flag) }
-        }
-    }
-    private func setAsnName(_ result: @escaping FlutterResult) {
-
-        goQueue.async {
-            IosSetAsnName()
-            DispatchQueue.main.async { result("flowline") }
-        }
-    }
-    private func setTimezone(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
-        guard let args = arguments,
-            let timezone = args["timezone"] as? String
-        else {
-            result(
-                FlutterError(
-                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
-            )
-            return
-        }
-        let timezoneFloat = Float(timezone) ?? 0
-        IosSetTimeZone(timezoneFloat)
     }
 
     private func login(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -284,10 +183,9 @@ class VpnPlugin: VpnStatusDelegate {
         }
 
         goQueue.async {
-            let token = IosLogin(email,password)
-            result(token) 
+            let token = IosLogin(email, password)
+            DispatchQueue.main.async { result(token) }
         }
-        
     }
 
     private func loginByCode(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
@@ -327,8 +225,6 @@ class VpnPlugin: VpnStatusDelegate {
 
         let isTestBool = Bool(isTest) ?? false
 
-        // Always call from main app process (will be routed through VPN if active)
-        // PacketTunnel extension's own traffic doesn't route through the tunnel it creates
         self.goQueue.async {
             let flowline = IosGetFlowLine(isTestBool, token)
             DispatchQueue.main.async { result(flowline) }
@@ -376,7 +272,6 @@ class VpnPlugin: VpnStatusDelegate {
             return
         }
 
-        // Create directory if it doesn't exist
         let cacheDirURL = URL(fileURLWithPath: cacheDir)
         do {
             try FileManager.default.createDirectory(
@@ -445,10 +340,104 @@ class VpnPlugin: VpnStatusDelegate {
             case .success:
                 result(true)
             case .failure(let error):
-                print("❌ VPN Prepare failed: \(error)")
+                print("VPN Prepare failed: \(error)")
                 result(false)
             }
         }
+    }
+
+    private func getSharedDirectory() -> String {
+        if let groupURL = FileManager.default.containerURL(
+            forSecurityApplicationGroupIdentifier: "group.de.unboundtech.defyxvpn")
+        {
+            return groupURL.path
+        }
+        return "/dev/null"
+    }
+
+    // MARK: - Measure Ping
+    private func measurePing(_ result: @escaping FlutterResult) {
+
+        goQueue.async {
+            let ping = IosMeasurePing()
+            DispatchQueue.main.async { result(ping) }
+        }
+
+    }
+
+    private func startVPN(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        let sharedDir = getSharedDirectory()
+        let defyxDir = URL(fileURLWithPath: sharedDir).appendingPathComponent("defyx")
+        let primaryPath = defyxDir.appendingPathComponent("primary")
+        do {
+            try FileManager.default.createDirectory(
+                at: primaryPath, withIntermediateDirectories: true)
+        } catch {
+            os_log("❌ Failed to create primary directory: %@", error.localizedDescription)
+            result(
+                FlutterError(
+                    code: "DIRECTORY_ERROR", message: "Failed to create directory",
+                    details: error.localizedDescription))
+            return
+        }
+        guard let args = arguments,
+            let flowLine = args["flowLine"] as? String,
+            let pattern = args["pattern"] as? String,
+            let deepScan = args["deepScan"] as? String,
+            let healthCheck = args["healthCheck"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+        VpnService.shared.sendTunnelMessage([
+            "command": "START_VPN", "cacheDir": defyxDir.path, "flowLine": flowLine, "pattern": pattern,"deepScan":deepScan,"healthCheck":healthCheck
+        ]) {
+            response in
+            result(response)
+        }
+    }
+    private func stopVPN(_ result: @escaping FlutterResult) {
+        VpnService.shared.sendTunnelMessage(["command": "STOP_VPN"]) { response in
+            result(response)
+        }
+        disconnectVPN(result)
+    }
+
+    private func startTunnel(_ result: @escaping FlutterResult) {
+        VpnService.shared.sendTunnelMessage(["command": "START_TUNNEL"]) { response in
+            result(response == "TUNNEL_STARTED")
+        }
+    }
+    // MARK: - Get Flag
+    private func getFlag(_ result: @escaping FlutterResult) {
+
+        goQueue.async {
+            let flag = IosGetFlag()
+            DispatchQueue.main.async { result(flag) }
+        }
+    }
+    private func setAsnName(_ result: @escaping FlutterResult) {
+
+        goQueue.async {
+            IosSetAsnName()
+            DispatchQueue.main.async { result("flowline") }
+        }
+    }
+    private func setTimezone(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        guard let args = arguments,
+            let timezone = args["timezone"] as? String
+        else {
+            result(
+                FlutterError(
+                    code: "INVALID_ARGUMENTS", message: "Missing required parameters", details: nil)
+            )
+            return
+        }
+        let timezoneFloat = Float(timezone) ?? 0
+        IosSetTimeZone(timezoneFloat)
     }
 
     private func isVPNPrepared(_ result: @escaping FlutterResult) {

@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
-import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart';
@@ -15,9 +14,9 @@ class AdvertiseDirector {
 
   static Future<bool> shouldUseInternalAds(Ref ref) async {
     // STRATEGY SELECTION (for backward compatibility with desktop):
-    // - Desktop (Windows/macOS/Linux) → InternalAdStrategy only (no AdMob support)
-    // - Iranian users → InternalAdStrategy only (AdMob disabled for Iran)
-    // - Mobile (Android/iOS) → DUAL strategy approach:
+    // - Desktop (Windows/macOS/Linux) -> InternalAdStrategy only (no AdMob support)
+    // - Iranian users -> InternalAdStrategy only (AdMob disabled for Iran)
+    // - Mobile (Android/iOS) -> DUAL strategy approach:
     //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
     //     * InternalAdStrategy handles internal ads (connected state ONLY)
     //     * AdsWidget coordinates between the two strategies
@@ -60,7 +59,7 @@ class AdvertiseDirector {
 
   static Future<Map<String, String>> getRandomCustomAd(Ref ref) async {
     final String currentTimeZone = await FlutterTimezone.getLocalTimezone();
-    debugPrint('📍 Ad Manager - Getting ad for timezone: $currentTimeZone');
+    debugPrint('Ad Manager - Getting ad for timezone: $currentTimeZone');
 
     final adversies = await ref
         .read(secureStorageProvider)
@@ -81,7 +80,7 @@ class AdvertiseDirector {
           final selectedAd = adsData[randomIndex] as List<dynamic>;
 
           if (selectedAd.length >= 2) {
-            debugPrint('📍 Ad Manager - Selected timezone ad #$randomIndex');
+            debugPrint('Ad Manager - Selected timezone ad #$randomIndex');
             return {
               'imageUrl': selectedAd[0] as String,
               'clickUrl': selectedAd[1] as String,
@@ -102,7 +101,7 @@ class AdvertiseDirector {
           final selectedAd = adsData[randomIndex] as List<dynamic>;
 
           if (selectedAd.length >= 2) {
-            debugPrint('📍 Ad Manager - Selected General ad #$randomIndex');
+            debugPrint('Ad Manager - Selected General ad #$randomIndex');
             return {
               'imageUrl': selectedAd[0] as String,
               'clickUrl': selectedAd[1] as String,

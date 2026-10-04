@@ -24,9 +24,9 @@ class CloudflareLoggerService {
       };
 
       await api.logMeasurement(logData: logData);
-      debugPrint('📊 Results logged to Cloudflare');
+      debugPrint('Results logged to Cloudflare');
     } catch (e) {
-      debugPrint('⚠️ Failed to log results to Cloudflare: $e');
+      debugPrint('Failed to log results to Cloudflare: $e');
     }
   }
 }
