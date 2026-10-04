@@ -65,7 +65,7 @@ final class HttpClient implements IHttpClient {
   void _logRequest(RequestOptions options) {
     if (kDebugMode) {
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      debugPrint('🌐 REQUEST [${options.method}] => ${options.uri}');
+      debugPrint('REQUEST [${options.method}] => ${options.uri}');
       debugPrint('Headers: ${options.headers}');
       if (options.data != null) {
         debugPrint('Body: ${options.data}');
@@ -82,7 +82,7 @@ final class HttpClient implements IHttpClient {
     if (kDebugMode) {
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       debugPrint(
-          '✅ RESPONSE [${response.statusCode}] => ${response.requestOptions.uri}');
+          'RESPONSE [${response.statusCode}] => ${response.requestOptions.uri}');
       debugPrint('Data: ${response.data}');
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
@@ -93,7 +93,7 @@ final class HttpClient implements IHttpClient {
     if (kDebugMode) {
       debugPrint('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       debugPrint(
-          '❌ ERROR [${error.response?.statusCode}] => ${error.requestOptions.uri}');
+          'ERROR [${error.response?.statusCode}] => ${error.requestOptions.uri}');
       debugPrint('Type: ${error.type}');
       debugPrint('Message: ${error.message}');
       if (error.response != null) {

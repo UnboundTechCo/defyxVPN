@@ -1,7 +1,8 @@
 import Flutter
+import UIKit
 
 @main
-@objc class AppDelegate: FlutterAppDelegate {
+@objc class AppDelegate: FlutterAppDelegate,FlutterImplicitEngineDelegate {
   private var vpnPlugin: VpnPlugin?
   private var vibrationPlugin: VibrationPlugin?
   private var eventSink: FlutterEventSink?
@@ -10,48 +11,59 @@ import Flutter
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    GeneratedPluginRegistrant.register(with: self)
+    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+  }
 
-    vpnPlugin = VpnPlugin()
-    vibrationPlugin = VibrationPlugin()
+  func didInitializeImplicitFlutterEngine(
+    _ engineBridge: FlutterImplicitEngineBridge
+  ) {
+    GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
 
-    if let controller = window?.rootViewController as? FlutterViewController {
-      let channel = FlutterMethodChannel(
-        name: "com.defyx.vpn",
-        binaryMessenger: controller.binaryMessenger)
-      channel.setMethodCallHandler { [weak self] (call, result) in
-        self?.vpnPlugin?.handleMethodCall(call, result: result)
-      }
-      
-      let vibrationChannel = FlutterMethodChannel(
-        name: "com.defyx.vibration",
-        binaryMessenger: controller.binaryMessenger)
-      vibrationChannel.setMethodCallHandler { [weak self] (call, result) in
-        self?.vibrationPlugin?.handleMethodCall(call, result: result)
-      }
+    let messenger = engineBridge.applicationRegistrar.messenger()
+    let vpnPlugin = VpnPlugin()
+    let vibrationPlugin = VibrationPlugin()
 
-      let eventChannel = FlutterEventChannel(
-        name: "com.defyx.vpn_events",
-        binaryMessenger: controller.binaryMessenger)
-      eventChannel.setStreamHandler(StatusStreamHandler(plugin: vpnPlugin!))
+    self.vpnPlugin = vpnPlugin
+    self.vibrationPlugin = vibrationPlugin
 
-      let progressChannel = FlutterEventChannel(
-        name: "com.defyx.progress_events",
-        binaryMessenger: controller.binaryMessenger)
-      let progressHandler = ProgressStreamHandler()
-      progressChannel.setStreamHandler(progressHandler)
-
-      let crashChannel = FlutterEventChannel(
-        name: "com.defyx.crash_events",
-        binaryMessenger: controller.binaryMessenger)
-      let crashHandler = CrashStreamHandler()
-      crashChannel.setStreamHandler(crashHandler)
-
-      getLogs(progressHandler)
-      getCrashes(crashHandler)
+    let vpnChannel = FlutterMethodChannel(
+      name: "com.defyx.vpn",
+      binaryMessenger: messenger
+    )
+    vpnChannel.setMethodCallHandler { [weak self] call, result in
+      self?.vpnPlugin?.handleMethodCall(call, result: result)
     }
 
-    return super.application(application, didFinishLaunchingWithOptions: launchOptions)
+    let vibrationChannel = FlutterMethodChannel(
+      name: "com.defyx.vibration",
+      binaryMessenger: messenger
+    )
+    vibrationChannel.setMethodCallHandler { [weak self] call, result in
+      self?.vibrationPlugin?.handleMethodCall(call, result: result)
+    }
+
+    let statusChannel = FlutterEventChannel(
+      name: "com.defyx.vpn_events",
+      binaryMessenger: messenger
+    )
+    statusChannel.setStreamHandler(StatusStreamHandler(plugin: vpnPlugin))
+
+    let progressChannel = FlutterEventChannel(
+      name: "com.defyx.progress_events",
+      binaryMessenger: messenger
+    )
+    let progressHandler = ProgressStreamHandler()
+    progressChannel.setStreamHandler(progressHandler)
+
+    let crashChannel = FlutterEventChannel(
+      name: "com.defyx.crash_events",
+      binaryMessenger: messenger
+    )
+    let crashHandler = CrashStreamHandler()
+    crashChannel.setStreamHandler(crashHandler)
+
+    getLogs(progressHandler)
+    getCrashes(crashHandler)
   }
 
   func getLogs(_ progressHandler: ProgressStreamHandler) {

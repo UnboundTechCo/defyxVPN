@@ -173,7 +173,7 @@ GtkWidget *SystemTray::CreateMenu()
     bool is_disconnected = IsVPNDisconnected();
     add_item("    Proxy Service", TrayAction::ProxyService, true, proxy_service_, is_disconnected);
     add_item("    System Proxy", TrayAction::SystemProxy, true, system_proxy_, is_disconnected);
-    add_item("    VPN (Upcoming)", TrayAction::VPNMode, true, vpn_mode_, false);
+    add_item("    VPN", TrayAction::VPNMode, true, vpn_mode_, is_disconnected);
     add_separator();
 
     // Actions section

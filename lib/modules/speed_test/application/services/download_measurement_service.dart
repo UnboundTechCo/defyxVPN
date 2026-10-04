@@ -31,7 +31,7 @@ class DownloadMeasurementService {
 
     for (int i = 0; i < count; i++) {
       if (isCanceledCheck(false)) {
-        debugPrint('🛑 Download measurement canceled');
+        debugPrint('Download measurement canceled');
         return;
       }
 
@@ -60,11 +60,11 @@ class DownloadMeasurementService {
           onMetricsUpdate(percentileSpeed, avgSpeed, currentPing, avgLatency, jitter);
 
           debugPrint(
-              '   📥 Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
+              'Download ${i + 1}/$count ($sizeLabel): ${speed.toStringAsFixed(2)} Mbps (90th percentile: ${percentileSpeed.toStringAsFixed(2)} Mbps, Avg: ${avgSpeed.toStringAsFixed(2)} Mbps)');
         }
       } catch (e) {
         consecutiveFailures++;
-        debugPrint('   ❌ Download measurement ${i + 1} failed: $e');
+        debugPrint('Download measurement ${i + 1} failed: $e');
 
         if (consecutiveFailures >= SpeedMeasurementConfig.maxConsecutiveFailures) {
           throw Exception('Network connection lost during download test.');
@@ -77,7 +77,7 @@ class DownloadMeasurementService {
 
   Future<double> _measureSpeed(int bytes) async {
     if (isCanceledCheck(false)) {
-      debugPrint('   🛑 Download measurement canceled before start');
+      debugPrint('Download measurement canceled before start');
       return 0.0;
     }
 
@@ -106,7 +106,7 @@ class DownloadMeasurementService {
       );
 
       if (isCanceledCheck(false)) {
-        debugPrint('   🛑 Download measurement canceled after completion');
+        debugPrint('Download measurement canceled after completion');
         return 0.0;
       }
 
@@ -122,7 +122,7 @@ class DownloadMeasurementService {
 
       return mbps;
     } catch (e) {
-      debugPrint('   ❌ Download measurement error: $e');
+      debugPrint('Download measurement error: $e');
       throw Exception('Download failed: $e');
     }
   }
