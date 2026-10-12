@@ -88,7 +88,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                   }
                   await ref
                       .read(flowlineServiceProvider)
-                      .saveFlowline(offlineMode: false);
+                      .saveFlowline(offlineMode: false, forceUpdate: true);
                   ref
                       .read(settingsProvider.notifier)
                       .updateSettingsBasedOnFlowLine();
