@@ -1,5 +1,4 @@
 import java.util.Properties
-import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 val keystoreProperties = Properties()
@@ -16,7 +15,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-extensions.configure<ApplicationExtension> {
+android {
     namespace = "de.unboundtech.defyxvpn"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "29.0.13846066"
