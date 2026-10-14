@@ -1,0 +1,21 @@
+[Unit]
+Description=DefyxVPN headless client
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/defyxvpn/defyxvpn.env
+ExecStart=/opt/defyxvpn/defyxvpn-cli connect --cache-dir /var/lib/defyxvpn
+Restart=on-failure
+RestartSec=5
+User=defyxvpn
+Group=defyxvpn
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/defyxvpn
+
+[Install]
+WantedBy=multi-user.target
