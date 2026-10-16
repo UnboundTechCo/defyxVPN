@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:defyx_vpn/core/theme/app_colors.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
@@ -68,9 +69,10 @@ class MetricItemCompact extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 12.sp,
-            fontFamily: 'Lato',
+            fontFamily: AppTheme.fontFamily,
             color: Colors.grey.shade500,
             fontWeight: FontWeight.w600,
+            height: 1.0,
           ),
         ),
         value > 0
@@ -81,17 +83,19 @@ class MetricItemCompact extends StatelessWidget {
                       text: numFormatNumber(value),
                       style: TextStyle(
                         fontSize: 26.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
+                        height: 1.0,
                       ),
                     ),
                     TextSpan(
                       text: " $unit",
                       style: TextStyle(
                         fontSize: 16.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         color: Colors.grey.shade500,
+                        height: 1.0,
                       ),
                     ),
                   ],
@@ -120,6 +124,7 @@ class MetricItemHorizontal extends StatelessWidget {
   final num value;
   final String unit;
   final ConnectionStatus connectionStatus;
+  final bool zeroIsValidValue;
 
   const MetricItemHorizontal({
     super.key,
@@ -127,6 +132,7 @@ class MetricItemHorizontal extends StatelessWidget {
     required this.value,
     this.unit = 'Mbps',
     required this.connectionStatus,
+    this.zeroIsValidValue = false,
   });
 
   Color _getColorByStatus(ConnectionStatus status) {
@@ -168,70 +174,66 @@ class MetricItemHorizontal extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final animationService = AnimationService();
-    final bool hasValue = (label == 'P.LOSS') ? true : value > 0;
+    final bool hasValue = zeroIsValidValue ? true : value > 0;
 
     return SizedBox(
-      width: 115.w,
       height: 20.h,
-      child: Stack(
-        alignment: AlignmentDirectional.centerStart,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Positioned(
-            top: 5.h,
-            left: 0,
+          Flexible(
             child: Text(
               label,
               textAlign: TextAlign.start,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontSize: 12.sp,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.grey.shade500,
                 fontWeight: FontWeight.w600,
+                height: 1.0,
               ),
             ),
           ),
+          SizedBox(width: 6.w),
           hasValue
-              ? Positioned(
-                  bottom: 0,
-                  right: 0,
-                  child: RichText(
-                    text: TextSpan(
-                      children: [
-                        TextSpan(
-                          text: numFormatNumber(value),
-                          style: TextStyle(
-                            fontSize: 15.sp,
-                            fontFamily: 'Lato',
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
+              ? RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: numFormatNumber(value),
+                        style: TextStyle(
+                          fontSize: 15.sp,
+                          fontFamily: AppTheme.fontFamily,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
                         ),
-                        TextSpan(
-                          text: " $unit",
-                          style: TextStyle(
-                            fontSize: 13.sp,
-                            fontFamily: 'Lato',
-                            color: Colors.grey.shade500,
-                          ),
+                      ),
+                      TextSpan(
+                        text: " $unit",
+                        style: TextStyle(
+                          fontSize: 13.sp,
+                          fontFamily: AppTheme.fontFamily,
+                          color: Colors.grey.shade500,
+                          height: 1.0,
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 )
-              : Positioned(
-                  bottom: 2.5.h,
-                  right: 0,
-                  child: Shimmer.fromColors(
-                    baseColor: _getColorByStatus(connectionStatus),
-                    highlightColor: _getHighlightColorByStatus(connectionStatus),
-                    enabled: animationService.shouldAnimate(),
-                    child: Container(
-                      width: 57.w,
-                      height: 11.h,
-                      decoration: BoxDecoration(
-                        color: _getColorByStatus(connectionStatus),
-                        borderRadius: BorderRadius.circular(15.r),
-                      ),
+              : Shimmer.fromColors(
+                  baseColor: _getColorByStatus(connectionStatus),
+                  highlightColor: _getHighlightColorByStatus(connectionStatus),
+                  enabled: animationService.shouldAnimate(),
+                  child: Container(
+                    width: 57.w,
+                    height: 11.h,
+                    decoration: BoxDecoration(
+                      color: _getColorByStatus(connectionStatus),
+                      borderRadius: BorderRadius.circular(15.r),
                     ),
                   ),
                 ),

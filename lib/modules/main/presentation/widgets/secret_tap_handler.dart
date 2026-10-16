@@ -18,21 +18,7 @@ class SecretTapHandler {
     if (_secretTapCounter >= 7) {
       alertService.heartbeat();
       _secretTapCounter = 0;
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return Dialog(
-            backgroundColor: Colors.transparent,
-            insetPadding: EdgeInsets.zero,
-            child: Container(
-              width: double.infinity,
-              height: double.infinity,
-              color: const Color.fromARGB(13, 0, 0, 0),
-              child: const LogScreen(),
-            ),
-          );
-        },
-      );
+      showAppLogsOverlay(context);
     }
   }
 

@@ -129,7 +129,7 @@ class AdReadinessState {
         lastError: json['lastError'] as String?,
       );
     } catch (e) {
-      debugPrint('⚠️ Failed to parse AdReadinessState: $e');
+      debugPrint('Failed to parse AdReadinessState: $e');
       return AdReadinessState.initial();
     }
   }
@@ -148,7 +148,7 @@ class AdReadinessState {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
       return AdReadinessState.fromJson(json);
     } catch (e) {
-      debugPrint('⚠️ Failed to decode AdReadinessState JSON: $e');
+      debugPrint('Failed to decode AdReadinessState JSON: $e');
       return AdReadinessState.initial();
     }
   }

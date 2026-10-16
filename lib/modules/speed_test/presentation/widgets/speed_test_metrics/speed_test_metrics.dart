@@ -31,74 +31,85 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.start,
-          spacing: 5.h,
-          children: [
-            if (showDownload)
-              SizedBox(
-                height: 65.h,
-                child: MetricItemCompact(
-                  label: l10n.download,
-                  value: downloadSpeed,
-                  connectionStatus: connectionStatus,
-                ),
-              ),
-            MetricItemCompact(
-              label: l10n.ping,
-              value: ping,
-              unit: l10n.ms,
-              connectionStatus: connectionStatus,
-            ),
-          ],
-        ),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          spacing: 5.h,
-          children: [
-            if (showUpload)
-              SizedBox(
-                height: 65.h,
-                child: MetricItemCompact(
-                  label: l10n.upload,
-                  value: uploadSpeed,
-                  connectionStatus: connectionStatus,
-                ),
-              ),
-            Column(
-              spacing: 5.h,
+
+    // Keep download/upload/latency fields in the same left-right layout as
+    // English regardless of locale, instead of mirroring for RTL languages.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.start,
+              spacing: 5.h,
               children: [
-                MetricItemHorizontal(
-                  label: l10n.latency,
-                  value: latency,
-                  unit: l10n.ms,
-                  connectionStatus: connectionStatus,
-                ),
-                MetricItemHorizontal(
-                  label: l10n.packetLoss,
-                  value: packetLoss,
-                  unit: '%',
-                  connectionStatus: connectionStatus,
-                ),
-                MetricItemHorizontal(
-                  label: l10n.jitter,
-                  value: jitter,
+                if (showDownload)
+                  SizedBox(
+                    height: 65.h,
+                    child: MetricItemCompact(
+                      label: l10n.download,
+                      value: downloadSpeed,
+                      connectionStatus: connectionStatus,
+                    ),
+                  ),
+                MetricItemCompact(
+                  label: l10n.ping,
+                  value: ping,
                   unit: l10n.ms,
                   connectionStatus: connectionStatus,
                 ),
               ],
             ),
-          ],
-        ),
-      ],
+          ),
+          SizedBox(width: 16.w),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 5.h,
+              children: [
+                if (showUpload)
+                  SizedBox(
+                    height: 65.h,
+                    child: MetricItemCompact(
+                      label: l10n.upload,
+                      value: uploadSpeed,
+                      connectionStatus: connectionStatus,
+                    ),
+                  ),
+                Column(
+                  spacing: 5.h,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    MetricItemHorizontal(
+                      label: l10n.latency,
+                      value: latency,
+                      unit: l10n.ms,
+                      connectionStatus: connectionStatus,
+                    ),
+                    MetricItemHorizontal(
+                      label: l10n.packetLoss,
+                      value: packetLoss,
+                      unit: '%',
+                      connectionStatus: connectionStatus,
+                      zeroIsValidValue: true,
+                    ),
+                    MetricItemHorizontal(
+                      label: l10n.jitter,
+                      value: jitter,
+                      unit: l10n.ms,
+                      connectionStatus: connectionStatus,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_state_widgets.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -24,7 +25,8 @@ class HeaderSection extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
               children: [
                 Directionality(
                   textDirection: TextDirection.ltr,
@@ -37,16 +39,16 @@ class HeaderSection extends ConsumerWidget {
                             text: 'D',
                             style: TextStyle(
                               fontSize: 35.sp,
-                              fontFamily: 'Lato',
+                              fontFamily: AppTheme.fontFamily,
                               fontWeight: FontWeight.w700,
                               color: const Color(0xFFFFC927),
                             ),
                           ),
                           TextSpan(
-                            text: 'efyx ',
+                            text: 'efyx',
                             style: TextStyle(
                               fontSize: 32.sp,
-                              fontFamily: 'Lato',
+                              fontFamily: AppTheme.fontFamily,
                               fontWeight: FontWeight.w400,
                               color: const Color(0xFFFFC927),
                             ),
@@ -56,6 +58,7 @@ class HeaderSection extends ConsumerWidget {
                     ),
                   ),
                 ),
+                SizedBox(width: 6.w),
                 Flexible(
                   child: ConnectionStatusText(),
                 ),
@@ -94,12 +97,12 @@ class ConnectionStatusText extends ConsumerWidget {
               scale: 0.9 + (0.1 * value),
               child: Text(
                 text,
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.start,
                 style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
+                  fontSize: AppTheme.statusHeadlineFontSize.sp,
+                  fontFamily: AppTheme.fontFamily,
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
@@ -165,7 +168,7 @@ class ConnectionStateWidget extends ConsumerWidget {
           status: connectionState.status,
           text: stateInfo.text,
           color: stateInfo.color,
-          fontSize: 32.sp,
+          fontSize: AppTheme.statusHeadlineFontSize.sp,
           onPingRefresh: onPingRefresh,
         ),
       ),

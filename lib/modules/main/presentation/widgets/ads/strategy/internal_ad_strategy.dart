@@ -106,7 +106,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
       
       return const AdLoadResult.success();
     } catch (e) {
-      debugPrint('❌ Failed to load internal ad: $e');
+      debugPrint('Failed to load internal ad: $e');
       
       await _analytics.logEvent(
         name: 'ads_internal_ad_load_failure',
@@ -138,7 +138,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
     // iOS incorrectly resolves empty strings as file:/// URIs causing crashes
     if (imageUrl.isEmpty || (!imageUrl.startsWith('http://') && !imageUrl.startsWith('https://'))) {
       if (imageUrl.isNotEmpty) {
-        debugPrint('❌ Invalid URL in buildAdWidget, refusing to render: $imageUrl');
+        debugPrint('Invalid URL in buildAdWidget, refusing to render: $imageUrl');
       }
       return const SizedBox.shrink();
     }
@@ -146,13 +146,13 @@ class InternalAdStrategy implements AdLoadingStrategy {
     return GestureDetector(
       onTap: () async {
         if (clickUrl.isEmpty) {
-          debugPrint('⚠️ No click URL provided for internal ad');
+          debugPrint('No click URL provided for internal ad');
           return;
         }
 
         try {
           final uri = Uri.parse(clickUrl);
-          debugPrint('🔗 Opening internal ad URL: $clickUrl');
+          debugPrint('Opening internal ad URL: $clickUrl');
           
           // Track click
           final analytics = FirebaseAnalyticsService();
@@ -167,12 +167,12 @@ class InternalAdStrategy implements AdLoadingStrategy {
               uri,
               mode: LaunchMode.externalApplication,
             );
-            debugPrint('✅ Internal ad URL opened successfully');
+            debugPrint('Internal ad URL opened successfully');
           } else {
-            debugPrint('❌ Cannot launch URL: $clickUrl');
+            debugPrint('Cannot launch URL: $clickUrl');
           }
         } catch (e) {
-          debugPrint('❌ Error opening internal ad URL: $e');
+          debugPrint('Error opening internal ad URL: $e');
         }
       },
       child: Image.network(
@@ -199,7 +199,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
           );
         },
         errorBuilder: (context, error, stackTrace) {
-          debugPrint('❌ Failed to load internal ad image from: $imageUrl');
+          debugPrint('Failed to load internal ad image from: $imageUrl');
           debugPrint('   Error: $error');
           
           // Set local flag and trigger state update to hide widget
@@ -219,7 +219,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
               );
               
               // Clear all ad data so the container disappears completely
-              debugPrint('🗑️ Clearing ad data due to image load failure');
+              debugPrint('Clearing ad data due to image load failure');
               container.read(adsProvider.notifier).clearCustomAdData();
             });
           }
@@ -239,24 +239,24 @@ class InternalAdStrategy implements AdLoadingStrategy {
     required bool hasInitialized,
     required Function() onRefreshNeeded,
   }) {
-    debugPrint('📍 InternalAdStrategy - Connection: ${previous.name} → ${current.name}');
+    debugPrint('InternalAdStrategy connection: ${previous.name} -> ${current.name}');
     
     // INTERNAL ADS: Show when connected (all users including Iranian)
     // When connected, load fresh internal ad and show it
     if (current == ConnectionStatus.connected && previous != ConnectionStatus.connected) {
-      debugPrint('▶️ Connected - will load internal ad after network routing stabilizes');
+      debugPrint('Connected - will load internal ad after network routing stabilizes');
       
       // iOS FIX: Add delay to allow VPN network routing to fully establish
       // Without this delay, Image.network may incorrectly resolve HTTPS URLs as file:// URIs
       // causing "No host specified in URI file:///..." errors on first connection
       // Also allows time for VPN tunnel to stabilize (tun2socks, ping refresh, SSL/TLS)
       Future.delayed(const Duration(milliseconds: 2500), () {
-        debugPrint('⏱️ Network routing delay complete (2.5s) - loading fresh internal ad');
+        debugPrint('Network routing delay complete (2.5s) - loading fresh internal ad');
         
         // Load fresh internal ad
         loadAd(ref: ref).then((result) {
           if (result.success) {
-            debugPrint('⏰ Fresh internal ad loaded - starting countdown');
+            debugPrint('Fresh internal ad loaded - starting countdown');
             ref.read(adsProvider.notifier).startCountdownTimer();
           }
         });
@@ -269,7 +269,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
     // For Iranian users: Nothing will show (they don't have GoogleAdStrategy)
     if (current == ConnectionStatus.disconnected && 
         previous == ConnectionStatus.connected) {
-      debugPrint('⏸️ Disconnected - clearing internal ad');
+      debugPrint('Disconnected - clearing internal ad');
       ref.read(adsProvider.notifier).stopCountdownTimer();
       ref.read(adsProvider.notifier).clearCustomAdData();
     }

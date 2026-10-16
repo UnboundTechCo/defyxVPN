@@ -25,9 +25,6 @@ class VpnBridge {
 
   Future<void> stopVPN() async => await _methodChannel.invokeMethod('stopVPN');
 
-  Future<void> stopTun2Socks() async =>
-      await _methodChannel.invokeMethod("stopTun2Socks");
-
   Future<bool?> connectVpn() async =>
       await _methodChannel.invokeMethod<bool>('connect');
 
@@ -46,11 +43,23 @@ class VpnBridge {
     "healthCheck": healthCheck.toString(),
   });
 
-  Future<void> startTun2socks() =>
-      _methodChannel.invokeMethod("startTun2socks");
-
   Future<bool> isTunnelRunning() async =>
       (await _methodChannel.invokeMethod<bool>("isTunnelRunning")) ?? false;
+
+  Future<bool> startTunnel() async =>
+      (await _methodChannel.invokeMethod<bool>("startTunnel")) ?? false;
+
+  Future<void> stopTunnel() async =>
+      await _methodChannel.invokeMethod("stopTunnel");
+
+  Future<bool> isVpnModeEnabled() async {
+    try {
+      return (await _methodChannel.invokeMethod<bool>("isVpnModeEnabled")) ??
+          false;
+    } catch (_) {
+      return false;
+    }
+  }
 
   Future<void> setConnectionMethod(String method) async => await _methodChannel
       .invokeMethod("setConnectionMethod", {"method": method});
@@ -78,6 +87,15 @@ class VpnBridge {
 
   Future<void> setCacheDir(String cacheDir) async {
     await _methodChannel.invokeMethod('setCacheDir', {"cacheDir": cacheDir});
+  }
+
+  /// Wipes and recreates the native VPN engine's on-disk cache. Only implemented on Windows/Linux.
+  Future<void> clearVpnCache() async {
+    try {
+      await _methodChannel.invokeMethod('clearVpnCache');
+    } on MissingPluginException {
+      // Not implemented on this platform; nothing to clear.
+    }
   }
 
   Future<String> getSharedDirectory() async =>

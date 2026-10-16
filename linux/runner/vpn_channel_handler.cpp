@@ -539,6 +539,19 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FinishWithBool(method_call, true);
         }
+        else if (strcmp(method, "isVpnModeEnabled") == 0)
+        {
+            FinishWithBool(method_call, self->system_tray_ && self->system_tray_->GetVPNMode());
+        }
+        else if (strcmp(method, "startTunnel") == 0)
+        {
+            FinishWithBool(method_call, defyx_core::StartTunnel());
+        }
+        else if (strcmp(method, "stopTunnel") == 0)
+        {
+            defyx_core::StopTunnel();
+            FinishWithBool(method_call, true);
+        }
         else if (strcmp(method, "getVpnStatus") == 0)
         {
             std::string status;
@@ -597,19 +610,13 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
             FlValue *args = fl_method_call_get_args(method_call);
             std::string is_test_str = LookupString(args, "isTest");
             std::string flowLine = defyx_core::GetFlowLine();
-            if (flowLine.empty())
-            {
-                flowLine = "{}";
-            }
+            // Keep empty as empty: an empty string here must not be treated as a
+            // valid flowline by the Dart side, or it overwrites good cached data.
             FinishWithString(method_call, flowLine);
         }
         else if (strcmp(method, "getCachedFlowLine") == 0)
         {
             std::string flowLine = defyx_core::GetCachedFlowLine();
-            if (flowLine.empty())
-            {
-                flowLine = "{}";
-            }
             FinishWithString(method_call, flowLine);
         }
         else if (strcmp(method, "decodeAndVerifyFlowline") == 0)

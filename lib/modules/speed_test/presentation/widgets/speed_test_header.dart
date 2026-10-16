@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../models/speed_test_result.dart';
@@ -35,7 +36,8 @@ class SpeedTestHeader extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
             Directionality(
               textDirection: TextDirection.ltr,
@@ -46,16 +48,16 @@ class SpeedTestHeader extends StatelessWidget {
                       text: 'D',
                       style: TextStyle(
                         fontSize: 35.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w700,
                         color: const Color(0xFFFFC927),
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx ',
+                      text: 'efyx',
                       style: TextStyle(
                         fontSize: 32.sp,
-                        fontFamily: 'Lato',
+                        fontFamily: AppTheme.fontFamily,
                         fontWeight: FontWeight.w400,
                         color: const Color(0xFFFFC927),
                       ),
@@ -64,15 +66,16 @@ class SpeedTestHeader extends StatelessWidget {
                 ),
               ),
             ),
+            SizedBox(width: 6.w),
             Flexible(
               child: Text(
                 upperText,
-                maxLines: 2,
+                maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.start,
                 style: TextStyle(
-                  fontSize: 32.sp,
-                  fontFamily: 'Lato',
+                  fontSize: AppTheme.statusHeadlineFontSize.sp,
+                  fontFamily: AppTheme.fontFamily,
                   fontWeight: FontWeight.w400,
                   color: Colors.white,
                 ),
@@ -82,12 +85,12 @@ class SpeedTestHeader extends StatelessWidget {
         ),
         Text(
           bottomText,
-          maxLines: 2,
+          maxLines: 3,
           overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.start,
           style: TextStyle(
-            fontSize: 32.sp,
-            fontFamily: 'Lato',
+            fontSize: AppTheme.statusHeadlineFontSize.sp,
+            fontFamily: AppTheme.fontFamily,
             fontWeight: FontWeight.w700,
             color: Colors.white,
           ),

@@ -2,6 +2,7 @@ import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/dialog.dart';
 import 'package:defyx_vpn/common/components/text_field.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -104,7 +105,7 @@ class _SettingsPremiumLoginByCodeDialogState
             Text(
               l10n.authenticationRequired,
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: fontSize * 1.4,
                 color: Colors.black,
                 fontWeight: FontWeight.w700,
@@ -120,7 +121,7 @@ class _SettingsPremiumLoginByCodeDialogState
                         l10n.premiumLoginByCodeDescription,
                         style: TextStyle(
                           fontSize: fontSize,
-                          fontFamily: 'Lato',
+                          fontFamily: AppTheme.fontFamily,
                           color: Colors.black.withValues(alpha: 0.5),
                           height: 1.4,
                         ),

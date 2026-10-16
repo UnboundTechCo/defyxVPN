@@ -4,10 +4,14 @@ import android.Android
 import android.Manifest
 import android.ProgressListener
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.lifecycleScope
@@ -79,11 +83,33 @@ class MainActivity : FlutterActivity() {
             )
         }
     }
+
+    // Aggressive OEM battery managers (MIUI, Huawei, ColorOS, etc.) can kill the app in the
+    // background without this exemption; only prompt once so we don't nag on every launch.
+    private fun requestIgnoreBatteryOptimizations() {
+        val prefs = getSharedPreferences("defyx_prefs", Context.MODE_PRIVATE)
+        if (prefs.getBoolean("battery_optimization_requested", false)) return
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        if (powerManager.isIgnoringBatteryOptimizations(packageName)) return
+
+        try {
+            val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+            intent.data = Uri.parse("package:$packageName")
+            startActivity(intent)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to request battery optimization exemption", e)
+        } finally {
+            prefs.edit().putBoolean("battery_optimization_requested", true).apply()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val intent = Intent(this, DefyxVpnService::class.java)
         grantNotificationPermission()
+        requestIgnoreBatteryOptimizations()
         startService(intent)
     }
 
@@ -94,10 +120,8 @@ class MainActivity : FlutterActivity() {
                 "disconnect" -> disconnectVpn(result)
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
-                "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
                 "isTunnelRunning" -> isTunnelRunning(result)
-                "stopTun2Socks" -> stopTun2Socks(result)
                 "calculatePing" -> calculatePing(result)
                 "getFlag" -> getFlag(result)
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
@@ -207,22 +231,6 @@ class MainActivity : FlutterActivity() {
         eventSink?.success(mapOf("status" to status))
     }
 
-    //    private fun startTun2Socks(result: MethodChannel.Result) = try {
-    //        DefyxVpnService.getInstance().startTun2socks()
-    //        result.success(true)
-    //    } catch (e: Exception){
-    //        result.error("START_TUN2SOCKS","Failed to start Tun2Socks", e.message);
-    //    }
-
-    private fun stopTun2Socks(result: MethodChannel.Result) =
-            try {
-                DefyxVpnService.getInstance().stopTun2Socks()
-                result.success(true)
-            } catch (e: Exception) {
-                result.error("STOP_TUN2SOCKS", "Failed to stop Tun2Socks", e.message)
-            }
-
-    // Blocking function to calculate ping using socks5 proxy at 127.0.0.1:5000
     private fun calculatePing(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {

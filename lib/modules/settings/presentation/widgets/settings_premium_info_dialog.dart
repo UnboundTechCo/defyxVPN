@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_login_dialog.dart';
 import 'package:flutter/material.dart';
@@ -59,7 +60,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
             Text(
               l10n.connectionRequired,
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: fontSize * 1.4,
                 color: Colors.black,
                 fontWeight: FontWeight.w700,
@@ -70,7 +71,7 @@ class _SettingsPremiumInfoDialogState extends State<SettingsPremiumInfoDialog> {
               l10n.connectionRequiredDescription,
               style: TextStyle(
                 fontSize: fontSize,
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 color: Colors.black.withValues(alpha: 0.5),
                 height: 1.4,
               ),

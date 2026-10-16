@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
@@ -85,7 +86,9 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                       _rotationController.reset();
                     });
                   }
-                  await ref.read(flowlineServiceProvider).saveFlowline(offlineMode: false);
+                  await ref
+                      .read(flowlineServiceProvider)
+                      .saveFlowline(offlineMode: false, forceUpdate: true);
                   ref
                       .read(settingsProvider.notifier)
                       .updateSettingsBasedOnFlowLine();
@@ -105,23 +108,19 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                 ),
                 icon: AppIcons.importConfig(width: 20, height: 20),
                 onTap: () {
-                  FilePicker.platform
-                      .pickFiles(
-                        type: FileType.custom,
-                        allowedExtensions: ['dfx'],
-                      )
-                      .then((result) async {
-                        if (result != null &&
-                            result.files.single.path != null) {
-                          ref
-                              .read(flowlineServiceProvider)
-                              .saveFlowline(
-                                offlineMode: true,
-                                flowLine: await result.xFiles.first
-                                    .readAsString(),
-                              );
-                        }
-                      });
+                  FilePicker.pickFile(
+                    type: FileType.custom,
+                    allowedExtensions: ['dfx'],
+                  ).then((result) async {
+                    if (result != null) {
+                      ref
+                          .read(flowlineServiceProvider)
+                          .saveFlowline(
+                            offlineMode: true,
+                            flowLine: await result.xFile.readAsString(),
+                          );
+                    }
+                  });
                   _menuController.close();
                 },
               ),
@@ -162,7 +161,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
             AppLocalizations.of(context).synchronization.toUpperCase(),
             style: TextStyle(
               fontSize: 12.sp,
-              fontFamily: 'Lato',
+              fontFamily: AppTheme.fontFamily,
               fontWeight: FontWeight.w600,
               color: const Color(0xFFD5FFBA),
               letterSpacing: 0.5,

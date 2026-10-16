@@ -3,7 +3,26 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  static const String fontFamily = 'Lato';
+  static const String _latinFontFamily = 'Lato';
+  static const String _farsiFontFamily = 'Vazir';
+
+  static String _fontFamily = _latinFontFamily;
+
+  /// Switches the app-wide font to match the given locale (Vazir for Farsi,
+  /// Lato otherwise). Call whenever the active language changes.
+  static void updateFontFamilyForLocale(Locale locale) {
+    _fontFamily = locale.languageCode == 'fa'
+        ? _farsiFontFamily
+        : _latinFontFamily;
+  }
+
+  static String get fontFamily => _fontFamily;
+
+  /// Farsi status/headline copy tends to run noticeably longer than the
+  /// English original, so it needs a smaller display size to avoid wrapping
+  /// onto extra lines in the same space.
+  static double get statusHeadlineFontSize =>
+      _fontFamily == _farsiFontFamily ? 24.0 : 32.0;
 
   static ThemeData get lightTheme {
     return ThemeData(

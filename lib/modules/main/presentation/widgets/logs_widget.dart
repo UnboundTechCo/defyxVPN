@@ -1,7 +1,10 @@
+import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:async';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
@@ -213,14 +216,17 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
     });
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(20.w),
+      constraints: BoxConstraints(
+        maxWidth: MediaQuery.of(context).size.width * 0.9,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF3D3D3D), width: 1),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15.r),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -231,23 +237,23 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                   AppLocalizations.of(context).appLogs,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Lato',
+                  style: TextStyle(
+                    color: Colors.black,
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w700,
+                    fontFamily: AppTheme.fontFamily,
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              SizedBox(width: 8.w),
               Flexible(
                 flex: 3,
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Container(
-                      width: 8,
-                      height: 8,
+                      width: 8.w,
+                      height: 8.w,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         color: ref.read(logsProvider.notifier).isRefreshing()
@@ -255,22 +261,22 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                             : Colors.red,
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4.w),
                     Flexible(
                       child: Text(
                         AppLocalizations.of(context).autoRefresh,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                          fontFamily: 'Lato',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 12.sp,
+                          fontFamily: AppTheme.fontFamily,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 4),
+                    SizedBox(width: 4.w),
                     IconButton(
-                      icon: const Icon(Icons.refresh, color: Colors.white),
+                      icon: Icon(Icons.refresh, color: Colors.grey[700]),
                       iconSize: 20,
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
@@ -281,48 +287,47 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: 16.h),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF2A2A2A),
-              borderRadius: BorderRadius.circular(8),
+              color: const Color(0xFFF5F5F5),
+              borderRadius: BorderRadius.circular(12.r),
             ),
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.6,
-              maxWidth: MediaQuery.of(context).size.width * 0.9,
             ),
             child: Stack(
               children: [
                 SingleChildScrollView(
                   controller: scrollController,
                   child: Padding(
-                    padding: const EdgeInsets.all(12),
+                    padding: EdgeInsets.all(12.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (logsState.logs.isEmpty)
-                          const Text(
+                          Text(
                             'Sample log: [INFO] Connection initialized',
                             style: TextStyle(
-                              color: Colors.green,
-                              fontFamily: 'Lato',
-                              fontSize: 12,
+                              color: Colors.green[700],
+                              fontFamily: AppTheme.fontFamily,
+                              fontSize: 12.sp,
                             ),
                           ),
                         ...logsState.logs.map((log) {
-                          Color textColor = Colors.grey;
+                          Color textColor = Colors.black87;
 
                           if (log.contains('ERROR') || log.contains('error')) {
-                            textColor = Colors.red;
+                            textColor = Colors.red[700]!;
                           } else if (log.contains('WARNING') ||
                               log.contains('NEW SESSION') ||
                               log.contains('Warp client stopped gracefully') ||
                               log.contains('Starting Warp with config')) {
-                            textColor = Colors.orange;
+                            textColor = Colors.orange[800]!;
                           } else if (log.contains('STEP')) {
-                            textColor = Colors.green;
+                            textColor = Colors.green[700]!;
                           } else if (log.contains('DEBUG')) {
-                            textColor = Colors.blue;
+                            textColor = Colors.blue[700]!;
                           }
 
                           return Padding(
@@ -331,46 +336,46 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                               log,
                               style: TextStyle(
                                 color: textColor,
-                                fontFamily: 'Lato',
-                                fontSize: 12,
+                                fontFamily: AppTheme.fontFamily,
+                                fontSize: 12.sp,
                               ),
                             ),
                           );
                         }),
                         // Add extra space at the bottom for better visibility of last log
-                        const SizedBox(height: 16),
+                        SizedBox(height: 16.h),
                       ],
                     ),
                   ),
                 ),
                 Positioned(
-                  top: 8,
-                  right: 8,
+                  top: 8.h,
+                  right: 8.w,
                   child: InkWell(
                     onTap: () => ref.read(logsProvider.notifier).clearLogs(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 8.w,
+                        vertical: 4.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black38,
-                        borderRadius: BorderRadius.circular(4),
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(4.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.clear_all,
-                            color: Colors.white70,
-                            size: 14,
+                            color: Colors.grey[700],
+                            size: 14.sp,
                           ),
-                          const SizedBox(width: 4),
+                          SizedBox(width: 4.w),
                           Text(
                             AppLocalizations.of(context).clear,
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 10,
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                              fontSize: 10.sp,
                             ),
                           ),
                         ],
@@ -381,43 +386,35 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: 20.h),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF3D3D3D),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              Expanded(
+                child: AppButton(
+                  label: AppLocalizations.of(context).close,
+                  onPressed: () => Navigator.of(context).pop(),
+                  size: AppButtonSize.small,
+                  variant: AppButtonVariant.secondary,
                 ),
-                child: Text(AppLocalizations.of(context).close),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Clipboard.setData(
-                    ClipboardData(text: logsState.logs.join('\n')),
-                  );
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppLocalizations.of(context).logsCopied),
-                      backgroundColor: const Color(0xFF2A2A2A),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF007AFF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: AppButton(
+                  label: AppLocalizations.of(context).copyLogs,
+                  onPressed: () {
+                    Clipboard.setData(
+                      ClipboardData(text: logsState.logs.join('\n')),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(AppLocalizations.of(context).logsCopied),
+                        backgroundColor: const Color(0xFF2A2A2A),
+                      ),
+                    );
+                  },
+                  size: AppButtonSize.small,
+                  variant: AppButtonVariant.primary,
                 ),
-                child: Text(AppLocalizations.of(context)!.copyLogs),
               ),
             ],
           ),
@@ -477,8 +474,9 @@ class _LogScreenState extends ConsumerState<LogScreen> {
       builder: (BuildContext context) {
         return Dialog(
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(15.r),
           ),
+          insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
           elevation: 0,
           backgroundColor: Colors.transparent,
           child: const LogPopupContent(),
@@ -496,4 +494,23 @@ class _LogScreenState extends ConsumerState<LogScreen> {
   Widget build(BuildContext context) {
     return const SizedBox.shrink();
   }
+}
+
+// Shared entry point for showing the log viewer as a full-screen overlay
+void showAppLogsOverlay(BuildContext context) {
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: EdgeInsets.zero,
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          color: const Color.fromARGB(13, 0, 0, 0),
+          child: const LogScreen(),
+        ),
+      );
+    },
+  );
 }

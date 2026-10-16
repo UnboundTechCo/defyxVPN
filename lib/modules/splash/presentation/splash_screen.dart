@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/material.dart';
@@ -28,23 +29,29 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       _onNavigate();
       return;
     });
-    // final vpnData = await ref.read(vpnDataProvider.future);
-    final vpnStatus = await VpnBridge().getVpnStatus();
+    try {
+      // final vpnData = await ref.read(vpnDataProvider.future);
+      final vpnStatus = await VpnBridge().getVpnStatus();
 
-    if (vpnStatus == "connected") {
-      _onNavigate();
-      return;
-    }
+      if (vpnStatus == "connected") {
+        _onNavigate();
+        return;
+      }
 
-    if (ref.context.mounted) {
-      final vpn = VPN(ProviderScope.containerOf(ref.context));
-      await vpn.initVPN();
+      if (ref.context.mounted) {
+        final vpn = VPN(ProviderScope.containerOf(ref.context));
+        await vpn.initVPN();
+        _onNavigate();
+        return;
+      } else {
+        await Future.delayed(const Duration(seconds: 3));
+      }
       _onNavigate();
-      return;
-    } else {
-      await Future.delayed(const Duration(seconds: 3));
+    } catch (e) {
+      // Fall through to navigation so an unexpected startup error never leaves the user stuck on splash.
+      debugPrint('Splash startup failed: $e');
+      _onNavigate();
     }
-    _onNavigate();
   }
 
   void _onNavigate() {
@@ -111,7 +118,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             TextSpan(
               text: 'D',
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 34.sp,
                 color: const Color(0xFFFFC927),
                 fontWeight: FontWeight.w700,
@@ -120,7 +127,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             TextSpan(
               text: 'efyx ',
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 34.sp,
                 color: const Color(0xFFFFC927),
                 fontWeight: FontWeight.w400,
@@ -129,7 +136,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             TextSpan(
               text: 'VPN',
               style: TextStyle(
-                fontFamily: 'Lato',
+                fontFamily: AppTheme.fontFamily,
                 fontSize: 34.sp,
                 color: Colors.white,
                 fontWeight: FontWeight.w400,
@@ -146,7 +153,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
       AppLocalizations.of(context).splashSubtitle,
       textAlign: TextAlign.center,
       style: TextStyle(
-        fontFamily: 'Lato',
+        fontFamily: AppTheme.fontFamily,
         fontSize: 18.sp,
         color: const Color(0xFFCFCFCF),
         fontWeight: FontWeight.w500,
