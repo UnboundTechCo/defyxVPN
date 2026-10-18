@@ -10,11 +10,39 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
-class DefyxNavBar extends ConsumerWidget {
+class DefyxNavBar extends ConsumerStatefulWidget {
   const DefyxNavBar({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DefyxNavBar> createState() => _DefyxNavBarState();
+}
+
+class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
+  late FocusNode _speedTestFocusNode;
+  late FocusNode _homeFocusNode;
+  late FocusNode _settingsFocusNode;
+  late FocusNode _infoBtnFocusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _speedTestFocusNode = FocusNode();
+    _homeFocusNode = FocusNode();
+    _settingsFocusNode = FocusNode();
+    _infoBtnFocusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _speedTestFocusNode.dispose();
+    _homeFocusNode.dispose();
+    _settingsFocusNode.dispose();
+    _infoBtnFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
     final currentScreen = _getCurrentScreenFromLocation(location);
     final settingsLoading = ref.watch(settingsLoadingProvider);
@@ -44,12 +72,14 @@ class DefyxNavBar extends ConsumerWidget {
                     icon: "speed",
                     current: currentScreen,
                     onTap: () => _handleSpeedTest(context, ref),
+                    focusNode: _speedTestFocusNode,
                   ),
                   DefyxNavItem(
                     screen: AppScreen.home,
                     icon: "chield",
                     current: currentScreen,
                     onTap: () => _navigateToHome(context),
+                    focusNode: _homeFocusNode,
                   ),
                   DefyxNavItem(
                     screen: AppScreen.settings,
@@ -57,29 +87,43 @@ class DefyxNavBar extends ConsumerWidget {
                     isLoading: settingsLoading,
                     current: currentScreen,
                     onTap: () => _navigateToSettings(context),
+                    focusNode: _settingsFocusNode,
                   ),
                 ],
               ),
             ),
             Positioned(
               right: 24.w,
-              child: GestureDetector(
-                onTap: () => _showShareDialog(context, ref),
-                child: Container(
-                  width: 60.w,
-                  height: 60.w,
-                  decoration: const BoxDecoration(
-                    color: Colors.black,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: SvgPicture.asset(
-                      'assets/icons/info.svg',
-                      width: 25.w,
-                      height: 25.w,
-                      colorFilter: const ColorFilter.mode(
-                        Colors.white,
-                        BlendMode.srcIn,
+              child: Focus(
+                focusNode: _infoBtnFocusNode,
+                child: MouseRegion(
+                  cursor: SystemMouseCursors.click,
+                  child: GestureDetector(
+                    onTap: () => _showShareDialog(context, ref),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      width: 60.w,
+                      height: 60.w,
+                      decoration: BoxDecoration(
+                        color: Colors.black,
+                        shape: BoxShape.circle,
+                        border: _infoBtnFocusNode.hasFocus
+                            ? Border.all(
+                                color: const Color(0xFFFFD700),
+                                width: 2.0,
+                              )
+                            : null,
+                      ),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/info.svg',
+                          width: 25.w,
+                          height: 25.w,
+                          colorFilter: const ColorFilter.mode(
+                            Colors.white,
+                            BlendMode.srcIn,
+                          ),
+                        ),
                       ),
                     ),
                   ),
