@@ -12,10 +12,10 @@ class SettingsConfig {
 
   const SettingsConfig({
     this.showDestination = false,
-    this.showSplitTunnel = false,
+    this.showSplitTunnel = true,
     this.showDeepScan = true,
     this.showHealthCheck = true,
-    this.showKillSwitch = false,
+    this.showKillSwitch = true,
     this.customItems = const [],
   });
 
@@ -80,6 +80,7 @@ class SettingsFactory {
       isAccessible: true,
       sortOrder: 0,
       itemType: SettingsItemType.navigation,
+      navigationRoute: SettingsRoute.splitTunnel,
       subtitle: subtitle,
     );
   }

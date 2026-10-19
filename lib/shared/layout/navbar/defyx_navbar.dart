@@ -149,11 +149,12 @@ class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
   }
 
   AppScreen _getCurrentScreenFromLocation(String location) {
+    if (location.startsWith(DefyxVPNRoutes.settings.route)) {
+      return AppScreen.settings;
+    }
     switch (location) {
       case '/main':
         return AppScreen.home;
-      case '/settings':
-        return AppScreen.settings;
       case '/speedTest':
         return AppScreen.speedTest;
       default:

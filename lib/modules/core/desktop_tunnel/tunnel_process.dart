@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/modules/core/desktop_tunnel/tunnel_link.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/modules/settings/models/split_tunnel_config.dart';
 import 'package:flutter/services.dart';
 
 class TunnelProcess {
@@ -63,7 +64,11 @@ class TunnelProcess {
         switch (name) {
           case 'start':
             await _verifyGatewayOnce(bridge);
-            ok = await bridge.startTunnel();
+            ok = await bridge.startTunnel(
+              mode: message['mode'] as String? ?? SplitTunnelMode.off.coreValue,
+              rules: message['rules'] as String? ?? '[]',
+              apps: message['apps'] as String? ?? '[]',
+            );
             if (!ok) error = 'the core refused to start the tunnel';
             break;
           case 'stop':

@@ -10,7 +10,9 @@ import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/modules/settings/models/split_tunnel_config.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
+import 'package:defyx_vpn/modules/settings/providers/split_tunnel_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/flow_line_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
@@ -160,7 +162,7 @@ class VPN {
       loggerNotifier.setSwitchingMethod();
     }
     if (msg.startsWith("Data: VPN stopped")) {
-      _closeTunnel(keepConnectionStatus: connectionStateIsError);
+      _onProxyStopped(keepConnectionStatus: connectionStateIsError);
     }
     if (msg.startsWith("Data: VPN connecting")) {
       _onLoading();
@@ -437,7 +439,34 @@ class VPN {
     analyticsService.logVpnDisconnected();
   }
 
-  Future<void> _closeTunnel({bool keepConnectionStatus = false}) async {
+  Future<void> _onProxyStopped({required bool keepConnectionStatus}) async {
+    final connectionNotifier = _container?.read(
+      connectionStateProvider.notifier,
+    );
+    final status = _container?.read(connectionStateProvider).status;
+    final proxyLost = status == ConnectionStatus.connected;
+
+    if (proxyLost && _isKillSwitchEnabled()) {
+      log.addLog('[INFO] Proxy stopped, kill switch keeps the tunnel up');
+      connectionNotifier?.setError();
+      alertService.error();
+      return;
+    }
+
+    await _closeTunnel(
+      keepConnectionStatus: keepConnectionStatus,
+      proxyLost: proxyLost,
+    );
+  }
+
+  bool _isKillSwitchEnabled() =>
+      _container?.read(settingsProvider.notifier).isKillSwitchEnabled() ??
+      false;
+
+  Future<void> _closeTunnel({
+    bool keepConnectionStatus = false,
+    bool proxyLost = false,
+  }) async {
     final connectionNotifier = _container?.read(
       connectionStateProvider.notifier,
     );
@@ -447,7 +476,7 @@ class VPN {
       connectionNotifier?.setDisconnecting();
     }
     await _stopDesktopTunnel();
-    if (Platform.isIOS) {
+    if (Platform.isIOS || (Platform.isAndroid && proxyLost)) {
       await _vpnBridge.disconnectVpn();
     }
     await vpnData?.disableVPN();
@@ -484,15 +513,27 @@ class VPN {
   }
 
   Future<bool> _createTunnel() async {
+    final splitTunnel =
+        await _container?.read(splitTunnelProvider.notifier).loadedConfig() ??
+        const SplitTunnelConfig();
+
     switch (Platform.operatingSystem) {
       case 'android':
-        await _vpnBridge.connectVpn();
+        await _vpnBridge.connectVpn(
+          mode: splitTunnel.mode.coreValue,
+          rules: splitTunnel.rulesPayload,
+          apps: splitTunnel.appsPayload,
+        );
         return true;
       case "ios":
-        return await _vpnBridge.startTunnel();
+        return await _vpnBridge.startTunnel(
+          mode: splitTunnel.mode.coreValue,
+          rules: splitTunnel.rulesPayload,
+          apps: splitTunnel.appsPayload,
+        );
       case "windows":
       case "linux":
-        return await _startDesktopTunnel();
+        return await _startDesktopTunnel(splitTunnel);
       default:
         return true;
     }
@@ -536,12 +577,16 @@ class VPN {
     );
   }
 
-  Future<bool> _startDesktopTunnel() async {
+  Future<bool> _startDesktopTunnel(SplitTunnelConfig splitTunnel) async {
     if (!await _vpnBridge.isVpnModeEnabled()) {
       return true;
     }
 
-    final isStarted = await DesktopTunnel.instance.start();
+    final isStarted = await DesktopTunnel.instance.start(
+      mode: splitTunnel.mode.coreValue,
+      rules: splitTunnel.rulesPayload,
+      apps: splitTunnel.appsPayload,
+    );
     if (!isStarted) {
       log.addLog(
         '[ERROR] Failed to start tunnel: ${DesktopTunnel.instance.lastError}',

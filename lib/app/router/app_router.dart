@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../modules/main/presentation/screens/main_screen.dart';
 import '../../modules/splash/presentation/splash_screen.dart';
 import '../../modules/settings/presentation/screens/settings_screen.dart';
+import '../../modules/settings/presentation/screens/split_tunnel_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
 import '../../shared/layout/navbar/defyx_navbar.dart';
 
@@ -14,6 +15,7 @@ enum DefyxVPNRoutes {
   splash("/splash"),
   main("/main"),
   settings("/settings"),
+  splitTunnel("/settings/split_tunnel"),
   speedTest("/speedTest");
 
   final String route;
@@ -147,6 +149,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: DefyxVPNRoutes.settings.route,
             pageBuilder: (context, state) => _createPageAnimation(
               const SettingsScreen(),
+              state.pageKey,
+              SlideDirection.rightToLeft,
+            ),
+          ),
+          GoRoute(
+            path: DefyxVPNRoutes.splitTunnel.route,
+            pageBuilder: (context, state) => _createPageAnimation(
+              const SplitTunnelScreen(),
               state.pageKey,
               SlideDirection.rightToLeft,
             ),

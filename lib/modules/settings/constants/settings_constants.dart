@@ -50,6 +50,7 @@ abstract class SettingsMessage {
 // Storage Keys
 abstract class SettingsStorageKey {
   static const appSettings = 'app_settings_v2';
+  static const splitTunnel = 'split_tunnel_v1';
 }
 
 // Localized text helper - fetches translations with fallback to defaults

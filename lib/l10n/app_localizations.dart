@@ -552,6 +552,84 @@ abstract class AppLocalizations {
   /// **'INCLUDED'**
   String get settingsIncluded;
 
+  /// Split tunnel screen - title
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get splitTunnelPreferences;
+
+  /// Split tunnel mode - disabled
+  ///
+  /// In en, this message translates to:
+  /// **'OFF'**
+  String get splitTunnelModeOff;
+
+  /// Split tunnel mode - exclude the selected items from the tunnel
+  ///
+  /// In en, this message translates to:
+  /// **'EXCLUDE SELECTED'**
+  String get splitTunnelModeExclude;
+
+  /// Split tunnel mode - tunnel only the selected items
+  ///
+  /// In en, this message translates to:
+  /// **'ONLY SELECTED'**
+  String get splitTunnelModeOnly;
+
+  /// Split tunnel tab - addresses
+  ///
+  /// In en, this message translates to:
+  /// **'ADDRESSES'**
+  String get splitTunnelTabAddresses;
+
+  /// Split tunnel tab - apps
+  ///
+  /// In en, this message translates to:
+  /// **'APPS'**
+  String get splitTunnelTabApps;
+
+  /// Split tunnel search field hint
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get splitTunnelSearch;
+
+  /// Split tunnel address input hint
+  ///
+  /// In en, this message translates to:
+  /// **'type here ...'**
+  String get splitTunnelAddressHint;
+
+  /// Split tunnel app path input hint
+  ///
+  /// In en, this message translates to:
+  /// **'type or route it ...'**
+  String get splitTunnelAppHint;
+
+  /// Split tunnel menu - pick an executable file
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a file'**
+  String get splitTunnelBrowseFile;
+
+  /// Split tunnel menu - pick a folder
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a folder'**
+  String get splitTunnelBrowseFolder;
+
+  /// Split tunnel apps tab - empty list message
+  ///
+  /// In en, this message translates to:
+  /// **'No apps found'**
+  String get splitTunnelNoApps;
+
+  /// Settings label - excluded items
+  ///
+  /// In en, this message translates to:
+  /// **'EXCLUDED'**
+  String get settingsExcluded;
+
   /// Settings error message - core requirement
   ///
   /// In en, this message translates to:

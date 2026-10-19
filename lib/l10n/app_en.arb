@@ -381,6 +381,71 @@
     "description": "Settings label - included items"
   },
 
+  "splitTunnelPreferences": "Preferences",
+  "@splitTunnelPreferences": {
+    "description": "Split tunnel screen - title"
+  },
+
+  "splitTunnelModeOff": "OFF",
+  "@splitTunnelModeOff": {
+    "description": "Split tunnel mode - disabled"
+  },
+
+  "splitTunnelModeExclude": "EXCLUDE SELECTED",
+  "@splitTunnelModeExclude": {
+    "description": "Split tunnel mode - exclude the selected items from the tunnel"
+  },
+
+  "splitTunnelModeOnly": "ONLY SELECTED",
+  "@splitTunnelModeOnly": {
+    "description": "Split tunnel mode - tunnel only the selected items"
+  },
+
+  "splitTunnelTabAddresses": "ADDRESSES",
+  "@splitTunnelTabAddresses": {
+    "description": "Split tunnel tab - addresses"
+  },
+
+  "splitTunnelTabApps": "APPS",
+  "@splitTunnelTabApps": {
+    "description": "Split tunnel tab - apps"
+  },
+
+  "splitTunnelSearch": "Search",
+  "@splitTunnelSearch": {
+    "description": "Split tunnel search field hint"
+  },
+
+  "splitTunnelAddressHint": "type here ...",
+  "@splitTunnelAddressHint": {
+    "description": "Split tunnel address input hint"
+  },
+
+  "splitTunnelAppHint": "type or route it ...",
+  "@splitTunnelAppHint": {
+    "description": "Split tunnel app path input hint"
+  },
+
+  "splitTunnelBrowseFile": "Choose a file",
+  "@splitTunnelBrowseFile": {
+    "description": "Split tunnel menu - pick an executable file"
+  },
+
+  "splitTunnelBrowseFolder": "Choose a folder",
+  "@splitTunnelBrowseFolder": {
+    "description": "Split tunnel menu - pick a folder"
+  },
+
+  "splitTunnelNoApps": "No apps found",
+  "@splitTunnelNoApps": {
+    "description": "Split tunnel apps tab - empty list message"
+  },
+
+  "settingsExcluded": "EXCLUDED",
+  "@settingsExcluded": {
+    "description": "Settings label - excluded items"
+  },
+
   "settingsAtLeastOneCoreRequired": "At least one core must remain enabled",
   "@settingsAtLeastOneCoreRequired": {
     "description": "Settings error message - core requirement"

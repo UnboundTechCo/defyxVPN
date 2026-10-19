@@ -149,6 +149,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     );
   }
 
+  bool isKillSwitchEnabled() {
+    final savedGroup = state.groups[SettingsGroupId.trafficControl];
+    return SettingsFactory.getSavedItemState(
+      savedGroup?.items,
+      SettingsItemId.killSwitch,
+    );
+  }
+
   SettingsGroup _createDefaultConnectionMethodGroup(
     List<dynamic> flowline,
     SettingsText text,

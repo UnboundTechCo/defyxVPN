@@ -238,6 +238,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsIncluded => 'INCLUDED';
 
   @override
+  String get splitTunnelPreferences => 'Preferences';
+
+  @override
+  String get splitTunnelModeOff => 'OFF';
+
+  @override
+  String get splitTunnelModeExclude => 'EXCLUDE SELECTED';
+
+  @override
+  String get splitTunnelModeOnly => 'ONLY SELECTED';
+
+  @override
+  String get splitTunnelTabAddresses => 'ADDRESSES';
+
+  @override
+  String get splitTunnelTabApps => 'APPS';
+
+  @override
+  String get splitTunnelSearch => 'Search';
+
+  @override
+  String get splitTunnelAddressHint => 'type here ...';
+
+  @override
+  String get splitTunnelAppHint => 'type or route it ...';
+
+  @override
+  String get splitTunnelBrowseFile => 'Choose a file';
+
+  @override
+  String get splitTunnelBrowseFolder => 'Choose a folder';
+
+  @override
+  String get splitTunnelNoApps => 'No apps found';
+
+  @override
+  String get settingsExcluded => 'EXCLUDED';
+
+  @override
   String get settingsAtLeastOneCoreRequired =>
       'At least one core must remain enabled';
 

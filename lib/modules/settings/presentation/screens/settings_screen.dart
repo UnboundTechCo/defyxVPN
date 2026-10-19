@@ -10,8 +10,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import '../../constants/settings_constants.dart';
+import '../../models/settings_group.dart';
+import '../../models/split_tunnel_config.dart';
 import '../../providers/settings_provider.dart';
+import '../../providers/split_tunnel_provider.dart';
 import '../widgets/settings_group_widget.dart';
 import '../widgets/diagnostics_experiments_dialog.dart';
 import '../../../../shared/providers/language_provider.dart';
@@ -386,7 +390,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget _buildSettingsContent(WidgetRef ref, BuildContext context) {
     final settingsState = ref.watch(settingsProvider);
     final settingsNotifier = ref.read(settingsProvider.notifier);
-    final groups = settingsState.groupList;
+    final splitTunnelMode = ref.watch(
+      splitTunnelProvider.select((config) => config.mode),
+    );
+    final groups = settingsState.groupList
+        .map((group) => _withSplitTunnelSubtitle(group, splitTunnelMode))
+        .toList();
     return Column(
       children: groups
           .map(
@@ -414,12 +423,32 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       );
                     }
                   : null,
-              onNavigate: (route) {
-                Navigator.pushNamed(context, route);
-              },
+              onNavigate: (route) => context.push(route),
             ),
           )
           .toList(),
+    );
+  }
+
+  SettingsGroup _withSplitTunnelSubtitle(
+    SettingsGroup group,
+    SplitTunnelMode mode,
+  ) {
+    if (group.id != SettingsGroupId.trafficControl) return group;
+
+    final l10n = AppLocalizations.of(context);
+    final subtitle = switch (mode) {
+      SplitTunnelMode.off => l10n.splitTunnelModeOff,
+      SplitTunnelMode.excludeSelected => l10n.settingsExcluded,
+      SplitTunnelMode.onlySelected => l10n.settingsIncluded,
+    };
+    return group.copyWith(
+      items: [
+        for (final item in group.items)
+          item.id == SettingsItemId.splitTunnel
+              ? item.copyWith(subtitle: subtitle)
+              : item,
+      ],
     );
   }
 

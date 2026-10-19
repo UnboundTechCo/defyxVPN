@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/modules/settings/models/installed_app.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -25,8 +26,12 @@ class VpnBridge {
 
   Future<void> stopVPN() async => await _methodChannel.invokeMethod('stopVPN');
 
-  Future<bool?> connectVpn() async =>
-      await _methodChannel.invokeMethod<bool>('connect');
+  Future<bool?> connectVpn({String? mode, String? rules, String? apps}) async =>
+      await _methodChannel.invokeMethod<bool>('connect', {
+        if (mode != null) "mode": mode,
+        if (rules != null) "rules": rules,
+        if (apps != null) "apps": apps,
+      });
 
   Future<bool?> grantVpnPermission() async =>
       await _methodChannel.invokeMethod<bool>("grantVpnPermission");
@@ -46,8 +51,17 @@ class VpnBridge {
   Future<bool> isTunnelRunning() async =>
       (await _methodChannel.invokeMethod<bool>("isTunnelRunning")) ?? false;
 
-  Future<bool> startTunnel() async =>
-      (await _methodChannel.invokeMethod<bool>("startTunnel")) ?? false;
+  Future<bool> startTunnel({
+    required String mode,
+    required String rules,
+    required String apps,
+  }) async =>
+      (await _methodChannel.invokeMethod<bool>("startTunnel", {
+        "mode": mode,
+        "rules": rules,
+        "apps": apps,
+      })) ??
+      false;
 
   Future<void> stopTunnel() async =>
       await _methodChannel.invokeMethod("stopTunnel");
@@ -95,6 +109,17 @@ class VpnBridge {
       await _methodChannel.invokeMethod('clearVpnCache');
     } on MissingPluginException {
       // Not implemented on this platform; nothing to clear.
+    }
+  }
+
+  Future<List<InstalledApp>> getInstalledApps() async {
+    try {
+      final apps = await _methodChannel.invokeListMethod<Map<dynamic, dynamic>>(
+        'getInstalledApps',
+      );
+      return (apps ?? const []).map(InstalledApp.fromMap).toList();
+    } on MissingPluginException {
+      return const [];
     }
   }
 

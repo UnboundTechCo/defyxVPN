@@ -238,6 +238,45 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsIncluded => 'شامل شده';
 
   @override
+  String get splitTunnelPreferences => 'تنظیمات';
+
+  @override
+  String get splitTunnelModeOff => 'خاموش';
+
+  @override
+  String get splitTunnelModeExclude => 'حذف موارد انتخاب‌شده';
+
+  @override
+  String get splitTunnelModeOnly => 'فقط موارد انتخاب‌شده';
+
+  @override
+  String get splitTunnelTabAddresses => 'آدرس‌ها';
+
+  @override
+  String get splitTunnelTabApps => 'برنامه‌ها';
+
+  @override
+  String get splitTunnelSearch => 'جستجو';
+
+  @override
+  String get splitTunnelAddressHint => 'اینجا تایپ کنید ...';
+
+  @override
+  String get splitTunnelAppHint => 'تایپ کنید یا مسیر را انتخاب کنید ...';
+
+  @override
+  String get splitTunnelBrowseFile => 'انتخاب فایل';
+
+  @override
+  String get splitTunnelBrowseFolder => 'انتخاب پوشه';
+
+  @override
+  String get splitTunnelNoApps => 'برنامه‌ای یافت نشد';
+
+  @override
+  String get settingsExcluded => 'حذف شده';
+
+  @override
   String get settingsAtLeastOneCoreRequired =>
       'حداقل یک هسته باید فعال باقی بماند';
 

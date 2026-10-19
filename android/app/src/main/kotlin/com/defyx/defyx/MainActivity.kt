@@ -6,6 +6,11 @@ import android.ProgressListener
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
@@ -20,12 +25,14 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
 import kotlinx.coroutines.*
 
 private const val VPN_REQUEST_CODE = 1000
 private const val TAG = "MainActivity"
+private const val APP_ICON_SIZE_PX = 96
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.defyx.vpn"
@@ -126,6 +133,7 @@ class MainActivity : FlutterActivity() {
                 "getFlag" -> getFlag(result)
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
                 "stopVPN" -> stopVPN(result)
+                "getInstalledApps" -> getInstalledApps(result)
                 "grantVpnPermission" -> grantVpnPermission(result)
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
@@ -292,6 +300,55 @@ class MainActivity : FlutterActivity() {
                     result.error("PING_ERROR", "Failed to Stop VPN", e.localizedMessage)
                 }
             }
+        }
+    }
+
+    private fun getInstalledApps(result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val launcherIntent =
+                        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+                val apps =
+                        packageManager
+                                .queryIntentActivities(launcherIntent, PackageManager.MATCH_ALL)
+                                .map { it.activityInfo.applicationInfo }
+                                .filter { it.packageName != packageName }
+                                .distinctBy { it.packageName }
+                                .map { info ->
+                                    mapOf(
+                                            "name" to info.loadLabel(packageManager).toString(),
+                                            "packageName" to info.packageName,
+                                            "icon" to
+                                                    drawableToPng(
+                                                            info.loadIcon(packageManager),
+                                                            APP_ICON_SIZE_PX
+                                                    )
+                                    )
+                                }
+                withContext(Dispatchers.Main) { result.success(apps) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Get installed apps failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("GET_APPS_ERROR", "Failed to list apps", e.localizedMessage)
+                }
+            }
+        }
+    }
+
+    private fun drawableToPng(drawable: Drawable, sizePx: Int): ByteArray {
+        val bitmap =
+                if (drawable is BitmapDrawable && drawable.bitmap.width == sizePx) {
+                    drawable.bitmap
+                } else {
+                    Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).also {
+                        val canvas = Canvas(it)
+                        drawable.setBounds(0, 0, canvas.width, canvas.height)
+                        drawable.draw(canvas)
+                    }
+                }
+        return ByteArrayOutputStream().use { stream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.toByteArray()
         }
     }
 
