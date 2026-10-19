@@ -19,6 +19,7 @@ import '../widgets/split_tunnel_search_field.dart';
 import '../widgets/split_tunnel_tab_bar.dart';
 
 const Color _accentColor = Color(0xFFFFC927);
+const double _backIconSize = 36;
 
 class SplitTunnelScreen extends ConsumerStatefulWidget {
   const SplitTunnelScreen({super.key});
@@ -111,12 +112,21 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        InkWell(
-          onTap: _goBack,
-          customBorder: const CircleBorder(),
-          child: Padding(
-            padding: EdgeInsets.all(4.r),
-            child: Icon(Icons.chevron_left, size: 36.sp, color: _accentColor),
+        Transform.translate(
+          offset: Offset(
+            (Directionality.of(context) == TextDirection.rtl ? 1 : -1) *
+                _backIconSize.sp /
+                3,
+            0,
+          ),
+          child: InkWell(
+            onTap: _goBack,
+            customBorder: const CircleBorder(),
+            child: Icon(
+              Icons.chevron_left,
+              size: _backIconSize.sp,
+              color: _accentColor,
+            ),
           ),
         ),
         SizedBox(height: 8.h),
