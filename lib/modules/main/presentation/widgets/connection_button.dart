@@ -105,6 +105,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
   }
 
   void _handleFocusChange() {
+    if (!mounted) return;
     setState(() {
       _hasFocus = _focusNode.hasFocus;
     });
@@ -223,7 +224,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
         _handleTimerState(connectionState.status);
 
         return Focus(
-          focusNode: _focusNode,
+          canRequestFocus: false,
+          skipTraversal: true,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -382,6 +384,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
                         color: Colors.transparent,
                         child: InkWell(
                           onTap: widget.onTap,
+                          focusNode: _focusNode,
+                          onFocusChange: (focused) =>
+                              setState(() => _hasFocus = focused),
                           splashColor: Colors.white.withValues(alpha: 0.2),
                           highlightColor: Colors.white.withValues(alpha: 0.1),
                           child: Container(
