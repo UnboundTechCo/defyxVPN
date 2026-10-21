@@ -3,7 +3,7 @@ on:
 
 jobs:
   build-linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
 
@@ -80,6 +80,11 @@ jobs:
             plocate \
             rpm
 
+      - name: Verify RPM packaging tools
+        run: |
+          rpmbuild --version
+          patchelf --version
+
       - name: Build locate database (needed by fastforge AppImage `include`)
         run: sudo updatedb
 
@@ -92,9 +97,17 @@ jobs:
         env:
           APPIMAGE_EXTRACT_AND_RUN: 1
         run: |
-          dart pub global activate fastforge
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
-          fastforge release --name=production
+          dart pub global activate fastforge 0.6.12
+
+          task_pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+
+          sed -i '/final file = await/s/await [$](/await Process.run(/' \
+            "$task_pub_cache/hosted/pub.dev/flutter_app_packager-0.6.11/lib/src/makers/appimage/app_package_maker_appimage.dart"
+
+          dart \
+            --packages="$task_pub_cache/global_packages/fastforge/.dart_tool/package_config.json" \
+            "$task_pub_cache/hosted/pub.dev/fastforge-0.6.12/bin/main.dart" \
+            release --name=production
 
       - name: Rename Linux artifacts
         run: |
