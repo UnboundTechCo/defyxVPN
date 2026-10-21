@@ -4,6 +4,7 @@ import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/defyx_nav_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_dialog.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -96,6 +97,18 @@ class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
               right: 24.w,
               child: Focus(
                 focusNode: _infoBtnFocusNode,
+                onFocusChange: (_) => setState(() {}),
+                onKeyEvent: (node, event) {
+                  if (event is KeyDownEvent &&
+                      (event.logicalKey == LogicalKeyboardKey.select ||
+                          event.logicalKey == LogicalKeyboardKey.enter ||
+                          event.logicalKey == LogicalKeyboardKey.numpadEnter ||
+                          event.logicalKey == LogicalKeyboardKey.gameButtonA)) {
+                    _showShareDialog(context, ref);
+                    return KeyEventResult.handled;
+                  }
+                  return KeyEventResult.ignored;
+                },
                 child: MouseRegion(
                   cursor: SystemMouseCursors.click,
                   child: GestureDetector(
