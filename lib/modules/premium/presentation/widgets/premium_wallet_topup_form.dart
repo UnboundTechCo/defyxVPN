@@ -176,7 +176,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 ),
                 child: Center(
                   child: Text(
-                    '\$${amount.toInt()}',
+                    '${amount.toInt()} Credit${amount.toInt() > 1 ? 's' : ''}',
                     style: TextStyle(
                       color: isSelected
                           ? const Color(0xFF2563EB)
@@ -205,7 +205,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Please select the wallet top-up amount:',
+                'Please select the wallet Top-up amount:',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 30.sp,
