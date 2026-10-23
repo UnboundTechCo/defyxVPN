@@ -155,6 +155,23 @@ class PremiumApiService {
     }
   }
 
+  Future<LoginResponse> guestModeLoginApple(String uniqueIdentifier) async {
+    try {
+      final response = await _dio.post(
+        '/auth/customer/apple/guest',
+        data: {'unique_identifier': uniqueIdentifier},
+      );
+
+      if (response.statusCode != 201) {
+        throw Exception('Failed to login in guest mode.');
+      }
+
+      return LoginResponse.fromJson(response.data as Map<String, dynamic>);
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Exception _handleError(DioException error) {
     if (error.response?.statusCode == 401) {
       return Exception('Token expired. Please log in again.');

@@ -62,7 +62,9 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
     try {
       final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
       if (!isLoggedIn) {
-        final registered = await Register(ref: widget.ref).registerByApple();
+        final registered = await Register(
+          ref: widget.ref,
+        ).guestModeLoginApple();
         if (!mounted || !registered) return;
       }
 
@@ -176,7 +178,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 ),
                 child: Center(
                   child: Text(
-                    '${amount.toInt()} Credit${amount.toInt() > 1 ? 's' : ''}',
+                    '${amount.toInt()}',
                     style: TextStyle(
                       color: isSelected
                           ? const Color(0xFF2563EB)
@@ -205,7 +207,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Please select the wallet Top-up amount:',
+                'Please select the wallet top-up amount:',
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 30.sp,
