@@ -843,7 +843,7 @@ abstract class AppLocalizations {
   /// Premium widget - marketplace description
   ///
   /// In en, this message translates to:
-  /// **'Get premium VPN access with\nfast and reliable connections.'**
+  /// **'Get premium VPN access with\nhighspeed and reliable connections.'**
   String get marketplaceDescription;
 
   /// Premium widget - logged in status
