@@ -97,7 +97,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
           // mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              '\$${plan.price.toStringAsFixed(2)}',
+              '${plan.price.toStringAsFixed(2)} Credits',
               style: TextStyle(
                 color: const Color(0xFF4CAF7F),
                 fontSize: 34.sp,

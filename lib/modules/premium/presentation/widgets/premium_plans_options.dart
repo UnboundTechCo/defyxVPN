@@ -13,6 +13,8 @@ class PremiumPlanSelect extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedPlan = ref.watch(selectedPlanProvider);
 
+    final planIsSelected = selectedPlan != null;
+
     final plans = ref.watch(plansProvider);
 
     return SingleChildScrollView(
@@ -85,7 +87,7 @@ class PremiumPlanSelect extends ConsumerWidget {
                               ),
                             ),
                             Text(
-                              '\$${plan.price.toStringAsFixed(2)}',
+                              '${plan.price.toStringAsFixed(2)} Credits',
                               style: TextStyle(
                                 color: isSelectedPlan
                                     ? const Color(0xFF21AD86)
@@ -115,6 +117,7 @@ class PremiumPlanSelect extends ConsumerWidget {
             variant: AppButtonVariant.outline,
             round: AppButtonRound.circle,
             size: AppButtonSize.medium,
+            isDisabled: !planIsSelected,
             isLoading: plans.when(
               data: (data) => false,
               loading: () => true,

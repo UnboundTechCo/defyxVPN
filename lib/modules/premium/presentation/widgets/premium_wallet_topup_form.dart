@@ -198,6 +198,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
 
   @override
   Widget build(BuildContext context) {
+    final amountIsSelected = _selectedAmount != null;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -224,6 +225,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 size: AppButtonSize.medium,
                 round: AppButtonRound.circle,
                 isLoading: _isProcessing,
+                isDisabled: !amountIsSelected,
               ),
               SizedBox(height: 16.h),
               AppButton(
