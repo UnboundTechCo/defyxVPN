@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import java.io.File
 import kotlinx.coroutines.*
+import org.json.JSONArray
 
 class DefyxVpnService : VpnService() {
     companion object {
@@ -163,7 +164,7 @@ class DefyxVpnService : VpnService() {
         return builder.build()
     }
 
-    fun startVpn(context: Context) {
+    fun startVpn(context: Context, splitMode: String, splitRules: String, splitApps: String) {
         CoroutineScope(Dispatchers.IO).launch {
             Log.d(TAG, "startVpn called")
             try {
@@ -181,9 +182,7 @@ class DefyxVpnService : VpnService() {
                                 .setMtu(1500)
                                 .setBlocking(false)
 
-                try {
-                    builder.addDisallowedApplication(context.packageName)
-                } catch (_: Exception) {}
+                applySplitApps(builder, context.packageName, splitMode, splitApps)
 
                 vpnInterface?.close()
                 vpnInterface = builder.establish()
@@ -207,6 +206,7 @@ class DefyxVpnService : VpnService() {
                                     this@DefyxVpnService.protect(fileDescriptor)
                         }
                 )
+                Android.setSplitTunnel(splitMode, splitRules, splitApps)
                 val success = Android.startTunnel(fd.toLong())
 
                 isVpnConnected = success
@@ -226,6 +226,42 @@ class DefyxVpnService : VpnService() {
                 updateNotification("DefyxVPN", "Connection failed")
                 notifyVpnStatus("disconnected")
                 withContext(Dispatchers.Main) { saveVpnState(false) }
+            }
+        }
+    }
+
+    private fun applySplitApps(builder: Builder, ownPackage: String, mode: String, apps: String) {
+        val packages =
+                try {
+                    val array = JSONArray(apps)
+                    (0 until array.length())
+                            .map { array.optString(it) }
+                            .filter { it.isNotEmpty() && it != ownPackage }
+                            .distinct()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+        if (mode == "only") {
+            var allowed = 0
+            for (app in packages) {
+                try {
+                    builder.addAllowedApplication(app)
+                    allowed++
+                } catch (_: Exception) {}
+            }
+            if (allowed > 0) return
+        }
+
+        try {
+            builder.addDisallowedApplication(ownPackage)
+        } catch (_: Exception) {}
+
+        if (mode == "exclude") {
+            for (app in packages) {
+                try {
+                    builder.addDisallowedApplication(app)
+                } catch (_: Exception) {}
             }
         }
     }

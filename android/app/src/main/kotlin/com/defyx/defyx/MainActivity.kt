@@ -123,7 +123,7 @@ class MainActivity : FlutterActivity() {
     private suspend fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "connect" -> connectVpn(result)
+                "connect" -> connectVpn(call.arguments as? Map<String, Any>, result)
                 "disconnect" -> disconnectVpn(result)
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
@@ -162,7 +162,7 @@ class MainActivity : FlutterActivity() {
             result.success(false)
         }
     }
-    private fun connectVpn(result: MethodChannel.Result) {
+    private fun connectVpn(args: Map<String, Any>?, result: MethodChannel.Result) {
         pendingVpnResult = result
 
         // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
@@ -175,7 +175,13 @@ class MainActivity : FlutterActivity() {
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance().startVpn(this)
+            DefyxVpnService.getInstance()
+                    .startVpn(
+                            this,
+                            args?.get("mode") as? String ?: "off",
+                            args?.get("rules") as? String ?: "[]",
+                            args?.get("apps") as? String ?: "[]"
+                    )
             result.success(true)
         }
     }
