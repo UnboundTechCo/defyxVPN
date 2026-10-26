@@ -32,7 +32,9 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
   SplitTunnelTab _tab = SplitTunnelTab.addresses;
   String _query = '';
 
-  bool get _listsInstalledApps => Platform.isAndroid || Platform.isIOS;
+  bool get _supportsApps => !Platform.isIOS;
+
+  bool get _listsInstalledApps => Platform.isAndroid;
 
   void _selectTab(SplitTunnelTab tab) {
     if (tab == _tab) return;
@@ -84,11 +86,13 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                               .setMode,
                         ),
                         SizedBox(height: 24.h),
-                        SplitTunnelTabBar(
-                          selected: _tab,
-                          onChanged: _selectTab,
-                        ),
-                        SizedBox(height: 16.h),
+                        if (_supportsApps) ...[
+                          SplitTunnelTabBar(
+                            selected: _tab,
+                            onChanged: _selectTab,
+                          ),
+                          SizedBox(height: 16.h),
+                        ],
                         SplitTunnelSearchField(
                           key: ValueKey(_tab),
                           onChanged: (value) => setState(() => _query = value),
