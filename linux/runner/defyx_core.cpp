@@ -16,6 +16,7 @@ typedef int (*dx_stop_vpn_fn)();
 typedef void (*dx_start_t2s_fn)(long long fd, const char* addr);
 typedef void (*dx_stop_t2s_fn)();
 typedef int (*dx_start_tunnel_fn)();
+typedef void (*dx_set_split_tunnel_fn)(const char*, const char*, const char*);
 typedef void (*dx_stop_tunnel_fn)();
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
@@ -41,6 +42,7 @@ static dx_stop_vpn_fn g_stop_vpn = nullptr;
 static dx_start_t2s_fn g_start_t2s = nullptr;
 static dx_stop_t2s_fn g_stop_t2s = nullptr;
 static dx_start_tunnel_fn g_start_tunnel = nullptr;
+static dx_set_split_tunnel_fn g_set_split_tunnel = nullptr;
 static dx_stop_tunnel_fn g_stop_tunnel = nullptr;
 static dx_stop_fn g_stop_all = nullptr;
 static dx_measure_ping_fn g_measure_ping = nullptr;
@@ -150,6 +152,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_start_t2s = (dx_start_t2s_fn)dlsym(g_dx_dll, "StartTun2Socks");
   g_stop_t2s = (dx_stop_t2s_fn)dlsym(g_dx_dll, "StopTun2Socks");
   g_start_tunnel = (dx_start_tunnel_fn)dlsym(g_dx_dll, "StartTunnel");
+  g_set_split_tunnel = (dx_set_split_tunnel_fn)dlsym(g_dx_dll, "SetSplitTunnel");
   g_stop_tunnel = (dx_stop_tunnel_fn)dlsym(g_dx_dll, "StopTunnel");
   g_stop_all = (dx_stop_fn)dlsym(g_dx_dll, "Stop");
   g_measure_ping = (dx_measure_ping_fn)dlsym(g_dx_dll, "MeasurePing");
@@ -182,6 +185,7 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("StartTun2Socks", g_start_t2s);
   check("StopTun2Socks", g_stop_t2s);
   check("StartTunnel", g_start_tunnel);
+  check("SetSplitTunnel", g_set_split_tunnel);
   check("StopTunnel", g_stop_tunnel);
   check("Stop", g_stop_all);
   check("MeasurePing", g_measure_ping);
@@ -331,6 +335,16 @@ bool StartTunnel() {
     defyx_core::LogMessage("StartTunnel unavailable: symbol missing");
   } catch (...) {}
   return false;
+}
+
+void SetSplitTunnel(const std::string& mode, const std::string& rules, const std::string& apps) {
+  try {
+    defyx_core::LogMessage("SetSplitTunnel called mode=" + mode);
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_set_split_tunnel) {
+      g_set_split_tunnel(mode.c_str(), rules.c_str(), apps.c_str());
+    }
+  } catch (...) {}
 }
 
 void StopTunnel() {

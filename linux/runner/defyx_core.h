@@ -14,6 +14,7 @@ void StartTun2Socks(long long fd, const std::string& addr);
 void StopTun2Socks();
 
 bool StartTunnel();
+void SetSplitTunnel(const std::string& mode, const std::string& rules, const std::string& apps);
 void StopTunnel();
 void Stop();
 long long MeasurePing();

@@ -274,6 +274,11 @@ void VPNChannelHandler::SetupMethodChannel() {
         }
 
         if (method == "startTunnel") {
+          if (call.arguments() && std::holds_alternative<flutter::EncodableMap>(*call.arguments())) {
+            auto m = std::get<flutter::EncodableMap>(*call.arguments());
+            dxcore_->SetSplitTunnel(get_string_arg(m, "mode"), get_string_arg(m, "rules"),
+                                    get_string_arg(m, "apps"));
+          }
           result->Success(flutter::EncodableValue(dxcore_->StartTunnel() != 0));
           return;
         }
