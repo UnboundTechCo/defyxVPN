@@ -5,6 +5,7 @@ import android.SocketProtector
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
@@ -14,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.content.edit
 import java.io.File
 import kotlinx.coroutines.*
+import org.json.JSONArray
 
 class DefyxVpnService : VpnService() {
     companion object {
@@ -163,7 +165,7 @@ class DefyxVpnService : VpnService() {
         return builder.build()
     }
 
-    fun startVpn(context: Context) {
+    fun startVpn(context: Context, splitMode: String, splitRules: String, splitApps: String) {
         CoroutineScope(Dispatchers.IO).launch {
             Log.d(TAG, "startVpn called")
             try {
@@ -181,9 +183,7 @@ class DefyxVpnService : VpnService() {
                                 .setMtu(1500)
                                 .setBlocking(false)
 
-                try {
-                    builder.addDisallowedApplication(context.packageName)
-                } catch (_: Exception) {}
+                applySplitApps(builder, context.packageName, splitMode, splitApps)
 
                 vpnInterface?.close()
                 vpnInterface = builder.establish()
@@ -207,6 +207,7 @@ class DefyxVpnService : VpnService() {
                                     this@DefyxVpnService.protect(fileDescriptor)
                         }
                 )
+                Android.setSplitTunnel(splitMode, splitRules, splitApps)
                 val success = Android.startTunnel(fd.toLong())
 
                 isVpnConnected = success
@@ -229,6 +230,55 @@ class DefyxVpnService : VpnService() {
             }
         }
     }
+
+    private fun applySplitApps(builder: Builder, ownPackage: String, mode: String, apps: String) {
+        val packages =
+                try {
+                    val array = JSONArray(apps)
+                    (0 until array.length())
+                            .map { array.optString(it) }
+                            .filter { it.isNotEmpty() && it != ownPackage && isInstalled(it) }
+                            .distinct()
+                } catch (_: Exception) {
+                    emptyList()
+                }
+
+        if (mode == "only" && packages.isNotEmpty()) {
+            for (app in packages) {
+                try {
+                    builder.addAllowedApplication(app)
+                } catch (_: Exception) {}
+            }
+            return
+        }
+
+        try {
+            builder.addDisallowedApplication(ownPackage)
+        } catch (_: Exception) {}
+
+        if (mode == "exclude") {
+            for (app in packages) {
+                try {
+                    builder.addDisallowedApplication(app)
+                } catch (_: Exception) {}
+            }
+        }
+    }
+
+    private fun isInstalled(packageName: String): Boolean =
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    packageManager.getApplicationInfo(
+                            packageName,
+                            PackageManager.ApplicationInfoFlags.of(0)
+                    )
+                } else {
+                    @Suppress("DEPRECATION") packageManager.getApplicationInfo(packageName, 0)
+                }
+                true
+            } catch (_: PackageManager.NameNotFoundException) {
+                false
+            }
 
     private fun disconnectVpn() {
         CoroutineScope(Dispatchers.IO).launch {

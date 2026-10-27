@@ -112,6 +112,18 @@ class VpnBridge {
     }
   }
 
+  Future<Uint8List?> getAppIcon(String packageName) async {
+    try {
+      return await _methodChannel.invokeMethod<Uint8List>('getAppIcon', {
+        'packageName': packageName,
+      });
+    } on MissingPluginException {
+      return null;
+    } on PlatformException {
+      return null;
+    }
+  }
+
   Future<List<InstalledApp>> getInstalledApps() async {
     try {
       final apps = await _methodChannel.invokeListMethod<Map<dynamic, dynamic>>(
