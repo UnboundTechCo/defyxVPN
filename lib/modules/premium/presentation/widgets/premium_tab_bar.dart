@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
 import 'package:flutter/material.dart';
@@ -36,27 +38,29 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               PremiumTab.account,
               false,
             ),
-            SizedBox(width: 24.w),
-            _buildTabButton(
-              AppIcons.plansPath,
-              'PLANS',
-              PremiumTab.plans,
-              false,
-            ),
-            SizedBox(width: 24.w),
-            _buildTabButton(
-              AppIcons.walletPath,
-              'WALLET',
-              PremiumTab.wallet,
-              false,
-            ),
-            SizedBox(width: 24.w),
-            _buildTabButton(
-              AppIcons.supportPath,
-              'SUPPORT',
-              PremiumTab.support,
-              false,
-            ),
+            if (Platform.isIOS) ...[
+              SizedBox(width: 24.w),
+              _buildTabButton(
+                AppIcons.plansPath,
+                'PLANS',
+                PremiumTab.plans,
+                false,
+              ),
+              SizedBox(width: 24.w),
+              _buildTabButton(
+                AppIcons.walletPath,
+                'WALLET',
+                PremiumTab.wallet,
+                false,
+              ),
+              // SizedBox(width: 24.w),
+              // _buildTabButton(
+              //   AppIcons.supportPath,
+              //   'SUPPORT',
+              //   PremiumTab.support,
+              //   false,
+              // ),
+            ],
           ],
         ),
       ),
