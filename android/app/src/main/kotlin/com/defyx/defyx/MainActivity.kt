@@ -6,6 +6,7 @@ import android.ProgressListener
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -323,17 +324,7 @@ class MainActivity : FlutterActivity() {
                                 .map { it.activityInfo.applicationInfo }
                                 .filter { it.packageName != packageName }
                                 .distinctBy { it.packageName }
-                                .map { info ->
-                                    mapOf(
-                                            "name" to info.loadLabel(packageManager).toString(),
-                                            "packageName" to info.packageName,
-                                            "icon" to
-                                                    drawableToPng(
-                                                            info.loadIcon(packageManager),
-                                                            APP_ICON_SIZE_PX
-                                                    )
-                                    )
-                                }
+                                .mapNotNull { appEntry(it) }
                 withContext(Dispatchers.Main) { result.success(apps) }
             } catch (e: Exception) {
                 Log.e(TAG, "Get installed apps failed: ${e.message}", e)
@@ -342,6 +333,14 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+    }
+
+    private fun appEntry(info: ApplicationInfo): Map<String, Any?>? {
+        val name = runCatching { info.loadLabel(packageManager).toString() }.getOrNull() ?: return null
+        val icon =
+                runCatching { drawableToPng(info.loadIcon(packageManager), APP_ICON_SIZE_PX) }
+                        .getOrNull()
+        return mapOf("name" to name, "packageName" to info.packageName, "icon" to icon)
     }
 
     private fun drawableToPng(drawable: Drawable, sizePx: Int): ByteArray {
