@@ -10,40 +10,9 @@ PODS:
     - Flutter
   - device_info_plus (0.0.1):
     - Flutter
-  - DKImagePickerController/Core (4.3.9):
-    - DKImagePickerController/ImageDataManager
-    - DKImagePickerController/Resource
-  - DKImagePickerController/ImageDataManager (4.3.9)
-  - DKImagePickerController/PhotoGallery (4.3.9):
-    - DKImagePickerController/Core
-    - DKPhotoGallery
-  - DKImagePickerController/Resource (4.3.9)
-  - DKPhotoGallery (0.0.19):
-    - DKPhotoGallery/Core (= 0.0.19)
-    - DKPhotoGallery/Model (= 0.0.19)
-    - DKPhotoGallery/Preview (= 0.0.19)
-    - DKPhotoGallery/Resource (= 0.0.19)
-    - SDWebImage
-    - SwiftyGif
-  - DKPhotoGallery/Core (0.0.19):
-    - DKPhotoGallery/Model
-    - DKPhotoGallery/Preview
-    - SDWebImage
-    - SwiftyGif
-  - DKPhotoGallery/Model (0.0.19):
-    - SDWebImage
-    - SwiftyGif
-  - DKPhotoGallery/Preview (0.0.19):
-    - DKPhotoGallery/Model
-    - DKPhotoGallery/Resource
-    - SDWebImage
-    - SwiftyGif
-  - DKPhotoGallery/Resource (0.0.19):
-    - SDWebImage
-    - SwiftyGif
-  - file_picker (0.0.1):
-    - DKImagePickerController/PhotoGallery
+  - file_picker_darwin (1.0.0):
     - Flutter
+    - FlutterMacOS
   - Firebase/CoreOnly (12.19.0):
     - FirebaseCore (~> 12.19.0)
   - Firebase/Crashlytics (12.19.0):
@@ -116,11 +85,11 @@ PODS:
     - FlutterMacOS
   - flutter_timezone (0.0.1):
     - Flutter
-  - Google-Mobile-Ads-SDK (12.2.0):
+  - Google-Mobile-Ads-SDK (12.14.0):
     - GoogleUserMessagingPlatform (>= 1.1)
-  - google_mobile_ads (6.0.0):
+  - google_mobile_ads (7.0.0):
     - Flutter
-    - Google-Mobile-Ads-SDK (~> 12.2.0)
+    - Google-Mobile-Ads-SDK (~> 12.14.0)
     - webview_flutter_wkwebview
   - GoogleAdsOnDeviceConversion (3.7.0):
     - GoogleUtilities/Environment (~> 8.1)
@@ -193,9 +162,6 @@ PODS:
   - PromisesObjC (2.4.1)
   - PromisesSwift (2.4.1):
     - PromisesObjC (= 2.4.1)
-  - SDWebImage (5.21.7):
-    - SDWebImage/Core (= 5.21.7)
-  - SDWebImage/Core (5.21.7)
   - sensors_plus (0.0.1):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -204,7 +170,6 @@ PODS:
   - sign_in_with_apple (0.0.1):
     - Flutter
     - FlutterMacOS
-  - SwiftyGif (5.4.5)
   - url_launcher_ios (0.0.1):
     - Flutter
   - webview_flutter_wkwebview (0.0.1):
@@ -217,7 +182,7 @@ DEPENDENCIES:
   - battery_plus (from `.symlinks/plugins/battery_plus/ios`)
   - connectivity_plus (from `.symlinks/plugins/connectivity_plus/ios`)
   - device_info_plus (from `.symlinks/plugins/device_info_plus/ios`)
-  - file_picker (from `.symlinks/plugins/file_picker/ios`)
+  - file_picker_darwin (from `.symlinks/plugins/file_picker_darwin/darwin`)
   - firebase_analytics (from `.symlinks/plugins/firebase_analytics/ios`)
   - firebase_core (from `.symlinks/plugins/firebase_core/ios`)
   - firebase_crashlytics (from `.symlinks/plugins/firebase_crashlytics/ios`)
@@ -236,8 +201,6 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
-    - DKImagePickerController
-    - DKPhotoGallery
     - Firebase
     - FirebaseAnalytics
     - FirebaseCore
@@ -256,8 +219,6 @@ SPEC REPOS:
     - nanopb
     - PromisesObjC
     - PromisesSwift
-    - SDWebImage
-    - SwiftyGif
 
 EXTERNAL SOURCES:
   app_tracking_transparency:
@@ -270,8 +231,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/connectivity_plus/ios"
   device_info_plus:
     :path: ".symlinks/plugins/device_info_plus/ios"
-  file_picker:
-    :path: ".symlinks/plugins/file_picker/ios"
+  file_picker_darwin:
+    :path: ".symlinks/plugins/file_picker_darwin/darwin"
   firebase_analytics:
     :path: ".symlinks/plugins/firebase_analytics/ios"
   firebase_core:
@@ -307,9 +268,7 @@ SPEC CHECKSUMS:
   battery_plus: b42253f6d2dde71712f8c36fef456d99121c5977
   connectivity_plus: cb623214f4e1f6ef8fe7403d580fdad517d2f7dd
   device_info_plus: 21fcca2080fbcd348be798aa36c3e5ed849eefbe
-  DKImagePickerController: 946cec48c7873164274ecc4624d19e3da4c1ef3c
-  DKPhotoGallery: b3834fecb755ee09a593d7c9e389d8b5d6deed60
-  file_picker: a0560bc09d61de87f12d246fc47d2119e6ef37be
+  file_picker_darwin: 4c2b9a50ea44cb3b071381ea0cf48591bdd80251
   Firebase: 7ca191e43724142f79fae653547b3382c45413cc
   firebase_analytics: 99133ddb6f6cf89c0b49cafae131070607abbfa5
   firebase_core: 55de508663ceda7d1dc369a32b327a5655019ae2
@@ -325,8 +284,8 @@ SPEC CHECKSUMS:
   Flutter: 71a624a5bc0c04062bf19101d501e466baf2fb47
   flutter_secure_storage_darwin: acdb3f316ed05a3e68f856e0353b133eec373a23
   flutter_timezone: 7c838e17ffd4645d261e87037e5bebf6d38fe544
-  Google-Mobile-Ads-SDK: 1dfb0c3cb46c7e2b00b0f4de74a1e06d9ea25d67
-  google_mobile_ads: 535223588a6791b7a3cc3513a1bc7b89d12f3e62
+  Google-Mobile-Ads-SDK: 4534fd2dfcd3f705c5485a6633c5188d03d4eed2
+  google_mobile_ads: df3008bafbe1f2ad6862f87334e560d2f047f902
   GoogleAdsOnDeviceConversion: 41f168313b305040f4af27093d3c0af5ba46a9a3
   GoogleAppMeasurement: f2f676480e4c97936df934aa181bc29caea46975
   GoogleDataTransport: a24e58982ab3ba2f64d79613e027fe7f57e88539
@@ -337,11 +296,9 @@ SPEC CHECKSUMS:
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   PromisesObjC: 752c3227f599e3467650e47ea36f433eeb10c273
   PromisesSwift: 217dea0fd5d2ad65222a109c48698add13cc1c5b
-  SDWebImage: e9fc87c1aab89a8ab1bbd74eba378c6f53be8abf
-  sensors_plus: 6a11ed0c2e1d0bd0b20b4029d3bad27d96e0c65b
+  sensors_plus: b70a93b69dafdabd26ce4ac3f4d0529ab9acc4ca
   shared_preferences_foundation: 7036424c3d8ec98dfe75ff1667cb0cd531ec82bb
   sign_in_with_apple: 5e34677a4e74c5f42760f41b3bbe05343e84d171
-  SwiftyGif: 706c60cf65fa2bc5ee0313beece843c8eb8194d4
   url_launcher_ios: 7a95fa5b60cc718a708b8f2966718e93db0cef1b
   webview_flutter_wkwebview: 8ebf4fded22593026f7dbff1fbff31ea98573c8d
 
