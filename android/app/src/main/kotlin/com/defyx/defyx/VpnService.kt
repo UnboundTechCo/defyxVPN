@@ -5,6 +5,7 @@ import android.SocketProtector
 import android.app.*
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.net.VpnService
 import android.os.Build
@@ -236,21 +237,19 @@ class DefyxVpnService : VpnService() {
                     val array = JSONArray(apps)
                     (0 until array.length())
                             .map { array.optString(it) }
-                            .filter { it.isNotEmpty() && it != ownPackage }
+                            .filter { it.isNotEmpty() && it != ownPackage && isInstalled(it) }
                             .distinct()
                 } catch (_: Exception) {
                     emptyList()
                 }
 
-        if (mode == "only") {
-            var allowed = 0
+        if (mode == "only" && packages.isNotEmpty()) {
             for (app in packages) {
                 try {
                     builder.addAllowedApplication(app)
-                    allowed++
                 } catch (_: Exception) {}
             }
-            if (allowed > 0) return
+            return
         }
 
         try {
@@ -265,6 +264,21 @@ class DefyxVpnService : VpnService() {
             }
         }
     }
+
+    private fun isInstalled(packageName: String): Boolean =
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    packageManager.getApplicationInfo(
+                            packageName,
+                            PackageManager.ApplicationInfoFlags.of(0)
+                    )
+                } else {
+                    @Suppress("DEPRECATION") packageManager.getApplicationInfo(packageName, 0)
+                }
+                true
+            } catch (_: PackageManager.NameNotFoundException) {
+                false
+            }
 
     private fun disconnectVpn() {
         CoroutineScope(Dispatchers.IO).launch {
