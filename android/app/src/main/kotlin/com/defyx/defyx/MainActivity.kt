@@ -312,11 +312,14 @@ class MainActivity : FlutterActivity() {
     private fun getInstalledApps(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val launcherIntent =
-                        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
                 val apps =
-                        packageManager
-                                .queryIntentActivities(launcherIntent, PackageManager.MATCH_ALL)
+                        listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER)
+                                .flatMap { category ->
+                                    packageManager.queryIntentActivities(
+                                            Intent(Intent.ACTION_MAIN).addCategory(category),
+                                            PackageManager.MATCH_ALL
+                                    )
+                                }
                                 .map { it.activityInfo.applicationInfo }
                                 .filter { it.packageName != packageName }
                                 .distinctBy { it.packageName }
