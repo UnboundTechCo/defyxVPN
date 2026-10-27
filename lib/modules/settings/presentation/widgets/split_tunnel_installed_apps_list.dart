@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
@@ -83,7 +81,7 @@ class _InstalledAppTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         child: Row(
           children: [
-            _AppIcon(icon: app.icon, svg: app.iconSvg),
+            _AppIcon(app: app),
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
@@ -106,27 +104,32 @@ class _InstalledAppTile extends StatelessWidget {
   }
 }
 
-class _AppIcon extends StatelessWidget {
-  final Uint8List? icon;
-  final Uint8List? svg;
+class _AppIcon extends ConsumerWidget {
+  final InstalledApp app;
 
-  const _AppIcon({required this.icon, this.svg});
+  const _AppIcon({required this.app});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final size = 30.r;
+    final svg = app.iconSvg;
+    final icon =
+        app.icon ??
+        (svg == null
+            ? ref.watch(appIconProvider(app.packageName)).valueOrNull
+            : null);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
       child: icon != null
           ? Image.memory(
-              icon!,
+              icon,
               width: size,
               height: size,
               cacheWidth: 96,
               gaplessPlayback: true,
             )
           : svg != null
-          ? SvgPicture.memory(svg!, width: size, height: size)
+          ? SvgPicture.memory(svg, width: size, height: size)
           : Icon(Icons.apps, size: size, color: Colors.grey[400]),
     );
   }

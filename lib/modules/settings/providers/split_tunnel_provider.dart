@@ -120,6 +120,10 @@ final installedAppsProvider = FutureProvider.autoDispose<List<InstalledApp>>((
     ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 });
 
+final appIconProvider = FutureProvider.family<Uint8List?, String>(
+  (ref, packageName) => VpnBridge().getAppIcon(packageName),
+);
+
 Future<List<InstalledApp>> _popularApps() {
   return Future.wait([
     for (final app in popularApps)

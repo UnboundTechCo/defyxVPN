@@ -30,6 +30,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 private const val VPN_REQUEST_CODE = 1000
 private const val TAG = "MainActivity"
@@ -43,6 +45,7 @@ class MainActivity : FlutterActivity() {
     private var pendingVpnResult: MethodChannel.Result? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
     private lateinit var vibrationPlugin: VibrationPlugin
+    private val iconPermits = Semaphore(2)
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -135,6 +138,7 @@ class MainActivity : FlutterActivity() {
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
                 "stopVPN" -> stopVPN(result)
                 "getInstalledApps" -> getInstalledApps(result)
+                "getAppIcon" -> getAppIcon(call.argument<String>("packageName"), result)
                 "grantVpnPermission" -> grantVpnPermission(result)
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
@@ -337,10 +341,25 @@ class MainActivity : FlutterActivity() {
 
     private fun appEntry(info: ApplicationInfo): Map<String, Any?>? {
         val name = runCatching { info.loadLabel(packageManager).toString() }.getOrNull() ?: return null
-        val icon =
-                runCatching { drawableToPng(info.loadIcon(packageManager), APP_ICON_SIZE_PX) }
-                        .getOrNull()
-        return mapOf("name" to name, "packageName" to info.packageName, "icon" to icon)
+        return mapOf("name" to name, "packageName" to info.packageName)
+    }
+
+    private fun getAppIcon(packageName: String?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val icon =
+                    iconPermits.withPermit {
+                        packageName?.let {
+                            runCatching {
+                                        drawableToPng(
+                                                packageManager.getApplicationIcon(it),
+                                                APP_ICON_SIZE_PX
+                                        )
+                                    }
+                                    .getOrNull()
+                        }
+                    }
+            withContext(Dispatchers.Main) { result.success(icon) }
+        }
     }
 
     private fun drawableToPng(drawable: Drawable, sizePx: Int): ByteArray {
