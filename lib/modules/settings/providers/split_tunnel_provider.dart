@@ -5,10 +5,12 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../constants/settings_constants.dart';
 import '../models/installed_app.dart';
+import '../models/popular_app.dart';
 import '../models/split_tunnel_config.dart';
 
 class SplitTunnelNotifier extends StateNotifier<SplitTunnelConfig> {
@@ -112,7 +114,23 @@ final splitTunnelProvider =
 final installedAppsProvider = FutureProvider.autoDispose<List<InstalledApp>>((
   ref,
 ) async {
+  if (Platform.isIOS) return _popularApps();
   final apps = await VpnBridge().getInstalledApps();
   return [...apps]
     ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
 });
+
+Future<List<InstalledApp>> _popularApps() {
+  return Future.wait([
+    for (final app in popularApps)
+      rootBundle
+          .load(app.iconAsset)
+          .then(
+            (data) => InstalledApp(
+              name: app.name,
+              packageName: app.id,
+              iconSvg: data.buffer.asUint8List(),
+            ),
+          ),
+  ]);
+}
