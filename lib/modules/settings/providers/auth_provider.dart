@@ -1,5 +1,7 @@
+import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
+import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class AuthData {
@@ -31,6 +33,7 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     await storage.write(premiumEmailKey, email);
 
     state = AsyncData(AuthData(email: email, isLoggedIn: true));
+    clear();
   }
 
   Future<void> loginByCode(String token) async {
@@ -39,6 +42,7 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     await storage.write(premiumTokenKey, token);
 
     state = AsyncData(AuthData(email: "", isLoggedIn: true));
+    clear();
   }
 
   Future<void> logout() async {
@@ -46,7 +50,7 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
 
     await storage.delete(premiumTokenKey);
     await storage.delete(premiumEmailKey);
-
+    clear();
     state = AsyncData(AuthData(email: '', isLoggedIn: false));
   }
 
@@ -55,4 +59,11 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
 
     return await storage.read(premiumTokenKey) ?? '';
   }
+
+  void clear() {
+    ref.invalidate(premiumApiServiceProvider);
+    ref.invalidate(balanceProvider);
+  }
+
+  get isLoggedIn => state.value?.isLoggedIn ?? false;
 }

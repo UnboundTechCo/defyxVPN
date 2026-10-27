@@ -14,15 +14,15 @@ class FlowLineState {
       step: step ?? this.step,
       totalSteps: totalSteps ?? this.totalSteps,
       mode: mode ?? this.mode,
-        
     );
   }
 }
 
-final flowLineProvider =
-    StateNotifierProvider<FlowLineNotifier, FlowLineState>((ref) {
-      return FlowLineNotifier();
-    });
+final flowLineProvider = StateNotifierProvider<FlowLineNotifier, FlowLineState>(
+  (ref) {
+    return FlowLineNotifier();
+  },
+);
 
 class FlowLineNotifier extends StateNotifier<FlowLineState> {
   static const String _flowLineStepKey = 'flow_line_step';

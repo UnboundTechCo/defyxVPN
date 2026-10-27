@@ -169,15 +169,12 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                             BlendMode.srcIn,
                           ),
                         ),
-                        onTap: () {
+                        onTap: () async {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => CustomWebViewScreen(
-                                url: 'https://market.defyxvpn.com',
-                                title: l10n.marketplace,
-                              ),
-                            ),
+                          final uri = Uri.parse('https://market.defyxvpn.com');
+                          await launchUrl(
+                            uri,
+                            mode: LaunchMode.externalApplication,
                           );
                         },
                       ),

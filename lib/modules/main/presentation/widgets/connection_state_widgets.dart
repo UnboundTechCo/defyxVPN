@@ -295,7 +295,7 @@ class AnalyzingContent extends ConsumerWidget {
           },
         ),
         SizedBox(width: 10.w),
-        AppIcons.arrowLeft(width: 14.w, height: 14.h),
+        AppIcons.arrowRight(width: 14.w, height: 14.h),
         SizedBox(width: 10.w),
         LoggerStatusWidget(),
       ],

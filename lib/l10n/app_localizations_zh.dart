@@ -364,10 +364,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get signOutSuccess => '退出成功！';
 
   @override
-  String get settingsMarketplace => '市场';
+  String get cancel => '取消';
 
   @override
-  String get marketplaceDescription => '浏览来自可信供应商的安全VPN配置。';
+  String get deleteAccount => '删除账户';
+
+  @override
+  String get deleteAccountConfirmation => '这将永久删除您的账户且无法撤销。是否继续？';
+
+  @override
+  String get deleteAccountSuccess => '账户已成功删除。';
+
+  @override
+  String get deleteAccountFailed => '删除账户失败';
+
+  @override
+  String get settingsMarketplace => 'PREMIUM';
+
+  @override
+  String get marketplaceDescription => '获得快速可靠的高级\nVPN访问权限。';
 
   @override
   String get loggedIn => '已登录';
