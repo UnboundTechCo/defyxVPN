@@ -58,7 +58,9 @@ class _LanguageOption extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
         margin: EdgeInsets.only(bottom: 8.h),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFC927).withOpacity(0.1) : Colors.white,
+          color: isSelected
+              ? const Color(0xFFFFC927).withOpacity(0.1)
+              : Colors.white,
           border: Border.all(
             color: isSelected ? const Color(0xFFFFC927) : Colors.grey.shade300,
             width: isSelected ? 2 : 1,

@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
-import 'package:defyx_vpn/shared/providers/connection_state_provider.dart' as conn;
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
+    as conn;
 
 import '../widgets/speed_test_header.dart';
 import '../../application/speed_test_provider.dart';
@@ -111,7 +112,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.only(top: 30.h, bottom: 20.h),
-                      child: _buildContent(speedTestState, connectionState.status),
+                      child: _buildContent(
+                        speedTestState,
+                        connectionState.status,
+                      ),
                     ),
                   ),
                 ],
@@ -123,8 +127,8 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
     );
   }
 
-// TODO: After fixing ads issue, enable this code to start countdown timer when entering ads step
-/*
+  // TODO: After fixing ads issue, enable this code to start countdown timer when entering ads step
+  /*
   // void _handleStepChange(SpeedTestState? previous, SpeedTestState next) {
     // Handle ads step
     if (next.step == SpeedTestStep.ads) {
@@ -142,7 +146,10 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         status == conn.ConnectionStatus.connected;
   }
 
-  Widget _buildContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
+  Widget _buildContent(
+    SpeedTestState state,
+    conn.ConnectionStatus connectionStatus,
+  ) {
     final mainContent = _buildMainContent(state, connectionStatus);
     final shouldShowToast = _shouldShowToastOverlay(state);
 
@@ -150,12 +157,21 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
       return mainContent;
     }
 
-    return _buildContentWithToast(mainContent, _errorMessage(context, state.errorType!));
+    return _buildContentWithToast(
+      mainContent,
+      _errorMessage(context, state.errorType!),
+    );
   }
 
-  Widget _buildMainContent(SpeedTestState state, conn.ConnectionStatus connectionStatus) {
-    if (state.step == SpeedTestStep.ready && !_isConnectionValid(connectionStatus)) {
-      debugPrint('Connection not valid, showing loading state. Status: $connectionStatus');
+  Widget _buildMainContent(
+    SpeedTestState state,
+    conn.ConnectionStatus connectionStatus,
+  ) {
+    if (state.step == SpeedTestStep.ready &&
+        !_isConnectionValid(connectionStatus)) {
+      debugPrint(
+        'Connection not valid, showing loading state. Status: $connectionStatus',
+      );
       return const SpeedTestLoadingState();
     }
 
@@ -177,10 +193,11 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
         );
       case SpeedTestStep.upload:
         return SpeedTestUploadState(
-            state: state,
-            onStop: () {
-              ref.read(speedTestProvider.notifier).stopAndResetTest();
-            });
+          state: state,
+          onStop: () {
+            ref.read(speedTestProvider.notifier).stopAndResetTest();
+          },
+        );
     }
   }
 
@@ -206,9 +223,7 @@ class _SpeedTestScreenState extends ConsumerState<SpeedTestScreen> {
           left: 0,
           right: 0,
           bottom: 100.h,
-          child: SpeedTestToastMessage(
-            message: errorMessage,
-          ),
+          child: SpeedTestToastMessage(message: errorMessage),
         ),
         // TODO: After fixing ads issue, enable this code to show ads overlay
         /*

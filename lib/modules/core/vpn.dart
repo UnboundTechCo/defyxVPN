@@ -188,6 +188,9 @@ class VPN {
           reason: 'TokenExpiredSignal',
         );
         ref.read(authProvider.notifier).logout();
+        ref
+            .read(flowlineServiceProvider)
+            .saveFlowline(offlineMode: false, forceUpdate: true);
       }
     }
 

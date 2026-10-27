@@ -12,8 +12,8 @@ class GroupState {
 
 final groupStateProvider =
     StateNotifierProvider<GroupStateNotifier, GroupState>((ref) {
-  return GroupStateNotifier();
-});
+      return GroupStateNotifier();
+    });
 
 class GroupStateNotifier extends StateNotifier<GroupState> {
   GroupStateNotifier() : super(const GroupState());

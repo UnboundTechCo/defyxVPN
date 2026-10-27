@@ -14,7 +14,6 @@ final pingLoadingProvider = StateProvider<bool>((ref) => false);
 final flagLoadingProvider = StateProvider<bool>((ref) => false);
 
 final pingProvider = StateProvider<String>((ref) => '0');
-
 final flagProvider = FutureProvider<String>((ref) async {
   final isLoading = ref.watch(flagLoadingProvider);
   final network = NetworkStatus();

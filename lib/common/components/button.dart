@@ -2,9 +2,11 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-enum AppButtonVariant { primary, secondary, tertiary }
+enum AppButtonVariant { primary, secondary, tertiary, blue, outline, error }
 
 enum AppButtonSize { small, medium }
+
+enum AppButtonRound { none, small, medium, circle }
 
 class AppButton extends StatelessWidget {
   final String label;
@@ -12,6 +14,9 @@ class AppButton extends StatelessWidget {
   final AppButtonVariant variant;
   final AppButtonSize size;
   final bool isLoading;
+  final bool isDisabled;
+  final AppButtonRound? round;
+  final double? width;
 
   const AppButton({
     super.key,
@@ -20,6 +25,9 @@ class AppButton extends StatelessWidget {
     this.variant = AppButtonVariant.primary,
     this.size = AppButtonSize.medium,
     this.isLoading = false,
+    this.isDisabled = false,
+    this.width = double.infinity,
+    this.round,
   });
 
   @override
@@ -28,9 +36,9 @@ class AppButton extends StatelessWidget {
 
     return SizedBox(
       height: config.height,
+      width: width,
       child: ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
-
+        onPressed: isDisabled || isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           minimumSize: Size.zero,
           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -41,7 +49,7 @@ class AppButton extends StatelessWidget {
           foregroundColor: _textColor,
           disabledForegroundColor: _textColor,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8.r),
+            borderRadius: BorderRadius.circular(_borderRadius.r),
             side: BorderSide(color: _borderColor, width: 1),
           ),
         ),
@@ -74,6 +82,20 @@ class AppButton extends StatelessWidget {
   }
 
   Color get _backgroundColor {
+    if (isDisabled) {
+      switch (variant) {
+        case AppButtonVariant.outline:
+        case AppButtonVariant.tertiary:
+          return Colors.transparent;
+
+        case AppButtonVariant.primary:
+        case AppButtonVariant.secondary:
+        case AppButtonVariant.blue:
+        case AppButtonVariant.error:
+          return const Color(0xFFEAEAEA);
+      }
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return const Color(0xFF21AD86);
@@ -81,46 +103,87 @@ class AppButton extends StatelessWidget {
       case AppButtonVariant.secondary:
         return const Color(0xFFEAEAEA);
 
+      case AppButtonVariant.outline:
       case AppButtonVariant.tertiary:
         return Colors.transparent;
+
+      case AppButtonVariant.blue:
+        return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return const Color(0xFFEF4444);
     }
   }
 
   Color get _textColor {
+    if (isDisabled) {
+      return const Color(0xFF9E9E9E);
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return Colors.white;
 
       case AppButtonVariant.secondary:
-        return const Color(0xFF4B4B4B);
-
       case AppButtonVariant.tertiary:
         return const Color(0xFF4B4B4B);
+      case AppButtonVariant.blue:
+        return Colors.white;
+      case AppButtonVariant.outline:
+        return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.white;
     }
   }
 
   Color get _loaderColor {
+    if (isDisabled) {
+      return const Color(0xFF9E9E9E);
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
         return Colors.white;
-
       case AppButtonVariant.secondary:
         return const Color(0xFF4B4B4B);
       case AppButtonVariant.tertiary:
         return const Color(0xFF9E9E9E);
+      case AppButtonVariant.blue:
+        return Colors.white;
+      case AppButtonVariant.outline:
+        return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.white;
     }
   }
 
   Color get _borderColor {
+    if (isDisabled) {
+      switch (variant) {
+        case AppButtonVariant.outline:
+        case AppButtonVariant.tertiary:
+          return const Color(0xFFD1D1D1);
+
+        case AppButtonVariant.primary:
+        case AppButtonVariant.secondary:
+        case AppButtonVariant.blue:
+        case AppButtonVariant.error:
+          return Colors.transparent;
+      }
+    }
+
     switch (variant) {
       case AppButtonVariant.primary:
-        return Colors.transparent;
-
       case AppButtonVariant.secondary:
         return Colors.transparent;
 
       case AppButtonVariant.tertiary:
         return const Color(0xFFEAEAEA);
+      case AppButtonVariant.blue:
+        return Colors.transparent;
+      case AppButtonVariant.outline:
+        return const Color(0xFF2563EB);
+      case AppButtonVariant.error:
+        return Colors.transparent;
     }
   }
 
@@ -143,6 +206,21 @@ class AppButton extends StatelessWidget {
           loaderSize: 18,
           height: 46,
         );
+    }
+  }
+
+  double get _borderRadius {
+    switch (round) {
+      case AppButtonRound.none:
+        return 0;
+      case AppButtonRound.small:
+        return 4;
+      case AppButtonRound.medium:
+        return 8;
+      case AppButtonRound.circle:
+        return 50;
+      default:
+        return 8;
     }
   }
 }

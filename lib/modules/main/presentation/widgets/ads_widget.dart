@@ -96,10 +96,7 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
             switchInCurve: Curves.easeIn,
             switchOutCurve: Curves.easeOut,
             transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
+              return FadeTransition(opacity: animation, child: child);
             },
             child: ClipRRect(
               key: ValueKey('ad_rotation_${adsState.rotationCount}'),

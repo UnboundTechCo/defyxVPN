@@ -11,10 +11,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class SpeedTestReadyState extends ConsumerWidget {
   final VoidCallback onRetry;
 
-  const SpeedTestReadyState({
-    super.key,
-    required this.onRetry,
-  });
+  const SpeedTestReadyState({super.key, required this.onRetry});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,11 +21,13 @@ class SpeedTestReadyState extends ConsumerWidget {
     void handleStartTest() {
       final status = connectionState.status;
 
-      if (status == ConnectionStatus.disconnected || status == ConnectionStatus.connected) {
+      if (status == ConnectionStatus.disconnected ||
+          status == ConnectionStatus.connected) {
         ref.read(speedTestProvider.notifier).startTest();
       } else {
         debugPrint(
-            'Button clicked but connection status is $status. Will start when connection is valid.');
+          'Button clicked but connection status is $status. Will start when connection is valid.',
+        );
       }
     }
 

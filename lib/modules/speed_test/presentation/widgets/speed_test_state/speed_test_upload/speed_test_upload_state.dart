@@ -33,7 +33,9 @@ class SpeedTestUploadState extends ConsumerWidget {
             progress: combinedProgress,
             color: AppColors.uploadColor,
             showButton: false,
-            centerValue: state.currentSpeed > 0 ? state.currentSpeed : state.result.uploadSpeed,
+            centerValue: state.currentSpeed > 0
+                ? state.currentSpeed
+                : state.result.uploadSpeed,
             centerUnit: l10n.mbps,
             subtitle: l10n.upload,
             result: state.result,
