@@ -14,7 +14,7 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: "3.35.2"
+          flutter-version: "3.47.6"
           channel: "stable"
           architecture: "x64"
 
@@ -89,12 +89,57 @@ jobs:
           sudo chmod +x /usr/local/bin/appimagetool
 
       - name: Activate and Run FastForge Bundle Build
+        shell: bash
         env:
-          APPIMAGE_EXTRACT_AND_RUN: 1
+          APPIMAGE_EXTRACT_AND_RUN: "1"
         run: |
-          dart pub global activate fastforge
-          export PATH="$PATH":"$HOME/.pub-cache/bin"
-          fastforge release --name=production
+          set -euo pipefail
+          dart pub global activate fastforge 0.6.12
+
+          python3 - <<'PY'
+          import os
+          from pathlib import Path
+
+          cache = Path(os.environ.get("PUB_CACHE") or Path.home() / ".pub-cache")
+
+          def patch(file, changes):
+              source = file.read_text()
+              for old, new in changes:
+                  if new in source:
+                      continue
+                  if source.count(old) != 1:
+                      raise SystemExit(f"Unexpected source in {file}: {old!r}")
+                  source = source.replace(old, new, 1)
+              file.write_text(source)
+              print(f"Patched {file.name}")
+
+          patch(cache / "hosted/pub.dev/unified_distributor-0.2.12/lib/src/utils/default_shell_executor.dart", [
+              ("String? stdoutStr;", "String? stdoutStr = '';"),
+              ("String? stderrStr;", "String? stderrStr = '';"),
+              ("process.stdout.listen(", "final stdoutDone = process.stdout.forEach("),
+              ("process.stderr.listen(", "final stderrDone = process.stderr.forEach("),
+              ("int exitCode = await process.exitCode;",
+               "int exitCode = await process.exitCode;\n    await Future.wait([stdoutDone, stderrDone]);"),
+          ])
+
+          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.11/lib/src/makers/appimage/app_package_maker_appimage.dart", [
+              ("} catch (e) {", "} catch (e, stackTrace) {"),
+              ("throw MakeError(e.toString());",
+               "Error.throwWithStackTrace(MakeError(e.toString()), stackTrace);"),
+          ])
+
+          # RPM uses a per-build working directory; Fastforge stages files in BUILD.
+          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.11/lib/src/makers/rpm/make_rpm_config.dart", [
+              ("'%install': [",
+               "'%install': [\n            'cd \"%{_topdir}/BUILD\"',"),
+          ])
+          PY
+
+          task_pub_cache="${PUB_CACHE:-$HOME/.pub-cache}"
+          dart \
+            --packages="$task_pub_cache/global_packages/fastforge/.dart_tool/package_config.json" \
+            "$task_pub_cache/hosted/pub.dev/fastforge-0.6.12/bin/main.dart" \
+            release --name=production
 
       - name: Rename Linux artifacts
         run: |

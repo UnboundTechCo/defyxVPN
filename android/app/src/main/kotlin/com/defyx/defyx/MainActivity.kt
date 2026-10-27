@@ -120,10 +120,8 @@ class MainActivity : FlutterActivity() {
                 "disconnect" -> disconnectVpn(result)
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
-                "startTun2socks" -> result.success(null) // startTun2Socks(result)
                 "getVpnStatus" -> getVpnStatus(result)
                 "isTunnelRunning" -> isTunnelRunning(result)
-                "stopTun2Socks" -> stopTun2Socks(result)
                 "calculatePing" -> calculatePing(result)
                 "getFlag" -> getFlag(result)
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
@@ -233,22 +231,6 @@ class MainActivity : FlutterActivity() {
         eventSink?.success(mapOf("status" to status))
     }
 
-    //    private fun startTun2Socks(result: MethodChannel.Result) = try {
-    //        DefyxVpnService.getInstance().startTun2socks()
-    //        result.success(true)
-    //    } catch (e: Exception){
-    //        result.error("START_TUN2SOCKS","Failed to start Tun2Socks", e.message);
-    //    }
-
-    private fun stopTun2Socks(result: MethodChannel.Result) =
-            try {
-                DefyxVpnService.getInstance().stopTun2Socks()
-                result.success(true)
-            } catch (e: Exception) {
-                result.error("STOP_TUN2SOCKS", "Failed to stop Tun2Socks", e.message)
-            }
-
-    // Blocking function to calculate ping using socks5 proxy at 127.0.0.1:5000
     private fun calculatePing(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {

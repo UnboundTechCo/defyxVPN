@@ -377,7 +377,10 @@ class LoggerStatusWidget extends ConsumerWidget {
         if (groupName.isEmpty) {
           return (text: 'CONNECTING', color: defaultColor);
         }
-        return (text: l10n.connectingVia(groupName), color: defaultColor);
+        final fixedGroupName = groupName.length > 10
+            ? '${groupName.substring(0, 10)}...'
+            : groupName;
+        return (text: l10n.connectingVia(fixedGroupName), color: defaultColor);
       case LoggerStatus.switching_method:
         return (text: l10n.switchingMethod, color: defaultColor);
       default:

@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:defyx_vpn/firebase_options.dart';
+import 'package:defyx_vpn/modules/core/desktop_tunnel/tunnel_process.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
@@ -16,17 +16,15 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'app/app.dart';
 
-const _lastAppVersionKey = 'last_app_version';
+void main(List<String> arguments) async {
+  const lastAppVersionKey = 'last_app_version';
 
-void main() async {
-  runZonedGuarded(_runApp, (error, stack) {
-    debugPrint('Uncaught zone error: $error');
-    DesktopErrorLogger().logError('Zone', error, stack);
-  });
-}
-
-Future<void> _runApp() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (TunnelProcess.matches(arguments)) {
+    await TunnelProcess.run(arguments);
+    return;
+  }
 
   // Silence Dart console logging in release builds.
   // Debug builds keep logs so developers can still trace issues.
@@ -51,11 +49,11 @@ Future<void> _runApp() async {
   if (prefs != null && (Platform.isWindows || Platform.isLinux)) {
     try {
       final currentVersion = (await PackageInfo.fromPlatform()).version;
-      final lastVersion = prefs.getString(_lastAppVersionKey);
+      final lastVersion = prefs.getString(lastAppVersionKey);
       if (lastVersion != null && lastVersion != currentVersion) {
         await VpnBridge().clearVpnCache();
       }
-      await prefs.setString(_lastAppVersionKey, currentVersion);
+      await prefs.setString(lastAppVersionKey, currentVersion);
     } catch (e) {
       debugPrint('Failed to run version-gated cache clear: $e');
       await DesktopErrorLogger().logError('VersionGatedCacheClear', e);

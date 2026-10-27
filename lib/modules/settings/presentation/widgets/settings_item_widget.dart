@@ -8,7 +8,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import '../../models/settings_item.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
 
-class SettingsItemWidget extends StatelessWidget {
+class SettingsItemWidget extends StatefulWidget {
   final SettingsItem item;
   final VoidCallback? onToggle;
   final Function(String)? onNavigate;
@@ -31,12 +31,40 @@ class SettingsItemWidget extends StatelessWidget {
   });
 
   @override
+  State<SettingsItemWidget> createState() => _SettingsItemWidgetState();
+}
+
+class _SettingsItemWidgetState extends State<SettingsItemWidget> {
+  late FocusNode _focusNode;
+  bool _hasFocus = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _handleFocusChange() {
+    setState(() {
+      _hasFocus = _focusNode.hasFocus;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     Widget rowContent = Row(
       children: [
-        if (showDragHandle && dragIndex != null) ...[
+        if (widget.showDragHandle && widget.dragIndex != null) ...[
           ReorderableDragStartListener(
-            index: dragIndex!,
+            index: widget.dragIndex!,
             child: Container(
               width: 24.w,
               height: 24.h,
@@ -50,13 +78,15 @@ class SettingsItemWidget extends StatelessWidget {
                 width: 24.w,
                 height: 24.h,
                 colorFilter: ColorFilter.mode(
-                  item.isAccessible ? Colors.grey[400]! : Colors.grey[600]!,
+                  widget.item.isAccessible
+                      ? Colors.grey[400]!
+                      : Colors.grey[600]!,
                   BlendMode.srcIn,
                 ),
               ),
             ),
           ),
-        ] else if (item.showLeftIcon) ...[
+        ] else if (widget.item.showLeftIcon) ...[
           Container(
             width: 24.w,
             height: 24.h,
@@ -76,24 +106,26 @@ class SettingsItemWidget extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 7.w,
             children: [
-              if (item.isPremium)
+              if (widget.item.isPremium)
                 InkWell(
                   child: AppIcons.premium(height: 18, width: 18),
                   onTap: () =>
-                      SettingsToastMessage.show(item.description ?? ""),
+                      SettingsToastMessage.show(widget.item.description ?? ""),
                 ),
               Text(
-                truncateText(item.title.toUpperCase(), 20),
+                truncateText(widget.item.title.toUpperCase(), 20),
                 style: TextStyle(
                   fontSize: 17.sp,
                   fontFamily: AppTheme.fontFamily,
                   fontWeight: FontWeight.w400,
-                  color: item.isAccessible ? Colors.white : Colors.grey[600],
+                  color: widget.item.isAccessible
+                      ? Colors.white
+                      : Colors.grey[600],
                 ),
               ),
-              if (item.description != null &&
-                  item.description!.isNotEmpty &&
-                  !item.isPremium)
+              if (widget.item.description != null &&
+                  widget.item.description!.isNotEmpty &&
+                  !widget.item.isPremium)
                 InkWell(
                   child: AppIcons.info(
                     height: 22,
@@ -104,7 +136,7 @@ class SettingsItemWidget extends StatelessWidget {
                     ),
                   ),
                   onTap: () =>
-                      SettingsToastMessage.show(item.description ?? ""),
+                      SettingsToastMessage.show(widget.item.description ?? ""),
                 ),
             ],
           ),
@@ -120,7 +152,7 @@ class SettingsItemWidget extends StatelessWidget {
           transform: Matrix4.identity(),
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
           margin: EdgeInsets.symmetric(vertical: 2.h),
-          decoration: isDraggable
+          decoration: widget.isDraggable
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(8.r),
                   color: Colors.transparent,
@@ -128,7 +160,7 @@ class SettingsItemWidget extends StatelessWidget {
               : null,
           child: Opacity(opacity: 1.0, child: rowContent),
         ),
-        if (!isLastItem && showSeparator)
+        if (!widget.isLastItem && widget.showSeparator)
           Container(
             height: 1,
             color: Colors.white.withValues(alpha: 0.05),
@@ -137,26 +169,40 @@ class SettingsItemWidget extends StatelessWidget {
       ],
     );
 
-    if (item.itemType == SettingsItemType.navigation &&
-        item.navigationRoute != null) {
-      return GestureDetector(
-        onTap: () => onNavigate?.call(item.navigationRoute!),
+    return Focus(
+      focusNode: _focusNode,
+      child: GestureDetector(
+        onTap: () {
+          if (widget.item.itemType == SettingsItemType.navigation &&
+              widget.item.navigationRoute != null) {
+            widget.onNavigate?.call(widget.item.navigationRoute!);
+          } else {
+            widget.onToggle?.call();
+          }
+        },
         behavior: HitTestBehavior.opaque,
-        child: content,
-      );
-    }
-
-    return content;
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          decoration: _hasFocus && widget.item.isAccessible
+              ? BoxDecoration(
+                  border: Border.all(color: const Color(0xFFFFD700), width: 2),
+                  borderRadius: BorderRadius.circular(8.r),
+                )
+              : null,
+          child: content,
+        ),
+      ),
+    );
   }
 
   Widget _buildTrailingWidget() {
-    if (item.itemType == SettingsItemType.navigation) {
+    if (widget.item.itemType == SettingsItemType.navigation) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (item.subtitle != null)
+          if (widget.item.subtitle != null)
             Text(
-              item.subtitle!,
+              widget.item.subtitle!,
               style: TextStyle(
                 fontSize: 14.sp,
                 fontFamily: AppTheme.fontFamily,
@@ -164,16 +210,18 @@ class SettingsItemWidget extends StatelessWidget {
                 color: Colors.grey[500],
               ),
             ),
-          if (item.subtitle != null) SizedBox(width: 8.w),
+          if (widget.item.subtitle != null) SizedBox(width: 8.w),
           Icon(Icons.chevron_right, color: Colors.grey[400], size: 24.sp),
         ],
       );
     }
 
     return DefyxSwitch(
-      value: item.isEnabled,
-      onChanged: item.isAccessible ? (_) => onToggle?.call() : null,
-      enabled: item.isAccessible,
+      value: widget.item.isEnabled,
+      onChanged: widget.item.isAccessible
+          ? (_) => widget.onToggle?.call()
+          : null,
+      enabled: widget.item.isAccessible,
     );
   }
 }

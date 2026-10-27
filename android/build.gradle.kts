@@ -1,3 +1,4 @@
+import com.android.build.api.variant.LibraryAndroidComponentsExtension
 
 allprojects {
     repositories {
@@ -7,7 +8,7 @@ allprojects {
     buildscript {
         configurations.all {
             resolutionStrategy {
-                force("com.android.tools.build:gradle:8.9.1")
+                force("com.android.tools.build:gradle:9.0.1")
             }
         }
     }
@@ -19,6 +20,17 @@ rootProject.layout.buildDirectory.value(newBuildDir)
 subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
+subprojects {
+    val androidProject = this
+
+    pluginManager.withPlugin("com.android.library") {
+        androidProject.extensions
+            .getByType(LibraryAndroidComponentsExtension::class.java)
+            .finalizeDsl { android ->
+                android.ndkVersion = "29.0.13846066"
+            }
+    }
 }
 subprojects {
     project.evaluationDependsOn(":app")

@@ -17,7 +17,7 @@ class UmpService {
     required WidgetRef ref,
     required VoidCallback onDone,
   }) async {
-    debugPrint('🔍 Starting UMP consent flow...');
+    debugPrint('Starting UMP consent flow...');
     await requestConsent(onDone: onDone);
   }
 
@@ -44,7 +44,7 @@ class UmpService {
     final consentInfo = ConsentInformation.instance;
     final params = ConsentRequestParameters(tagForUnderAgeOfConsent: false);
 
-    debugPrint('🔍 Requesting UMP consent info update...');
+    debugPrint('Requesting UMP consent info update...');
     consentInfo.requestConsentInfoUpdate(
       params,
       () => _onConsentInfoSuccess(consentInfo, finish),
@@ -80,17 +80,17 @@ class UmpService {
   }
 
   void _onConsentInfoFailure(FormError error, VoidCallback onDone) {
-    debugPrint('❌ UMP consent info request failed: ${error.message}');
+    debugPrint('UMP consent info request failed: ${error.message}');
     onDone();
   }
 
   void _onFormLoaded(ConsentForm form, VoidCallback onDone) {
-    debugPrint('📄 UMP consent form loaded, showing to user...');
+    debugPrint('UMP consent form loaded, showing to user...');
     form.show((FormError? error) => _onFormDismissed(error, onDone));
   }
 
   void _onFormLoadFailed(FormError error, VoidCallback onDone) {
-    debugPrint('❌ UMP consent form failed to load: ${error.message}');
+    debugPrint('UMP consent form failed to load: ${error.message}');
     onDone();
   }
 
@@ -129,7 +129,7 @@ class UmpService {
         canRequestAds: canRequestAds,
       );
     } catch (e) {
-      debugPrint('⚠️ Failed to cache UMP consent: $e');
+      debugPrint('Failed to cache UMP consent: $e');
     }
   }
 
@@ -138,7 +138,7 @@ class UmpService {
     if (_cacheService != null) {
       final cachedResult = await _cacheService.getCachedCanShowAds();
       if (cachedResult != null) {
-        debugPrint('📦 Using cached canShowAds: $cachedResult');
+        debugPrint('Using cached canShowAds: $cachedResult');
         return cachedResult;
       }
     }

@@ -539,6 +539,19 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FinishWithBool(method_call, true);
         }
+        else if (strcmp(method, "isVpnModeEnabled") == 0)
+        {
+            FinishWithBool(method_call, self->system_tray_ && self->system_tray_->GetVPNMode());
+        }
+        else if (strcmp(method, "startTunnel") == 0)
+        {
+            FinishWithBool(method_call, defyx_core::StartTunnel());
+        }
+        else if (strcmp(method, "stopTunnel") == 0)
+        {
+            defyx_core::StopTunnel();
+            FinishWithBool(method_call, true);
+        }
         else if (strcmp(method, "getVpnStatus") == 0)
         {
             std::string status;

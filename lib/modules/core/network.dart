@@ -54,6 +54,7 @@ class NetworkStatus {
       'sk',
       'tr',
       'us',
+      'xx',
     ];
     try {
       final flag = await _vpnBridge.getFlag();
