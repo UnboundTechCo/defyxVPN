@@ -59,9 +59,7 @@ class HeaderSection extends ConsumerWidget {
                   ),
                 ),
                 SizedBox(width: 6.w),
-                Flexible(
-                  child: ConnectionStatusText(),
-                ),
+                Flexible(child: ConnectionStatusText()),
               ],
             ),
             ConnectionStateWidget(onPingRefresh: onPingRefresh),
@@ -263,9 +261,7 @@ class AnalyzingStatus extends ConsumerWidget {
           duration: const Duration(milliseconds: 300),
           scale: isAnalyzing ? 1.0 : 0.9,
           alignment: Alignment.centerLeft,
-          child: isAnalyzing
-              ? AnalyzingContent()
-              : const SizedBox.shrink(),
+          child: isAnalyzing ? AnalyzingContent() : const SizedBox.shrink(),
         ),
       ),
     );

@@ -591,12 +591,37 @@
     "description": "Sign out success toast message"
   },
 
-  "settingsMarketplace": "Marketplace",
+  "cancel": "Cancel",
+  "@cancel": {
+    "description": "Cancel action"
+  },
+
+  "deleteAccount": "Delete account",
+  "@deleteAccount": {
+    "description": "Permanent account deletion action"
+  },
+
+  "deleteAccountConfirmation": "This permanently deletes your account and cannot be undone. Continue?",
+  "@deleteAccountConfirmation": {
+    "description": "Permanent account deletion confirmation"
+  },
+
+  "deleteAccountSuccess": "Account deleted successfully.",
+  "@deleteAccountSuccess": {
+    "description": "Account deletion success message"
+  },
+
+  "deleteAccountFailed": "Account deletion failed",
+  "@deleteAccountFailed": {
+    "description": "Account deletion failure message"
+  },
+
+  "settingsMarketplace": "PREMIUM",
   "@settingsMarketplace": {
     "description": "Premium widget - marketplace title"
   },
 
-  "marketplaceDescription": "Browse secure VPN configurations from trusted suppliers.",
+  "marketplaceDescription": "Get premium VPN access with\nfast and reliable connections.",
   "@marketplaceDescription": {
     "description": "Premium widget - marketplace description"
   },

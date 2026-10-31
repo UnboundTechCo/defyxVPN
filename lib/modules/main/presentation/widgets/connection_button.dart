@@ -29,6 +29,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
   late Animation<double> _pulseAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _shieldRotationAnimation;
+  late FocusNode _focusNode;
+  bool _hasFocus = false;
 
   Timer? _timer;
   int _seconds = 0;
@@ -47,6 +49,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
   @override
   void initState() {
     super.initState();
+    _focusNode = FocusNode();
+    _focusNode.addListener(_handleFocusChange);
     _initializeDimensions();
     _setupAnimations();
     _loadConnectionTime();
@@ -63,7 +67,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
   void _setupAnimations() {
     _animationController = AnimationController(
       vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 2000)),
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 2000),
+      ),
     );
     _animationService.conditionalRepeat(_animationController, reverse: true);
 
@@ -77,7 +83,9 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
     _shieldLoadingController = AnimationController(
       vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 1500)),
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 1500),
+      ),
     );
 
     _shieldRotationAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -91,7 +99,16 @@ class _ConnectionButtonState extends State<ConnectionButton>
     _timer = null;
     _animationController.dispose();
     _shieldLoadingController.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+    _focusNode.dispose();
     super.dispose();
+  }
+
+  void _handleFocusChange() {
+    if (!mounted) return;
+    setState(() {
+      _hasFocus = _focusNode.hasFocus;
+    });
   }
 
   // Load connection time from shared preferences
@@ -191,7 +208,8 @@ class _ConnectionButtonState extends State<ConnectionButton>
     final hours = _seconds ~/ 3600;
     final minutes = (_seconds % 3600) ~/ 60;
     final seconds = _seconds % 60;
-    _formattedTime = "${hours.toString().padLeft(2, '0')}:"
+    _formattedTime =
+        "${hours.toString().padLeft(2, '0')}:"
         "${minutes.toString().padLeft(2, '0')}:"
         "${seconds.toString().padLeft(2, '0')}";
   }
@@ -205,18 +223,22 @@ class _ConnectionButtonState extends State<ConnectionButton>
         // Handle timer based on connection status
         _handleTimerState(connectionState.status);
 
-        return Stack(
-          alignment: Alignment.center,
-          children: [
-            // Pulse animation rings
-            _buildPulseRings(),
+        return Focus(
+          canRequestFocus: false,
+          skipTraversal: true,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Pulse animation rings
+              _buildPulseRings(),
 
-            // Main connection button
-            _buildMainButton(connectionState),
+              // Main connection button
+              _buildMainButton(connectionState),
 
-            // Timer display
-            _buildTimerDisplay(connectionState.status),
-          ],
+              // Timer display
+              _buildTimerDisplay(connectionState.status),
+            ],
+          ),
         );
       },
     );
@@ -314,67 +336,85 @@ class _ConnectionButtonState extends State<ConnectionButton>
   }
 
   Widget _buildMainButton(vpn.ConnectionState connectionState) {
-    return SizedBox(
-      width: _buttonSize,
-      height: _buttonSize,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // Shield background/border
-          AppIcons.shieldAnime(width: _buttonSize, height: _buttonSize),
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: _buttonSize,
+          height: _buttonSize,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              // Shield background/border
+              AppIcons.shieldAnime(width: _buttonSize, height: _buttonSize),
 
-          // Shield loading animation overlay (only for analyzing state)
-          if (connectionState.status == vpn.ConnectionStatus.analyzing ||
-              connectionState.status == vpn.ConnectionStatus.disconnecting)
-            AnimatedBuilder(
-              animation: _shieldRotationAnimation,
-              builder: (context, child) {
-                return CustomPaint(
-                  size: Size(_buttonSize, _buttonSize),
-                  painter: ShieldLoadingPainter(
-                    progress: _shieldRotationAnimation.value,
-                    size: _buttonSize,
-                  ),
-                );
-              },
-            ),
+              // Shield loading animation overlay (only for analyzing state)
+              if (connectionState.status == vpn.ConnectionStatus.analyzing ||
+                  connectionState.status == vpn.ConnectionStatus.disconnecting)
+                AnimatedBuilder(
+                  animation: _shieldRotationAnimation,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      size: Size(_buttonSize, _buttonSize),
+                      painter: ShieldLoadingPainter(
+                        progress: _shieldRotationAnimation.value,
+                        size: _buttonSize,
+                      ),
+                    );
+                  },
+                ),
 
-          // All interactive content clipped to shield shape
-          // Perfectly aligned with shield edges
-          Positioned.fill(
-            child: ClipPath(
-              clipper: SvgShieldClipper(size: _buttonSize),
-              clipBehavior: Clip.antiAlias,
-              child: Stack(
-                children: [
-                  // Subtle gradient background inside shield
-                  Container(
-                    width: _buttonSize,
-                    height: _buttonSize,
-                    decoration: BoxDecoration(color: Colors.transparent),
-                  ),
-
-                  // Interactive material with InkWell
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: widget.onTap,
-                      splashColor: Colors.white.withValues(alpha: 0.2),
-                      highlightColor: Colors.white.withValues(alpha: 0.1),
-                      child: Container(
+              // All interactive content clipped to shield shape
+              // Perfectly aligned with shield edges
+              Positioned.fill(
+                child: ClipPath(
+                  clipper: SvgShieldClipper(size: _buttonSize),
+                  clipBehavior: Clip.antiAlias,
+                  child: Stack(
+                    children: [
+                      // Subtle gradient background inside shield
+                      Container(
                         width: _buttonSize,
                         height: _buttonSize,
-                        alignment: Alignment.center,
-                        child: _buildButtonContent(connectionState.status),
+                        decoration: BoxDecoration(color: Colors.transparent),
                       ),
-                    ),
+
+                      // Interactive material with InkWell
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: widget.onTap,
+                          focusNode: _focusNode,
+                          onFocusChange: (focused) =>
+                              setState(() => _hasFocus = focused),
+                          splashColor: Colors.white.withValues(alpha: 0.2),
+                          highlightColor: Colors.white.withValues(alpha: 0.1),
+                          child: Container(
+                            width: _buttonSize,
+                            height: _buttonSize,
+                            alignment: Alignment.center,
+                            child: _buildButtonContent(connectionState.status),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Focus indicator ring
+        if (_hasFocus)
+          Positioned.fill(
+            child: Container(
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0xFFFFD700), width: 3.0),
               ),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 
