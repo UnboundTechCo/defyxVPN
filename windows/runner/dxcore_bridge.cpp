@@ -64,6 +64,7 @@ bool DXCoreBridge::Load() {
   load(pRequestHandshake_, "WinRequestHandshake");
   load(pCompleteHandshake_, "WinCompleteHandshake");
   load(pStartTunnel_, "WinStartTunnel");
+  load(pSetSplitTunnel_, "WinSetSplitTunnel");
   load(pStopTunnel_, "WinStopTunnel");
   ok &= load(pLogin_, "WinLogin");
   ok &= load(pLoginByCode_, "WinLoginByCode");
@@ -115,6 +116,12 @@ int DXCoreBridge::StopVPN() { return
   pStopVPN_ ? pStopVPN_() : 0; }
 
 int DXCoreBridge::StartTunnel() { return pStartTunnel_ ? pStartTunnel_() : 0; }
+
+void DXCoreBridge::SetSplitTunnel(const std::string& mode,
+                                  const std::string& rules,
+                                  const std::string& apps) {
+  if (pSetSplitTunnel_) pSetSplitTunnel_(mode.c_str(), rules.c_str(), apps.c_str());
+}
 
 void DXCoreBridge::StopTunnel() {
   if (pStopTunnel_) pStopTunnel_();

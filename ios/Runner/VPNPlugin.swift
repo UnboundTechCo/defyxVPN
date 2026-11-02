@@ -90,7 +90,7 @@ class VpnPlugin: VpnStatusDelegate {
         case "setConnectionMethod":
             print("setConnectionMethod")
         case "startTunnel":
-            startTunnel(result)
+            startTunnel(call.arguments as? [String: Any], result)
         case "isTunnelRunning":
             isTunnelRunning(result)
         case "prepareVPN":
@@ -406,8 +406,14 @@ class VpnPlugin: VpnStatusDelegate {
         disconnectVPN(result)
     }
 
-    private func startTunnel(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "START_TUNNEL"]) { response in
+    private func startTunnel(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {
+        let message = [
+            "command": "START_TUNNEL",
+            "mode": arguments?["mode"] as? String ?? "off",
+            "rules": arguments?["rules"] as? String ?? "[]",
+            "apps": arguments?["apps"] as? String ?? "[]",
+        ]
+        VpnService.shared.sendTunnelMessage(message) { response in
             result(response == "TUNNEL_STARTED")
         }
     }

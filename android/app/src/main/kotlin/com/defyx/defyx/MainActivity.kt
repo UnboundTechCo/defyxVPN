@@ -6,6 +6,12 @@ import android.ProgressListener
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
+import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.net.VpnService
 import android.os.Build
@@ -20,12 +26,16 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 private const val VPN_REQUEST_CODE = 1000
 private const val TAG = "MainActivity"
+private const val APP_ICON_SIZE_PX = 96
 
 class MainActivity : FlutterActivity() {
     private val CHANNEL = "com.defyx.vpn"
@@ -35,6 +45,7 @@ class MainActivity : FlutterActivity() {
     private var pendingVpnResult: MethodChannel.Result? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
     private lateinit var vibrationPlugin: VibrationPlugin
+    private val iconPermits = Semaphore(2)
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -116,7 +127,7 @@ class MainActivity : FlutterActivity() {
     private suspend fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "connect" -> connectVpn(result)
+                "connect" -> connectVpn(call.arguments as? Map<String, Any>, result)
                 "disconnect" -> disconnectVpn(result)
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
@@ -126,6 +137,8 @@ class MainActivity : FlutterActivity() {
                 "getFlag" -> getFlag(result)
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
                 "stopVPN" -> stopVPN(result)
+                "getInstalledApps" -> getInstalledApps(result)
+                "getAppIcon" -> getAppIcon(call.argument<String>("packageName"), result)
                 "grantVpnPermission" -> grantVpnPermission(result)
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
@@ -154,7 +167,7 @@ class MainActivity : FlutterActivity() {
             result.success(false)
         }
     }
-    private fun connectVpn(result: MethodChannel.Result) {
+    private fun connectVpn(args: Map<String, Any>?, result: MethodChannel.Result) {
         pendingVpnResult = result
 
         // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
@@ -167,7 +180,13 @@ class MainActivity : FlutterActivity() {
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance().startVpn(this)
+            DefyxVpnService.getInstance()
+                    .startVpn(
+                            this,
+                            args?.get("mode") as? String ?: "off",
+                            args?.get("rules") as? String ?: "[]",
+                            args?.get("apps") as? String ?: "[]"
+                    )
             result.success(true)
         }
     }
@@ -292,6 +311,71 @@ class MainActivity : FlutterActivity() {
                     result.error("PING_ERROR", "Failed to Stop VPN", e.localizedMessage)
                 }
             }
+        }
+    }
+
+    private fun getInstalledApps(result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val apps =
+                        listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER)
+                                .flatMap { category ->
+                                    packageManager.queryIntentActivities(
+                                            Intent(Intent.ACTION_MAIN).addCategory(category),
+                                            PackageManager.MATCH_ALL
+                                    )
+                                }
+                                .map { it.activityInfo.applicationInfo }
+                                .filter { it.packageName != packageName }
+                                .distinctBy { it.packageName }
+                                .mapNotNull { appEntry(it) }
+                withContext(Dispatchers.Main) { result.success(apps) }
+            } catch (e: Exception) {
+                Log.e(TAG, "Get installed apps failed: ${e.message}", e)
+                withContext(Dispatchers.Main) {
+                    result.error("GET_APPS_ERROR", "Failed to list apps", e.localizedMessage)
+                }
+            }
+        }
+    }
+
+    private fun appEntry(info: ApplicationInfo): Map<String, Any?>? {
+        val name = runCatching { info.loadLabel(packageManager).toString() }.getOrNull() ?: return null
+        return mapOf("name" to name, "packageName" to info.packageName)
+    }
+
+    private fun getAppIcon(packageName: String?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val icon =
+                    iconPermits.withPermit {
+                        packageName?.let {
+                            runCatching {
+                                        drawableToPng(
+                                                packageManager.getApplicationIcon(it),
+                                                APP_ICON_SIZE_PX
+                                        )
+                                    }
+                                    .getOrNull()
+                        }
+                    }
+            withContext(Dispatchers.Main) { result.success(icon) }
+        }
+    }
+
+    private fun drawableToPng(drawable: Drawable, sizePx: Int): ByteArray {
+        val bitmap =
+                if (drawable is BitmapDrawable && drawable.bitmap.width == sizePx) {
+                    drawable.bitmap
+                } else {
+                    Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888).also {
+                        val canvas = Canvas(it)
+                        drawable.setBounds(0, 0, canvas.width, canvas.height)
+                        drawable.draw(canvas)
+                    }
+                }
+        return ByteArrayOutputStream().use { stream ->
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            stream.toByteArray()
         }
     }
 

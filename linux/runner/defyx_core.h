@@ -14,6 +14,7 @@ void StartTun2Socks(long long fd, const std::string& addr);
 void StopTun2Socks();
 
 bool StartTunnel();
+void SetSplitTunnel(const std::string& mode, const std::string& rules, const std::string& apps);
 void StopTunnel();
 void Stop();
 long long MeasurePing();
@@ -37,4 +38,8 @@ void RegisterProgressHandler(std::function<void(std::string)> handler);
 // Returns true if the shared library was loaded and entrypoints found.
 bool LoadCoreDll(const std::string& dllPath = "");
 void UnloadCoreDll();
+
+// Performs the two-step HMAC-SHA256 gateway handshake with libdxcore_amd64.so.
+// Returns true only if both sides verify successfully. Must be called after LoadCoreDll.
+bool PerformGatewayHandshake();
 } // namespace defyx_core

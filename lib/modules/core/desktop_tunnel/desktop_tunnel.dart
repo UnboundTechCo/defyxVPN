@@ -42,10 +42,18 @@ class DesktopTunnel {
     return _preparing ??= _spawn().whenComplete(() => _preparing = null);
   }
 
-  Future<bool> start() async {
+  Future<bool> start({
+    required String mode,
+    required String rules,
+    required String apps,
+  }) async {
     if (!await prepare()) return false;
     try {
-      final Map<String, dynamic> reply = await _request('start');
+      final Map<String, dynamic> reply = await _request('start', <String, dynamic>{
+        'mode': mode,
+        'rules': rules,
+        'apps': apps,
+      });
       _tunnelUp = reply['ok'] == true;
       if (!_tunnelUp) {
         _lastError = reply['error'] as String? ?? 'the tunnel refused to start';
@@ -220,7 +228,10 @@ class DesktopTunnel {
     _requests.clear();
   }
 
-  Future<Map<String, dynamic>> _request(String name) {
+  Future<Map<String, dynamic>> _request(
+    String name, [
+    Map<String, dynamic> arguments = const <String, dynamic>{},
+  ]) {
     final TunnelLink? link = _link;
     if (link == null) {
       return Future<Map<String, dynamic>>.error(
@@ -232,7 +243,12 @@ class DesktopTunnel {
     final Completer<Map<String, dynamic>> completer =
         Completer<Map<String, dynamic>>();
     _requests[id] = completer;
-    link.send(<String, dynamic>{'type': 'command', 'id': id, 'name': name});
+    link.send(<String, dynamic>{
+      'type': 'command',
+      'id': id,
+      'name': name,
+      ...arguments,
+    });
 
     return completer.future.timeout(
       _commandTimeout,

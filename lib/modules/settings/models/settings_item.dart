@@ -13,6 +13,7 @@ class SettingsItem {
   final String? subtitle;
   final bool showLeftIcon;
   final bool isPremium;
+  final bool isMarket;
 
   const SettingsItem({
     required this.id,
@@ -27,6 +28,7 @@ class SettingsItem {
     this.subtitle,
     this.showLeftIcon = false,
     this.isPremium = false,
+    this.isMarket = false,
   });
 
   SettingsItem copyWith({
@@ -42,6 +44,7 @@ class SettingsItem {
     String? subtitle,
     bool? showLeftIcon,
     bool? isPremium,
+    bool? isMarket,
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -56,6 +59,7 @@ class SettingsItem {
       subtitle: subtitle ?? this.subtitle,
       showLeftIcon: showLeftIcon ?? this.showLeftIcon,
       isPremium: isPremium ?? this.isPremium,
+      isMarket: isMarket ?? this.isMarket,
     );
   }
 
@@ -76,6 +80,7 @@ class SettingsItem {
       subtitle: json['subtitle'] as String?,
       showLeftIcon: json['showLeftIcon'] as bool? ?? false,
       isPremium: json['isPremium'] as bool? ?? false,
+      isMarket: json['isMarket'] as bool? ?? false,
     );
   }
 
@@ -93,6 +98,7 @@ class SettingsItem {
       'subtitle': subtitle,
       'showLeftIcon': showLeftIcon,
       'isPremium': isPremium,
+      'isMarket': isMarket,
     };
   }
 }

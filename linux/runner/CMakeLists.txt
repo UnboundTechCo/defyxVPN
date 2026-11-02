@@ -44,6 +44,24 @@ target_include_directories(${BINARY_NAME} PRIVATE ${APPINDICATOR_INCLUDE_DIRS})
 
 target_compile_options(${BINARY_NAME} PRIVATE ${APPINDICATOR_CFLAGS_OTHER})
 
+# --- Gateway key embedding ---
+set(GATEWAY_KEY_FILE "${CMAKE_CURRENT_LIST_DIR}/LINUX_KEY.txt")
+if(EXISTS "${GATEWAY_KEY_FILE}")
+  file(READ "${GATEWAY_KEY_FILE}" _GATEWAY_KEY_RAW)
+  string(REGEX REPLACE "[ \t\r\n]+" "" LINUX_GATEWAY_KEY_STRIPPED "${_GATEWAY_KEY_RAW}")
+  configure_file("${CMAKE_CURRENT_LIST_DIR}/linux_key_generated.h.in"
+                 "${CMAKE_CURRENT_BINARY_DIR}/linux_key_generated.h" @ONLY)
+else()
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/linux_key_generated.h"
+    "#pragma once\nstatic const char kLinuxGatewayKey[] = \"\";\n")
+endif()
+target_include_directories(${BINARY_NAME} PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+
+# --- OpenSSL for HMAC-SHA256 ---
+pkg_check_modules(OPENSSL REQUIRED openssl)
+target_link_libraries(${BINARY_NAME} PRIVATE ${OPENSSL_LIBRARIES})
+target_include_directories(${BINARY_NAME} PRIVATE ${OPENSSL_INCLUDE_DIRS})
+
 # --- DXcore native library build and packaging --------------------------------
 
 # Allow overriding the DXcore source directory and built library via env vars.

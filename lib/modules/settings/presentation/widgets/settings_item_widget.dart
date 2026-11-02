@@ -112,6 +112,12 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
                   onTap: () =>
                       SettingsToastMessage.show(widget.item.description ?? ""),
                 ),
+              if (widget.item.isMarket)
+                InkWell(
+                  child: AppIcons.market(height: 18, width: 18),
+                  onTap: () =>
+                      SettingsToastMessage.show(widget.item.description ?? ""),
+                ),
               Text(
                 truncateText(widget.item.title.toUpperCase(), 20),
                 style: TextStyle(
