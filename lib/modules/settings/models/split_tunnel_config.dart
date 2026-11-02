@@ -63,6 +63,9 @@ class SplitTunnelConfig {
   String get rulesPayload =>
       jsonEncode(rules.map((rule) => rule.label).toList());
 
+  String rulesPayloadWith(Iterable<String> extra) =>
+      jsonEncode([...rules.map((rule) => rule.label), ...extra]);
+
   String get appsPayload => jsonEncode(apps);
 
   SplitTunnelConfig copyWith({

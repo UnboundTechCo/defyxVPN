@@ -1,11 +1,10 @@
-import 'dart:typed_data';
-
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../models/installed_app.dart';
 import '../../providers/split_tunnel_provider.dart';
@@ -82,7 +81,7 @@ class _InstalledAppTile extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
         child: Row(
           children: [
-            _AppIcon(icon: app.icon),
+            _AppIcon(app: app),
             SizedBox(width: 12.w),
             Expanded(
               child: Text(
@@ -105,25 +104,33 @@ class _InstalledAppTile extends StatelessWidget {
   }
 }
 
-class _AppIcon extends StatelessWidget {
-  final Uint8List? icon;
+class _AppIcon extends ConsumerWidget {
+  final InstalledApp app;
 
-  const _AppIcon({required this.icon});
+  const _AppIcon({required this.app});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final size = 30.r;
+    final svg = app.iconSvg;
+    final icon =
+        app.icon ??
+        (svg == null
+            ? ref.watch(appIconProvider(app.packageName)).valueOrNull
+            : null);
     return ClipRRect(
       borderRadius: BorderRadius.circular(8.r),
-      child: icon == null
-          ? Icon(Icons.apps, size: size, color: Colors.grey[400])
-          : Image.memory(
-              icon!,
+      child: icon != null
+          ? Image.memory(
+              icon,
               width: size,
               height: size,
               cacheWidth: 96,
               gaplessPlayback: true,
-            ),
+            )
+          : svg != null
+          ? SvgPicture.memory(svg, width: size, height: size)
+          : Icon(Icons.apps, size: size, color: Colors.grey[400]),
     );
   }
 }

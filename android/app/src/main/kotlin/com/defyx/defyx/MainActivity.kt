@@ -6,6 +6,7 @@ import android.ProgressListener
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -29,6 +30,8 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 
 private const val VPN_REQUEST_CODE = 1000
 private const val TAG = "MainActivity"
@@ -42,6 +45,7 @@ class MainActivity : FlutterActivity() {
     private var pendingVpnResult: MethodChannel.Result? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
     private lateinit var vibrationPlugin: VibrationPlugin
+    private val iconPermits = Semaphore(2)
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -123,7 +127,7 @@ class MainActivity : FlutterActivity() {
     private suspend fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
-                "connect" -> connectVpn(result)
+                "connect" -> connectVpn(call.arguments as? Map<String, Any>, result)
                 "disconnect" -> disconnectVpn(result)
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
@@ -134,6 +138,7 @@ class MainActivity : FlutterActivity() {
                 "startVPN" -> startVPN(call.arguments as? Map<String, Any>, result)
                 "stopVPN" -> stopVPN(result)
                 "getInstalledApps" -> getInstalledApps(result)
+                "getAppIcon" -> getAppIcon(call.argument<String>("packageName"), result)
                 "grantVpnPermission" -> grantVpnPermission(result)
                 "setAsnName" -> setAsnName(result)
                 "setTimezone" -> setTimezone(call.arguments as? Map<String, Any>, result)
@@ -162,7 +167,7 @@ class MainActivity : FlutterActivity() {
             result.success(false)
         }
     }
-    private fun connectVpn(result: MethodChannel.Result) {
+    private fun connectVpn(args: Map<String, Any>?, result: MethodChannel.Result) {
         pendingVpnResult = result
 
         // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
@@ -175,7 +180,13 @@ class MainActivity : FlutterActivity() {
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance().startVpn(this)
+            DefyxVpnService.getInstance()
+                    .startVpn(
+                            this,
+                            args?.get("mode") as? String ?: "off",
+                            args?.get("rules") as? String ?: "[]",
+                            args?.get("apps") as? String ?: "[]"
+                    )
             result.success(true)
         }
     }
@@ -306,25 +317,18 @@ class MainActivity : FlutterActivity() {
     private fun getInstalledApps(result: MethodChannel.Result) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val launcherIntent =
-                        Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
                 val apps =
-                        packageManager
-                                .queryIntentActivities(launcherIntent, PackageManager.MATCH_ALL)
+                        listOf(Intent.CATEGORY_LAUNCHER, Intent.CATEGORY_LEANBACK_LAUNCHER)
+                                .flatMap { category ->
+                                    packageManager.queryIntentActivities(
+                                            Intent(Intent.ACTION_MAIN).addCategory(category),
+                                            PackageManager.MATCH_ALL
+                                    )
+                                }
                                 .map { it.activityInfo.applicationInfo }
                                 .filter { it.packageName != packageName }
                                 .distinctBy { it.packageName }
-                                .map { info ->
-                                    mapOf(
-                                            "name" to info.loadLabel(packageManager).toString(),
-                                            "packageName" to info.packageName,
-                                            "icon" to
-                                                    drawableToPng(
-                                                            info.loadIcon(packageManager),
-                                                            APP_ICON_SIZE_PX
-                                                    )
-                                    )
-                                }
+                                .mapNotNull { appEntry(it) }
                 withContext(Dispatchers.Main) { result.success(apps) }
             } catch (e: Exception) {
                 Log.e(TAG, "Get installed apps failed: ${e.message}", e)
@@ -332,6 +336,29 @@ class MainActivity : FlutterActivity() {
                     result.error("GET_APPS_ERROR", "Failed to list apps", e.localizedMessage)
                 }
             }
+        }
+    }
+
+    private fun appEntry(info: ApplicationInfo): Map<String, Any?>? {
+        val name = runCatching { info.loadLabel(packageManager).toString() }.getOrNull() ?: return null
+        return mapOf("name" to name, "packageName" to info.packageName)
+    }
+
+    private fun getAppIcon(packageName: String?, result: MethodChannel.Result) {
+        CoroutineScope(Dispatchers.IO).launch {
+            val icon =
+                    iconPermits.withPermit {
+                        packageName?.let {
+                            runCatching {
+                                        drawableToPng(
+                                                packageManager.getApplicationIcon(it),
+                                                APP_ICON_SIZE_PX
+                                        )
+                                    }
+                                    .getOrNull()
+                        }
+                    }
+            withContext(Dispatchers.Main) { result.success(icon) }
         }
     }
 

@@ -10,6 +10,7 @@ import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/modules/settings/models/popular_app.dart';
 import 'package:defyx_vpn/modules/settings/models/split_tunnel_config.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/split_tunnel_provider.dart';
@@ -528,7 +529,9 @@ class VPN {
       case "ios":
         return await _vpnBridge.startTunnel(
           mode: splitTunnel.mode.coreValue,
-          rules: splitTunnel.rulesPayload,
+          rules: splitTunnel.rulesPayloadWith(
+            popularAppRules(splitTunnel.apps),
+          ),
           apps: splitTunnel.appsPayload,
         );
       case "windows":
