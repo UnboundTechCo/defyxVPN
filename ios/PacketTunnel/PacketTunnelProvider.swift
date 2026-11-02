@@ -106,6 +106,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         switch command {
         case "START_TUNNEL":
+            IosSetSplitTunnel(dict["mode"] ?? "off", dict["rules"] ?? "[]", dict["apps"] ?? "[]")
             let success = IosStartTunnel(0)
             let response = success ? "TUNNEL_STARTED" : "TUNNEL_ERROR"
             os_log("Tunnel: %{public}@", response)

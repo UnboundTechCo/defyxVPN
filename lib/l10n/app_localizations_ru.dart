@@ -238,6 +238,45 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsIncluded => 'ВКЛЮЧЕНО';
 
   @override
+  String get splitTunnelPreferences => 'Настройки';
+
+  @override
+  String get splitTunnelModeOff => 'ВЫКЛ';
+
+  @override
+  String get splitTunnelModeExclude => 'ИСКЛЮЧИТЬ ВЫБРАННЫЕ';
+
+  @override
+  String get splitTunnelModeOnly => 'ТОЛЬКО ВЫБРАННЫЕ';
+
+  @override
+  String get splitTunnelTabAddresses => 'АДРЕСА';
+
+  @override
+  String get splitTunnelTabApps => 'ПРИЛОЖЕНИЯ';
+
+  @override
+  String get splitTunnelSearch => 'Поиск';
+
+  @override
+  String get splitTunnelAddressHint => 'введите здесь ...';
+
+  @override
+  String get splitTunnelAppHint => 'введите или выберите путь ...';
+
+  @override
+  String get splitTunnelBrowseFile => 'Выбрать файл';
+
+  @override
+  String get splitTunnelBrowseFolder => 'Выбрать папку';
+
+  @override
+  String get splitTunnelNoApps => 'Приложения не найдены';
+
+  @override
+  String get settingsExcluded => 'ИСКЛЮЧЕНО';
+
+  @override
   String get settingsAtLeastOneCoreRequired =>
       'Должен оставаться включенным хотя бы один модуль';
 
