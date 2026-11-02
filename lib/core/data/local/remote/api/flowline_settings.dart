@@ -8,7 +8,7 @@ class FlowlineSettings {
     List<String> disabledAdmob = List<String>.from(json["disabledAdmob"]);
     disabledAdmob = disabledAdmob.map((v) => v.toLowerCase()).toList();
 
-    List<String> baseUrls = List<String>.from(json["baseUrls"]);
+    List<String> baseUrls = List<String>.from(json["backendUrls"]);
     return FlowlineSettings(disabledAdmob: disabledAdmob, baseUrls: baseUrls);
   }
 }
