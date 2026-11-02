@@ -236,6 +236,45 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsIncluded => '已包含';
 
   @override
+  String get splitTunnelPreferences => '偏好设置';
+
+  @override
+  String get splitTunnelModeOff => '关闭';
+
+  @override
+  String get splitTunnelModeExclude => '排除所选';
+
+  @override
+  String get splitTunnelModeOnly => '仅限所选';
+
+  @override
+  String get splitTunnelTabAddresses => '地址';
+
+  @override
+  String get splitTunnelTabApps => '应用';
+
+  @override
+  String get splitTunnelSearch => '搜索';
+
+  @override
+  String get splitTunnelAddressHint => '在此输入 ...';
+
+  @override
+  String get splitTunnelAppHint => '输入或选择路径 ...';
+
+  @override
+  String get splitTunnelBrowseFile => '选择文件';
+
+  @override
+  String get splitTunnelBrowseFolder => '选择文件夹';
+
+  @override
+  String get splitTunnelNoApps => '未找到应用';
+
+  @override
+  String get settingsExcluded => '已排除';
+
+  @override
   String get settingsAtLeastOneCoreRequired => '至少需要保留一个核心';
 
   @override
