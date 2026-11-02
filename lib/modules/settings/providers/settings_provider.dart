@@ -225,6 +225,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         );
         if (!existsInSaved) {
           final isPremium = flowItem['isPremium'] ?? false;
+          final isMarket = flowItem['isMarket'] ?? false;
 
           final newItem = SettingsFactory.createFlowlineItem(
             label: label,
@@ -232,6 +233,7 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
             sortOrder: isPremium ? -1 : maxSortOrder,
             isEnabled: flowItem['enabled'] ?? false,
             isPremium: isPremium,
+            isMarket: isMarket,
           );
           if (isPremium) {
             maxSortOrder++;

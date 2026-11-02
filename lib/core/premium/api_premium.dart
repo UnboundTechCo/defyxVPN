@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/common/dtos/balance_dto.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:defyx_vpn/common/dtos/login_response_dto.dart';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,6 +23,7 @@ class PremiumApiServiceNotifier extends AsyncNotifier<PremiumApiService> {
   Future<PremiumApiService> build() async {
     final storage = ref.read(secureStorageProvider);
     final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
     final token = await storage.read(premiumTokenKey);
 
     return PremiumApiService(baseUrl: baseUrl, token: token);

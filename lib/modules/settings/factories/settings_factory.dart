@@ -40,6 +40,7 @@ class SettingsFactory {
     required int sortOrder,
     bool isEnabled = false,
     bool isPremium = false,
+    bool isMarket = false,
   }) {
     return SettingsItem(
       id: label + sortOrder.toString(),
@@ -50,6 +51,7 @@ class SettingsFactory {
       description: description,
       itemType: SettingsItemType.toggle,
       isPremium: isPremium,
+      isMarket: isMarket,
     );
   }
 
@@ -228,6 +230,7 @@ class SettingsFactory {
         sortOrder: entry.key,
         isEnabled: flow['enabled'] ?? false,
         isPremium: flow['isPremium'] ?? false,
+        isMarket: flow['isMarket'] ?? false,
       );
     }).toList();
   }
