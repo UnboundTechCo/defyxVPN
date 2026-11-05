@@ -12,10 +12,10 @@ class SettingsConfig {
 
   const SettingsConfig({
     this.showDestination = false,
-    this.showSplitTunnel = false,
+    this.showSplitTunnel = true,
     this.showDeepScan = true,
     this.showHealthCheck = true,
-    this.showKillSwitch = false,
+    this.showKillSwitch = true,
     this.customItems = const [],
   });
 
@@ -40,6 +40,7 @@ class SettingsFactory {
     required int sortOrder,
     bool isEnabled = false,
     bool isPremium = false,
+    bool isMarket = false,
   }) {
     return SettingsItem(
       id: label + sortOrder.toString(),
@@ -50,6 +51,7 @@ class SettingsFactory {
       description: description,
       itemType: SettingsItemType.toggle,
       isPremium: isPremium,
+      isMarket: isMarket,
     );
   }
 
@@ -80,6 +82,7 @@ class SettingsFactory {
       isAccessible: true,
       sortOrder: 0,
       itemType: SettingsItemType.navigation,
+      navigationRoute: SettingsRoute.splitTunnel,
       subtitle: subtitle,
     );
   }
@@ -228,6 +231,7 @@ class SettingsFactory {
         sortOrder: entry.key,
         isEnabled: flow['enabled'] ?? false,
         isPremium: flow['isPremium'] ?? false,
+        isMarket: flow['isMarket'] ?? false,
       );
     }).toList();
   }

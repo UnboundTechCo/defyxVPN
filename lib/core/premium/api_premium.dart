@@ -22,6 +22,7 @@ class PremiumApiServiceNotifier extends AsyncNotifier<PremiumApiService> {
   Future<PremiumApiService> build() async {
     final storage = ref.read(secureStorageProvider);
     final baseUrl = dotenv.env['API_BASE_URL'] ?? '';
+
     final token = await storage.read(premiumTokenKey);
 
     return PremiumApiService(baseUrl: baseUrl, token: token);

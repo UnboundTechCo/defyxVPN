@@ -33,6 +33,7 @@ class AppIcons {
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
   static const String premiumPath = 'assets/icons/premium.svg';
+  static const String marketPath = 'assets/icons/market.svg';
   static const String shopPath = 'assets/icons/shop.svg';
   static const String moneyPath = 'assets/icons/money.svg';
   static const String userPath = 'assets/icons/user.svg';
@@ -179,6 +180,10 @@ class AppIcons {
 
   static SvgPicture premium({double? width, double? height}) {
     return SvgPicture.asset(premiumPath, width: width, height: height);
+  }
+
+  static SvgPicture market({double? width, double? height}) {
+    return SvgPicture.asset(marketPath, width: width, height: height);
   }
 
   static SvgPicture money({double? width, double? height}) {

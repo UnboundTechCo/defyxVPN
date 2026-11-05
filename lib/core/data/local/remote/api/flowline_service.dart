@@ -159,7 +159,7 @@ class FlowlineService implements IFlowlineService {
         e,
         stack,
       );
-      return FlowlineSettings(disabledAdmob: []);
+      return FlowlineSettings(disabledAdmob: [], baseUrls: []);
     }
   }
 }
