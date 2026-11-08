@@ -22,7 +22,7 @@ class SpeedTestUploadState extends ConsumerWidget {
     final speedProgress = (state.currentSpeed / 50).clamp(0.0, 1.0);
     final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
     final connectionState = ref.watch(connectionStateProvider);
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.start,

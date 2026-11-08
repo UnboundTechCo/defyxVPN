@@ -459,4 +459,10 @@ class AppLocalizationsFa extends AppLocalizations {
   @override
   String get speedTestConnectionUnstable =>
       'اتصال شما ناپایدار بود و تست متوقف شد.';
+
+  @override
+  String get tvHoldOkToReorder => 'برای جابه‌جایی، دکمه OK را نگه دارید';
+
+  @override
+  String get tvMoveModeHint => 'با ▲ ▼ جابه‌جا کنید · OK برای پایان';
 }

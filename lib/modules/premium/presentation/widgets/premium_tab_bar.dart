@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -79,8 +80,11 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: isDisabled ? null : () => widget.onTabChanged(tab),
+          TvFocusable(
+            onTap: () => widget.onTabChanged(tab),
+            enabled: !isDisabled,
+            behavior: HitTestBehavior.deferToChild,
+            borderRadius: BorderRadius.circular(16.r),
             child: Container(
               padding: EdgeInsets.all(12.w),
               decoration: BoxDecoration(

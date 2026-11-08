@@ -145,5 +145,7 @@
   "connectionRequired": "需要连接",
   "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。",
   "speedTestFailed": "速度测试失败，请重试。",
-  "speedTestConnectionUnstable": "您的连接不稳定，测试已中断。"
+  "speedTestConnectionUnstable": "您的连接不稳定，测试已中断。",
+  "tvHoldOkToReorder": "长按 OK 键调整顺序",
+  "tvMoveModeHint": "▲ ▼ 移动 · OK 完成"
 }

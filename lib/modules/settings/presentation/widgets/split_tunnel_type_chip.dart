@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -47,6 +48,14 @@ class SplitTunnelTypeChip extends StatelessWidget {
 
     if (!_isSelectable) return chip;
 
+    return TvFocusRing(
+      borderRadius: BorderRadius.circular(100.r),
+      fillWhenFocused: false,
+      child: _buildMenuButton(chip),
+    );
+  }
+
+  Widget _buildMenuButton(Widget chip) {
     return PopupMenuButton<String>(
       tooltip: '',
       padding: EdgeInsets.zero,

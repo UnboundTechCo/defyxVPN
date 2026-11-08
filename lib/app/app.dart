@@ -2,6 +2,9 @@ import 'dart:io';
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
+import 'package:defyx_vpn/app/router/dpad_shell_page.dart';
+import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
+import 'package:defyx_vpn/shared/tv/dpad_traversal_policy.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -22,6 +25,13 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// D-pad/keyboard traversal for the whole app. Content focused inside a
+/// shell page is kept clear of the floating nav bar.
+final FocusTraversalPolicy _dpadTraversalPolicy = DpadTraversalPolicy(
+  bottomObstruction: (context) =>
+      DpadShellPage.contains(context) ? DefyxNavBar.coveredHeight(context) : 0,
+);
 
 class App extends ConsumerStatefulWidget {
   const App({super.key});
@@ -206,7 +216,10 @@ class _AppState extends ConsumerState<App> {
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
-      child: child ?? const SizedBox.shrink(),
+      child: FocusTraversalGroup(
+        policy: _dpadTraversalPolicy,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

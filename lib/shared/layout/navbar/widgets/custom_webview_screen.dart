@@ -1,6 +1,9 @@
 import 'dart:io';
 import 'package:defyx_vpn/core/theme/app_colors.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/utils/tv_keyboard_helper.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -163,40 +166,70 @@ class _CustomWebViewScreenState extends State<CustomWebViewScreen> {
       );
     }
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          widget.title,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20.sp,
-            fontWeight: FontWeight.w600,
+    return Focus(
+      canRequestFocus: false,
+      skipTraversal: true,
+      onKeyEvent: _handleScrollKeys,
+      child: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          centerTitle: true,
+          leading: IconButton(
+            autofocus: TvSupport.isTv,
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: Text(
+            widget.title,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20.sp,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
-      ),
-      body: Stack(
-        children: [
-          if (_controller != null)
-            WebViewWidget(controller: _controller!)
-          else
-            const SizedBox.shrink(),
-          if (_isLoading)
-            Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
+        body: Stack(
+          children: [
+            if (_controller != null)
+              // On TV the web view is not a D-pad focus stop (it would trap
+              // focus); Up/Down scroll it instead, see _handleScrollKeys.
+              ExcludeFocus(
+                excluding: TvSupport.isTv,
+                child: WebViewWidget(controller: _controller!),
+              )
+            else
+              const SizedBox.shrink(),
+            if (_isLoading)
+              Center(
+                child: CircularProgressIndicator(
+                  color: AppColors.primary,
+                ),
               ),
-            ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  /// Scrolls the page with Up/Down while D-pad focus stays on Close.
+  KeyEventResult _handleScrollKeys(FocusNode node, KeyEvent event) {
+    final controller = _controller;
+    if (controller == null || event is KeyUpEvent) {
+      return KeyEventResult.ignored;
+    }
+    final direction = TvKeyboardHelper.directionOf(event);
+    if (direction != TraversalDirection.up &&
+        direction != TraversalDirection.down) {
+      return KeyEventResult.ignored;
+    }
+    final sign = direction == TraversalDirection.down ? 1 : -1;
+    controller.runJavaScript(
+      'window.scrollBy({top: $sign * window.innerHeight * 0.6, '
+      'behavior: "smooth"});',
+    );
+    return KeyEventResult.handled;
   }
 }

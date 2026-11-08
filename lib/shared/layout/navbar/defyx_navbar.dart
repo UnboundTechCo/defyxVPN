@@ -1,10 +1,13 @@
+import 'dart:math' as math;
+
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/app_screen_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/defyx_nav_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_dialog.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -14,9 +17,32 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 class DefyxNavBar extends ConsumerStatefulWidget {
   const DefyxNavBar({super.key});
 
+  static const double _bottomPadding = 20;
+
+  static double _barHeight(TargetPlatform platform) =>
+      (platform == TargetPlatform.iOS || platform == TargetPlatform.android)
+      ? 65.h
+      : 75.h;
+
+  /// The height at the bottom of the screen covered by the floating nav bar.
+  ///
+  /// Used to keep D-pad-focused content from scrolling behind the bar. Reads
+  /// the [MediaQuery] without registering a dependency, so it is safe to call
+  /// outside of build.
+  static double coveredHeight(BuildContext context) {
+    final media = context.getInheritedWidgetOfExactType<MediaQuery>()?.data;
+    final barHeight = math.max(
+      _barHeight(defaultTargetPlatform),
+      _infoButtonSize.w,
+    );
+    return (media?.padding.bottom ?? 0) + _bottomPadding.h + barHeight;
+  }
+
   @override
   ConsumerState<DefyxNavBar> createState() => _DefyxNavBarState();
 }
+
+const double _infoButtonSize = 60;
 
 class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
   late FocusNode _speedTestFocusNode;
@@ -54,17 +80,13 @@ class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
 
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.only(bottom: 20.h),
+        padding: EdgeInsets.only(bottom: DefyxNavBar._bottomPadding.h),
         child: Stack(
           alignment: Alignment.center,
           children: [
             Container(
               width: 200.w,
-              height:
-                  (Theme.of(context).platform == TargetPlatform.iOS ||
-                      Theme.of(context).platform == TargetPlatform.android)
-                  ? 65.h
-                  : 75.h,
+              height: DefyxNavBar._barHeight(Theme.of(context).platform),
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(100.r),
@@ -99,48 +121,25 @@ class _DefyxNavBarState extends ConsumerState<DefyxNavBar> {
             ),
             Positioned(
               right: 24.w,
-              child: Focus(
+              child: TvFocusable(
                 focusNode: _infoBtnFocusNode,
-                onFocusChange: (_) => setState(() {}),
-                onKeyEvent: (node, event) {
-                  if (event is KeyDownEvent &&
-                      (event.logicalKey == LogicalKeyboardKey.select ||
-                          event.logicalKey == LogicalKeyboardKey.enter ||
-                          event.logicalKey == LogicalKeyboardKey.numpadEnter ||
-                          event.logicalKey == LogicalKeyboardKey.gameButtonA)) {
-                    _showShareDialog(context, ref);
-                    return KeyEventResult.handled;
-                  }
-                  return KeyEventResult.ignored;
-                },
-                child: MouseRegion(
-                  cursor: SystemMouseCursors.click,
-                  child: GestureDetector(
-                    onTap: () => _showShareDialog(context, ref),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 150),
-                      width: 60.w,
-                      height: 60.w,
-                      decoration: BoxDecoration(
-                        color: Colors.black,
-                        shape: BoxShape.circle,
-                        border: _infoBtnFocusNode.hasFocus
-                            ? Border.all(
-                                color: const Color(0xFFFFD700),
-                                width: 2.0,
-                              )
-                            : null,
-                      ),
-                      child: Center(
-                        child: SvgPicture.asset(
-                          'assets/icons/info.svg',
-                          width: 25.w,
-                          height: 25.w,
-                          colorFilter: const ColorFilter.mode(
-                            Colors.white,
-                            BlendMode.srcIn,
-                          ),
-                        ),
+                onTap: () => _showShareDialog(context, ref),
+                shape: BoxShape.circle,
+                child: Container(
+                  width: _infoButtonSize.w,
+                  height: _infoButtonSize.w,
+                  decoration: const BoxDecoration(
+                    color: Colors.black,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: SvgPicture.asset(
+                      'assets/icons/info.svg',
+                      width: 25.w,
+                      height: 25.w,
+                      colorFilter: const ColorFilter.mode(
+                        Colors.white,
+                        BlendMode.srcIn,
                       ),
                     ),
                   ),

@@ -3,11 +3,12 @@ import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dar
 import 'package:defyx_vpn/shared/layout/navbar/widgets/introduction_dialog.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/social_icon_button.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/utils/open_link.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 class QuickMenuDialog extends StatefulWidget {
@@ -35,7 +36,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     return SafeArea(
       child: Padding(
@@ -62,6 +63,7 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                     children: [
                       QuickMenuItem(
                         topBorderRadius: true,
+                        autofocus: TvSupport.isTv,
                         title: l10n.introduction,
                         onTap: () {
                           Navigator.of(context).pop();
@@ -171,10 +173,9 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                         ),
                         onTap: () async {
                           Navigator.of(context).pop();
-                          final uri = Uri.parse('https://market.defyxvpn.com');
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
+                          await openLink(
+                            'https://market.defyxvpn.com',
+                            title: l10n.marketplace,
                           );
                         },
                       ),
@@ -191,10 +192,9 @@ class _QuickMenuDialogState extends State<QuickMenuDialog> {
                         ),
                         onTap: () async {
                           Navigator.of(context).pop();
-                          final uri = Uri.parse('https://t.me/DefyxVPN_bot');
-                          await launchUrl(
-                            uri,
-                            mode: LaunchMode.externalApplication,
+                          await openLink(
+                            'https://t.me/DefyxVPN_bot',
+                            title: l10n.telegramBot,
                           );
                         },
                       ),

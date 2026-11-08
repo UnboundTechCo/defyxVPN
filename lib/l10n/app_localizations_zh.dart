@@ -447,4 +447,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get speedTestConnectionUnstable => '您的连接不稳定，测试已中断。';
+
+  @override
+  String get tvHoldOkToReorder => '长按 OK 键调整顺序';
+
+  @override
+  String get tvMoveModeHint => '▲ ▼ 移动 · OK 完成';
 }

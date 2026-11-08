@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/widgets/dpad_text_field_scope.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -10,6 +11,14 @@ class SplitTunnelSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Lets remote users move past the field and shows its focus.
+    return DpadTextFieldScope(
+      focusRingRadius: BorderRadius.circular(12.r),
+      child: _buildField(context),
+    );
+  }
+
+  Widget _buildField(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.1),

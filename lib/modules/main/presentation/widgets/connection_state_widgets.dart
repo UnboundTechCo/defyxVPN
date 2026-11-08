@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/group_provider.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -151,6 +152,15 @@ class PingIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    return TvFocusRing(
+      borderRadius: BorderRadius.circular(6.r),
+      ringOutset: 3,
+      fillWhenFocused: false,
+      child: _buildButton(),
+    );
+  }
+
+  Widget _buildButton() {
     return Material(
       color: Colors.transparent,
       child: InkWell(

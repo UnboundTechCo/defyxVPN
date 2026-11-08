@@ -459,4 +459,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get speedTestConnectionUnstable =>
       'Your connection was unstable, and the test was interrupted.';
+
+  @override
+  String get tvHoldOkToReorder => 'Hold OK to reorder';
+
+  @override
+  String get tvMoveModeHint => '▲ ▼ to move · OK to finish';
 }

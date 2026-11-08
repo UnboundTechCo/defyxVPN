@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -56,24 +57,27 @@ class _TabSegment extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: InkWell(
-        onTap: onTap,
+      child: TvFocusRing(
         borderRadius: BorderRadius.circular(100.r),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          padding: EdgeInsets.symmetric(vertical: 10.h),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: isSelected ? const Color(0xFF1D1D1D) : Colors.transparent,
-            borderRadius: BorderRadius.circular(100.r),
-          ),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 15.sp,
-              fontFamily: AppTheme.fontFamily,
-              fontWeight: FontWeight.w400,
-              color: Colors.white,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(100.r),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            padding: EdgeInsets.symmetric(vertical: 10.h),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF1D1D1D) : Colors.transparent,
+              borderRadius: BorderRadius.circular(100.r),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 15.sp,
+                fontFamily: AppTheme.fontFamily,
+                fontWeight: FontWeight.w400,
+                color: Colors.white,
+              ),
             ),
           ),
         ),

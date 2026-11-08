@@ -4,6 +4,8 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -119,13 +121,17 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                 3,
             0,
           ),
-          child: InkWell(
-            onTap: _goBack,
-            customBorder: const CircleBorder(),
-            child: Icon(
-              Icons.chevron_left,
-              size: _backIconSize.sp,
-              color: _accentColor,
+          child: TvFocusRing(
+            shape: BoxShape.circle,
+            child: InkWell(
+              onTap: _goBack,
+              autofocus: TvSupport.isTv,
+              customBorder: const CircleBorder(),
+              child: Icon(
+                Icons.chevron_left,
+                size: _backIconSize.sp,
+                color: _accentColor,
+              ),
             ),
           ),
         ),

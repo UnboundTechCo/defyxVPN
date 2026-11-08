@@ -5,6 +5,8 @@ import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -369,6 +371,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ref: ref,
                     shouldExecuteAction: true,
                     onTapBefore: _handlePremiumWidgetTap,
+                    // First control on the page gets focus on TV.
+                    autofocus: TvSupport.isTv,
                   ),
                 ),
                 if (!Platform.isIOS) ...[
@@ -459,9 +463,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context);
     return Padding(
       padding: EdgeInsets.only(left: 15.w),
-      child: GestureDetector(
+      child: TvFocusable(
         onTap: () => DiagnosticsExperimentsDialog.show(context),
-        behavior: HitTestBehavior.opaque,
+        borderRadius: BorderRadius.circular(6.r),
+        ringOutset: 4,
         child: Row(
           children: [
             Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),

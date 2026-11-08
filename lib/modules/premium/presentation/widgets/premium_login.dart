@@ -10,6 +10,7 @@ import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -194,8 +195,11 @@ class _PremiumLoginState extends State<PremiumLogin> {
                         color: Colors.black.withValues(alpha: 0.5),
                       ),
                     ),
-                    GestureDetector(
+                    TvFocusable(
                       onTap: _openSignUpPage,
+                      behavior: HitTestBehavior.deferToChild,
+                      borderRadius: BorderRadius.circular(4.r),
+                      ringOutset: 3,
                       child: Text(
                         l10n.signUp.toUpperCase(),
                         style: TextStyle(

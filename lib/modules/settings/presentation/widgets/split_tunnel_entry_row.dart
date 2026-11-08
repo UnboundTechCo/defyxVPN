@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -32,12 +33,15 @@ class SplitTunnelEntryRow extends StatelessWidget {
             ),
           ),
           SizedBox(width: 8.w),
-          InkWell(
-            onTap: onRemove,
-            customBorder: const CircleBorder(),
-            child: Padding(
-              padding: EdgeInsets.all(4.r),
-              child: Icon(Icons.close, size: 22.sp, color: Colors.grey[400]),
+          TvFocusRing(
+            shape: BoxShape.circle,
+            child: InkWell(
+              onTap: onRemove,
+              customBorder: const CircleBorder(),
+              child: Padding(
+                padding: EdgeInsets.all(4.r),
+                child: Icon(Icons.close, size: 22.sp, color: Colors.grey[400]),
+              ),
             ),
           ),
         ],

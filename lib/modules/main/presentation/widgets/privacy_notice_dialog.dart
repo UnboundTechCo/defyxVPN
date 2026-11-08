@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -105,6 +106,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ),
             SizedBox(height: 20.h),
             ElevatedButton(
+              autofocus: TvSupport.isTv,
               onPressed: _handleGotIt,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],
