@@ -113,7 +113,7 @@ jobs:
               file.write_text(source)
               print(f"Patched {file.name}")
 
-          patch(cache / "hosted/pub.dev/unified_distributor-0.2.12/lib/src/utils/default_shell_executor.dart", [
+          patch(cache / "hosted/pub.dev/unified_distributor-0.2.13/lib/src/utils/default_shell_executor.dart", [
               ("String? stdoutStr;", "String? stdoutStr = '';"),
               ("String? stderrStr;", "String? stderrStr = '';"),
               ("process.stdout.listen(", "final stdoutDone = process.stdout.forEach("),
@@ -122,14 +122,14 @@ jobs:
                "int exitCode = await process.exitCode;\n    await Future.wait([stdoutDone, stderrDone]);"),
           ])
 
-          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.11/lib/src/makers/appimage/app_package_maker_appimage.dart", [
+          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.12/lib/src/makers/appimage/app_package_maker_appimage.dart", [
               ("} catch (e) {", "} catch (e, stackTrace) {"),
               ("throw MakeError(e.toString());",
                "Error.throwWithStackTrace(MakeError(e.toString()), stackTrace);"),
           ])
 
           # RPM uses a per-build working directory; Fastforge stages files in BUILD.
-          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.11/lib/src/makers/rpm/make_rpm_config.dart", [
+          patch(cache / "hosted/pub.dev/flutter_app_packager-0.6.12/lib/src/makers/rpm/make_rpm_config.dart", [
               ("'%install': [",
                "'%install': [\n            'cd \"%{_topdir}/BUILD\"',"),
           ])

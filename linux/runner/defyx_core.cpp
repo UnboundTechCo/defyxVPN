@@ -1,5 +1,6 @@
 #include "defyx_core.h"
 #include <chrono>
+#include <cstring>
 #include <mutex>
 #include <iostream>
 #include <fstream>
@@ -572,7 +573,7 @@ static bool GatewayGenRandom32(std::vector<uint8_t>& out) {
   return urandom.good() && urandom.gcount() == 32;
 }
 
-bool defyx_core::PerformGatewayHandshake() {
+bool PerformGatewayHandshake() {
   if (!g_dx_dll) LoadCoreDll("");
   if (!g_request_handshake || !g_complete_handshake) return false;
 
@@ -596,7 +597,7 @@ bool defyx_core::PerformGatewayHandshake() {
 
   // Step 3: HMAC-SHA256(key=appRandom||coreRandom, message=embeddedKey)
   const char* embedded = kLinuxGatewayKey;
-  std::vector<uint8_t> embedded_bytes(embedded, embedded + strlen(embedded));
+  std::vector<uint8_t> embedded_bytes(embedded, embedded + std::strlen(embedded));
 
   std::vector<uint8_t> client_key;
   client_key.insert(client_key.end(), app_random.begin(), app_random.end());
