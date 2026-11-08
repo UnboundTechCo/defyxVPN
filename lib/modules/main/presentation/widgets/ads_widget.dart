@@ -26,6 +26,8 @@
 /// - Automatic hiding when countdown expires
 /// - Smooth fade animations (300ms)
 ///
+library;
+
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'

@@ -30,7 +30,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Keep download/upload/latency fields in the same left-right layout as
     // English regardless of locale, instead of mirroring for RTL languages.

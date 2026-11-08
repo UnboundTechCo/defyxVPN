@@ -36,7 +36,10 @@ class SettingsDonateWidget extends ConsumerWidget {
       padding: EdgeInsets.all(15.w),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withOpacity(0.16), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+          width: 1,
+        ),
       ),
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,

@@ -5,6 +5,7 @@
 ///
 /// The state is centralized here to ensure consistent behavior across
 /// all ad types while allowing the loading logic to vary via Strategy Pattern.
+library;
 
 import 'dart:async';
 import 'package:flutter/material.dart';

@@ -82,7 +82,7 @@ class SettingsPremiumWidget extends ConsumerWidget {
                         height: 16,
                         width: 16,
                         colorFilter: ColorFilter.mode(
-                          Colors.white.withOpacity(0.16),
+                          Colors.white.withValues(alpha: 0.16),
                           BlendMode.srcIn,
                         ),
                       ),
@@ -133,7 +133,10 @@ class SettingsPremiumWidget extends ConsumerWidget {
         // #EAEAEA29
         // color: Colors.white.withOpacity(0.16),
         borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(color: Colors.white.withOpacity(0.16), width: 1),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.16),
+          width: 1,
+        ),
       ),
       child: _buildLoginButton(context, ref),
     );
