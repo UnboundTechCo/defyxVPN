@@ -2,13 +2,19 @@ import 'package:defyx_vpn/common/helpers/truncate_text.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
+import 'package:defyx_vpn/shared/utils/tv_keyboard_helper.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import '../../models/settings_item.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
 
-class SettingsItemWidget extends StatefulWidget {
+/// A settings row. With a remote it is a single focus stop: OK runs the same
+/// action as a tap (toggle or open). Draggable rows can also be moved with the
+/// D-pad: holding OK starts the move mode, Up/Down move the row, OK ends it.
+class SettingsItemWidget extends StatelessWidget {
   final SettingsItem item;
   final VoidCallback? onToggle;
   final Function(String)? onNavigate;
@@ -17,6 +23,25 @@ class SettingsItemWidget extends StatefulWidget {
   final bool showDragHandle;
   final int? dragIndex;
   final bool showSeparator;
+
+  /// Focus node owned by the parent, so focus survives the row being rebuilt.
+  final FocusNode? focusNode;
+  final ValueChanged<bool>? onFocusChange;
+
+  /// Called when OK is held on the row. Starts the D-pad move mode.
+  final VoidCallback? onSelectLongPress;
+
+  /// Whether the row is being moved with the D-pad.
+  final bool isMoving;
+
+  /// Moves the row by -1 (up) or +1 (down) while [isMoving].
+  final ValueChanged<int>? onMove;
+
+  /// Ends the move mode.
+  final VoidCallback? onMoveEnd;
+
+  /// A short D-pad hint shown next to the switch (e.g. how to reorder).
+  final String? dpadHint;
 
   const SettingsItemWidget({
     super.key,
@@ -28,43 +53,56 @@ class SettingsItemWidget extends StatefulWidget {
     this.showDragHandle = false,
     this.dragIndex,
     this.showSeparator = false,
+    this.focusNode,
+    this.onFocusChange,
+    this.onSelectLongPress,
+    this.isMoving = false,
+    this.onMove,
+    this.onMoveEnd,
+    this.dpadHint,
   });
 
-  @override
-  State<SettingsItemWidget> createState() => _SettingsItemWidgetState();
-}
-
-class _SettingsItemWidgetState extends State<SettingsItemWidget> {
-  late FocusNode _focusNode;
-  bool _hasFocus = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_handleFocusChange);
+  void _handleTap() {
+    if (item.itemType == SettingsItemType.navigation &&
+        item.navigationRoute != null) {
+      onNavigate?.call(item.navigationRoute!);
+    } else {
+      onToggle?.call();
+    }
   }
 
-  @override
-  void dispose() {
-    _focusNode.removeListener(_handleFocusChange);
-    _focusNode.dispose();
-    super.dispose();
-  }
+  KeyEventResult _handleMoveKeys(FocusNode node, KeyEvent event) {
+    if (!isMoving) return KeyEventResult.ignored;
 
-  void _handleFocusChange() {
-    setState(() {
-      _hasFocus = _focusNode.hasFocus;
-    });
+    final direction = TvKeyboardHelper.directionOf(event);
+    if (direction != null) {
+      if (event is! KeyUpEvent) {
+        if (direction == TraversalDirection.up) onMove?.call(-1);
+        if (direction == TraversalDirection.down) onMove?.call(1);
+      }
+      // Focus stays on the row while it is being moved.
+      return KeyEventResult.handled;
+    }
+    if (TvKeyboardHelper.isActivationKey(event)) {
+      if (event is KeyDownEvent) onMoveEnd?.call();
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
   }
 
   @override
   Widget build(BuildContext context) {
+    final handleColor = isMoving
+        ? TvFocusable.focusRingColor
+        : item.isAccessible
+        ? Colors.grey[400]!
+        : Colors.grey[600]!;
+
     Widget rowContent = Row(
       children: [
-        if (widget.showDragHandle && widget.dragIndex != null) ...[
+        if (showDragHandle && dragIndex != null) ...[
           ReorderableDragStartListener(
-            index: widget.dragIndex!,
+            index: dragIndex!,
             child: Container(
               width: 24.w,
               height: 24.h,
@@ -73,20 +111,20 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
                 borderRadius: BorderRadius.circular(4.r),
                 color: Colors.transparent,
               ),
-              child: SvgPicture.asset(
-                'assets/icons/draggable_setting_indicator.svg',
-                width: 24.w,
-                height: 24.h,
-                colorFilter: ColorFilter.mode(
-                  widget.item.isAccessible
-                      ? Colors.grey[400]!
-                      : Colors.grey[600]!,
-                  BlendMode.srcIn,
-                ),
-              ),
+              child: isMoving
+                  ? Icon(Icons.swap_vert, size: 24.w, color: handleColor)
+                  : SvgPicture.asset(
+                      'assets/icons/draggable_setting_indicator.svg',
+                      width: 24.w,
+                      height: 24.h,
+                      colorFilter: ColorFilter.mode(
+                        handleColor,
+                        BlendMode.srcIn,
+                      ),
+                    ),
             ),
           ),
-        ] else if (widget.item.showLeftIcon) ...[
+        ] else if (item.showLeftIcon) ...[
           Container(
             width: 24.w,
             height: 24.h,
@@ -106,33 +144,40 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
             crossAxisAlignment: CrossAxisAlignment.center,
             spacing: 7.w,
             children: [
-              if (widget.item.isPremium)
+              // The info icons are touch-only; D-pad users see the
+              // description under the list instead.
+              if (item.isPremium)
                 InkWell(
+                  canRequestFocus: false,
                   child: AppIcons.premium(height: 18, width: 18),
                   onTap: () =>
-                      SettingsToastMessage.show(widget.item.description ?? ""),
+                      SettingsToastMessage.show(item.description ?? ""),
                 ),
-              if (widget.item.isMarket)
+              if (item.isMarket)
                 InkWell(
+                  canRequestFocus: false,
                   child: AppIcons.market(height: 18, width: 18),
                   onTap: () =>
-                      SettingsToastMessage.show(widget.item.description ?? ""),
+                      SettingsToastMessage.show(item.description ?? ""),
                 ),
-              Text(
-                truncateText(widget.item.title.toUpperCase(), 20),
-                style: TextStyle(
-                  fontSize: 17.sp,
-                  fontFamily: AppTheme.fontFamily,
-                  fontWeight: FontWeight.w400,
-                  color: widget.item.isAccessible
-                      ? Colors.white
-                      : Colors.grey[600],
+              Flexible(
+                child: Text(
+                  truncateText(item.title.toUpperCase(), 20),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontFamily: AppTheme.fontFamily,
+                    fontWeight: FontWeight.w400,
+                    color: item.isAccessible ? Colors.white : Colors.grey[600],
+                  ),
                 ),
               ),
-              if (widget.item.description != null &&
-                  widget.item.description!.isNotEmpty &&
-                  !widget.item.isPremium)
+              if (item.description != null &&
+                  item.description!.isNotEmpty &&
+                  !item.isPremium)
                 InkWell(
+                  canRequestFocus: false,
                   child: AppIcons.info(
                     height: 22,
                     width: 20,
@@ -142,11 +187,30 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
                     ),
                   ),
                   onTap: () =>
-                      SettingsToastMessage.show(widget.item.description ?? ""),
+                      SettingsToastMessage.show(item.description ?? ""),
                 ),
             ],
           ),
         ),
+        if (dpadHint != null)
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
+              child: Text(
+                dpadHint!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.end,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  fontFamily: AppTheme.fontFamily,
+                  fontWeight: FontWeight.w600,
+                  color: TvFocusable.focusRingColor,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ),
+          ),
         _buildTrailingWidget(),
       ],
     );
@@ -158,7 +222,12 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
           transform: Matrix4.identity(),
           padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
           margin: EdgeInsets.symmetric(vertical: 2.h),
-          decoration: widget.isDraggable
+          decoration: isMoving
+              ? BoxDecoration(
+                  borderRadius: BorderRadius.circular(8.r),
+                  color: TvFocusable.focusRingColor.withValues(alpha: 0.18),
+                )
+              : isDraggable
               ? BoxDecoration(
                   borderRadius: BorderRadius.circular(8.r),
                   color: Colors.transparent,
@@ -166,7 +235,7 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
               : null,
           child: Opacity(opacity: 1.0, child: rowContent),
         ),
-        if (!widget.isLastItem && widget.showSeparator)
+        if (!isLastItem && showSeparator)
           Container(
             height: 1,
             color: Colors.white.withValues(alpha: 0.05),
@@ -175,40 +244,25 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
       ],
     );
 
-    return Focus(
-      focusNode: _focusNode,
-      child: GestureDetector(
-        onTap: () {
-          if (widget.item.itemType == SettingsItemType.navigation &&
-              widget.item.navigationRoute != null) {
-            widget.onNavigate?.call(widget.item.navigationRoute!);
-          } else {
-            widget.onToggle?.call();
-          }
-        },
-        behavior: HitTestBehavior.opaque,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: _hasFocus && widget.item.isAccessible
-              ? BoxDecoration(
-                  border: Border.all(color: const Color(0xFFFFD700), width: 2),
-                  borderRadius: BorderRadius.circular(8.r),
-                )
-              : null,
-          child: content,
-        ),
-      ),
+    return TvFocusable(
+      focusNode: focusNode,
+      onTap: _handleTap,
+      onSelectLongPress: onSelectLongPress,
+      onKeyEvent: _handleMoveKeys,
+      onFocusChange: onFocusChange,
+      borderRadius: BorderRadius.circular(8.r),
+      child: content,
     );
   }
 
   Widget _buildTrailingWidget() {
-    if (widget.item.itemType == SettingsItemType.navigation) {
+    if (item.itemType == SettingsItemType.navigation) {
       return Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (widget.item.subtitle != null)
+          if (item.subtitle != null)
             Text(
-              widget.item.subtitle!,
+              item.subtitle!,
               style: TextStyle(
                 fontSize: 14.sp,
                 fontFamily: AppTheme.fontFamily,
@@ -216,18 +270,18 @@ class _SettingsItemWidgetState extends State<SettingsItemWidget> {
                 color: Colors.grey[500],
               ),
             ),
-          if (widget.item.subtitle != null) SizedBox(width: 8.w),
+          if (item.subtitle != null) SizedBox(width: 8.w),
           Icon(Icons.chevron_right, color: Colors.grey[400], size: 24.sp),
         ],
       );
     }
 
+    // The row is the focus stop and toggles this switch with OK.
     return DefyxSwitch(
-      value: widget.item.isEnabled,
-      onChanged: widget.item.isAccessible
-          ? (_) => widget.onToggle?.call()
-          : null,
-      enabled: widget.item.isAccessible,
+      value: item.isEnabled,
+      onChanged: item.isAccessible ? (_) => onToggle?.call() : null,
+      enabled: item.isAccessible,
+      focusable: false,
     );
   }
 }

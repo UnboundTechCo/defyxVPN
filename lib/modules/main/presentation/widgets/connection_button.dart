@@ -1,6 +1,8 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -29,8 +31,6 @@ class _ConnectionButtonState extends State<ConnectionButton>
   late Animation<double> _pulseAnimation;
   late Animation<double> _scaleAnimation;
   late Animation<double> _shieldRotationAnimation;
-  late FocusNode _focusNode;
-  bool _hasFocus = false;
 
   Timer? _timer;
   int _seconds = 0;
@@ -49,8 +49,6 @@ class _ConnectionButtonState extends State<ConnectionButton>
   @override
   void initState() {
     super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_handleFocusChange);
     _initializeDimensions();
     _setupAnimations();
     _loadConnectionTime();
@@ -99,16 +97,7 @@ class _ConnectionButtonState extends State<ConnectionButton>
     _timer = null;
     _animationController.dispose();
     _shieldLoadingController.dispose();
-    _focusNode.removeListener(_handleFocusChange);
-    _focusNode.dispose();
     super.dispose();
-  }
-
-  void _handleFocusChange() {
-    if (!mounted) return;
-    setState(() {
-      _hasFocus = _focusNode.hasFocus;
-    });
   }
 
   // Load connection time from shared preferences
@@ -223,22 +212,18 @@ class _ConnectionButtonState extends State<ConnectionButton>
         // Handle timer based on connection status
         _handleTimerState(connectionState.status);
 
-        return Focus(
-          canRequestFocus: false,
-          skipTraversal: true,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Pulse animation rings
-              _buildPulseRings(),
+        return Stack(
+          alignment: Alignment.center,
+          children: [
+            // Pulse animation rings
+            _buildPulseRings(),
 
-              // Main connection button
-              _buildMainButton(connectionState),
+            // Main connection button
+            _buildMainButton(connectionState),
 
-              // Timer display
-              _buildTimerDisplay(connectionState.status),
-            ],
-          ),
+            // Timer display
+            _buildTimerDisplay(connectionState.status),
+          ],
         );
       },
     );
@@ -336,85 +321,78 @@ class _ConnectionButtonState extends State<ConnectionButton>
   }
 
   Widget _buildMainButton(vpn.ConnectionState connectionState) {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        SizedBox(
-          width: _buttonSize,
-          height: _buttonSize,
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              // Shield background/border
-              AppIcons.shieldAnime(width: _buttonSize, height: _buttonSize),
+    // TvFocusable is the single focus stop for the remote (focused at launch
+    // on TV) and draws the focus ring; the InkWell only handles touch.
+    return TvFocusable(
+      onTap: widget.onTap,
+      autofocus: TvSupport.isTv,
+      handleTaps: false,
+      shape: BoxShape.circle,
+      ringWidth: 3,
+      fillWhenFocused: false,
+      child: SizedBox(
+        width: _buttonSize,
+        height: _buttonSize,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Shield background/border
+            AppIcons.shieldAnime(width: _buttonSize, height: _buttonSize),
 
-              // Shield loading animation overlay (only for analyzing state)
-              if (connectionState.status == vpn.ConnectionStatus.analyzing ||
-                  connectionState.status == vpn.ConnectionStatus.disconnecting)
-                AnimatedBuilder(
-                  animation: _shieldRotationAnimation,
-                  builder: (context, child) {
-                    return CustomPaint(
-                      size: Size(_buttonSize, _buttonSize),
-                      painter: ShieldLoadingPainter(
-                        progress: _shieldRotationAnimation.value,
-                        size: _buttonSize,
-                      ),
-                    );
-                  },
-                ),
+            // Shield loading animation overlay (only for analyzing state)
+            if (connectionState.status == vpn.ConnectionStatus.analyzing ||
+                connectionState.status == vpn.ConnectionStatus.disconnecting)
+              AnimatedBuilder(
+                animation: _shieldRotationAnimation,
+                builder: (context, child) {
+                  return CustomPaint(
+                    size: Size(_buttonSize, _buttonSize),
+                    painter: ShieldLoadingPainter(
+                      progress: _shieldRotationAnimation.value,
+                      size: _buttonSize,
+                    ),
+                  );
+                },
+              ),
 
-              // All interactive content clipped to shield shape
-              // Perfectly aligned with shield edges
-              Positioned.fill(
-                child: ClipPath(
-                  clipper: SvgShieldClipper(size: _buttonSize),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      // Subtle gradient background inside shield
-                      Container(
-                        width: _buttonSize,
-                        height: _buttonSize,
-                        decoration: BoxDecoration(color: Colors.transparent),
-                      ),
+            // All interactive content clipped to shield shape
+            // Perfectly aligned with shield edges
+            Positioned.fill(
+              child: ClipPath(
+                clipper: SvgShieldClipper(size: _buttonSize),
+                clipBehavior: Clip.antiAlias,
+                child: Stack(
+                  children: [
+                    // Subtle gradient background inside shield
+                    Container(
+                      width: _buttonSize,
+                      height: _buttonSize,
+                      decoration: BoxDecoration(color: Colors.transparent),
+                    ),
 
-                      // Interactive material with InkWell
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: widget.onTap,
-                          focusNode: _focusNode,
-                          onFocusChange: (focused) =>
-                              setState(() => _hasFocus = focused),
-                          splashColor: Colors.white.withValues(alpha: 0.2),
-                          highlightColor: Colors.white.withValues(alpha: 0.1),
-                          child: Container(
-                            width: _buttonSize,
-                            height: _buttonSize,
-                            alignment: Alignment.center,
-                            child: _buildButtonContent(connectionState.status),
-                          ),
+                    // Interactive material with InkWell
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: widget.onTap,
+                        canRequestFocus: false,
+                        splashColor: Colors.white.withValues(alpha: 0.2),
+                        highlightColor: Colors.white.withValues(alpha: 0.1),
+                        child: Container(
+                          width: _buttonSize,
+                          height: _buttonSize,
+                          alignment: Alignment.center,
+                          child: _buildButtonContent(connectionState.status),
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-        // Focus indicator ring
-        if (_hasFocus)
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFFFFD700), width: 3.0),
-              ),
             ),
-          ),
-      ],
+          ],
+        ),
+      ),
     );
   }
 

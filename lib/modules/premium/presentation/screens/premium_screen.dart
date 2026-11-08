@@ -6,6 +6,8 @@ import 'package:defyx_vpn/modules/premium/presentation/screens/support_screeen.d
 import 'package:defyx_vpn/modules/premium/presentation/screens/wallet_screen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_tab_bar.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -33,8 +35,13 @@ class PremiumScreen extends ConsumerWidget {
                   children: [
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: GestureDetector(
+                      // The nav bar is hidden here, so on TV focus starts on
+                      // the back button.
+                      child: TvFocusable(
                         onTap: () => context.go(DefyxVPNRoutes.settings.route),
+                        autofocus: TvSupport.isTv,
+                        behavior: HitTestBehavior.deferToChild,
+                        borderRadius: BorderRadius.circular(12.r),
                         child: AppIcons.arrowLeft(
                           width: 50.w,
                           height: 50.h,

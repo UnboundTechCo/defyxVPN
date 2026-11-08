@@ -971,6 +971,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your connection was unstable, and the test was interrupted.'**
   String get speedTestConnectionUnstable;
+
+  /// TV remote hint under the connection method list: hold the remote's OK button on a method to start moving it
+  ///
+  /// In en, this message translates to:
+  /// **'Hold OK to reorder'**
+  String get tvHoldOkToReorder;
+
+  /// TV remote hint while a connection method is being moved: Up/Down move it, OK ends moving
+  ///
+  /// In en, this message translates to:
+  /// **'▲ ▼ to move · OK to finish'**
+  String get tvMoveModeHint;
 }
 
 class _AppLocalizationsDelegate

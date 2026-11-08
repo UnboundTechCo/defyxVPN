@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -107,12 +108,14 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                             isLoading: widget.isLoading,
                           ),
                           SizedBox(width: 12.w),
-                          GestureDetector(
+                          TvFocusable(
                             onTap: () {
                               if (isLoggedIn) {
                                 _refetchBalance(widget.ref);
                               }
                             },
+                            behavior: HitTestBehavior.deferToChild,
+                            shape: BoxShape.circle,
                             child: Container(
                               width: 40.w,
                               height: 40.h,

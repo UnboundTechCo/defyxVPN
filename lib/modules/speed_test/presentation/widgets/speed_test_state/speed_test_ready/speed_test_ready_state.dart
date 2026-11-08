@@ -4,6 +4,7 @@ import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_start_button.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -42,15 +43,19 @@ class SpeedTestReadyState extends ConsumerWidget {
             showButton: true,
             result: state.result,
             connectionStatus: connectionState.status,
+            // On TV the button gets focus so OK starts (or repeats) the test.
             button: state.testCompleted
                 ? SpeedTestStartButton(
                     currentStep: SpeedTestStep.ready,
                     isEnabled: true,
                     onTap: onRetry,
                     previousStep: SpeedTestStep.download,
+                    autofocus: TvSupport.isTv,
                   )
                 : InkWell(
                     onTap: handleStartTest,
+                    // The start button below is the D-pad focus stop.
+                    canRequestFocus: false,
                     child: Column(
                       spacing: 8.h,
                       children: [
@@ -67,6 +72,7 @@ class SpeedTestReadyState extends ConsumerWidget {
                           currentStep: SpeedTestStep.ready,
                           isEnabled: true,
                           onTap: handleStartTest,
+                          autofocus: TvSupport.isTv,
                         ),
                       ],
                     ),

@@ -9,6 +9,7 @@ import '../../modules/settings/presentation/screens/split_tunnel_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
 import '../../modules/premium/presentation/screens/premium_screen.dart';
 import '../../shared/layout/navbar/defyx_navbar.dart';
+import 'dpad_shell_page.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
 
@@ -83,7 +84,8 @@ CustomTransitionPage<void> _createPageAnimation(
   LocalKey key,
   SlideDirection direction,
 ) {
-  return CustomTransitionPage<void>(
+  // DpadShellPage lets D-pad focus move from the page to the nav bar.
+  return DpadShellPage<void>(
     key: key,
     child: child,
     transitionDuration: const Duration(milliseconds: 320),
@@ -99,6 +101,40 @@ CustomTransitionPage<void> _createPageAnimation(
   );
 }
 
+/// Makes the system Back button step back through the app instead of closing
+/// it: Settings and Speed Test go Home, Premium and Split Tunnel go to
+/// Settings. Only Home lets Back leave the app.
+///
+/// The top-level screens are opened with `go`, so there is no route to pop;
+/// go_router then asks the shell's route, which honors this [PopScope].
+/// Screens pushed on top (e.g. Split Tunnel via `push`) still pop normally.
+class _ShellBackHandler extends StatelessWidget {
+  const _ShellBackHandler({required this.child});
+
+  final Widget child;
+
+  static String? _parentOf(String path) {
+    if (path == DefyxVPNRoutes.main.route) return null;
+    if (path == DefyxVPNRoutes.premium.route ||
+        path.startsWith('${DefyxVPNRoutes.settings.route}/')) {
+      return DefyxVPNRoutes.settings.route;
+    }
+    return DefyxVPNRoutes.main.route;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parent = _parentOf(GoRouterState.of(context).uri.path);
+    return PopScope(
+      canPop: parent == null,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && parent != null) context.go(parent);
+      },
+      child: child,
+    );
+  }
+}
+
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -112,18 +148,20 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         builder: (context, state, child) {
-          return Scaffold(
-            extendBody: true,
-            body: Stack(
-              children: [
-                child,
-                const Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: DefyxNavBar(),
-                ),
-              ],
+          return _ShellBackHandler(
+            child: Scaffold(
+              extendBody: true,
+              body: Stack(
+                children: [
+                  child,
+                  const Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: DefyxNavBar(),
+                  ),
+                ],
+              ),
             ),
           );
         },

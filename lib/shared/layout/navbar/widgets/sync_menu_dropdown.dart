@@ -5,6 +5,7 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/quick_menu_item.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,6 +22,10 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
     with SingleTickerProviderStateMixin {
   final AnimationService _animationService = AnimationService();
   final MenuController _menuController = MenuController();
+  final FocusNode _triggerFocusNode = FocusNode(debugLabel: 'SyncMenuTrigger');
+  final FocusNode _firstItemFocusNode = FocusNode(
+    debugLabel: 'SyncMenuFirstItem',
+  );
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
 
@@ -41,13 +46,47 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
   @override
   void dispose() {
     _rotationController.dispose();
+    _triggerFocusNode.dispose();
+    _firstItemFocusNode.dispose();
     super.dispose();
+  }
+
+  bool get _usingDpad =>
+      FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+
+  void _toggleMenu() {
+    if (_menuController.isOpen) {
+      _closeMenu();
+      return;
+    }
+    _menuController.open();
+    // With a remote, move focus into the menu so an item can be chosen.
+    if (_usingDpad) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _menuController.isOpen) {
+          _firstItemFocusNode.requestFocus();
+        }
+      });
+    }
+  }
+
+  void _closeMenu() {
+    _menuController.close();
+    if (_usingDpad && mounted) _triggerFocusNode.requestFocus();
+  }
+
+  /// Back closes an open menu instead of leaving the screen.
+  Future<bool> _handleBackButton() async {
+    if (!_menuController.isOpen) return false;
+    _closeMenu();
+    return true;
   }
 
   @override
   Widget build(BuildContext context) {
-    return MenuAnchor(
+    final menu = MenuAnchor(
       controller: _menuController,
+      childFocusNode: _triggerFocusNode,
       style: MenuStyle(
         backgroundColor: WidgetStateProperty.all(const Color(0xFFd1d1d1)),
         shape: WidgetStateProperty.all(
@@ -68,6 +107,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
             children: [
               QuickMenuItem(
                 topBorderRadius: true,
+                focusNode: _firstItemFocusNode,
                 title: AppLocalizations.of(context).updateMethods,
                 titleStyle: TextStyle(
                   fontSize: 16.sp,
@@ -80,7 +120,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                   color: const Color(0xFF7B7B7B),
                 ),
                 onTap: () async {
-                  _menuController.close();
+                  _closeMenu();
                   if (_animationService.shouldAnimate()) {
                     _rotationController.forward().then((_) {
                       _rotationController.reset();
@@ -121,7 +161,7 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
                           );
                     }
                   });
-                  _menuController.close();
+                  _closeMenu();
                 },
               ),
             ],
@@ -129,15 +169,12 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
         ),
       ],
       builder: (context, controller, child) {
-        return GestureDetector(
-          onTap: () {
-            if (_menuController.isOpen) {
-              _menuController.close();
-            } else {
-              _menuController.open();
-            }
-          },
-          child: child,
+        return TvFocusable(
+          focusNode: _triggerFocusNode,
+          onTap: _toggleMenu,
+          borderRadius: BorderRadius.circular(6.r),
+          ringOutset: 4,
+          child: child!,
         );
       },
       child: Row(
@@ -169,6 +206,12 @@ class _SyncMenuDropdownState extends ConsumerState<SyncMenuDropdown>
           ),
         ],
       ),
+    );
+
+    if (Router.maybeOf(context) == null) return menu;
+    return BackButtonListener(
+      onBackButtonPressed: _handleBackButton,
+      child: menu,
     );
   }
 }

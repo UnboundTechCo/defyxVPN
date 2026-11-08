@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -74,30 +75,42 @@ class _InstalledAppTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    // One focus stop per app for the remote: OK toggles the switch. The
+    // InkWell and the switch only handle touch.
+    return TvFocusable(
       onTap: onToggle,
+      handleTaps: false,
       borderRadius: BorderRadius.circular(8.r),
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
-        child: Row(
-          children: [
-            _AppIcon(app: app),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                app.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 17.sp,
-                  fontFamily: AppTheme.fontFamily,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white,
+      child: InkWell(
+        onTap: onToggle,
+        canRequestFocus: false,
+        borderRadius: BorderRadius.circular(8.r),
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          child: Row(
+            children: [
+              _AppIcon(app: app),
+              SizedBox(width: 12.w),
+              Expanded(
+                child: Text(
+                  app.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontFamily: AppTheme.fontFamily,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.white,
+                  ),
                 ),
               ),
-            ),
-            DefyxSwitch(value: isEnabled, onChanged: (_) => onToggle()),
-          ],
+              DefyxSwitch(
+                value: isEnabled,
+                onChanged: (_) => onToggle(),
+                focusable: false,
+              ),
+            ],
+          ),
         ),
       ),
     );

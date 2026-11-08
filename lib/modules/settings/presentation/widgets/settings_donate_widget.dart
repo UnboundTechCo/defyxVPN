@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -32,25 +33,28 @@ class SettingsDonateWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    return Container(
-      padding: EdgeInsets.all(15.w),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.r),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
-          width: 1,
-        ),
-      ),
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () {
-          if (shouldExecuteAction) {
-            bool shouldExecute = onTapBefore?.call() ?? true;
-            if (shouldExecute) {
-              _handleOpenDonationPage(context, ref);
-            }
+
+    // The whole card is one focus stop for the remote.
+    return TvFocusable(
+      behavior: HitTestBehavior.translucent,
+      borderRadius: BorderRadius.circular(10.r),
+      onTap: () {
+        if (shouldExecuteAction) {
+          bool shouldExecute = onTapBefore?.call() ?? true;
+          if (shouldExecute) {
+            _handleOpenDonationPage(context, ref);
           }
-        },
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(15.w),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.16),
+            width: 1,
+          ),
+        ),
         child: Row(
           children: [
             Column(

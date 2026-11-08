@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -39,10 +40,12 @@ class PremiumPlanSelect extends ConsumerWidget {
 
                   return Padding(
                     padding: EdgeInsets.only(bottom: 12.h),
-                    child: GestureDetector(
+                    child: TvFocusable(
                       onTap: () {
                         ref.read(selectedPlanProvider.notifier).state = plan;
                       },
+                      behavior: HitTestBehavior.deferToChild,
+                      borderRadius: BorderRadius.circular(12.r),
                       child: Container(
                         padding: EdgeInsets.all(16.w),
                         decoration: const BoxDecoration(

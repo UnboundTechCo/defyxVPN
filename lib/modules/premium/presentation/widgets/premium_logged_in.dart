@@ -5,6 +5,7 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -162,17 +163,21 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
                     ),
                   ),
                   SizedBox(width: 2.w),
-                  InkWell(
-                    onTap: isSigningOut || isDeletingAccount
-                        ? null
-                        : _handleSignOut,
-                    child: Text(
-                      l10n.signOut.toUpperCase(),
-                      style: TextStyle(
-                        fontFamily: AppTheme.fontFamily,
-                        fontSize: 12.sp,
-                        height: 1.4,
-                        color: const Color(0xFFFF4C4C),
+                  TvFocusRing(
+                    borderRadius: BorderRadius.circular(4.r),
+                    ringOutset: 3,
+                    child: InkWell(
+                      onTap: isSigningOut || isDeletingAccount
+                          ? null
+                          : _handleSignOut,
+                      child: Text(
+                        l10n.signOut.toUpperCase(),
+                        style: TextStyle(
+                          fontFamily: AppTheme.fontFamily,
+                          fontSize: 12.sp,
+                          height: 1.4,
+                          color: const Color(0xFFFF4C4C),
+                        ),
                       ),
                     ),
                   ),

@@ -3,6 +3,7 @@ import 'package:defyx_vpn/core/purchase/purchase_service.dart';
 import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -159,8 +160,10 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
           runSpacing: 12.h,
           children: _amountOptions.map((amount) {
             final isSelected = _selectedAmount == amount;
-            return GestureDetector(
+            return TvFocusable(
               onTap: () => setState(() => _selectedAmount = amount),
+              behavior: HitTestBehavior.deferToChild,
+              borderRadius: BorderRadius.circular(12.r),
               child: Container(
                 width: 100.w,
                 height: 80.h,

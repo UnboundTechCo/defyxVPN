@@ -1,4 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/shared/widgets/dpad_text_field_scope.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -46,38 +48,45 @@ class _SplitTunnelAddRowState extends State<SplitTunnelAddRow> {
           widget.typeSelector,
           SizedBox(width: 12.w),
           Expanded(
-            child: TextField(
-              controller: _controller,
-              onSubmitted: (_) => _submit(),
-              textInputAction: TextInputAction.done,
-              style: TextStyle(
-                fontSize: 17.sp,
-                fontFamily: AppTheme.fontFamily,
-                color: Colors.white,
-              ),
-              cursorColor: Colors.white,
-              decoration: InputDecoration(
-                hintText: widget.hint,
-                hintStyle: TextStyle(
+            // Lets remote users move past the field and shows its focus.
+            child: DpadTextFieldScope(
+              focusRingRadius: BorderRadius.circular(8.r),
+              child: TextField(
+                controller: _controller,
+                onSubmitted: (_) => _submit(),
+                textInputAction: TextInputAction.done,
+                style: TextStyle(
                   fontSize: 17.sp,
                   fontFamily: AppTheme.fontFamily,
-                  color: Colors.grey[400],
+                  color: Colors.white,
                 ),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                cursorColor: Colors.white,
+                decoration: InputDecoration(
+                  hintText: widget.hint,
+                  hintStyle: TextStyle(
+                    fontSize: 17.sp,
+                    fontFamily: AppTheme.fontFamily,
+                    color: Colors.grey[400],
+                  ),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.symmetric(vertical: 10.h),
+                ),
               ),
             ),
           ),
           ...widget.actions,
-          InkWell(
-            onTap: _submit,
-            customBorder: const CircleBorder(),
-            child: Padding(
-              padding: EdgeInsets.all(4.r),
-              child: Icon(Icons.add, size: 28.sp, color: _addIconColor),
+          TvFocusRing(
+            shape: BoxShape.circle,
+            child: InkWell(
+              onTap: _submit,
+              customBorder: const CircleBorder(),
+              child: Padding(
+                padding: EdgeInsets.all(4.r),
+                child: Icon(Icons.add, size: 28.sp, color: _addIconColor),
+              ),
             ),
           ),
         ],

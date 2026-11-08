@@ -6,6 +6,7 @@ import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/services/desktop_error_logger.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -33,6 +34,9 @@ void main(List<String> arguments) async {
   }
 
   await dotenv.load();
+
+  // Detect Android TV so the UI can show D-pad focus from the first frame.
+  await TvSupport.init();
 
   // Initialize language provider
   SharedPreferences? prefs;

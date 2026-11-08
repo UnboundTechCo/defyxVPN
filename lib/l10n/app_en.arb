@@ -729,5 +729,15 @@
   "speedTestConnectionUnstable": "Your connection was unstable, and the test was interrupted.",
   "@speedTestConnectionUnstable": {
     "description": "Speed test error message - connection unstable"
+  },
+
+  "tvHoldOkToReorder": "Hold OK to reorder",
+  "@tvHoldOkToReorder": {
+    "description": "TV remote hint under the connection method list: hold the remote's OK button on a method to start moving it"
+  },
+
+  "tvMoveModeHint": "▲ ▼ to move · OK to finish",
+  "@tvMoveModeHint": {
+    "description": "TV remote hint while a connection method is being moved: Up/Down move it, OK ends moving"
   }
 }

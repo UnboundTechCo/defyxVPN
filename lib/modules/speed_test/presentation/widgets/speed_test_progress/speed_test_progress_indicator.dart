@@ -1,5 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -185,20 +187,29 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
                 bottom: 100.h,
                 left: 0.w,
                 right: 0.w,
-                child: InkWell(
-                  onTap: widget.onStop,
-                  child: ProgressArcStack(
-                    uploadProgress: _uploadProgress,
-                    downloadProgress: _downloadProgress,
-                    color: widget.color,
-                    uploadProgressAnimation: _uploadProgressAnimation,
-                    downloadProgressAnimation: _downloadProgressAnimation,
-                    gridAnimation: _gridAnimation,
-                    showLoadingIndicator: widget.showLoadingIndicator,
-                    showButton: widget.showButton,
-                    button: widget.button,
-                    currentStep: widget.currentStep,
-                    centerContent: _buildCenterContent(),
+                child: TvFocusRing(
+                  // Only while a test runs; before that the start button
+                  // inside this area is the focus target and has its own ring.
+                  enabled: widget.onStop != null,
+                  borderRadius: BorderRadius.circular(24.r),
+                  fillWhenFocused: false,
+                  child: InkWell(
+                    onTap: widget.onStop,
+                    // While a test runs, OK on the remote stops it.
+                    autofocus: TvSupport.isTv && widget.onStop != null,
+                    child: ProgressArcStack(
+                      uploadProgress: _uploadProgress,
+                      downloadProgress: _downloadProgress,
+                      color: widget.color,
+                      uploadProgressAnimation: _uploadProgressAnimation,
+                      downloadProgressAnimation: _downloadProgressAnimation,
+                      gridAnimation: _gridAnimation,
+                      showLoadingIndicator: widget.showLoadingIndicator,
+                      showButton: widget.showButton,
+                      button: widget.button,
+                      currentStep: widget.currentStep,
+                      centerContent: _buildCenterContent(),
+                    ),
                   ),
                 ),
               ),

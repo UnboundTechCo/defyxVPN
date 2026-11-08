@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -63,6 +64,13 @@ class _ModeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return TvFocusRing(
+      borderRadius: BorderRadius.circular(8.r),
+      child: _buildInkWell(),
+    );
+  }
+
+  Widget _buildInkWell() {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8.r),

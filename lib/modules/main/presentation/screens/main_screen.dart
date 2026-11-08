@@ -319,9 +319,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         _dinoGame ??= DinoGame();
         mainContent = SizedBox(
           height: 200.h,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
-            child: GameWidget(game: _dinoGame!),
+          // The game is touch-only. Flame's GameWidget would otherwise grab
+          // focus and swallow every key (D-pad and Back included).
+          child: ExcludeFocus(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(16.r),
+              child: GameWidget(game: _dinoGame!, autofocus: false),
+            ),
           ),
         );
         break;
@@ -342,28 +346,32 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       alignment:
           Alignment.topCenter, // Align to top-center for consistent positioning
       children: [
-        // Always in tree at same position - never recreated
-        AnimatedOpacity(
-          duration: _animationService.adjustDuration(
-            const Duration(milliseconds: 300),
-          ),
-          opacity: shouldShowAd ? 1.0 : 0.0,
-          child: IgnorePointer(
-            ignoring: !shouldShowAd, // Prevent touch events when hidden
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 50.h,
-              ), // Match the spacing above ads
-              child: SizedBox(
-                height: 280.h,
-                width: 336.w,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF19312F),
-                    borderRadius: BorderRadius.circular(10.r),
+        // Always in tree at same position - never recreated.
+        // Ads are kept out of D-pad focus: the ad is a platform view that
+        // would be an invisible focus stop for remote users.
+        ExcludeFocus(
+          child: AnimatedOpacity(
+            duration: _animationService.adjustDuration(
+              const Duration(milliseconds: 300),
+            ),
+            opacity: shouldShowAd ? 1.0 : 0.0,
+            child: IgnorePointer(
+              ignoring: !shouldShowAd, // Prevent touch events when hidden
+              child: Padding(
+                padding: EdgeInsets.only(
+                  top: 50.h,
+                ), // Match the spacing above ads
+                child: SizedBox(
+                  height: 280.h,
+                  width: 336.w,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF19312F),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child:
+                        _adsWidget, // Always same widget instance, same position
                   ),
-                  child:
-                      _adsWidget, // Always same widget instance, same position
                 ),
               ),
             ),
