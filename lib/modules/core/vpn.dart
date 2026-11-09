@@ -259,8 +259,10 @@ class VPN {
 
     final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
-      connectionNotifier?.setNoInternet();
-      alertService.error();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        connectionNotifier?.setNoInternet();
+        alertService.error();
+      });
 
       // Report network connectivity failure
       crashReportingService.recordVpnError(
