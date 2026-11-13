@@ -30,6 +30,7 @@ library;
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
 import 'package:flutter/material.dart';
@@ -59,6 +60,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     final manager = ref.watch(adStrategyManagerProvider);
     final adsState = ref.watch(adsProvider);
     final connectionState = ref.watch(conn.connectionStateProvider).status;
+    final settings = ref.read(settingsProvider.notifier);
+
+    if (settings.isPremiumCustomer()) {
+      return const SizedBox.shrink();
+    }
 
     // Safety check: Hide if loading failed
     if (adsState.adLoadFailed) {
