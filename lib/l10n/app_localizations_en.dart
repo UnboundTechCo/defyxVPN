@@ -250,6 +250,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitTunnelModeOnly => 'ONLY SELECTED';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'changes to the split tunneling settings will take effect after connecting or reconnecting.';
+
+  @override
   String get splitTunnelTabAddresses => 'ADDRESSES';
 
   @override

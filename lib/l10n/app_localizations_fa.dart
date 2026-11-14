@@ -250,6 +250,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelModeOnly => 'فقط موارد انتخاب‌شده';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.';
+
+  @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
 
   @override

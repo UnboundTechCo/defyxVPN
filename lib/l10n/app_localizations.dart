@@ -576,6 +576,12 @@ abstract class AppLocalizations {
   /// **'ONLY SELECTED'**
   String get splitTunnelModeOnly;
 
+  /// Note under the split tunnel mode selector explaining when changes apply
+  ///
+  /// In en, this message translates to:
+  /// **'changes to the split tunneling settings will take effect after connecting or reconnecting.'**
+  String get splitTunnelReconnectNote;
+
   /// Split tunnel tab - addresses
   ///
   /// In en, this message translates to:

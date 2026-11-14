@@ -250,6 +250,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelModeOnly => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.';
+
+  @override
   String get splitTunnelTabAddresses => 'АДРЕСА';
 
   @override

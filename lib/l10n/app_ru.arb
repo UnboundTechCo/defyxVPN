@@ -80,6 +80,7 @@
   "splitTunnelModeOff": "ВЫКЛ",
   "splitTunnelModeExclude": "ИСКЛЮЧИТЬ ВЫБРАННЫЕ",
   "splitTunnelModeOnly": "ТОЛЬКО ВЫБРАННЫЕ",
+  "splitTunnelReconnectNote": "изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.",
   "splitTunnelTabAddresses": "АДРЕСА",
   "splitTunnelTabApps": "ПРИЛОЖЕНИЯ",
   "splitTunnelSearch": "Поиск",

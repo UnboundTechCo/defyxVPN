@@ -80,6 +80,7 @@
   "splitTunnelModeOff": "خاموش",
   "splitTunnelModeExclude": "حذف موارد انتخاب‌شده",
   "splitTunnelModeOnly": "فقط موارد انتخاب‌شده",
+  "splitTunnelReconnectNote": "تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.",
   "splitTunnelTabAddresses": "آدرس‌ها",
   "splitTunnelTabApps": "برنامه‌ها",
   "splitTunnelSearch": "جستجو",

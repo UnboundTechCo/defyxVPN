@@ -85,6 +85,22 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                               .read(splitTunnelProvider.notifier)
                               .setMode,
                         ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: 10.h,
+                            left: 14.w,
+                            right: 14.w,
+                          ),
+                          child: Text(
+                            l10n.splitTunnelReconnectNote,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontFamily: AppTheme.fontFamily,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey[400],
+                            ),
+                          ),
+                        ),
                         SizedBox(height: 24.h),
                         SplitTunnelTabBar(
                           selected: _tab,

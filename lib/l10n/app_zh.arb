@@ -80,6 +80,7 @@
   "splitTunnelModeOff": "关闭",
   "splitTunnelModeExclude": "排除所选",
   "splitTunnelModeOnly": "仅限所选",
+  "splitTunnelReconnectNote": "分流设置的更改将在连接或重新连接后生效。",
   "splitTunnelTabAddresses": "地址",
   "splitTunnelTabApps": "应用",
   "splitTunnelSearch": "搜索",

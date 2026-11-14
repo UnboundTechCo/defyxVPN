@@ -248,6 +248,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelModeOnly => '仅限所选';
 
   @override
+  String get splitTunnelReconnectNote => '分流设置的更改将在连接或重新连接后生效。';
+
+  @override
   String get splitTunnelTabAddresses => '地址';
 
   @override
