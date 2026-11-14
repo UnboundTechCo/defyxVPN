@@ -83,6 +83,7 @@
   "splitTunnelReconnectNote": "تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.",
   "splitTunnelTabAddresses": "آدرس‌ها",
   "splitTunnelTabApps": "برنامه‌ها",
+  "pressBackAgainToExit": "برای خروج دوباره دکمه بازگشت را بزنید",
   "splitTunnelSearch": "جستجو",
   "splitTunnelAddressHint": "اینجا تایپ کنید ...",
   "splitTunnelInvalidDomain": "یک دامنه معتبر وارد کنید، مثلاً example.com",

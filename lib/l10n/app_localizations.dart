@@ -594,6 +594,12 @@ abstract class AppLocalizations {
   /// **'APPS'**
   String get splitTunnelTabApps;
 
+  /// Toast shown on the first Back press on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// Split tunnel search field hint
   ///
   /// In en, this message translates to:

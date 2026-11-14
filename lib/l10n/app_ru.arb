@@ -83,6 +83,7 @@
   "splitTunnelReconnectNote": "изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.",
   "splitTunnelTabAddresses": "АДРЕСА",
   "splitTunnelTabApps": "ПРИЛОЖЕНИЯ",
+  "pressBackAgainToExit": "Нажмите «Назад» ещё раз, чтобы выйти",
   "splitTunnelSearch": "Поиск",
   "splitTunnelAddressHint": "введите здесь ...",
   "splitTunnelInvalidDomain": "введите корректный домен, например example.com",

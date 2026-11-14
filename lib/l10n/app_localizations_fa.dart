@@ -260,6 +260,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelTabApps => 'برنامه‌ها';
 
   @override
+  String get pressBackAgainToExit => 'برای خروج دوباره دکمه بازگشت را بزنید';
+
+  @override
   String get splitTunnelSearch => 'جستجو';
 
   @override

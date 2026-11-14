@@ -260,6 +260,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelTabApps => 'ПРИЛОЖЕНИЯ';
 
   @override
+  String get pressBackAgainToExit => 'Нажмите «Назад» ещё раз, чтобы выйти';
+
+  @override
   String get splitTunnelSearch => 'Поиск';
 
   @override

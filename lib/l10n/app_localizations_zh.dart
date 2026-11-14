@@ -257,6 +257,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelTabApps => '应用';
 
   @override
+  String get pressBackAgainToExit => '再按一次返回键退出';
+
+  @override
   String get splitTunnelSearch => '搜索';
 
   @override

@@ -83,6 +83,7 @@
   "splitTunnelReconnectNote": "分流设置的更改将在连接或重新连接后生效。",
   "splitTunnelTabAddresses": "地址",
   "splitTunnelTabApps": "应用",
+  "pressBackAgainToExit": "再按一次返回键退出",
   "splitTunnelSearch": "搜索",
   "splitTunnelAddressHint": "在此输入 ...",
   "splitTunnelInvalidDomain": "请输入有效的域名，例如 example.com",

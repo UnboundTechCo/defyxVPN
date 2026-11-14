@@ -416,6 +416,11 @@
     "description": "Split tunnel tab - apps"
   },
 
+  "pressBackAgainToExit": "Press back again to exit",
+  "@pressBackAgainToExit": {
+    "description": "Toast shown on the first Back press on the home screen"
+  },
+
   "splitTunnelSearch": "Search",
   "@splitTunnelSearch": {
     "description": "Split tunnel search field hint"
