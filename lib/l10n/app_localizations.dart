@@ -606,6 +606,18 @@ abstract class AppLocalizations {
   /// **'type here ...'**
   String get splitTunnelAddressHint;
 
+  /// Error shown when a split tunnel domain rule is not a valid domain
+  ///
+  /// In en, this message translates to:
+  /// **'enter a valid domain, e.g. example.com'**
+  String get splitTunnelInvalidDomain;
+
+  /// Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range
+  ///
+  /// In en, this message translates to:
+  /// **'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8'**
+  String get splitTunnelInvalidGeoip;
+
   /// Split tunnel app path input hint
   ///
   /// In en, this message translates to:

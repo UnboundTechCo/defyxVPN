@@ -426,7 +426,17 @@
     "description": "Split tunnel address input hint"
   },
 
-  "splitTunnelAppHint": "type or route it ...",
+  "splitTunnelInvalidDomain": "enter a valid domain, e.g. example.com",
+  "@splitTunnelInvalidDomain": {
+    "description": "Error shown when a split tunnel domain rule is not a valid domain"
+  },
+
+  "splitTunnelInvalidGeoip": "enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8",
+  "@splitTunnelInvalidGeoip": {
+    "description": "Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range"
+  },
+
+  "splitTunnelAppHint":"type or route it ...",
   "@splitTunnelAppHint": {
     "description": "Split tunnel app path input hint"
   },

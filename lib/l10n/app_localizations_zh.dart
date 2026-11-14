@@ -263,6 +263,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelAddressHint => '在此输入 ...';
 
   @override
+  String get splitTunnelInvalidDomain => '请输入有效的域名，例如 example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      '请输入国家代码、IP 地址或 CIDR 范围，例如 ir、8.8.8.8 或 10.0.0.0/8';
+
+  @override
   String get splitTunnelAppHint => '输入或选择路径 ...';
 
   @override

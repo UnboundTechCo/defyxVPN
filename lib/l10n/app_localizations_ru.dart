@@ -266,6 +266,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelAddressHint => 'введите здесь ...';
 
   @override
+  String get splitTunnelInvalidDomain =>
+      'введите корректный домен, например example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'введите код страны, IP-адрес или диапазон CIDR, например ir, 8.8.8.8 или 10.0.0.0/8';
+
+  @override
   String get splitTunnelAppHint => 'введите или выберите путь ...';
 
   @override

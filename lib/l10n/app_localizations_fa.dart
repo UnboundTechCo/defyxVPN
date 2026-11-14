@@ -266,6 +266,14 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelAddressHint => 'اینجا تایپ کنید ...';
 
   @override
+  String get splitTunnelInvalidDomain =>
+      'یک دامنه معتبر وارد کنید، مثلاً example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'کد کشور، آدرس IP یا محدوده CIDR وارد کنید، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
+
+  @override
   String get splitTunnelAppHint => 'تایپ کنید یا مسیر را انتخاب کنید ...';
 
   @override
