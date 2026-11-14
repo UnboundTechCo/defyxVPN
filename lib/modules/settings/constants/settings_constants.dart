@@ -28,7 +28,7 @@ abstract class SettingsItemTitle {
   static const splitTunnel = 'SPLIT TUNNEL';
   static const killSwitch = 'KILL SWITCH';
   static const deepScan = 'DEEP SCAN';
-  static const healthCheck = 'HEALTH CHECK';
+  static const healthCheck = 'HEALTH MONITOR';
 }
 
 // Navigation Routes
