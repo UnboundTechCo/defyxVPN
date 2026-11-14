@@ -588,7 +588,12 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FlValue *args = fl_method_call_get_args(method_call);
             defyx_core::SetSplitTunnel(LookupString(args, "mode"), LookupString(args, "rules"), LookupString(args, "apps"));
+            defyx_core::SetTunnelDNS(LookupString(args, "dns"));
             FinishWithBool(method_call, defyx_core::StartTunnel());
+        }
+        else if (strcmp(method, "getTunnelDns") == 0)
+        {
+            FinishWithString(method_call, defyx_core::GetTunnelDNS());
         }
         else if (strcmp(method, "stopTunnel") == 0)
         {

@@ -46,14 +46,19 @@ class DesktopTunnel {
     required String mode,
     required String rules,
     required String apps,
+    String dns = '',
   }) async {
     if (!await prepare()) return false;
     try {
-      final Map<String, dynamic> reply = await _request('start', <String, dynamic>{
-        'mode': mode,
-        'rules': rules,
-        'apps': apps,
-      });
+      final Map<String, dynamic> reply = await _request(
+        'start',
+        <String, dynamic>{
+          'mode': mode,
+          'rules': rules,
+          'apps': apps,
+          'dns': dns,
+        },
+      );
       _tunnelUp = reply['ok'] == true;
       if (!_tunnelUp) {
         _lastError = reply['error'] as String? ?? 'the tunnel refused to start';

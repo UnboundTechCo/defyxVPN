@@ -55,13 +55,25 @@ class VpnBridge {
     required String mode,
     required String rules,
     required String apps,
+    String dns = '',
   }) async =>
       (await _methodChannel.invokeMethod<bool>("startTunnel", {
         "mode": mode,
         "rules": rules,
         "apps": apps,
+        if (dns.isNotEmpty) "dns": dns,
       })) ??
       false;
+
+  /// The resolver of the connected step on desktop, which the elevated tunnel
+  /// process needs since it runs no steps itself. Empty when there is none.
+  Future<String> getTunnelDns() async {
+    try {
+      return (await _methodChannel.invokeMethod<String>("getTunnelDns")) ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
 
   Future<void> stopTunnel() async =>
       await _methodChannel.invokeMethod("stopTunnel");

@@ -68,6 +68,7 @@ class TunnelProcess {
               mode: message['mode'] as String? ?? SplitTunnelMode.off.coreValue,
               rules: message['rules'] as String? ?? '[]',
               apps: message['apps'] as String? ?? '[]',
+              dns: message['dns'] as String? ?? '',
             );
             if (!ok) error = 'the core refused to start the tunnel';
             break;

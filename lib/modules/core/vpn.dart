@@ -594,6 +594,7 @@ class VPN {
       mode: splitTunnel.mode.coreValue,
       rules: splitTunnel.rulesPayload,
       apps: splitTunnel.appsPayload,
+      dns: await _vpnBridge.getTunnelDns(),
     );
     if (!isStarted) {
       log.addLog(
