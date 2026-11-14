@@ -458,7 +458,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speedTestConnectionUnstable =>
-      'Your connection was unstable, and the test was interrupted.';
+      'Your connection seems slow or unstable.';
 
   @override
   String get tvHoldOkToReorder => 'Hold OK to reorder';

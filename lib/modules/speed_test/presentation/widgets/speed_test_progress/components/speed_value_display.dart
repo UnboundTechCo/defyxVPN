@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/core/utils/format_number.dart';
+import 'package:defyx_vpn/shared/services/animation_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -40,20 +41,28 @@ class SpeedValueDisplay extends StatelessWidget {
               width: 150.w,
               height: 100.h,
               child: Center(
-                child: Text(
-                  doubleFormatNumber(value),
-                  style: TextStyle(
-                    fontSize: value >= 1000
-                        ? 25.sp
-                        : value >= 100
-                            ? 50.sp
-                            : value >= 10
-                                ? 70.sp
-                                : 90.sp,
-                    fontFamily: AppTheme.fontFamily,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.0,
+                // Counts towards each new value instead of jumping to it.
+                child: TweenAnimationBuilder<double>(
+                  tween: Tween<double>(end: value),
+                  duration: AnimationService().adjustDuration(
+                    const Duration(milliseconds: 400),
+                  ),
+                  curve: Curves.easeOutCubic,
+                  builder: (context, shown, _) => Text(
+                    formatSpeed(shown),
+                    style: TextStyle(
+                      fontSize: shown >= 1000
+                          ? 25.sp
+                          : shown >= 100
+                              ? 50.sp
+                              : shown >= 10
+                                  ? 70.sp
+                                  : 90.sp,
+                      fontFamily: AppTheme.fontFamily,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      height: 1.0,
+                    ),
                   ),
                 ),
               ),

@@ -1,60 +1,71 @@
+import '../../data/speed_test_client.dart';
 import '../../models/speed_test_result.dart';
+import 'speed_measurement_config.dart';
+import 'speed_test_samples.dart';
 
 class ResultsCalculatorService {
-  static SpeedTestResult calculateFinalResults({
-    required List<double> downloadSpeeds,
-    required List<double> uploadSpeeds,
-    required List<int> latencies,
-    required List<Map<String, dynamic>> measurements,
-  }) {
-    final finalDownloadSpeed = _calculatePercentile(downloadSpeeds, 0.9);
-    final finalUploadSpeed = _calculatePercentile(uploadSpeeds, 0.9);
-
-    final ping = latencies.isNotEmpty ? latencies.reduce((a, b) => a < b ? a : b) : 0;
-
-    final latency = _calculatePercentile(latencies.map((e) => e.toDouble()).toList(), 0.5).round();
-
-    int jitter = 0;
-    if (latencies.length >= 2) {
-      List<int> jitterValues = [];
-      for (int i = 1; i < latencies.length; i++) {
-        jitterValues.add((latencies[i] - latencies[i - 1]).abs());
-      }
-      jitter = jitterValues.isNotEmpty
-          ? (jitterValues.reduce((a, b) => a + b) / jitterValues.length).round()
-          : 0;
-    }
-
-    double packetLoss = 0.0;
-    if (latencies.length > 10) {
-      final expectedPackets = measurements
-          .where((m) => m['type'] == 'latency')
-          .fold<int>(0, (sum, m) => sum + (m['numPackets'] as int));
-      packetLoss = ((expectedPackets - latencies.length) / expectedPackets * 100).clamp(0.0, 100.0);
-    }
+  static SpeedTestResult calculate(SpeedTestSamples samples) {
+    final latencies = samples.latenciesMs;
 
     return SpeedTestResult(
-      downloadSpeed: finalDownloadSpeed,
-      uploadSpeed: finalUploadSpeed,
-      ping: ping,
-      latency: latency,
-      jitter: jitter,
-      packetLoss: packetLoss,
+      downloadSpeed: bandwidth(samples.downloads),
+      uploadSpeed: bandwidth(samples.uploads),
+      ping: latencies.isEmpty ? 0 : latencies.reduce((a, b) => a < b ? a : b),
+      latency: percentile(
+        latencies.map((e) => e.toDouble()).toList(),
+        SpeedMeasurementConfig.latencyPercentile,
+      ).round(),
+      jitter: jitter(latencies),
+      packetLoss: samples.latencyAttempts == 0
+          ? 0.0
+          : samples.latencyFailures / samples.latencyAttempts * 100,
     );
   }
 
-  static double _calculatePercentile(List<double> values, double percentile) {
-    if (values.isEmpty) return 0.0;
-
-    final sorted = List<double>.from(values)..sort();
-    final index = (percentile * (sorted.length - 1)).round();
-    return sorted[index.clamp(0, sorted.length - 1)];
+  /// 90th percentile of the transfer speeds. Transfers too short to measure
+  /// are skipped, unless nothing else is left.
+  static double bandwidth(List<TransferSample> transfers) {
+    final measurable = transfers
+        .where((t) => t.duration >= SpeedMeasurementConfig.minRequestDuration)
+        .toList();
+    final source = measurable.isNotEmpty ? measurable : transfers;
+    return percentile(
+      source.map((t) => t.mbps).toList(),
+      SpeedMeasurementConfig.bandwidthPercentile,
+    );
   }
 
-  static bool checkConnectionStability(SpeedTestResult result) {
-    return result.packetLoss < 5.0 &&
-        result.jitter < 50 &&
-        result.downloadSpeed > 0.1 &&
-        result.uploadSpeed > 0.1;
+  /// Average change between consecutive pings.
+  static int jitter(List<int> latenciesMs) {
+    if (latenciesMs.length < 2) return 0;
+    var sum = 0;
+    for (var i = 1; i < latenciesMs.length; i++) {
+      sum += (latenciesMs[i] - latenciesMs[i - 1]).abs();
+    }
+    return (sum / (latenciesMs.length - 1)).round();
+  }
+
+  /// Linear-interpolated percentile, [p] in 0..1.
+  static double percentile(List<double> values, double p) {
+    if (values.isEmpty) return 0.0;
+    final sorted = List<double>.from(values)..sort();
+    final position = p.clamp(0.0, 1.0) * (sorted.length - 1);
+    final lower = position.floor();
+    final upper = position.ceil();
+    if (lower == upper) return sorted[lower];
+    return sorted[lower] + (sorted[upper] - sorted[lower]) * (position - lower);
+  }
+
+  /// False when the connection is too slow, loses too many requests or its
+  /// latency swings too much for the result to be meaningful.
+  static bool isStable(SpeedTestResult result, SpeedTestSamples samples) {
+    final failureRate = samples.requestAttempts == 0
+        ? 0.0
+        : samples.requestFailures / samples.requestAttempts;
+
+    return result.downloadSpeed >= SpeedMeasurementConfig.unstableMinSpeedMbps &&
+        result.uploadSpeed >= SpeedMeasurementConfig.unstableMinSpeedMbps &&
+        failureRate < SpeedMeasurementConfig.unstableFailureRate &&
+        result.jitter <= SpeedMeasurementConfig.unstableJitterMs;
   }
 }
