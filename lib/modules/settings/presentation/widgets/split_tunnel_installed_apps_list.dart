@@ -11,6 +11,8 @@ import '../../models/installed_app.dart';
 import '../../providers/split_tunnel_provider.dart';
 import 'split_tunnel_list_card.dart';
 
+const double _listMaxHeightFactor = 0.5;
+
 class SplitTunnelInstalledAppsList extends ConsumerWidget {
   final String query;
 
@@ -45,6 +47,7 @@ class SplitTunnelInstalledAppsList extends ConsumerWidget {
         if (visibleApps.isEmpty) return const _EmptyMessage();
 
         return SplitTunnelListCard(
+          maxHeight: _listMaxHeightFactor.sh,
           itemCount: visibleApps.length,
           itemBuilder: (context, index) {
             final app = visibleApps[index];
