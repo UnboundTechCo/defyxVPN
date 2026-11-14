@@ -43,6 +43,7 @@ class MainActivity : FlutterActivity() {
     private val VIBRATION_CHANNEL = "com.defyx.vibration"
     private var eventSink: EventChannel.EventSink? = null
     private var pendingVpnResult: MethodChannel.Result? = null
+    private var pendingConnectArgs: Map<String, Any>? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
     private lateinit var vibrationPlugin: VibrationPlugin
     private val iconPermits = Semaphore(2)
@@ -168,27 +169,34 @@ class MainActivity : FlutterActivity() {
         }
     }
     private fun connectVpn(args: Map<String, Any>?, result: MethodChannel.Result) {
-        pendingVpnResult = result
-
         // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
 
         val vpnIntent = VpnService.prepare(this)
         if (vpnIntent != null) {
+            pendingVpnResult = result
+            pendingConnectArgs = args ?: emptyMap()
             try {
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } catch (e: Exception) {
+                pendingVpnResult = null
+                pendingConnectArgs = null
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance()
-                    .startVpn(
-                            this,
-                            args?.get("mode") as? String ?: "off",
-                            args?.get("rules") as? String ?: "[]",
-                            args?.get("apps") as? String ?: "[]"
-                    )
-            result.success(true)
+            startTunnel(args, result)
         }
+    }
+
+    // Answers with whether the tunnel really started, so a failure shows as
+    // one instead of a connection that carries no traffic.
+    private fun startTunnel(args: Map<String, Any>?, result: MethodChannel.Result) {
+        DefyxVpnService.getInstance()
+                .startVpn(
+                        this,
+                        args?.get("mode") as? String ?: "off",
+                        args?.get("rules") as? String ?: "[]",
+                        args?.get("apps") as? String ?: "[]"
+                ) { started -> runOnUiThread { result.success(started) } }
     }
 
     private fun grantVpnPermission(result: MethodChannel.Result) {
@@ -196,6 +204,7 @@ class MainActivity : FlutterActivity() {
             val vpnIntent = VpnService.prepare(this)
             if (vpnIntent != null) {
                 pendingVpnResult = result
+                pendingConnectArgs = null
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } else {
                 result.success(true)
@@ -214,12 +223,16 @@ class MainActivity : FlutterActivity() {
 
         if (requestCode == VPN_REQUEST_CODE) {
             val res = pendingVpnResult ?: return
+            val connectArgs = pendingConnectArgs
             pendingVpnResult = null
+            pendingConnectArgs = null
 
-            if (resultCode == Activity.RESULT_OK) {
-                res.success(true)
-            } else {
+            if (resultCode != Activity.RESULT_OK) {
                 res.success(false)
+            } else if (connectArgs != null) {
+                startTunnel(connectArgs, res)
+            } else {
+                res.success(true)
             }
         }
     }

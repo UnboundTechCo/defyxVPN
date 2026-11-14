@@ -525,12 +525,12 @@ class VPN {
 
     switch (Platform.operatingSystem) {
       case 'android':
-        await _vpnBridge.connectVpn(
-          mode: splitTunnel.mode.coreValue,
-          rules: splitTunnel.rulesPayload,
-          apps: splitTunnel.appsPayload,
-        );
-        return true;
+        return await _vpnBridge.connectVpn(
+              mode: splitTunnel.mode.coreValue,
+              rules: splitTunnel.rulesPayload,
+              apps: splitTunnel.appsPayload,
+            ) ??
+            false;
       case "ios":
         return await _vpnBridge.startTunnel(
           mode: splitTunnel.mode.coreValue,
