@@ -16,6 +16,8 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
@@ -56,7 +58,7 @@ class MainActivity : FlutterActivity() {
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
                 call,
                 result ->
-            lifecycleScope.launch { handleMethodCall(call, result) }
+            lifecycleScope.launch { handleMethodCall(call, MainThreadResult(result)) }
         }
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, STATUS_CHANNEL)
@@ -606,6 +608,32 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+    }
+}
+
+/**
+ * Replies to Flutter on the main thread, where the embedding expects them,
+ * whichever thread the handler finished on. Several handlers finish on
+ * Dispatchers.IO.
+ */
+private class MainThreadResult(private val result: MethodChannel.Result) : MethodChannel.Result {
+    private fun reply(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            block()
+        } else {
+            mainHandler.post(block)
+        }
+    }
+
+    override fun success(value: Any?) = reply { result.success(value) }
+
+    override fun error(code: String, message: String?, details: Any?) =
+            reply { result.error(code, message, details) }
+
+    override fun notImplemented() = reply { result.notImplemented() }
+
+    private companion object {
+        val mainHandler = Handler(Looper.getMainLooper())
     }
 }
 
