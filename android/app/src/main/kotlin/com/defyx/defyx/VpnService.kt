@@ -179,7 +179,7 @@ class DefyxVpnService : VpnService() {
                                 .addAddress("fdfe:dcba:9876::1", 126)
                                 .addRoute("0.0.0.0", 0)
                                 .addRoute("::", 0)
-                                .addDnsServer("1.1.1.1")
+                                .addDnsServer("172.18.0.2")
                                 .setMtu(1500)
                                 .setBlocking(false)
 
