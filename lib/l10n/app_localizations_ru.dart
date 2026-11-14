@@ -468,4 +468,18 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get tvMoveModeHint => '▲ ▼ — переместить · OK — готово';
+
+  @override
+  String get privateDnsTitle => 'Включён персональный DNS-сервер';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'Телефон отправляет DNS-запросы на $host. Если при подключении сайты не открываются, выберите для персонального DNS-сервера «Автоматический режим» или «Отключено» в настройках сети.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'Открыть настройки';
+
+  @override
+  String get privateDnsDismiss => 'Не сейчас';
 }

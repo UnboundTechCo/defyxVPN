@@ -9,6 +9,7 @@ import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/private_dns_dialog.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/models/popular_app.dart';
 import 'package:defyx_vpn/modules/settings/models/split_tunnel_config.dart';
@@ -24,6 +25,7 @@ import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 
@@ -379,6 +381,7 @@ class VPN {
     vpnData?.enableVPN();
     await refreshPing();
     alertService.success();
+    unawaited(_noticePrivateDns());
 
     final settings = _container?.read(settingsProvider.notifier);
     final groupState = _container?.read(groupStateProvider);
@@ -401,6 +404,35 @@ class VPN {
     await _container
         ?.read(flowlineServiceProvider)
         .saveFlowline(offlineMode: false);
+  }
+
+  static const _privateDnsNoticeKey = 'private_dns_notice_host';
+
+  /// With Private DNS set to a hostname, Android sends all DNS to that server
+  /// through the VPN, and servers that only answer their own country or
+  /// customers then fail, so no site opens. The user is told once per
+  /// hostname, since many such servers work fine.
+  Future<void> _noticePrivateDns() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final host = await _vpnBridge.getPrivateDnsHost();
+      if (host.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(_privateDnsNoticeKey) == host) return;
+
+      final context = rootNavigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      await prefs.setString(_privateDnsNoticeKey, host);
+      if (!context.mounted) return;
+
+      final openSettings = await PrivateDnsDialog.show(context, host);
+      if (openSettings == true) {
+        await _vpnBridge.openNetworkSettings();
+      }
+    } catch (e) {
+      debugPrint('Private DNS notice failed: $e');
+    }
   }
 
   Future<void> _onLoading() async {

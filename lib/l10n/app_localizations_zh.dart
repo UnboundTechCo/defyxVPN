@@ -453,4 +453,18 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get tvMoveModeHint => '▲ ▼ 移动 · OK 完成';
+
+  @override
+  String get privateDnsTitle => '已开启私人 DNS';
+
+  @override
+  String privateDnsMessage(String host) {
+    return '您的手机会将 DNS 查询发送到 $host。如果连接后网站无法打开，请在网络设置中将私人 DNS 设为“自动”或“关闭”。';
+  }
+
+  @override
+  String get privateDnsOpenSettings => '打开设置';
+
+  @override
+  String get privateDnsDismiss => '以后再说';
 }

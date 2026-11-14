@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
-import android.net.ConnectivityManager
 import android.net.VpnService
 import android.os.Build
 import android.os.ParcelFileDescriptor
@@ -261,13 +260,8 @@ class DefyxVpnService : VpnService() {
     // the VPN. Servers that only accept local addresses then fail, so the
     // setting is logged to explain such reports.
     private fun logPrivateDns() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return
-        try {
-            val connectivity = getSystemService(ConnectivityManager::class.java) ?: return
-            val network = connectivity.activeNetwork ?: return
-            val server = connectivity.getLinkProperties(network)?.privateDnsServerName ?: return
-            log("Private DNS is set to $server, DNS of other apps goes to it through the VPN")
-        } catch (_: Exception) {}
+        val server = PrivateDns.host(this) ?: return
+        log("Private DNS is set to $server, DNS of other apps goes to it through the VPN")
     }
 
     private fun applySplitApps(builder: Builder, ownPackage: String, mode: String, apps: String) {

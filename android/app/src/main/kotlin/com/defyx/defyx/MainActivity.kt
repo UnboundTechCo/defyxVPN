@@ -152,6 +152,8 @@ class MainActivity : FlutterActivity() {
                         setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 "login" -> login(call.arguments as? Map<String, Any>, result)
                 "loginByCode" -> loginByCode(call.arguments as? Map<String, Any>, result)
+                "getPrivateDnsHost" -> result.success(PrivateDns.host(this) ?: "")
+                "openNetworkSettings" -> result.success(PrivateDns.openSettings(this))
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
