@@ -1,29 +1,30 @@
 import 'dart:async';
+import 'dart:io';
 import 'dart:math';
-import 'package:defyx_vpn/core/network/http_client.dart';
-import 'package:defyx_vpn/core/network/http_client_interface.dart';
-import 'package:defyx_vpn/modules/speed_test/data/api/speed_test_api.dart';
+
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/services/alert_service.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'services/cloudflare_logger_service.dart';
-import 'services/download_measurement_service.dart';
+
+import '../data/speed_test_client.dart';
+import 'services/bandwidth_measurement_service.dart';
 import 'services/latency_measurement_service.dart';
 import 'services/results_calculator_service.dart';
 import 'services/speed_measurement_config.dart';
-import 'services/upload_measurement_service.dart';
+import 'services/speed_test_samples.dart';
 
 enum SpeedTestErrorType { testFailed, connectionUnstable }
 
 class SpeedTestState {
   final SpeedTestStep step;
   final SpeedTestResult result;
-  final double progress;
   final bool isConnectionStable;
   final SpeedTestErrorType? errorType;
-  final String currentPhase;
+
+  /// Smoothed live speed of the running direction, in Mbps.
   final double currentSpeed;
   final bool hadError;
   final bool testCompleted;
@@ -31,10 +32,8 @@ class SpeedTestState {
   const SpeedTestState({
     this.step = SpeedTestStep.ready,
     this.result = const SpeedTestResult(),
-    this.progress = 0.0,
     this.isConnectionStable = true,
     this.errorType,
-    this.currentPhase = '',
     this.currentSpeed = 0.0,
     this.hadError = false,
     this.testCompleted = false,
@@ -43,11 +42,9 @@ class SpeedTestState {
   SpeedTestState copyWith({
     SpeedTestStep? step,
     SpeedTestResult? result,
-    double? progress,
     bool? isConnectionStable,
     SpeedTestErrorType? errorType,
     bool clearErrorMessage = false,
-    String? currentPhase,
     double? currentSpeed,
     bool? hadError,
     bool? testCompleted,
@@ -55,10 +52,8 @@ class SpeedTestState {
     return SpeedTestState(
       step: step ?? this.step,
       result: result ?? this.result,
-      progress: progress ?? this.progress,
       isConnectionStable: isConnectionStable ?? this.isConnectionStable,
       errorType: clearErrorMessage ? null : (errorType ?? this.errorType),
-      currentPhase: currentPhase ?? this.currentPhase,
       currentSpeed: currentSpeed ?? this.currentSpeed,
       hadError: hadError ?? this.hadError,
       testCompleted: testCompleted ?? this.testCompleted,
@@ -67,134 +62,82 @@ class SpeedTestState {
 }
 
 final speedTestProvider =
-    StateNotifierProvider<SpeedTestNotifier, SpeedTestState>((ref) {
-      final httpClient = ref.read(httpClientProvider);
-      return SpeedTestNotifier(httpClient, ref);
-    });
+    StateNotifierProvider<SpeedTestNotifier, SpeedTestState>(
+      (ref) => SpeedTestNotifier(ref),
+    );
+
+/// One speed test run. Cancelling it aborts its requests, and a cancelled run
+/// never writes to the state again, so a stopped run can't leak values into
+/// the next one.
+class _TestRun {
+  final CancelToken cancelToken = CancelToken();
+  final SpeedTestSamples samples = SpeedTestSamples();
+  final String measurementId =
+      (Random().nextDouble() * 1e16).round().toString();
+
+  bool get isCancelled => cancelToken.isCancelled;
+
+  void cancel() {
+    if (!isCancelled) cancelToken.cancel();
+  }
+}
 
 class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
-  final IHttpClient _httpClient;
-  final Ref _ref;
-  late final SpeedTestApi _api;
-  late final CloudflareLoggerService _logger;
-  late final AlertService _alertService;
-
-  bool _isTestCanceled = false;
-  Timer? _testTimer;
-  final List<StreamSubscription> _activeSubscriptions = [];
-  ProviderSubscription<ConnectionState>? _connectionSubscription;
-
-  String _measurementId = '';
-  final List<double> _downloadSpeeds = [];
-  final List<double> _uploadSpeeds = [];
-  final List<int> _latencies = [];
-
-  SpeedTestNotifier(this._httpClient, this._ref)
-    : super(const SpeedTestState()) {
-    final dio = (_httpClient as HttpClient).dio;
-
-    dio.options.connectTimeout = SpeedMeasurementConfig.connectTimeout;
-    dio.options.receiveTimeout = SpeedMeasurementConfig.receiveTimeout;
-    dio.options.sendTimeout = SpeedMeasurementConfig.sendTimeout;
-    dio.options.headers['User-Agent'] = 'Defyx VPN Speed Test';
-
-    _api = SpeedTestApi(dio);
-    _logger = CloudflareLoggerService(_api);
-    _alertService = AlertService();
+  SpeedTestNotifier(this._ref) : super(const SpeedTestState()) {
     _alertService.init();
   }
 
-  String _generateMeasurementId() {
-    return (Random().nextDouble() * 1e16).round().toString();
-  }
+  final Ref _ref;
+  final AlertService _alertService = AlertService();
+  final Stopwatch _liveUpdateClock = Stopwatch();
+  _TestRun? _run;
+  ProviderSubscription<ConnectionState>? _connectionSubscription;
 
   @override
   void dispose() {
-    _stopTestOnly();
+    _cancelRun();
     _stopConnectionMonitoring();
     super.dispose();
   }
 
   void stopAndResetTest() {
-    _isTestCanceled = true;
-    _testTimer?.cancel();
-    _testTimer = null;
-
+    _cancelRun();
     _stopConnectionMonitoring();
-
-    for (final subscription in _activeSubscriptions) {
-      subscription.cancel();
-    }
-    _activeSubscriptions.clear();
-
-    _downloadSpeeds.clear();
-    _uploadSpeeds.clear();
-    _latencies.clear();
-
     state = const SpeedTestState();
-
     debugPrint('Speed test stopped and reset');
   }
 
-  void _stopTestOnly() {
-    _isTestCanceled = true;
-    _testTimer?.cancel();
-    _testTimer = null;
-
-    for (final subscription in _activeSubscriptions) {
-      subscription.cancel();
-    }
-    _activeSubscriptions.clear();
-
-    _downloadSpeeds.clear();
-    _uploadSpeeds.clear();
-    _latencies.clear();
-
-    debugPrint('Speed test stopped (without state reset)');
-  }
-
   Future<void> startTest() async {
-    if (!_isTestCanceled) {
-      stopAndResetTest();
-    }
+    _cancelRun();
+    final run = _TestRun();
+    _run = run;
+    debugPrint('Cloudflare speed test started');
 
-    _isTestCanceled = false;
-    debugPrint('Cloudflare Speed Test Started');
-    _measurementId = _generateMeasurementId();
-
-    state = state.copyWith(
-      step: SpeedTestStep.loading,
-      progress: 0.0,
-      result: const SpeedTestResult(),
-      currentPhase: 'Initializing...',
-      currentSpeed: 0.0,
-      clearErrorMessage: true,
-      isConnectionStable: true,
-      hadError: false,
-    );
-
-    _downloadSpeeds.clear();
-    _uploadSpeeds.clear();
-    _latencies.clear();
-
+    state = const SpeedTestState(step: SpeedTestStep.loading);
     _startConnectionMonitoring();
 
+    SpeedTestClient? client;
     try {
-      await _runMeasurementSequence();
+      client = await SpeedTestClient.create(
+        cancelToken: run.cancelToken,
+        routeThroughVpnProxy: _shouldUseVpnProxy(),
+      );
+      await _runMeasurements(run, client);
+      if (run.isCancelled) return;
 
-      if (_isTestCanceled) {
-        debugPrint('Speed test was canceled');
-        _stopConnectionMonitoring();
-        return;
-      }
-
-      _calculateFinalResults();
-      _checkConnectionStability();
-      debugPrint('Speed test completed successfully');
       _stopConnectionMonitoring();
+      final result = _finish(run);
+
+      final loggingClient = client;
+      client = null;
+      unawaited(
+        loggingClient
+            .logResults(_logData(run, result))
+            .whenComplete(loggingClient.close),
+      );
     } catch (e) {
+      if (run.isCancelled) return;
       debugPrint('Speed test error: $e');
-      _stopConnectionMonitoring();
       _alertService.error();
       state = state.copyWith(
         errorType: SpeedTestErrorType.testFailed,
@@ -203,7 +146,34 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         currentSpeed: 0.0,
         hadError: true,
       );
+    } finally {
+      client?.close();
+      if (identical(_run, run)) _stopConnectionMonitoring();
     }
+  }
+
+  void completeTest() {
+    state = state.copyWith(
+      step: SpeedTestStep.ready,
+      clearErrorMessage: !state.hadError,
+      hadError: false,
+    );
+  }
+
+  void _cancelRun() {
+    _run?.cancel();
+    _run = null;
+  }
+
+  /// Android keeps the app's own traffic outside the tunnel, and Dart's HTTP
+  /// client ignores the system proxy used on Windows and Linux. On those
+  /// platforms the test only goes through the VPN via the core's local proxy.
+  /// On iOS and macOS the packet tunnel already carries the app's traffic.
+  bool _shouldUseVpnProxy() {
+    final connected =
+        _ref.read(connectionStateProvider).status == ConnectionStatus.connected;
+    return connected &&
+        (Platform.isAndroid || Platform.isWindows || Platform.isLinux);
   }
 
   void _startConnectionMonitoring() {
@@ -215,9 +185,7 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         debugPrint('Connection status during test: $status');
 
         if (!_isConnectionValid(status) && _isTestRunning()) {
-          debugPrint(
-            'Connection became invalid during speed test, stopping...',
-          );
+          debugPrint('Connection became invalid during speed test, stopping...');
           stopAndResetTest();
         }
       },
@@ -240,231 +208,142 @@ class SpeedTestNotifier extends StateNotifier<SpeedTestState> {
         state.step == SpeedTestStep.upload;
   }
 
-  Future<void> _runMeasurementSequence() async {
-    String currentPhase = '';
+  Future<void> _runMeasurements(_TestRun run, SpeedTestClient client) async {
+    final latency = LatencyMeasurementService(
+      client: client,
+      measurementId: run.measurementId,
+      samples: run.samples,
+      isCancelled: () => run.isCancelled,
+      onSample: () => _publishResult(run),
+    );
 
-    for (int i = 0; i < SpeedMeasurementConfig.measurements.length; i++) {
-      if (_isTestCanceled) {
-        debugPrint('Measurement sequence canceled');
-        return;
+    MeasurementType? phase;
+    BandwidthMeasurementService? bandwidth;
+
+    for (final step in SpeedMeasurementConfig.measurements) {
+      if (run.isCancelled) return;
+
+      if (step.type != phase) {
+        if (phase != null) await _endPhase(run, phase);
+        if (run.isCancelled) return;
+
+        phase = step.type;
+        bandwidth = phase == MeasurementType.latency
+            ? null
+            : BandwidthMeasurementService(
+                type: phase,
+                client: client,
+                measurementId: run.measurementId,
+                samples: run.samples,
+                isCancelled: () => run.isCancelled,
+                onLiveSpeed: (mbps) => _publishLiveSpeed(run, mbps),
+                onSample: () => _publishResult(run),
+              );
+        _liveUpdateClock
+          ..stop()
+          ..reset();
+        _setState(
+          run,
+          state.copyWith(step: _stepFor(phase), currentSpeed: 0.0),
+        );
       }
 
-      final measurement = SpeedMeasurementConfig.measurements[i];
-      final progress = (i + 1) / SpeedMeasurementConfig.totalMeasurements;
-      final type = measurement['type'] as String;
-
-      bool needsPhaseChange = false;
-      SpeedTestStep? nextStep;
-
-      if (type == 'latency' && currentPhase != 'loading') {
-        needsPhaseChange = true;
-        nextStep = SpeedTestStep.loading;
-        currentPhase = 'loading';
-      } else if (type == 'download' && currentPhase != 'download') {
-        needsPhaseChange = true;
-        nextStep = SpeedTestStep.download;
-        currentPhase = 'download';
-      } else if (type == 'upload' && currentPhase != 'upload') {
-        needsPhaseChange = true;
-        nextStep = SpeedTestStep.upload;
-        currentPhase = 'upload';
+      if (bandwidth == null) {
+        await latency.run(step);
+      } else {
+        await bandwidth.run(step);
       }
+    }
 
-      if (needsPhaseChange && i > 0 && state.progress > 0) {
-        state = state.copyWith(progress: 0.0);
-        await Future.delayed(const Duration(milliseconds: 1200));
+    if (phase != null && !run.isCancelled) await _endPhase(run, phase);
+  }
 
-        if (_isTestCanceled) {
-          debugPrint('Measurement sequence canceled during transition');
-          return;
-        }
-      }
+  /// Shows the final value of a direction for a moment, so the big number
+  /// ends on the same value as the result below it.
+  Future<void> _endPhase(_TestRun run, MeasurementType phase) async {
+    if (phase == MeasurementType.latency) return;
+    final result = state.result;
+    _setState(
+      run,
+      state.copyWith(
+        currentSpeed: phase == MeasurementType.download
+            ? result.downloadSpeed
+            : result.uploadSpeed,
+      ),
+    );
+    await Future<void>.delayed(SpeedMeasurementConfig.phaseResultHold);
+  }
 
-      if (needsPhaseChange && nextStep != null) {
-        state = state.copyWith(step: nextStep);
-      }
-
-      debugPrint(
-        'Running measurement ${i + 1}/${SpeedMeasurementConfig.totalMeasurements}: $type',
-      );
-
-      switch (type) {
-        case 'latency':
-          await _runLatencyMeasurement(measurement);
-          break;
-        case 'download':
-          await _runDownloadMeasurement(measurement, progress);
-          break;
-        case 'upload':
-          await _runUploadMeasurement(measurement, progress);
-          break;
-      }
-
-      await Future.delayed(SpeedMeasurementConfig.measurementDelay);
+  static SpeedTestStep _stepFor(MeasurementType type) {
+    switch (type) {
+      case MeasurementType.latency:
+        return SpeedTestStep.loading;
+      case MeasurementType.download:
+        return SpeedTestStep.download;
+      case MeasurementType.upload:
+        return SpeedTestStep.upload;
     }
   }
 
-  Future<void> _runLatencyMeasurement(Map<String, dynamic> config) async {
-    final numPackets = config['numPackets'] as int;
-    state = state.copyWith(
-      step: SpeedTestStep.loading,
-      currentPhase: 'Measuring latency... ($numPackets packets)',
+  void _publishResult(_TestRun run) {
+    _setState(
+      run,
+      state.copyWith(result: ResultsCalculatorService.calculate(run.samples)),
     );
-
-    final service = LatencyMeasurementService(
-      api: _api,
-      measurementId: _measurementId,
-      isCanceledCheck: (reset) => _isTestCanceled,
-      onMetricsUpdate: (ping, latency, jitter) {
-        state = state.copyWith(
-          result: state.result.copyWith(
-            ping: ping,
-            latency: latency,
-            jitter: jitter,
-          ),
-        );
-      },
-    );
-
-    await service.runMeasurement(config);
-    _latencies.addAll(service.latencies);
   }
 
-  Future<void> _runDownloadMeasurement(
-    Map<String, dynamic> config,
-    double progress,
-  ) async {
-    final bytes = config['bytes'] as int;
-    final sizeLabel = SpeedMeasurementConfig.formatBytes(bytes);
-
-    state = state.copyWith(
-      step: SpeedTestStep.download,
-      currentPhase: 'Download test: $sizeLabel',
-      progress: progress,
-    );
-
-    final service = DownloadMeasurementService(
-      api: _api,
-      measurementId: _measurementId,
-      isCanceledCheck: (reset) => _isTestCanceled,
-      onSpeedUpdate: (speed) {
-        state = state.copyWith(currentSpeed: speed);
-      },
-      onMetricsUpdate:
-          (percentileSpeed, avgSpeed, currentPing, avgLatency, jitter) {
-            state = state.copyWith(
-              currentSpeed: avgSpeed,
-              result: state.result.copyWith(
-                downloadSpeed: percentileSpeed,
-                ping: currentPing,
-                latency: avgLatency,
-                jitter: jitter,
-              ),
-            );
-          },
-      latencies: _latencies,
-    );
-
-    await service.runMeasurement(config);
-    _downloadSpeeds.addAll(service.downloadSpeeds);
-  }
-
-  Future<void> _runUploadMeasurement(
-    Map<String, dynamic> config,
-    double progress,
-  ) async {
-    final bytes = config['bytes'] as int;
-    final sizeLabel = SpeedMeasurementConfig.formatBytes(bytes);
-
-    state = state.copyWith(
-      step: SpeedTestStep.upload,
-      currentPhase: 'Upload test: $sizeLabel',
-      progress: progress,
-    );
-
-    final service = UploadMeasurementService(
-      api: _api,
-      measurementId: _measurementId,
-      isCanceledCheck: (reset) => _isTestCanceled,
-      onSpeedUpdate: (speed) {
-        state = state.copyWith(currentSpeed: speed);
-      },
-      onMetricsUpdate: (percentileSpeed, avgSpeed, jitter, packetLoss) {
-        state = state.copyWith(
-          currentSpeed: avgSpeed,
-          result: state.result.copyWith(
-            uploadSpeed: percentileSpeed,
-            jitter: jitter,
-            packetLoss: packetLoss,
-          ),
-        );
-      },
-      latencies: _latencies,
-      measurements: SpeedMeasurementConfig.measurements,
-    );
-
-    await service.runMeasurement(config);
-    _uploadSpeeds.addAll(service.uploadSpeeds);
-  }
-
-  void _calculateFinalResults() {
-    final result = ResultsCalculatorService.calculateFinalResults(
-      downloadSpeeds: _downloadSpeeds,
-      uploadSpeeds: _uploadSpeeds,
-      latencies: _latencies,
-      measurements: SpeedMeasurementConfig.measurements,
-    );
-
-    state = state.copyWith(
-      result: result,
-      progress: 1.0,
-      currentPhase: 'Test completed',
-      testCompleted: true,
-    );
-
-    _logger.logResults(measurementId: _measurementId, result: result);
-  }
-
-  void _checkConnectionStability() {
-    final isStable = ResultsCalculatorService.checkConnectionStability(
-      state.result,
-    );
-
-    if (!isStable) {
-      _alertService.error();
-      state = state.copyWith(
-        step: SpeedTestStep.ready,
-        isConnectionStable: false,
-        errorType: SpeedTestErrorType.connectionUnstable,
-        hadError: true,
-      );
-    } else {
-      state = state.copyWith(
-        step: SpeedTestStep.ready,
-        clearErrorMessage: true,
-        hadError: false,
-      );
+  /// Limits live updates to a few per second; the gauge animates in between.
+  void _publishLiveSpeed(_TestRun run, double mbps) {
+    if (_liveUpdateClock.isRunning &&
+        _liveUpdateClock.elapsed < SpeedMeasurementConfig.liveSpeedUiInterval) {
+      return;
     }
+    _liveUpdateClock
+      ..reset()
+      ..start();
+    _setState(run, state.copyWith(currentSpeed: mbps));
   }
 
-  void resetTest() {
-    stopAndResetTest();
+  void _setState(_TestRun run, SpeedTestState next) {
+    if (run.isCancelled || !mounted) return;
+    state = next;
   }
 
-  void retryConnection() {
-    stopAndResetTest();
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (!_isTestCanceled) {
-        startTest();
-      }
-    });
-  }
+  SpeedTestResult _finish(_TestRun run) {
+    final result = ResultsCalculatorService.calculate(run.samples);
+    final stable = ResultsCalculatorService.isStable(result, run.samples);
+    debugPrint(
+      'Speed test completed: '
+      'download ${result.downloadSpeed.toStringAsFixed(2)} Mbps, '
+      'upload ${result.uploadSpeed.toStringAsFixed(2)} Mbps, '
+      'ping ${result.ping} ms, latency ${result.latency} ms, '
+      'jitter ${result.jitter} ms, '
+      'failed requests ${run.samples.requestFailures}/${run.samples.requestAttempts}, '
+      'stable: $stable',
+    );
 
-  void completeTest() {
+    if (!stable) _alertService.error();
     state = state.copyWith(
       step: SpeedTestStep.ready,
-      clearErrorMessage: !state.hadError,
-      hadError: false,
+      result: result,
+      currentSpeed: 0.0,
+      testCompleted: true,
+      isConnectionStable: stable,
+      errorType: stable ? null : SpeedTestErrorType.connectionUnstable,
+      clearErrorMessage: stable,
+      hadError: !stable,
     );
+    return result;
   }
+
+  static Map<String, dynamic> _logData(_TestRun run, SpeedTestResult result) => {
+    'measId': run.measurementId,
+    'downloadMbps': result.downloadSpeed,
+    'uploadMbps': result.uploadSpeed,
+    'latencyMs': result.latency,
+    'jitterMs': result.jitter,
+    'packetLossPercent': result.packetLoss,
+    'timestamp': DateTime.now().toIso8601String(),
+    'client': 'DefyxVPN-Flutter',
+  };
 }

@@ -473,7 +473,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get speedTestConnectionUnstable =>
-      'Ваше соединение было нестабильным, и тест был прерван.';
+      'Похоже, ваше соединение медленное или нестабильное.';
 
   @override
   String get tvHoldOkToReorder => 'Удерживайте OK, чтобы изменить порядок';

@@ -741,9 +741,9 @@
     "description": "Speed test error message - generic failure"
   },
 
-  "speedTestConnectionUnstable": "Your connection was unstable, and the test was interrupted.",
+  "speedTestConnectionUnstable": "Your connection seems slow or unstable.",
   "@speedTestConnectionUnstable": {
-    "description": "Speed test error message - connection unstable"
+    "description": "Speed test message shown after a completed test when the connection was too slow or unstable"
   },
 
   "tvHoldOkToReorder": "Hold OK to reorder",
