@@ -180,17 +180,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         builder: (context, state, child) {
+          final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
           return _ShellBackHandler(
             child: Scaffold(
               extendBody: true,
               body: Stack(
                 children: [
                   child,
-                  const Positioned(
+                  Positioned(
                     bottom: 0,
                     left: 0,
                     right: 0,
-                    child: DefyxNavBar(),
+                    child: Visibility(
+                      visible: !isKeyboardOpen,
+                      maintainState: true,
+                      child: const DefyxNavBar(),
+                    ),
                   ),
                 ],
               ),
