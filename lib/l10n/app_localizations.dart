@@ -966,10 +966,10 @@ abstract class AppLocalizations {
   /// **'Speed test failed. Please try again.'**
   String get speedTestFailed;
 
-  /// Speed test error message - connection unstable
+  /// Speed test message shown after a completed test when the connection was too slow or unstable
   ///
   /// In en, this message translates to:
-  /// **'Your connection was unstable, and the test was interrupted.'**
+  /// **'Your connection seems slow or unstable.'**
   String get speedTestConnectionUnstable;
 
   /// TV remote hint under the connection method list: hold the remote's OK button on a method to start moving it

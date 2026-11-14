@@ -446,7 +446,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get speedTestFailed => '速度测试失败，请重试。';
 
   @override
-  String get speedTestConnectionUnstable => '您的连接不稳定，测试已中断。';
+  String get speedTestConnectionUnstable => '您的网络连接似乎较慢或不稳定。';
 
   @override
   String get tvHoldOkToReorder => '长按 OK 键调整顺序';

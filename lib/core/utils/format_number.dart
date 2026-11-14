@@ -31,3 +31,17 @@ String numFormatNumber(num value) {
   }
   return rounded.toString();
 }
+
+/// Formats a speed in Mbps: whole numbers from 1 up, one decimal below 1.
+String formatSpeed(num mbps) {
+  if (!mbps.isFinite || mbps <= 0) return '0';
+  final oneDecimal = double.parse(mbps.toStringAsFixed(1));
+  if (oneDecimal == 0) return '0';
+  if (oneDecimal < 1) return oneDecimal.toStringAsFixed(1);
+  return _groupThousands(mbps.round());
+}
+
+String _groupThousands(int value) => value.toString().replaceAllMapped(
+  RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+  (Match m) => '${m[1]},',
+);

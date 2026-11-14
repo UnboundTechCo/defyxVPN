@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/modules/speed_test/application/speed_test_provider.dart';
+import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_gauge_scale.dart';
 import 'package:defyx_vpn/modules/speed_test/presentation/widgets/speed_test_progress/speed_test_progress_indicator.dart';
 import 'package:defyx_vpn/modules/speed_test/models/speed_test_result.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -19,8 +20,6 @@ class SpeedTestDownloadState extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final speedProgress = (state.currentSpeed / 100).clamp(0.0, 1.0);
-    final combinedProgress = (state.progress * 0.5) + (speedProgress * 0.5);
     final connectionState = ref.watch(connectionStateProvider);
     final l10n = AppLocalizations.of(context);
 
@@ -30,12 +29,10 @@ class SpeedTestDownloadState extends ConsumerWidget {
       children: [
         Flexible(
           child: SpeedTestProgressIndicator(
-            progress: combinedProgress,
+            progress: SpeedGaugeScale.fractionFor(state.currentSpeed),
             color: AppColors.downloadColor,
             showButton: false,
-            centerValue: state.currentSpeed > 0
-                ? state.currentSpeed
-                : state.result.downloadSpeed,
+            centerValue: state.currentSpeed,
             centerUnit: l10n.mbps,
             subtitle: l10n.download,
             result: state.result,
