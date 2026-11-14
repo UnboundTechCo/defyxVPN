@@ -65,6 +65,7 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
       child: SafeArea(
         bottom: false,
         child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),

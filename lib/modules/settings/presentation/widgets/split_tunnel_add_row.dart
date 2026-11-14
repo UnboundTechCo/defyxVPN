@@ -99,6 +99,8 @@ class _SplitTunnelAddRowState extends State<SplitTunnelAddRow> {
             child: TextField(
               controller: _controller,
               onChanged: (_) => _clearError(),
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               onSubmitted: (_) => _submit(),
               textInputAction: TextInputAction.done,
               style: TextStyle(
