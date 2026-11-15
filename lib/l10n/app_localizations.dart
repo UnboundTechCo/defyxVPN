@@ -966,10 +966,10 @@ abstract class AppLocalizations {
   /// **'Speed test failed. Please try again.'**
   String get speedTestFailed;
 
-  /// Speed test error message - connection unstable
+  /// Speed test message shown after a completed test when the connection was too slow or unstable
   ///
   /// In en, this message translates to:
-  /// **'Your connection was unstable, and the test was interrupted.'**
+  /// **'Your connection seems slow or unstable.'**
   String get speedTestConnectionUnstable;
 
   /// TV remote hint under the connection method list: hold the remote's OK button on a method to start moving it
@@ -983,6 +983,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'▲ ▼ to move · OK to finish'**
   String get tvMoveModeHint;
+
+  /// Title of the notice shown after connecting on Android when Private DNS is set to a hostname
+  ///
+  /// In en, this message translates to:
+  /// **'Private DNS is on'**
+  String get privateDnsTitle;
+
+  /// Body of the Private DNS notice. Use the names Android shows for the Private DNS options in this language.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone sends its DNS lookups to {host}. If websites do not open while you are connected, set Private DNS to Automatic or Off in your network settings.'**
+  String privateDnsMessage(String host);
+
+  /// Button of the Private DNS notice that opens the Android network settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get privateDnsOpenSettings;
+
+  /// Button that closes the Private DNS notice
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get privateDnsDismiss;
 }
 
 class _AppLocalizationsDelegate

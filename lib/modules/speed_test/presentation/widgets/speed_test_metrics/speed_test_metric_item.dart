@@ -12,6 +12,7 @@ class MetricItemCompact extends StatelessWidget {
   final num value;
   final String unit;
   final ConnectionStatus connectionStatus;
+  final String Function(num value) format;
 
   const MetricItemCompact({
     super.key,
@@ -19,6 +20,7 @@ class MetricItemCompact extends StatelessWidget {
     required this.value,
     this.unit = 'Mbps',
     required this.connectionStatus,
+    this.format = numFormatNumber,
   });
 
   Color _getColorByStatus(ConnectionStatus status) {
@@ -80,7 +82,7 @@ class MetricItemCompact extends StatelessWidget {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: numFormatNumber(value),
+                      text: format(value),
                       style: TextStyle(
                         fontSize: 26.sp,
                         fontFamily: AppTheme.fontFamily,

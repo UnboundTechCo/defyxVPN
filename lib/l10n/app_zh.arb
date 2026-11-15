@@ -145,7 +145,11 @@
   "connectionRequired": "需要连接",
   "connectionRequiredDescription": "要完成安全的登录或注册过程，您必须首先使用可用的连接方法之一建立连接。",
   "speedTestFailed": "速度测试失败，请重试。",
-  "speedTestConnectionUnstable": "您的连接不稳定，测试已中断。",
+  "speedTestConnectionUnstable": "您的网络连接似乎较慢或不稳定。",
   "tvHoldOkToReorder": "长按 OK 键调整顺序",
-  "tvMoveModeHint": "▲ ▼ 移动 · OK 完成"
+  "tvMoveModeHint": "▲ ▼ 移动 · OK 完成",
+  "privateDnsTitle": "已开启私人 DNS",
+  "privateDnsMessage": "您的手机会将 DNS 查询发送到 {host}。如果连接后网站无法打开，请在网络设置中将私人 DNS 设为“自动”或“关闭”。",
+  "privateDnsOpenSettings": "打开设置",
+  "privateDnsDismiss": "以后再说"
 }

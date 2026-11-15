@@ -726,9 +726,9 @@
     "description": "Speed test error message - generic failure"
   },
 
-  "speedTestConnectionUnstable": "Your connection was unstable, and the test was interrupted.",
+  "speedTestConnectionUnstable": "Your connection seems slow or unstable.",
   "@speedTestConnectionUnstable": {
-    "description": "Speed test error message - connection unstable"
+    "description": "Speed test message shown after a completed test when the connection was too slow or unstable"
   },
 
   "tvHoldOkToReorder": "Hold OK to reorder",
@@ -739,5 +739,31 @@
   "tvMoveModeHint": "▲ ▼ to move · OK to finish",
   "@tvMoveModeHint": {
     "description": "TV remote hint while a connection method is being moved: Up/Down move it, OK ends moving"
+  },
+
+  "privateDnsTitle": "Private DNS is on",
+  "@privateDnsTitle": {
+    "description": "Title of the notice shown after connecting on Android when Private DNS is set to a hostname"
+  },
+
+  "privateDnsMessage": "Your phone sends its DNS lookups to {host}. If websites do not open while you are connected, set Private DNS to Automatic or Off in your network settings.",
+  "@privateDnsMessage": {
+    "description": "Body of the Private DNS notice. Use the names Android shows for the Private DNS options in this language.",
+    "placeholders": {
+      "host": {
+        "type": "String",
+        "example": "dns.example.com"
+      }
+    }
+  },
+
+  "privateDnsOpenSettings": "Open settings",
+  "@privateDnsOpenSettings": {
+    "description": "Button of the Private DNS notice that opens the Android network settings"
+  },
+
+  "privateDnsDismiss": "Not now",
+  "@privateDnsDismiss": {
+    "description": "Button that closes the Private DNS notice"
   }
 }

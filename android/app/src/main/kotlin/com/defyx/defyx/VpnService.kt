@@ -165,12 +165,19 @@ class DefyxVpnService : VpnService() {
         return builder.build()
     }
 
-    fun startVpn(context: Context, splitMode: String, splitRules: String, splitApps: String) {
+    fun startVpn(
+            context: Context,
+            splitMode: String,
+            splitRules: String,
+            splitApps: String,
+            onResult: (Boolean) -> Unit = {}
+    ) {
         CoroutineScope(Dispatchers.IO).launch {
             Log.d(TAG, "startVpn called")
             try {
                 notifyVpnStatus("connecting")
                 startAsForeground("DefyxVPN", "Connecting...")
+                logPrivateDns()
 
                 val builder =
                         Builder()
@@ -179,7 +186,7 @@ class DefyxVpnService : VpnService() {
                                 .addAddress("fdfe:dcba:9876::1", 126)
                                 .addRoute("0.0.0.0", 0)
                                 .addRoute("::", 0)
-                                .addDnsServer("1.1.1.1")
+                                .addDnsServer("172.18.0.2")
                                 .setMtu(1500)
                                 .setBlocking(false)
 
@@ -197,6 +204,7 @@ class DefyxVpnService : VpnService() {
                     withContext(Dispatchers.Main) { saveVpnState(false) }
                     updateNotification("DefyxVPN", "Connection failed")
                     notifyVpnStatus("disconnected")
+                    onResult(false)
                     return@launch
                 }
 
@@ -218,17 +226,42 @@ class DefyxVpnService : VpnService() {
                     notifyVpnStatus("connected")
                 } else {
                     Log.e(TAG, "Tunnel start failed")
-                    tunnelFd = -1
+                    releaseTunnel()
                     updateNotification("DefyxVPN", "Connection failed")
                     notifyVpnStatus("disconnected")
                 }
+                onResult(success)
             } catch (e: Exception) {
                 Log.e(TAG, "startVpn failed: ${e.message}", e)
+                releaseTunnel()
                 updateNotification("DefyxVPN", "Connection failed")
                 notifyVpnStatus("disconnected")
                 withContext(Dispatchers.Main) { saveVpnState(false) }
+                onResult(false)
             }
         }
+    }
+
+    // An established interface that no tunnel reads from takes all traffic of
+    // the device and drops it, so it is closed as soon as the tunnel fails.
+    private fun releaseTunnel() {
+        try {
+            vpnInterface?.close()
+        } catch (_: Exception) {}
+        vpnInterface = null
+        try {
+            Android.stopTunnel()
+        } catch (_: Exception) {}
+        tunnelFd = -1
+        isVpnConnected = false
+    }
+
+    // A Private DNS hostname makes Android send all DNS to that server through
+    // the VPN. Servers that only accept local addresses then fail, so the
+    // setting is logged to explain such reports.
+    private fun logPrivateDns() {
+        val server = PrivateDns.host(this) ?: return
+        log("Private DNS is set to $server, DNS of other apps goes to it through the VPN")
     }
 
     private fun applySplitApps(builder: Builder, ownPackage: String, mode: String, apps: String) {

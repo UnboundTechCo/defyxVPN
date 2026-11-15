@@ -16,6 +16,10 @@ void StopTun2Socks();
 bool StartTunnel();
 void SetSplitTunnel(const std::string& mode, const std::string& rules, const std::string& apps);
 void StopTunnel();
+// Resolver of the connected step, for the tunnel process; empty when the
+// library is too old to say.
+std::string GetTunnelDNS();
+void SetTunnelDNS(const std::string& address);
 void Stop();
 long long MeasurePing();
 std::string GetFlag();

@@ -8,7 +8,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
     private let tunnelMask = "255.255.255.252"
     private let tunnelAddress6 = "fdfe:dcba:9876::1"
     private let tunnelPrefix6: NSNumber = 126
-    private let tunnelDns = "1.1.1.1"
+    private let tunnelDns = "172.18.0.2"
     private let tunnelMtu = 1500
 
     private var appliedSettings: NEPacketTunnelNetworkSettings?

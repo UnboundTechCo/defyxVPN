@@ -461,11 +461,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get speedTestConnectionUnstable =>
-      'Ваше соединение было нестабильным, и тест был прерван.';
+      'Похоже, ваше соединение медленное или нестабильное.';
 
   @override
   String get tvHoldOkToReorder => 'Удерживайте OK, чтобы изменить порядок';
 
   @override
   String get tvMoveModeHint => '▲ ▼ — переместить · OK — готово';
+
+  @override
+  String get privateDnsTitle => 'Включён персональный DNS-сервер';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'Телефон отправляет DNS-запросы на $host. Если при подключении сайты не открываются, выберите для персонального DNS-сервера «Автоматический режим» или «Отключено» в настройках сети.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'Открыть настройки';
+
+  @override
+  String get privateDnsDismiss => 'Не сейчас';
 }
