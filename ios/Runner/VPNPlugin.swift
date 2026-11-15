@@ -125,7 +125,7 @@ class VpnPlugin: VpnStatusDelegate {
 
     private func disconnectVPN(_ result: @escaping FlutterResult) {
         VpnService.shared.stopVPN { _ in
-            result(true)
+            DispatchQueue.main.async { result(true) }
         }
     }
 
@@ -399,11 +399,20 @@ class VpnPlugin: VpnStatusDelegate {
             result(response)
         }
     }
+    // The core stops before the tunnel goes down, and Flutter gets a single
+    // reply once both are done. A tunnel that does not answer within a few
+    // seconds is taken down anyway.
     private func stopVPN(_ result: @escaping FlutterResult) {
-        VpnService.shared.sendTunnelMessage(["command": "STOP_VPN"]) { response in
-            result(response)
+        var disconnecting = false
+        let disconnect = {
+            DispatchQueue.main.async {
+                if disconnecting { return }
+                disconnecting = true
+                self.disconnectVPN(result)
+            }
         }
-        disconnectVPN(result)
+        VpnService.shared.sendTunnelMessage(["command": "STOP_VPN"]) { _ in disconnect() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) { disconnect() }
     }
 
     private func startTunnel(_ arguments: [String: Any]?, _ result: @escaping FlutterResult) {

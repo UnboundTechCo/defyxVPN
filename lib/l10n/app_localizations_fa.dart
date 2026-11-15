@@ -465,4 +465,18 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get tvMoveModeHint => 'با ▲ ▼ جابه‌جا کنید · OK برای پایان';
+
+  @override
+  String get privateDnsTitle => 'DNS خصوصی روشن است';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'گوشی شما درخواست‌های DNS را به $host می‌فرستد. اگر هنگام اتصال سایت‌ها باز نمی‌شوند، در تنظیمات شبکه، DNS خصوصی را روی «خودکار» یا «خاموش» بگذارید.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'باز کردن تنظیمات';
+
+  @override
+  String get privateDnsDismiss => 'الان نه';
 }

@@ -147,5 +147,9 @@
   "speedTestFailed": "تست سرعت ناموفق بود. لطفاً دوباره تلاش کنید.",
   "speedTestConnectionUnstable": "اتصال شما کند یا ناپایدار به نظر می‌رسد.",
   "tvHoldOkToReorder": "برای جابه‌جایی، دکمه OK را نگه دارید",
-  "tvMoveModeHint": "با ▲ ▼ جابه‌جا کنید · OK برای پایان"
+  "tvMoveModeHint": "با ▲ ▼ جابه‌جا کنید · OK برای پایان",
+  "privateDnsTitle": "DNS خصوصی روشن است",
+  "privateDnsMessage": "گوشی شما درخواست‌های DNS را به {host} می‌فرستد. اگر هنگام اتصال سایت‌ها باز نمی‌شوند، در تنظیمات شبکه، DNS خصوصی را روی «خودکار» یا «خاموش» بگذارید.",
+  "privateDnsOpenSettings": "باز کردن تنظیمات",
+  "privateDnsDismiss": "الان نه"
 }

@@ -22,6 +22,8 @@ typedef void (*dx_stop_t2s_fn)();
 typedef int (*dx_start_tunnel_fn)();
 typedef void (*dx_set_split_tunnel_fn)(const char*, const char*, const char*);
 typedef void (*dx_stop_tunnel_fn)();
+typedef char* (*dx_get_tunnel_dns_fn)();
+typedef void (*dx_set_tunnel_dns_fn)(const char*);
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
@@ -50,6 +52,8 @@ static dx_stop_t2s_fn g_stop_t2s = nullptr;
 static dx_start_tunnel_fn g_start_tunnel = nullptr;
 static dx_set_split_tunnel_fn g_set_split_tunnel = nullptr;
 static dx_stop_tunnel_fn g_stop_tunnel = nullptr;
+static dx_get_tunnel_dns_fn g_get_tunnel_dns = nullptr;
+static dx_set_tunnel_dns_fn g_set_tunnel_dns = nullptr;
 static dx_stop_fn g_stop_all = nullptr;
 static dx_measure_ping_fn g_measure_ping = nullptr;
 static dx_get_flag_fn g_get_flag = nullptr;
@@ -162,6 +166,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_start_tunnel = (dx_start_tunnel_fn)dlsym(g_dx_dll, "StartTunnel");
   g_set_split_tunnel = (dx_set_split_tunnel_fn)dlsym(g_dx_dll, "SetSplitTunnel");
   g_stop_tunnel = (dx_stop_tunnel_fn)dlsym(g_dx_dll, "StopTunnel");
+  g_get_tunnel_dns = (dx_get_tunnel_dns_fn)dlsym(g_dx_dll, "GetTunnelDNS");
+  g_set_tunnel_dns = (dx_set_tunnel_dns_fn)dlsym(g_dx_dll, "SetTunnelDNS");
   g_stop_all = (dx_stop_fn)dlsym(g_dx_dll, "Stop");
   g_measure_ping = (dx_measure_ping_fn)dlsym(g_dx_dll, "MeasurePing");
   g_get_flag = (dx_get_flag_fn)dlsym(g_dx_dll, "GetFlag");
@@ -197,6 +203,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("StartTunnel", g_start_tunnel);
   check("SetSplitTunnel", g_set_split_tunnel);
   check("StopTunnel", g_stop_tunnel);
+  check("GetTunnelDNS", g_get_tunnel_dns);
+  check("SetTunnelDNS", g_set_tunnel_dns);
   check("Stop", g_stop_all);
   check("MeasurePing", g_measure_ping);
   check("GetFlag", g_get_flag);
@@ -364,6 +372,27 @@ void StopTunnel() {
     defyx_core::LogMessage("StopTunnel called");
     if (!g_dx_dll) LoadCoreDll("");
     if (g_stop_tunnel) { g_stop_tunnel(); return; }
+  } catch (...) {}
+}
+
+std::string GetTunnelDNS() {
+  try {
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_get_tunnel_dns) {
+      char* address = g_get_tunnel_dns();
+      std::string result = address ? std::string(address) : std::string();
+      if (g_free_string && address) g_free_string(address);
+      return result;
+    }
+  } catch (...) {}
+  return {};
+}
+
+void SetTunnelDNS(const std::string& address) {
+  try {
+    defyx_core::LogMessage("SetTunnelDNS called address=" + address);
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_set_tunnel_dns) g_set_tunnel_dns(address.c_str());
   } catch (...) {}
 }
 

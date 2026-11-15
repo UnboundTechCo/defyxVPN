@@ -465,4 +465,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tvMoveModeHint => '▲ ▼ to move · OK to finish';
+
+  @override
+  String get privateDnsTitle => 'Private DNS is on';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'Your phone sends its DNS lookups to $host. If websites do not open while you are connected, set Private DNS to Automatic or Off in your network settings.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'Open settings';
+
+  @override
+  String get privateDnsDismiss => 'Not now';
 }
