@@ -475,7 +475,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get privacyNoticeIntro => 'DefyxVPN 发送哪些数据以及发送到哪里：';
 
   @override
-  String get privacyNoticeConnection => '• 连接时会获取连接设置；登录高级版时会发送您的账户信息。';
+  String get privacyNoticeConnection =>
+      '• 应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
 
   @override
   String get privacyNoticeTelemetry =>

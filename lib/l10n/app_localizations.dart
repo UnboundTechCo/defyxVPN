@@ -1023,7 +1023,7 @@ abstract class AppLocalizations {
   /// Privacy notice item about the app's own requests
   ///
   /// In en, this message translates to:
-  /// **'• Connection settings are fetched when you connect, and your account details are sent when you sign in to Premium.'**
+  /// **'• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.'**
   String get privacyNoticeConnection;
 
   /// Privacy notice item about Firebase; only sent after consent

@@ -488,7 +488,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• هنگام اتصال، تنظیمات اتصال دریافت می‌شود و هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      '• هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
 
   @override
   String get privacyNoticeTelemetry =>

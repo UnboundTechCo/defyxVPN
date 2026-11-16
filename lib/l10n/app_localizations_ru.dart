@@ -491,7 +491,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• При подключении загружаются настройки подключения, а при входе в Premium отправляются данные вашей учётной записи.';
+      '• При запуске приложения и при подключении загружаются настройки подключения, а ваш интернет-провайдер определяется по IP-адресу — через серверы DefyxVPN и службы определения IP, например freeipapi.com и ip.sb. При входе в Premium отправляются данные вашей учётной записи.';
 
   @override
   String get privacyNoticeTelemetry =>

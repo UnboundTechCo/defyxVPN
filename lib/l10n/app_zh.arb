@@ -154,7 +154,7 @@
   "privateDnsDismiss": "以后再说",
   "privacyNoticeTitle": "隐私声明",
   "privacyNoticeIntro": "DefyxVPN 发送哪些数据以及发送到哪里：",
-  "privacyNoticeConnection": "• 连接时会获取连接设置；登录高级版时会发送您的账户信息。",
+  "privacyNoticeConnection": "• 应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。",
   "privacyNoticeTelemetry": "• 仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。",
   "privacyNoticeAds": "• 广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。",
   "privacyNoticeSpeedTest": "• 运行测速时，测速结果会发送至 Cloudflare。",
