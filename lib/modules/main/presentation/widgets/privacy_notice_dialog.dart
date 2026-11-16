@@ -5,8 +5,10 @@ import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/utils/tv_keyboard_helper.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 /// Says what the app sends and where, and asks whether usage statistics and
@@ -52,6 +54,42 @@ class PrivacyNoticeDialog extends StatefulWidget {
 class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
   bool _isLoading = false;
   late bool _shareDiagnostics = TelemetryConsent.isGranted;
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  // On TV the notice text is a focus stop that Up and Down scroll, so a
+  // remote can read all of it. At either end the key moves focus on.
+  KeyEventResult _scrollNotice(FocusNode node, KeyEvent event) {
+    if (event is KeyUpEvent || !_scroll.hasClients) {
+      return KeyEventResult.ignored;
+    }
+    final direction = TvKeyboardHelper.directionOf(event);
+    if (direction != TraversalDirection.up &&
+        direction != TraversalDirection.down) {
+      return KeyEventResult.ignored;
+    }
+    final position = _scroll.position;
+    final down = direction == TraversalDirection.down;
+    final atEnd = down
+        ? position.pixels >= position.maxScrollExtent
+        : position.pixels <= position.minScrollExtent;
+    if (atEnd) return KeyEventResult.ignored;
+    final step = position.viewportDimension * 0.6;
+    _scroll.animateTo(
+      (position.pixels + (down ? step : -step)).clamp(
+        position.minScrollExtent,
+        position.maxScrollExtent,
+      ),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+    );
+    return KeyEventResult.handled;
+  }
 
   bool get _isMobile => Platform.isAndroid || Platform.isIOS;
 
@@ -131,8 +169,16 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ),
             SizedBox(height: 20.h),
             Flexible(
-              child: SingleChildScrollView(
-                child: Text(_message(l10n), style: textStyle),
+              child: TvFocusable(
+                enabled: TvSupport.isTv,
+                autofocus: TvSupport.isTv,
+                handleTaps: false,
+                onKeyEvent: _scrollNotice,
+                borderRadius: BorderRadius.circular(6.r),
+                child: SingleChildScrollView(
+                  controller: _scroll,
+                  child: Text(_message(l10n), style: textStyle),
+                ),
               ),
             ),
             if (TelemetryConsent.isSupported) ...[
@@ -145,7 +191,6 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ],
             SizedBox(height: 20.h),
             ElevatedButton(
-              autofocus: TvSupport.isTv,
               onPressed: _handleGotIt,
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.grey[200],
