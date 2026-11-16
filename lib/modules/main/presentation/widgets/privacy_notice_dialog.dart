@@ -83,8 +83,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
       if (TelemetryConsent.isSupported) l10n.privacyNoticeTelemetry,
       if (_isMobile) l10n.privacyNoticeAds,
       l10n.privacyNoticeSpeedTest,
-      // The app's own package is outside the tunnel on Android only.
-      if (Platform.isAndroid) l10n.privacyNoticeDirect,
+      l10n.privacyNoticeOwnTraffic,
     ];
     return [
       '${l10n.privacyNoticeIntro}\n${items.join('\n')}',

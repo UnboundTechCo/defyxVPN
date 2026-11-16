@@ -503,8 +503,8 @@ class AppLocalizationsEn extends AppLocalizations {
       '• Speed test results go to Cloudflare when you run a test.';
 
   @override
-  String get privacyNoticeDirect =>
-      '• Firebase and AdMob connect directly, not through the VPN.';
+  String get privacyNoticeOwnTraffic =>
+      '• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.';
 
   @override
   String get privacyNoticeLocal =>

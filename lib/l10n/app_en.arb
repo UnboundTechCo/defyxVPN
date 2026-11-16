@@ -797,9 +797,9 @@
     "description": "Privacy notice item about the speed test"
   },
 
-  "privacyNoticeDirect": "• Firebase and AdMob connect directly, not through the VPN.",
-  "@privacyNoticeDirect": {
-    "description": "Privacy notice item, Android only"
+  "privacyNoticeOwnTraffic": "• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.",
+  "@privacyNoticeOwnTraffic": {
+    "description": "Privacy notice item: the app's own traffic also goes through the VPN"
   },
 
   "privacyNoticeLocal": "Your internet provider's name is also kept on this device to speed up later connections.",

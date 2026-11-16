@@ -503,8 +503,8 @@ class AppLocalizationsFa extends AppLocalizations {
       '• هنگام اجرای تست سرعت، نتایج آن به Cloudflare ارسال می‌شود.';
 
   @override
-  String get privacyNoticeDirect =>
-      '• Firebase و AdMob مستقیماً متصل می‌شوند، نه از طریق VPN.';
+  String get privacyNoticeOwnTraffic =>
+      '• هنگام اتصال VPN، برنامه اتصال‌های خودش را هم از طریق آن می‌فرستد، به جز اتصال‌هایی که خود VPN را برقرار می‌کنند.';
 
   @override
   String get privacyNoticeLocal =>

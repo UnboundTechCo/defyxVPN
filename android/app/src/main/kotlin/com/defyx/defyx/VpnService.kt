@@ -64,6 +64,7 @@ class DefyxVpnService : VpnService() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        AppProxy.install()
         createNotificationChannel()
         if (!running.complete(this)) {
             running = CompletableDeferred(this)
@@ -255,6 +256,7 @@ class DefyxVpnService : VpnService() {
             }
 
             isVpnConnected = true
+            AppProxy.setEnabled(true)
             updateNotification("DefyxVPN", "Connected by $connectionMethod")
             notifyVpnStatus("connected")
             return true
@@ -276,6 +278,7 @@ class DefyxVpnService : VpnService() {
     // The tunnel holds its own copy of the descriptor, so the interface only
     // goes away once both are closed. Safe to call when nothing is open.
     private fun releaseTunnel() {
+        AppProxy.setEnabled(false)
         try {
             Android.stopTunnel()
         } catch (_: Exception) {}
@@ -336,7 +339,8 @@ class DefyxVpnService : VpnService() {
 
         // The core runs in this app and dials its servers without protect(),
         // so its own traffic must stay outside the tunnel or it would loop
-        // back into itself.
+        // back into itself. The app's other traffic is sent to the core's
+        // proxy instead, see AppProxy and AppTraffic.
         try {
             builder.addDisallowedApplication(ownPackage)
         } catch (_: Exception) {}

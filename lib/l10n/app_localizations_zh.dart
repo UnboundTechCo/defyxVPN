@@ -488,7 +488,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get privacyNoticeSpeedTest => '• 运行测速时，测速结果会发送至 Cloudflare。';
 
   @override
-  String get privacyNoticeDirect => '• Firebase 和 AdMob 直接连接，不经过 VPN。';
+  String get privacyNoticeOwnTraffic =>
+      '• VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
 
   @override
   String get privacyNoticeLocal => '您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。';

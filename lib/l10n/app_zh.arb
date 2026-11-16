@@ -158,7 +158,7 @@
   "privacyNoticeTelemetry": "• 仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。",
   "privacyNoticeAds": "• 广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。",
   "privacyNoticeSpeedTest": "• 运行测速时，测速结果会发送至 Cloudflare。",
-  "privacyNoticeDirect": "• Firebase 和 AdMob 直接连接，不经过 VPN。",
+  "privacyNoticeOwnTraffic": "• VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。",
   "privacyNoticeLocal": "您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。",
   "privacyNoticeChangeLater": "您可以随时在设置中更改此选择。",
   "privacyNoticeVpnProfile": "继续即表示您同意安装 VPN 配置文件。",

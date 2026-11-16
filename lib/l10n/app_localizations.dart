@@ -1044,11 +1044,11 @@ abstract class AppLocalizations {
   /// **'• Speed test results go to Cloudflare when you run a test.'**
   String get privacyNoticeSpeedTest;
 
-  /// Privacy notice item, Android only
+  /// Privacy notice item: the app's own traffic also goes through the VPN
   ///
   /// In en, this message translates to:
-  /// **'• Firebase and AdMob connect directly, not through the VPN.'**
-  String get privacyNoticeDirect;
+  /// **'• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.'**
+  String get privacyNoticeOwnTraffic;
 
   /// Privacy notice paragraph about local storage
   ///

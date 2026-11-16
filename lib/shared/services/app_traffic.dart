@@ -12,8 +12,8 @@ import 'package:flutter/foundation.dart';
 /// while the VPN is up they go to the core's local proxy instead. Requests then
 /// fail rather than fall back to the direct connection if the proxy is down.
 ///
-/// Firebase and AdMob open their own native connections and are not covered;
-/// the privacy notice says so.
+/// On Android the app's Java and web view traffic (Firebase, AdMob) is sent
+/// to the same proxy by AppProxy in the Android code.
 class AppTraffic extends HttpOverrides {
   AppTraffic._();
 
