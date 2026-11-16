@@ -393,6 +393,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     return items.map((item) => item.title).join(',');
   }
 
+  bool isPremiumCustomer() {
+    final group = state.groups[SettingsGroupId.connectionMethod];
+    if (group == null) return false;
+
+    return group.items.any((item) => item.isPremium);
+  }
+
   String getPattern() => getConnectionMethodPattern();
 
   // ============== Reset Methods ==============
