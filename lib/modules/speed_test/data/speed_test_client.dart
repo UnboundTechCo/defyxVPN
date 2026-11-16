@@ -80,9 +80,11 @@ class SpeedTestClient {
       createHttpClient: () {
         final client = HttpClient()
           ..idleTimeout = const Duration(seconds: 15);
-        if (useProxy) {
-          client.findProxy = (_) => 'PROXY $proxyHost:$proxyPort';
-        }
+        // Explicit both ways: the app-wide AppTraffic proxy must not
+        // decide which connection the test measures.
+        client.findProxy = useProxy
+            ? (_) => 'PROXY $proxyHost:$proxyPort'
+            : (_) => 'DIRECT';
         return client;
       },
     );
