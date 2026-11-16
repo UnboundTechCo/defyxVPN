@@ -34,7 +34,7 @@
         android:label="DefyxVPN"
         android:icon="@drawable/tv_icon"
         android:banner="@drawable/tv_banner"
-        android:usesCleartextTraffic="true">
+        android:networkSecurityConfig="@xml/network_security_config">
 
         <!-- Telemetry stays off until the user agrees to it, see
              TelemetryConsent. Firebase Sessions follows Crashlytics. -->
