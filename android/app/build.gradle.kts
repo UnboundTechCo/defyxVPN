@@ -46,8 +46,9 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 shrinks and obfuscates the DEX; Play flags 0% obfuscation otherwise.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig =
                 if (keystorePropertiesFile.exists()) signingConfigs.getByName("release")
                 else signingConfigs.getByName("debug")
