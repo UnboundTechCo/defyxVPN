@@ -482,4 +482,50 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => 'Не сейчас';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'Эта премиум-подписка была приобретена напрямую у Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Осталось трафика';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Осталось времени';
+
+  @override
+  String get marketplaceInfoGigabytes => 'ГБ';
+
+  @override
+  String get marketplaceInfoDays => 'дн.';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Не удалось загрузить данные об использовании. Проверьте соединение и повторите попытку.';
+
+  @override
+  String get marketplaceInfoRetry => 'Повторить';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Смените сервер, не меняя локацию.';
+
+  @override
+  String get marketplaceInfoJump => 'Сменить';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Сервер успешно изменён.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Не удалось сменить сервер';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN будет отключён';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'При смене сервера VPN отключится. Продолжить?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Да, сменить сервер';
 }

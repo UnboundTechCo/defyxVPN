@@ -765,5 +765,75 @@
   "privateDnsDismiss": "Not now",
   "@privateDnsDismiss": {
     "description": "Button that closes the Private DNS notice"
+  },
+
+  "marketplaceInfoDescription": "This premium subscription was purchased directly from Defyx.",
+  "@marketplaceInfoDescription": {
+    "description": "Text under the subscription name in the marketplace info sheet"
+  },
+
+  "marketplaceInfoRemainingData": "Remaining data",
+  "@marketplaceInfoRemainingData": {
+    "description": "Label inside the data usage ring of the marketplace info sheet"
+  },
+
+  "marketplaceInfoRemainingTime": "Remaining time",
+  "@marketplaceInfoRemainingTime": {
+    "description": "Label inside the time usage ring of the marketplace info sheet"
+  },
+
+  "marketplaceInfoGigabytes": "GB",
+  "@marketplaceInfoGigabytes": {
+    "description": "Gigabytes unit shown after the total data volume"
+  },
+
+  "marketplaceInfoDays": "Days",
+  "@marketplaceInfoDays": {
+    "description": "Days unit shown after the total subscription days"
+  },
+
+  "marketplaceInfoUsageError": "Could not load your usage. Check your connection and try again.",
+  "@marketplaceInfoUsageError": {
+    "description": "Warning shown in the marketplace info sheet when the usage request fails"
+  },
+
+  "marketplaceInfoRetry": "Retry",
+  "@marketplaceInfoRetry": {
+    "description": "Button that reloads the usage in the marketplace info sheet"
+  },
+
+  "marketplaceInfoJumpDescription": "Switch server without changing location.",
+  "@marketplaceInfoJumpDescription": {
+    "description": "Text of the jump card in the marketplace info sheet"
+  },
+
+  "marketplaceInfoJump": "Jump",
+  "@marketplaceInfoJump": {
+    "description": "Button that moves the subscription to another server in the same location"
+  },
+
+  "marketplaceInfoJumpSuccess": "Server switched successfully.",
+  "@marketplaceInfoJumpSuccess": {
+    "description": "Toast shown after the subscription moved to another server"
+  },
+
+  "marketplaceInfoJumpFailed": "Could not switch server",
+  "@marketplaceInfoJumpFailed": {
+    "description": "Toast shown when moving the subscription to another server fails. The reason is appended after a colon."
+  },
+
+  "jumpDisconnectTitle": "VPN will be disconnected",
+  "@jumpDisconnectTitle": {
+    "description": "Title of the warning shown before switching server while the VPN is running"
+  },
+
+  "jumpDisconnectMessage": "Switching server disconnects your VPN. Do you want to continue?",
+  "@jumpDisconnectMessage": {
+    "description": "Body of the warning shown before switching server while the VPN is running"
+  },
+
+  "jumpDisconnectConfirm": "Yes, switch server",
+  "@jumpDisconnectConfirm": {
+    "description": "Button that confirms disconnecting the VPN and switching server"
   }
 }

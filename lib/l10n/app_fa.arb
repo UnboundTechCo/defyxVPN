@@ -151,5 +151,19 @@
   "privateDnsTitle": "DNS خصوصی روشن است",
   "privateDnsMessage": "گوشی شما درخواست‌های DNS را به {host} می‌فرستد. اگر هنگام اتصال سایت‌ها باز نمی‌شوند، در تنظیمات شبکه، DNS خصوصی را روی «خودکار» یا «خاموش» بگذارید.",
   "privateDnsOpenSettings": "باز کردن تنظیمات",
-  "privateDnsDismiss": "الان نه"
+  "privateDnsDismiss": "الان نه",
+  "marketplaceInfoDescription": "این اشتراک پریمیوم مستقیماً از Defyx خریداری شده است.",
+  "marketplaceInfoRemainingData": "حجم باقی‌مانده",
+  "marketplaceInfoRemainingTime": "زمان باقی‌مانده",
+  "marketplaceInfoGigabytes": "گیگابایت",
+  "marketplaceInfoDays": "روز",
+  "marketplaceInfoUsageError": "دریافت میزان مصرف ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.",
+  "marketplaceInfoRetry": "تلاش دوباره",
+  "marketplaceInfoJumpDescription": "تغییر سرور بدون تغییر موقعیت.",
+  "marketplaceInfoJump": "پرش",
+  "marketplaceInfoJumpSuccess": "سرور با موفقیت تغییر کرد.",
+  "marketplaceInfoJumpFailed": "تغییر سرور ممکن نشد",
+  "jumpDisconnectTitle": "VPN قطع می‌شود",
+  "jumpDisconnectMessage": "با تغییر سرور، VPN شما قطع می‌شود. ادامه می‌دهید؟",
+  "jumpDisconnectConfirm": "بله، سرور را تغییر بده"
 }

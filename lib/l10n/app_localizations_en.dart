@@ -479,4 +479,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => 'Not now';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'This premium subscription was purchased directly from Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Remaining data';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Remaining time';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => 'Days';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Could not load your usage. Check your connection and try again.';
+
+  @override
+  String get marketplaceInfoRetry => 'Retry';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Switch server without changing location.';
+
+  @override
+  String get marketplaceInfoJump => 'Jump';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Server switched successfully.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Could not switch server';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN will be disconnected';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'Switching server disconnects your VPN. Do you want to continue?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Yes, switch server';
 }
