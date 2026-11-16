@@ -467,4 +467,46 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => '以后再说';
+
+  @override
+  String get marketplaceInfoDescription => '此高级订阅直接购自 Defyx。';
+
+  @override
+  String get marketplaceInfoRemainingData => '剩余流量';
+
+  @override
+  String get marketplaceInfoRemainingTime => '剩余时间';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => '天';
+
+  @override
+  String get marketplaceInfoUsageError => '无法加载用量信息。请检查网络连接后重试。';
+
+  @override
+  String get marketplaceInfoRetry => '重试';
+
+  @override
+  String get marketplaceInfoJumpDescription => '在不更改位置的情况下切换服务器。';
+
+  @override
+  String get marketplaceInfoJump => '切换';
+
+  @override
+  String get marketplaceInfoJumpSuccess => '服务器切换成功。';
+
+  @override
+  String get marketplaceInfoJumpFailed => '无法切换服务器';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN 将断开连接';
+
+  @override
+  String get jumpDisconnectMessage => '切换服务器会断开您的 VPN。是否继续？';
+
+  @override
+  String get jumpDisconnectConfirm => '是，切换服务器';
 }

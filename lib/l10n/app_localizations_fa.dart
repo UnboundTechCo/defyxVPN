@@ -479,4 +479,49 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => 'الان نه';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'این اشتراک پریمیوم مستقیماً از Defyx خریداری شده است.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'حجم باقی‌مانده';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'زمان باقی‌مانده';
+
+  @override
+  String get marketplaceInfoGigabytes => 'گیگابایت';
+
+  @override
+  String get marketplaceInfoDays => 'روز';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'دریافت میزان مصرف ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.';
+
+  @override
+  String get marketplaceInfoRetry => 'تلاش دوباره';
+
+  @override
+  String get marketplaceInfoJumpDescription => 'تغییر سرور بدون تغییر موقعیت.';
+
+  @override
+  String get marketplaceInfoJump => 'پرش';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'سرور با موفقیت تغییر کرد.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'تغییر سرور ممکن نشد';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN قطع می‌شود';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'با تغییر سرور، VPN شما قطع می‌شود. ادامه می‌دهید؟';
+
+  @override
+  String get jumpDisconnectConfirm => 'بله، سرور را تغییر بده';
 }

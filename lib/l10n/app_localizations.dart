@@ -1007,6 +1007,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get privateDnsDismiss;
+
+  /// Text under the subscription name in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'This premium subscription was purchased directly from Defyx.'**
+  String get marketplaceInfoDescription;
+
+  /// Label inside the data usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining data'**
+  String get marketplaceInfoRemainingData;
+
+  /// Label inside the time usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining time'**
+  String get marketplaceInfoRemainingTime;
+
+  /// Gigabytes unit shown after the total data volume
+  ///
+  /// In en, this message translates to:
+  /// **'GB'**
+  String get marketplaceInfoGigabytes;
+
+  /// Days unit shown after the total subscription days
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get marketplaceInfoDays;
+
+  /// Warning shown in the marketplace info sheet when the usage request fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your usage. Check your connection and try again.'**
+  String get marketplaceInfoUsageError;
+
+  /// Button that reloads the usage in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get marketplaceInfoRetry;
+
+  /// Text of the jump card in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server without changing location.'**
+  String get marketplaceInfoJumpDescription;
+
+  /// Button that moves the subscription to another server in the same location
+  ///
+  /// In en, this message translates to:
+  /// **'Jump'**
+  String get marketplaceInfoJump;
+
+  /// Toast shown after the subscription moved to another server
+  ///
+  /// In en, this message translates to:
+  /// **'Server switched successfully.'**
+  String get marketplaceInfoJumpSuccess;
+
+  /// Toast shown when moving the subscription to another server fails. The reason is appended after a colon.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not switch server'**
+  String get marketplaceInfoJumpFailed;
+
+  /// Title of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'VPN will be disconnected'**
+  String get jumpDisconnectTitle;
+
+  /// Body of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'Switching server disconnects your VPN. Do you want to continue?'**
+  String get jumpDisconnectMessage;
+
+  /// Button that confirms disconnecting the VPN and switching server
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, switch server'**
+  String get jumpDisconnectConfirm;
 }
 
 class _AppLocalizationsDelegate

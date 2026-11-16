@@ -151,5 +151,19 @@
   "privateDnsTitle": "Включён персональный DNS-сервер",
   "privateDnsMessage": "Телефон отправляет DNS-запросы на {host}. Если при подключении сайты не открываются, выберите для персонального DNS-сервера «Автоматический режим» или «Отключено» в настройках сети.",
   "privateDnsOpenSettings": "Открыть настройки",
-  "privateDnsDismiss": "Не сейчас"
+  "privateDnsDismiss": "Не сейчас",
+  "marketplaceInfoDescription": "Эта премиум-подписка была приобретена напрямую у Defyx.",
+  "marketplaceInfoRemainingData": "Осталось трафика",
+  "marketplaceInfoRemainingTime": "Осталось времени",
+  "marketplaceInfoGigabytes": "ГБ",
+  "marketplaceInfoDays": "дн.",
+  "marketplaceInfoUsageError": "Не удалось загрузить данные об использовании. Проверьте соединение и повторите попытку.",
+  "marketplaceInfoRetry": "Повторить",
+  "marketplaceInfoJumpDescription": "Смените сервер, не меняя локацию.",
+  "marketplaceInfoJump": "Сменить",
+  "marketplaceInfoJumpSuccess": "Сервер успешно изменён.",
+  "marketplaceInfoJumpFailed": "Не удалось сменить сервер",
+  "jumpDisconnectTitle": "VPN будет отключён",
+  "jumpDisconnectMessage": "При смене сервера VPN отключится. Продолжить?",
+  "jumpDisconnectConfirm": "Да, сменить сервер"
 }
