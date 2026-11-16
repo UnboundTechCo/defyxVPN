@@ -21,6 +21,14 @@ void main() {
       expect(allows('https://defyxvpn.com.example.com/'), isFalse);
     });
 
+    test('allows the company sites the pages redirect to', () {
+      final hosts = webViewDefaultHosts('https://donate.defyxvpn.com/');
+      bool opens(String url) => webViewAllows(Uri.parse(url), hosts);
+      expect(opens('https://donate.defyxvpn.com/give'), isTrue);
+      expect(opens('https://unboundtech.de/defyx/privacy-policy'), isTrue);
+      expect(opens('https://example.com/'), isFalse);
+    });
+
     test('refuses other schemes', () {
       expect(allows('intent://scan/#Intent;scheme=zxing;end'), isFalse);
       expect(allows('file:///data/data/de.unboundtech.defyxvpn/'), isFalse);
@@ -66,7 +74,10 @@ void main() {
       expect(AppTraffic.proxyFor(api), 'DIRECT');
       AppTraffic.setConnected(true);
       expect(AppTraffic.proxyFor(api), 'PROXY 127.0.0.1:5000');
-      expect(AppTraffic.proxyFor(Uri.parse('http://127.0.0.1:5000/')), 'DIRECT');
+      expect(
+        AppTraffic.proxyFor(Uri.parse('http://127.0.0.1:5000/')),
+        'DIRECT',
+      );
       AppTraffic.setConnected(false);
       expect(AppTraffic.proxyFor(api), 'DIRECT');
     });
@@ -74,7 +85,10 @@ void main() {
     test('stays direct where the tunnel already carries the app', () {
       AppTraffic.debugApplies = false;
       AppTraffic.setConnected(true);
-      expect(AppTraffic.proxyFor(Uri.parse('https://api.example.com/')), 'DIRECT');
+      expect(
+        AppTraffic.proxyFor(Uri.parse('https://api.example.com/')),
+        'DIRECT',
+      );
     });
   });
 }
