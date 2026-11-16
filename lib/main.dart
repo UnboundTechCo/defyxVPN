@@ -6,6 +6,7 @@ import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/services/desktop_error_logger.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -82,10 +83,11 @@ void main(List<String> arguments) async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
 
-    // Initialize Firebase Crashlytics
-    await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+    // Analytics and Crashlytics stay off until the user agrees to them.
+    await TelemetryConsent.load(prefs);
 
-    // Pass all uncaught Flutter errors to Crashlytics
+    // Pass all uncaught Flutter errors to Crashlytics. Without consent they
+    // stay on the device and are deleted if the user declines.
     FlutterError.onError = (errorDetails) {
       FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
       // Also print to console in debug mode

@@ -467,4 +467,47 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => '以后再说';
+
+  @override
+  String get privacyNoticeTitle => '隐私声明';
+
+  @override
+  String get privacyNoticeIntro => 'DefyxVPN 发送哪些数据以及发送到哪里：';
+
+  @override
+  String get privacyNoticeConnection => '• 连接时会获取连接设置；登录高级版时会发送您的账户信息。';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      '• 仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
+
+  @override
+  String get privacyNoticeAds => '• 广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
+
+  @override
+  String get privacyNoticeSpeedTest => '• 运行测速时，测速结果会发送至 Cloudflare。';
+
+  @override
+  String get privacyNoticeDirect => '• Firebase 和 AdMob 直接连接，不经过 VPN。';
+
+  @override
+  String get privacyNoticeLocal => '您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。';
+
+  @override
+  String get privacyNoticeChangeLater => '您可以随时在设置中更改此选择。';
+
+  @override
+  String get privacyNoticeVpnProfile => '继续即表示您同意安装 VPN 配置文件。';
+
+  @override
+  String get privacyNoticeShareDiagnostics => '发送使用统计和崩溃报告';
+
+  @override
+  String get privacyNoticeGotIt => '知道了';
+
+  @override
+  String get settingsPrivacy => '隐私';
+
+  @override
+  String get settingsShareDiagnostics => '发送诊断数据';
 }

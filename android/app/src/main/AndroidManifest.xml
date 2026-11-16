@@ -36,6 +36,15 @@
         android:banner="@drawable/tv_banner"
         android:usesCleartextTraffic="true">
 
+        <!-- Telemetry stays off until the user agrees to it, see
+             TelemetryConsent. Firebase Sessions follows Crashlytics. -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
+
         <!-- Android lists VPN apps among the users of systemExempted. -->
         <service
             android:name="de.unboundtech.defyxvpn.DefyxVpnService"

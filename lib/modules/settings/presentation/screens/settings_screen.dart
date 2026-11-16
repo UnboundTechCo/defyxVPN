@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import '../../constants/settings_constants.dart';
 import '../../models/settings_group.dart';
 import '../../models/split_tunnel_config.dart';
@@ -402,6 +403,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final groups = settingsState.groupList
         .map((group) => _withSplitTunnelSubtitle(group, splitTunnelMode))
+        .map(_withTelemetryConsent)
         .toList();
     return Column(
       children: groups
@@ -454,6 +456,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         for (final item in group.items)
           item.id == SettingsItemId.splitTunnel
               ? item.copyWith(subtitle: subtitle)
+              : item,
+      ],
+    );
+  }
+
+  // The privacy dialog can change the choice too, so the toggle shows the
+  // stored choice rather than the saved settings.
+  SettingsGroup _withTelemetryConsent(SettingsGroup group) {
+    if (group.id != SettingsGroupId.privacy) return group;
+    return group.copyWith(
+      items: [
+        for (final item in group.items)
+          item.id == SettingsItemId.shareDiagnostics
+              ? item.copyWith(isEnabled: TelemetryConsent.isGranted)
               : item,
       ],
     );

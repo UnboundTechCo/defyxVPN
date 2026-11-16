@@ -2,29 +2,47 @@ import 'dart:io';
 
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+/// Says what the app sends and where, and asks whether usage statistics and
+/// crash reports may be sent. Nothing goes to Firebase until the user ticks
+/// the box; it starts unticked.
 class PrivacyNoticeDialog extends StatefulWidget {
   final Future<bool> Function() onAccept;
 
-  const PrivacyNoticeDialog({super.key, required this.onAccept});
+  /// Whether to mention the VPN profile. Off when the notice is shown again
+  /// to a user who set up the VPN with an earlier version of it.
+  final bool mentionVpnProfile;
+
+  const PrivacyNoticeDialog({
+    super.key,
+    required this.onAccept,
+    this.mentionVpnProfile = true,
+  });
 
   @override
   State<PrivacyNoticeDialog> createState() => _PrivacyNoticeDialogState();
 
   static Future<void> show(
     BuildContext context,
-    Future<bool> Function() onAccept,
-  ) {
+    Future<bool> Function() onAccept, {
+    bool mentionVpnProfile = true,
+  }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return PopScope(
           canPop: false,
-          child: PrivacyNoticeDialog(onAccept: onAccept),
+          child: PrivacyNoticeDialog(
+            onAccept: onAccept,
+            mentionVpnProfile: mentionVpnProfile,
+          ),
         );
       },
     );
@@ -33,43 +51,61 @@ class PrivacyNoticeDialog extends StatefulWidget {
 
 class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
   bool _isLoading = false;
+  late bool _shareDiagnostics = TelemetryConsent.isGranted;
+
+  bool get _isMobile => Platform.isAndroid || Platform.isIOS;
 
   Future<void> _handleGotIt() async {
     try {
       if (_isLoading) return;
       setState(() => _isLoading = true);
 
+      if (TelemetryConsent.isSupported) {
+        await TelemetryConsent.set(_shareDiagnostics);
+      }
       final accepted = await widget.onAccept();
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (accepted && mounted) {
+      if (accepted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
       debugPrint('Error in _handleGotIt: $e');
+      if (!mounted) return;
       setState(() => _isLoading = false);
-      if (mounted) {
-        Navigator.of(context).pop();
-      }
+      Navigator.of(context).pop();
     }
+  }
+
+  String _message(AppLocalizations l10n) {
+    final items = [
+      l10n.privacyNoticeConnection,
+      if (TelemetryConsent.isSupported) l10n.privacyNoticeTelemetry,
+      if (_isMobile) l10n.privacyNoticeAds,
+      l10n.privacyNoticeSpeedTest,
+      // The app's own package is outside the tunnel on Android only.
+      if (Platform.isAndroid) l10n.privacyNoticeDirect,
+    ];
+    return [
+      '${l10n.privacyNoticeIntro}\n${items.join('\n')}',
+      l10n.privacyNoticeLocal,
+      if (_isMobile && widget.mentionVpnProfile) l10n.privacyNoticeVpnProfile,
+    ].join('\n\n');
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final screenWidth = 1.sw;
     const double baseScreenWidth = 375.0;
     final ratio = screenWidth / baseScreenWidth;
     final fontSize = (16.0 * ratio).clamp(14.0, 18.0).toDouble();
-
-    String message =
-        'This app does not collect, store, or transmit any personal information to its servers.\n\n'
-        'Only a small amount of non-personal data (such as your internet provider\'s name) may be stored locally on your device to improve connection performance for future sessions.\n';
-
-    if (Platform.isIOS || Platform.isAndroid) {
-      message += '\nBy continuing, you agree to install the VPN profile';
-      message +=
-          ' and may be asked for consent to personalize ads based on your preferences';
-      message += '.';
-    }
+    final textStyle = TextStyle(
+      fontSize: fontSize,
+      fontFamily: AppTheme.fontFamily,
+      color: Colors.black.withValues(alpha: 0.5),
+      height: 1.4,
+    );
 
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
@@ -86,7 +122,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Privacy Notice',
+              l10n.privacyNoticeTitle,
               style: TextStyle(
                 fontFamily: AppTheme.fontFamily,
                 fontSize: fontSize * 1.4,
@@ -95,15 +131,19 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
               ),
             ),
             SizedBox(height: 20.h),
-            Text(
-              message,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontFamily: AppTheme.fontFamily,
-                color: Colors.black.withValues(alpha: 0.5),
-                height: 1.4,
+            Flexible(
+              child: SingleChildScrollView(
+                child: Text(_message(l10n), style: textStyle),
               ),
             ),
+            if (TelemetryConsent.isSupported) ...[
+              SizedBox(height: 12.h),
+              _buildConsentCheckbox(l10n, fontSize),
+              Text(
+                l10n.privacyNoticeChangeLater,
+                style: textStyle.copyWith(fontSize: fontSize * 0.85),
+              ),
+            ],
             SizedBox(height: 20.h),
             ElevatedButton(
               autofocus: TvSupport.isTv,
@@ -127,7 +167,7 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
                       ),
                     )
                   : Text(
-                      'Got it',
+                      l10n.privacyNoticeGotIt,
                       style: TextStyle(
                         fontFamily: AppTheme.fontFamily,
                         color: const Color(0xFF4B4B4B),
@@ -138,6 +178,37 @@ class _PrivacyNoticeDialogState extends State<PrivacyNoticeDialog> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  // One focus stop for the remote: the row toggles, the checkbox itself does
+  // not take focus.
+  Widget _buildConsentCheckbox(AppLocalizations l10n, double fontSize) {
+    return TvFocusable(
+      onTap: () => setState(() => _shareDiagnostics = !_shareDiagnostics),
+      borderRadius: BorderRadius.circular(6.r),
+      child: Row(
+        children: [
+          ExcludeFocus(
+            child: Checkbox(
+              value: _shareDiagnostics,
+              activeColor: AppColors.bottomGradientConnected,
+              onChanged: (value) =>
+                  setState(() => _shareDiagnostics = value ?? false),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              l10n.privacyNoticeShareDiagnostics,
+              style: TextStyle(
+                fontFamily: AppTheme.fontFamily,
+                fontSize: fontSize,
+                color: Colors.black.withValues(alpha: 0.75),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
