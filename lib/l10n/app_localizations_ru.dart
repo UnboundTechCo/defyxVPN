@@ -250,16 +250,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelModeOnly => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.';
+
+  @override
   String get splitTunnelTabAddresses => 'АДРЕСА';
 
   @override
   String get splitTunnelTabApps => 'ПРИЛОЖЕНИЯ';
 
   @override
+  String get pressBackAgainToExit => 'Нажмите «Назад» ещё раз, чтобы выйти';
+
+  @override
   String get splitTunnelSearch => 'Поиск';
 
   @override
   String get splitTunnelAddressHint => 'введите здесь ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'введите корректный домен, например example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'введите код страны, IP-адрес или диапазон CIDR, например ir, 8.8.8.8 или 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'введите или выберите путь ...';

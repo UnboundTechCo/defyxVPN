@@ -250,16 +250,31 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelModeOnly => 'فقط موارد انتخاب‌شده';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.';
+
+  @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
 
   @override
   String get splitTunnelTabApps => 'برنامه‌ها';
 
   @override
+  String get pressBackAgainToExit => 'برای خروج دوباره دکمه بازگشت را بزنید';
+
+  @override
   String get splitTunnelSearch => 'جستجو';
 
   @override
   String get splitTunnelAddressHint => 'اینجا تایپ کنید ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'یک دامنه معتبر وارد کنید، مثلاً example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'کد کشور، آدرس IP یا محدوده CIDR وارد کنید، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'تایپ کنید یا مسیر را انتخاب کنید ...';

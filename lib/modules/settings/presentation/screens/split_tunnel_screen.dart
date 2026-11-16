@@ -21,7 +21,9 @@ import '../widgets/split_tunnel_search_field.dart';
 import '../widgets/split_tunnel_tab_bar.dart';
 
 const Color _accentColor = Color(0xFFFFC927);
-const double _backIconSize = 36;
+const double _backIconSize = 38;
+const double _backTapPadding = 8;
+const double _backGlyphInsetRatio = 0.36;
 
 class SplitTunnelScreen extends ConsumerStatefulWidget {
   const SplitTunnelScreen({super.key});
@@ -63,6 +65,7 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
       child: SafeArea(
         bottom: false,
         child: CustomScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
@@ -75,7 +78,7 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 45.h),
+                        SizedBox(height: 37.h),
                         _buildHeader(l10n),
                         SizedBox(height: 30.h),
                         _buildSectionTitle(l10n.settingsSplitTunnel),
@@ -84,6 +87,22 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
                           onChanged: ref
                               .read(splitTunnelProvider.notifier)
                               .setMode,
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                            top: 10.h,
+                            left: 14.w,
+                            right: 14.w,
+                          ),
+                          child: Text(
+                            l10n.splitTunnelReconnectNote,
+                            style: TextStyle(
+                              fontSize: 13.sp,
+                              fontFamily: AppTheme.fontFamily,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey[400],
+                            ),
+                          ),
                         ),
                         SizedBox(height: 24.h),
                         SplitTunnelTabBar(
@@ -117,8 +136,7 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
         Transform.translate(
           offset: Offset(
             (Directionality.of(context) == TextDirection.rtl ? 1 : -1) *
-                _backIconSize.sp /
-                3,
+                (_backTapPadding.r + _backIconSize.sp * _backGlyphInsetRatio),
             0,
           ),
           child: TvFocusRing(
@@ -127,15 +145,17 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
               onTap: _goBack,
               autofocus: TvSupport.isTv,
               customBorder: const CircleBorder(),
-              child: Icon(
-                Icons.chevron_left,
-                size: _backIconSize.sp,
-                color: _accentColor,
+              child: Padding(
+                padding: EdgeInsets.all(_backTapPadding.r),
+                child: Icon(
+                  Icons.chevron_left,
+                  size: _backIconSize.sp,
+                  color: _accentColor,
+                ),
               ),
             ),
           ),
         ),
-        SizedBox(height: 8.h),
         Text(
           l10n.splitTunnelPreferences,
           style: TextStyle(

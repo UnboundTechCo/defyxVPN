@@ -32,6 +32,8 @@ class SplitTunnelSearchField extends StatelessWidget {
           Expanded(
             child: TextField(
               onChanged: onChanged,
+              onTapOutside: (_) =>
+                  FocusManager.instance.primaryFocus?.unfocus(),
               style: TextStyle(
                 fontSize: 17.sp,
                 fontFamily: AppTheme.fontFamily,

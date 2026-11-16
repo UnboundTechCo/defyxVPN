@@ -576,6 +576,12 @@ abstract class AppLocalizations {
   /// **'ONLY SELECTED'**
   String get splitTunnelModeOnly;
 
+  /// Note under the split tunnel mode selector explaining when changes apply
+  ///
+  /// In en, this message translates to:
+  /// **'changes to the split tunneling settings will take effect after connecting or reconnecting.'**
+  String get splitTunnelReconnectNote;
+
   /// Split tunnel tab - addresses
   ///
   /// In en, this message translates to:
@@ -588,6 +594,12 @@ abstract class AppLocalizations {
   /// **'APPS'**
   String get splitTunnelTabApps;
 
+  /// Toast shown on the first Back press on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// Split tunnel search field hint
   ///
   /// In en, this message translates to:
@@ -599,6 +611,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'type here ...'**
   String get splitTunnelAddressHint;
+
+  /// Error shown when a split tunnel domain rule is not a valid domain
+  ///
+  /// In en, this message translates to:
+  /// **'enter a valid domain, e.g. example.com'**
+  String get splitTunnelInvalidDomain;
+
+  /// Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range
+  ///
+  /// In en, this message translates to:
+  /// **'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8'**
+  String get splitTunnelInvalidGeoip;
 
   /// Split tunnel app path input hint
   ///

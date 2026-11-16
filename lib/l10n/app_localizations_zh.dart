@@ -248,16 +248,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelModeOnly => '仅限所选';
 
   @override
+  String get splitTunnelReconnectNote => '分流设置的更改将在连接或重新连接后生效。';
+
+  @override
   String get splitTunnelTabAddresses => '地址';
 
   @override
   String get splitTunnelTabApps => '应用';
 
   @override
+  String get pressBackAgainToExit => '再按一次返回键退出';
+
+  @override
   String get splitTunnelSearch => '搜索';
 
   @override
   String get splitTunnelAddressHint => '在此输入 ...';
+
+  @override
+  String get splitTunnelInvalidDomain => '请输入有效的域名，例如 example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      '请输入国家代码、IP 地址或 CIDR 范围，例如 ir、8.8.8.8 或 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => '输入或选择路径 ...';

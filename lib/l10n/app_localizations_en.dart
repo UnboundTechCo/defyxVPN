@@ -250,16 +250,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitTunnelModeOnly => 'ONLY SELECTED';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'changes to the split tunneling settings will take effect after connecting or reconnecting.';
+
+  @override
   String get splitTunnelTabAddresses => 'ADDRESSES';
 
   @override
   String get splitTunnelTabApps => 'APPS';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get splitTunnelSearch => 'Search';
 
   @override
   String get splitTunnelAddressHint => 'type here ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'enter a valid domain, e.g. example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'type or route it ...';

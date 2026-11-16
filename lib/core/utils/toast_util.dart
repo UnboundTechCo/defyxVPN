@@ -4,7 +4,10 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:toastification/toastification.dart';
 
 class ToastUtil {
-  static void showToast(String message) {
+  static void showToast(
+    String message, {
+    Duration duration = const Duration(seconds: 5),
+  }) {
     toastification.show(
       description: Text(
         message,
@@ -19,13 +22,11 @@ class ToastUtil {
       backgroundColor: Colors.black,
       primaryColor: Colors.black,
       showIcon: false,
-      closeButton: ToastCloseButton(
-        showType: CloseButtonShowType.none,
-      ),
+      closeButton: ToastCloseButton(showType: CloseButtonShowType.none),
       alignment: Alignment(0, 0.7),
       borderRadius: BorderRadius.circular(6.0),
       padding: const EdgeInsets.all(16.0),
-      autoCloseDuration: const Duration(seconds: 5),
+      autoCloseDuration: duration,
       margin: const EdgeInsets.symmetric(horizontal: 25.0),
     );
   }
