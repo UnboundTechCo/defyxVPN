@@ -1,0 +1,8 @@
+# The DXcore release every build uses, and the SHA-256 of each asset.
+# CI refuses an asset whose hash differs. Change it with
+# scripts/update_dxcore_lock.sh, never by hand.
+tag=r6.1.4
+DXcore-android.zip=
+DXcore-ios.zip=
+DXcore-linux.zip=
+DXcore-windows.zip=

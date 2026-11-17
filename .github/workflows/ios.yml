@@ -5,37 +5,31 @@ on:
 
 jobs:
   build-ios:
-    runs-on: macos-latest
+    runs-on: macos-26
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: "3.47.6"
 
-      - name: Download iOS Framework
-        env:
-          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+      - name: Download DXcore-ios.zip
+        uses: ./.github/actions/fetch-dxcore
+        with:
+          asset: DXcore-ios.zip
+          path: DXcore-ios.zip
+          token: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+
+      - name: Unpack iOS Framework
         run: |
           mkdir -p ios/Frameworks
-          ASSET_ID=$(curl -s -H "Authorization: token $GITHUB_TOKEN" \
-            https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest \
-            | jq -r '.assets[] | select(.name == "DXcore-ios.zip") | .id')
-
-          curl -L \
-            -H "Authorization: token $GITHUB_TOKEN" \
-            -H "Accept: application/octet-stream" \
-            "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$ASSET_ID" \
-            -o ios/DXcore-ios.zip
-
-          cd ios
-          unzip -o DXcore-ios.zip
-          mv build/ios/* .
-          rm -rf build DXcore-ios.zip
-          ls -la
+          unzip -o DXcore-ios.zip -d ios
+          mv ios/build/ios/* ios/
+          rm -rf ios/build DXcore-ios.zip
+          ls -la ios
 
       - name: Get app version
         id: get_version
@@ -49,7 +43,7 @@ jobs:
           os_name: "ios"
 
       - name: Import iOS certificates
-        uses: apple-actions/import-codesign-certs@v3
+        uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3
         with:
           p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
           p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -80,7 +74,7 @@ jobs:
             CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
 
       - name: Upload IPA to TestFlight
-        uses: apple-actions/upload-testflight-build@v1
+        uses: apple-actions/upload-testflight-build@54dc215b4cd5529730db39f11c84efdb71414e07 # v1
         with:
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
@@ -88,7 +82,7 @@ jobs:
           app-path: build/ios/ipa/*.ipa
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ios-release
           path: build/ios/ipa/*.ipa

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
@@ -15,8 +16,11 @@ class CrashReportingService {
     return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
   }
 
+  // Null until the user agrees to share crash reports. Uncaught crashes are
+  // still kept on the device by the handlers in main.dart, see
+  // TelemetryConsent.
   FirebaseCrashlytics? get _crashlyticsInstance {
-    if (_isDesktopPlatform) return null;
+    if (_isDesktopPlatform || !TelemetryConsent.isGranted) return null;
     _crashlytics ??= FirebaseCrashlytics.instance;
     return _crashlytics;
   }

@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/shared/services/app_traffic.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -50,6 +51,12 @@ class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
   );
 
   StreamSubscription? _eventSubscription;
+
+  @override
+  set state(ConnectionState value) {
+    AppTraffic.setConnected(value.status == ConnectionStatus.connected);
+    super.state = value;
+  }
 
   ConnectionStateNotifier() : super(const ConnectionState()) {
     // Initialize VPN status listener first, then load saved state

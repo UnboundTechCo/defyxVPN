@@ -5,12 +5,14 @@ import 'package:flutter/material.dart';
 abstract class SettingsGroupId {
   static const connectionMethod = 'connection_method';
   static const trafficControl = 'traffic_control';
+  static const privacy = 'privacy';
 }
 
 // Group Titles
 abstract class SettingsGroupTitle {
   static const connectionMethod = 'CONNECTION METHOD';
   static const trafficControl = 'ESCAPE MODE';
+  static const privacy = 'PRIVACY';
 }
 
 // Item IDs
@@ -20,6 +22,7 @@ abstract class SettingsItemId {
   static const killSwitch = 'kill_switch';
   static const deepScan = 'deep_scan';
   static const healthCheck = 'health_check';
+  static const shareDiagnostics = 'share_diagnostics';
 }
 
 // Item Titles
@@ -29,6 +32,7 @@ abstract class SettingsItemTitle {
   static const killSwitch = 'KILL SWITCH';
   static const deepScan = 'DEEP SCAN';
   static const healthCheck = 'HEALTH CHECK';
+  static const shareDiagnostics = 'SHARE DIAGNOSTICS';
 }
 
 // Navigation Routes
@@ -69,5 +73,7 @@ class SettingsText {
   String get killSwitchTitle => _l10n?.settingsKillSwitch ?? SettingsItemTitle.killSwitch;
   String get connectionMethodTitle => _l10n?.settingsConnectionMethod ?? SettingsGroupTitle.connectionMethod;
   String get destinationTitle => _l10n?.settingsDestination ?? SettingsItemTitle.destination;
+  String get privacyTitle => _l10n?.settingsPrivacy ?? SettingsGroupTitle.privacy;
+  String get shareDiagnosticsTitle => _l10n?.settingsShareDiagnostics ?? SettingsItemTitle.shareDiagnostics;
   String get atLeastOneCoreRequired => _l10n?.settingsAtLeastOneCoreRequired ?? SettingsMessage.atLeastOneCoreRequired;
 }

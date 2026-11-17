@@ -9,10 +9,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: "3.47.6"
           channel: "stable"
@@ -38,21 +38,17 @@ jobs:
           var_blob: ${{ toJson(vars) }}
           os_name: "windows"
 
-      - name: Download Windows Framework
-        env:
-          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+      - name: Download DXcore-windows.zip
+        uses: ./.github/actions/fetch-dxcore
+        with:
+          asset: DXcore-windows.zip
+          path: DXcore-windows.zip
+          token: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+
+      - name: Unpack Windows Framework
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path "windows/runner" | Out-Null
-          $release = Invoke-RestMethod `
-            -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/latest" `
-            -Headers @{ Authorization = "token $env:GITHUB_TOKEN" }
-          $asset = $release.assets | Where-Object { $_.name -eq "DXcore-windows.zip" }
-          $asset_id = $asset.id
-          Invoke-WebRequest `
-            -Uri "https://api.github.com/repos/UnboundTechCo/DXcore-private/releases/assets/$asset_id" `
-            -Headers @{ Authorization = "token $env:GITHUB_TOKEN"; Accept = "application/octet-stream" } `
-            -OutFile "DXcore-windows.zip"
           Expand-Archive -Path "DXcore-windows.zip" -DestinationPath "windows/runner" -Force
           Move-Item "windows/runner/build/windows/*" "windows/runner/" -Force
           Remove-Item "DXcore-windows.zip"
@@ -113,7 +109,7 @@ jobs:
           }
 
       - name: Upload Windows Release Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: windows-release
           path: |

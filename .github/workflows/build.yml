@@ -12,6 +12,11 @@ jobs:
   android:
     uses: ./.github/workflows/android.yml
     secrets: inherit
+    # Signs build provenance for the APKs and the AAB, see android.yml.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
   ios:
     if: false

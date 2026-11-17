@@ -3,10 +3,10 @@ on:
   
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0 
 
@@ -39,32 +39,32 @@ jobs:
             .github/release_message.md >> release.md
 
       - name: Download Android Google Play artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: android-googleplay
           path: android-release/
 
       - name: Download Android GitHub artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: android-github
           path: android-release/
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: windows-release
           path: windows-release/
       
       - name: Download Linux artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: linux-release
           path: linux-release/
       
       - name: Download iOS artifacts
         if: false
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: ios-release
           path: ios-release/
@@ -72,7 +72,7 @@ jobs:
       - name: Create GitHub Release
         if: steps.create_tag.outputs.created == 'true'
         id: create_release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           name: "v${{ steps.get_version.outputs.version }}"
@@ -87,7 +87,7 @@ jobs:
 
       - name: Delete existing release assets
         if: steps.create_tag.outputs.created == 'false'
-        uses: mknejp/delete-release-assets@v1
+        uses: mknejp/delete-release-assets@a40d395589329c6e93ab51a02fc2e4c60fdfe48f # v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag: "v${{ steps.get_version.outputs.version }}"
@@ -95,7 +95,7 @@ jobs:
 
       - name: Update GitHub Release
         if: steps.create_tag.outputs.created == 'false'
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           name: "v${{ steps.get_version.outputs.version }}"
@@ -107,7 +107,7 @@ jobs:
 
       - name: Upload AAB to Google Play Store
         if: steps.create_tag.outputs.created == 'true'
-        uses: r0adkll/upload-google-play@v1
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
         with:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.unboundtech.defyxvpn
@@ -117,7 +117,7 @@ jobs:
 
       - name: Upload to TestFlight
         if: false
-        uses: apple-actions/upload-testflight-build@v3
+        uses: apple-actions/upload-testflight-build@9fd28d4e690396e43caca69cef54cccccce77034 # v3
         with:
           app-path: build/ios/ipa/Runner.ipa
           issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
