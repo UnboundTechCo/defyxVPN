@@ -42,6 +42,8 @@ class AppIcons {
   static const String applePath = 'assets/icons/apple.svg';
   static const String crownPath = 'assets/icons/crown.svg';
   static const String supportPath = 'assets/icons/support.svg';
+  static const String premiumVerifiedPath = 'assets/icons/premium_verified.svg';
+  static const String jumpPath = 'assets/icons/jump.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -180,6 +182,14 @@ class AppIcons {
 
   static SvgPicture premium({double? width, double? height}) {
     return SvgPicture.asset(premiumPath, width: width, height: height);
+  }
+
+  static SvgPicture premiumVerified({double? width, double? height}) {
+    return SvgPicture.asset(premiumVerifiedPath, width: width, height: height);
+  }
+
+  static SvgPicture jump({double? width, double? height}) {
+    return SvgPicture.asset(jumpPath, width: width, height: height);
   }
 
   static SvgPicture market({double? width, double? height}) {

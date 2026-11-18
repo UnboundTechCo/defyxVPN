@@ -25,6 +25,11 @@ extension ConnectionStatusExtension on ConnectionStatus {
   static ConnectionStatus fromInt(int value) {
     return ConnectionStatus.values[value];
   }
+
+  bool get isVpnRunning =>
+      this == ConnectionStatus.connected ||
+      this == ConnectionStatus.analyzing ||
+      this == ConnectionStatus.loading;
 }
 
 class ConnectionState {

@@ -250,16 +250,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelModeOnly => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.';
+
+  @override
   String get splitTunnelTabAddresses => 'АДРЕСА';
 
   @override
   String get splitTunnelTabApps => 'ПРИЛОЖЕНИЯ';
 
   @override
+  String get pressBackAgainToExit => 'Нажмите «Назад» ещё раз, чтобы выйти';
+
+  @override
   String get splitTunnelSearch => 'Поиск';
 
   @override
   String get splitTunnelAddressHint => 'введите здесь ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'введите корректный домен, например example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'введите код страны, IP-адрес или диапазон CIDR, например ir, 8.8.8.8 или 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'введите или выберите путь ...';
@@ -484,6 +499,52 @@ class AppLocalizationsRu extends AppLocalizations {
   String get privateDnsDismiss => 'Не сейчас';
 
   @override
+  String get marketplaceInfoDescription =>
+      'Эта премиум-подписка была приобретена напрямую у Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Осталось трафика';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Осталось времени';
+
+  @override
+  String get marketplaceInfoGigabytes => 'ГБ';
+
+  @override
+  String get marketplaceInfoDays => 'дн.';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Не удалось загрузить данные об использовании. Проверьте соединение и повторите попытку.';
+
+  @override
+  String get marketplaceInfoRetry => 'Повторить';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Смените сервер, не меняя локацию.';
+
+  @override
+  String get marketplaceInfoJump => 'Сменить';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Сервер успешно изменён.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Не удалось сменить сервер';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN будет отключён';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'При смене сервера VPN отключится. Продолжить?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Да, сменить сервер';
+
+  @override
   String get privacyNoticeTitle => 'Уведомление о конфиденциальности';
 
   @override
@@ -491,23 +552,23 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• При запуске приложения и при подключении загружаются настройки подключения, а ваш интернет-провайдер определяется по IP-адресу — через серверы DefyxVPN и службы определения IP, например freeipapi.com и ip.sb. При входе в Premium отправляются данные вашей учётной записи.';
+      'При запуске приложения и при подключении загружаются настройки подключения, а ваш интернет-провайдер определяется по IP-адресу — через серверы DefyxVPN и службы определения IP, например freeipapi.com и ip.sb. При входе в Premium отправляются данные вашей учётной записи.';
 
   @override
   String get privacyNoticeTelemetry =>
-      '• Только если вы разрешите это ниже: статистика использования и отчёты о сбоях отправляются в Google Firebase. Они включают название вашего интернет-провайдера, способ подключения и страну выхода VPN.';
+      'Только если вы разрешите это ниже: статистика использования и отчёты о сбоях отправляются в Google Firebase. Они включают название вашего интернет-провайдера, способ подключения и страну выхода VPN.';
 
   @override
   String get privacyNoticeAds =>
-      '• Реклама предоставляется Google AdMob, который может запросить ваше согласие на её персонализацию.';
+      'Реклама предоставляется Google AdMob, который может запросить ваше согласие на её персонализацию.';
 
   @override
   String get privacyNoticeSpeedTest =>
-      '• Результаты теста скорости отправляются в Cloudflare, когда вы запускаете тест.';
+      'Результаты теста скорости отправляются в Cloudflare, когда вы запускаете тест.';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      '• Пока VPN подключён, приложение направляет через него и собственные соединения, кроме тех, которые устанавливают сам VPN.';
+      'Пока VPN подключён, приложение направляет через него и собственные соединения, кроме тех, которые устанавливают сам VPN.';
 
   @override
   String get privacyNoticeLocal =>
@@ -515,7 +576,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privacyNoticeChangeLater =>
-      'Вы можете изменить свой выбор в любое время в настройках.';
+      'Изменить выбор можно в любое время в настройках, в разделе «Диагностика и эксперименты».';
 
   @override
   String get privacyNoticeVpnProfile =>

@@ -250,16 +250,31 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelModeOnly => 'فقط موارد انتخاب‌شده';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.';
+
+  @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
 
   @override
   String get splitTunnelTabApps => 'برنامه‌ها';
 
   @override
+  String get pressBackAgainToExit => 'برای خروج دوباره دکمه بازگشت را بزنید';
+
+  @override
   String get splitTunnelSearch => 'جستجو';
 
   @override
   String get splitTunnelAddressHint => 'اینجا تایپ کنید ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'یک دامنه معتبر وارد کنید، مثلاً example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'کد کشور، آدرس IP یا محدوده CIDR وارد کنید، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'مسیر را بنویسید یا انتخاب کنید ...';
@@ -481,6 +496,51 @@ class AppLocalizationsFa extends AppLocalizations {
   String get privateDnsDismiss => 'بعداً';
 
   @override
+  String get marketplaceInfoDescription =>
+      'این اشتراک پریمیوم مستقیماً از Defyx خریداری شده است.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'حجم باقی‌مانده';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'زمان باقی‌مانده';
+
+  @override
+  String get marketplaceInfoGigabytes => 'گیگابایت';
+
+  @override
+  String get marketplaceInfoDays => 'روز';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'دریافت میزان مصرف ممکن نشد. اتصال خود را بررسی کنید و دوباره تلاش کنید.';
+
+  @override
+  String get marketplaceInfoRetry => 'تلاش دوباره';
+
+  @override
+  String get marketplaceInfoJumpDescription => 'تغییر سرور بدون تغییر موقعیت.';
+
+  @override
+  String get marketplaceInfoJump => 'پرش';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'سرور با موفقیت تغییر کرد.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'تغییر سرور ممکن نشد';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN قطع می‌شود';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'با تغییر سرور، VPN شما قطع می‌شود. ادامه می‌دهید؟';
+
+  @override
+  String get jumpDisconnectConfirm => 'بله، سرور را تغییر بده';
+
+  @override
   String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
 
   @override
@@ -488,23 +548,23 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
 
   @override
   String get privacyNoticeTelemetry =>
-      '• فقط اگر در پایین اجازه دهید: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال می‌شود. این داده‌ها شامل نام ارائه‌دهنده اینترنت شما، روش اتصال و کشور خروجی VPN است.';
+      'فقط اگر در پایین اجازه دهید: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال می‌شود. این داده‌ها شامل نام ارائه‌دهنده اینترنت شما، روش اتصال و کشور خروجی VPN است.';
 
   @override
   String get privacyNoticeAds =>
-      '• تبلیغات از Google AdMob نمایش داده می‌شود که ممکن است برای شخصی‌سازی آن‌ها از شما رضایت بخواهد.';
+      'تبلیغات از Google AdMob نمایش داده می‌شود که ممکن است برای شخصی‌سازی آن‌ها از شما رضایت بخواهد.';
 
   @override
   String get privacyNoticeSpeedTest =>
-      '• هنگام اجرای تست سرعت، نتایج آن به Cloudflare ارسال می‌شود.';
+      'هنگام اجرای تست سرعت، نتایج آن به Cloudflare ارسال می‌شود.';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      '• هنگام اتصال VPN، برنامه اتصال‌های خودش را هم از طریق آن می‌فرستد، به جز اتصال‌هایی که خود VPN را برقرار می‌کنند.';
+      'هنگام اتصال VPN، برنامه اتصال‌های خودش را هم از طریق آن می‌فرستد، به جز اتصال‌هایی که خود VPN را برقرار می‌کنند.';
 
   @override
   String get privacyNoticeLocal =>
@@ -512,7 +572,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeChangeLater =>
-      'هر زمان می‌توانید انتخاب خود را در تنظیمات تغییر دهید.';
+      'هر زمان می‌توانید این انتخاب را در تنظیمات، بخش «عیب‌یابی و آزمایش‌ها»، تغییر دهید.';
 
   @override
   String get privacyNoticeVpnProfile =>

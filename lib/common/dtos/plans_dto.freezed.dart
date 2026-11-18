@@ -33,6 +33,9 @@ mixin _$PlansResponse {
   int get bandwidth_limit => throw _privateConstructorUsedError;
   @JsonKey(name: "price")
   double get price => throw _privateConstructorUsedError;
+  @JsonKey(name: "international_price_multiplier")
+  double get international_price_multiplier =>
+      throw _privateConstructorUsedError;
 
   /// Serializes this PlansResponse to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
@@ -58,6 +61,8 @@ abstract class $PlansResponseCopyWith<$Res> {
     @JsonKey(name: "duration_days") int duration_days,
     @JsonKey(name: "bandwidth_limit") int bandwidth_limit,
     @JsonKey(name: "price") double price,
+    @JsonKey(name: "international_price_multiplier")
+    double international_price_multiplier,
   });
 }
 
@@ -82,6 +87,7 @@ class _$PlansResponseCopyWithImpl<$Res, $Val extends PlansResponse>
     Object? duration_days = null,
     Object? bandwidth_limit = null,
     Object? price = null,
+    Object? international_price_multiplier = null,
   }) {
     return _then(
       _value.copyWith(
@@ -109,6 +115,11 @@ class _$PlansResponseCopyWithImpl<$Res, $Val extends PlansResponse>
                 ? _value.price
                 : price // ignore: cast_nullable_to_non_nullable
                       as double,
+            international_price_multiplier:
+                null == international_price_multiplier
+                ? _value.international_price_multiplier
+                : international_price_multiplier // ignore: cast_nullable_to_non_nullable
+                      as double,
           )
           as $Val,
     );
@@ -131,6 +142,8 @@ abstract class _$$PlansResponseImplCopyWith<$Res>
     @JsonKey(name: "duration_days") int duration_days,
     @JsonKey(name: "bandwidth_limit") int bandwidth_limit,
     @JsonKey(name: "price") double price,
+    @JsonKey(name: "international_price_multiplier")
+    double international_price_multiplier,
   });
 }
 
@@ -154,6 +167,7 @@ class __$$PlansResponseImplCopyWithImpl<$Res>
     Object? duration_days = null,
     Object? bandwidth_limit = null,
     Object? price = null,
+    Object? international_price_multiplier = null,
   }) {
     return _then(
       _$PlansResponseImpl(
@@ -181,6 +195,10 @@ class __$$PlansResponseImplCopyWithImpl<$Res>
             ? _value.price
             : price // ignore: cast_nullable_to_non_nullable
                   as double,
+        international_price_multiplier: null == international_price_multiplier
+            ? _value.international_price_multiplier
+            : international_price_multiplier // ignore: cast_nullable_to_non_nullable
+                  as double,
       ),
     );
   }
@@ -196,6 +214,8 @@ class _$PlansResponseImpl implements _PlansResponse {
     @JsonKey(name: "duration_days") required this.duration_days,
     @JsonKey(name: "bandwidth_limit") required this.bandwidth_limit,
     @JsonKey(name: "price") required this.price,
+    @JsonKey(name: "international_price_multiplier")
+    required this.international_price_multiplier,
   });
 
   factory _$PlansResponseImpl.fromJson(Map<String, dynamic> json) =>
@@ -219,6 +239,9 @@ class _$PlansResponseImpl implements _PlansResponse {
   @override
   @JsonKey(name: "price")
   final double price;
+  @override
+  @JsonKey(name: "international_price_multiplier")
+  final double international_price_multiplier;
 
   @override
   String toString() {
@@ -275,6 +298,8 @@ abstract class _PlansResponse implements PlansResponse {
     @JsonKey(name: "duration_days") required final int duration_days,
     @JsonKey(name: "bandwidth_limit") required final int bandwidth_limit,
     @JsonKey(name: "price") required final double price,
+    @JsonKey(name: "international_price_multiplier")
+    required final double international_price_multiplier,
   }) = _$PlansResponseImpl;
 
   factory _PlansResponse.fromJson(Map<String, dynamic> json) =
@@ -298,6 +323,9 @@ abstract class _PlansResponse implements PlansResponse {
   @override
   @JsonKey(name: "price")
   double get price;
+  @override
+  @JsonKey(name: "international_price_multiplier")
+  double get international_price_multiplier;
 
   /// Create a copy of PlansResponse
   /// with the given fields replaced by the non-null parameter values.

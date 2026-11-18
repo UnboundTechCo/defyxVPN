@@ -678,6 +678,20 @@ class VPN {
     }
   }
 
+  Future<void> disconnectIfRunning(WidgetRef ref) async {
+    switch (ref.read(connectionStateProvider).status) {
+      case ConnectionStatus.connected:
+        await _disconnect(ref);
+        return;
+      case ConnectionStatus.analyzing:
+      case ConnectionStatus.loading:
+        await _stopVPN(ref);
+        return;
+      default:
+        return;
+    }
+  }
+
   Future<void> getVPNStatus() async {
     final status = await _vpnBridge.getVpnStatus();
     log.addLog("VPN status: $status");

@@ -576,6 +576,12 @@ abstract class AppLocalizations {
   /// **'ONLY SELECTED'**
   String get splitTunnelModeOnly;
 
+  /// Note under the split tunnel mode selector explaining when changes apply
+  ///
+  /// In en, this message translates to:
+  /// **'changes to the split tunneling settings will take effect after connecting or reconnecting.'**
+  String get splitTunnelReconnectNote;
+
   /// Split tunnel tab - addresses
   ///
   /// In en, this message translates to:
@@ -588,6 +594,12 @@ abstract class AppLocalizations {
   /// **'APPS'**
   String get splitTunnelTabApps;
 
+  /// Toast shown on the first Back press on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// Split tunnel search field hint
   ///
   /// In en, this message translates to:
@@ -599,6 +611,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'type here ...'**
   String get splitTunnelAddressHint;
+
+  /// Error shown when a split tunnel domain rule is not a valid domain
+  ///
+  /// In en, this message translates to:
+  /// **'enter a valid domain, e.g. example.com'**
+  String get splitTunnelInvalidDomain;
+
+  /// Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range
+  ///
+  /// In en, this message translates to:
+  /// **'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8'**
+  String get splitTunnelInvalidGeoip;
 
   /// Split tunnel app path input hint
   ///
@@ -1008,6 +1032,90 @@ abstract class AppLocalizations {
   /// **'Not now'**
   String get privateDnsDismiss;
 
+  /// Text under the subscription name in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'This premium subscription was purchased directly from Defyx.'**
+  String get marketplaceInfoDescription;
+
+  /// Label inside the data usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining data'**
+  String get marketplaceInfoRemainingData;
+
+  /// Label inside the time usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining time'**
+  String get marketplaceInfoRemainingTime;
+
+  /// Gigabytes unit shown after the total data volume
+  ///
+  /// In en, this message translates to:
+  /// **'GB'**
+  String get marketplaceInfoGigabytes;
+
+  /// Days unit shown after the total subscription days
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get marketplaceInfoDays;
+
+  /// Warning shown in the marketplace info sheet when the usage request fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your usage. Check your connection and try again.'**
+  String get marketplaceInfoUsageError;
+
+  /// Button that reloads the usage in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get marketplaceInfoRetry;
+
+  /// Text of the jump card in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server without changing location.'**
+  String get marketplaceInfoJumpDescription;
+
+  /// Button that moves the subscription to another server in the same location
+  ///
+  /// In en, this message translates to:
+  /// **'Jump'**
+  String get marketplaceInfoJump;
+
+  /// Toast shown after the subscription moved to another server
+  ///
+  /// In en, this message translates to:
+  /// **'Server switched successfully.'**
+  String get marketplaceInfoJumpSuccess;
+
+  /// Toast shown when moving the subscription to another server fails. The reason is appended after a colon.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not switch server'**
+  String get marketplaceInfoJumpFailed;
+
+  /// Title of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'VPN will be disconnected'**
+  String get jumpDisconnectTitle;
+
+  /// Body of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'Switching server disconnects your VPN. Do you want to continue?'**
+  String get jumpDisconnectMessage;
+
+  /// Button that confirms disconnecting the VPN and switching server
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, switch server'**
+  String get jumpDisconnectConfirm;
+
   /// Title of the privacy notice shown on first launch
   ///
   /// In en, this message translates to:
@@ -1020,34 +1128,34 @@ abstract class AppLocalizations {
   /// **'What DefyxVPN sends, and where:'**
   String get privacyNoticeIntro;
 
-  /// Privacy notice item about the app's own requests
+  /// Privacy notice item about the app's own requests. Shown as a list item; the app draws the bullet, so do not add one.
   ///
   /// In en, this message translates to:
-  /// **'• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.'**
+  /// **'When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.'**
   String get privacyNoticeConnection;
 
-  /// Privacy notice item about Firebase; only sent after consent
+  /// Privacy notice item about Firebase; only sent after consent. Shown as a list item; the app draws the bullet, so do not add one.
   ///
   /// In en, this message translates to:
-  /// **'• Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.'**
+  /// **'Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.'**
   String get privacyNoticeTelemetry;
 
-  /// Privacy notice item about AdMob
+  /// Privacy notice item about AdMob. Shown as a list item; the app draws the bullet, so do not add one.
   ///
   /// In en, this message translates to:
-  /// **'• Ads come from Google AdMob, which may ask for your consent to personalize them.'**
+  /// **'Ads come from Google AdMob, which may ask for your consent to personalize them.'**
   String get privacyNoticeAds;
 
-  /// Privacy notice item about the speed test
+  /// Privacy notice item about the speed test. Shown as a list item; the app draws the bullet, so do not add one.
   ///
   /// In en, this message translates to:
-  /// **'• Speed test results go to Cloudflare when you run a test.'**
+  /// **'Speed test results go to Cloudflare when you run a test.'**
   String get privacyNoticeSpeedTest;
 
-  /// Privacy notice item: the app's own traffic also goes through the VPN
+  /// Privacy notice item: the app's own traffic also goes through the VPN. Shown as a list item; the app draws the bullet, so do not add one.
   ///
   /// In en, this message translates to:
-  /// **'• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.'**
+  /// **'While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.'**
   String get privacyNoticeOwnTraffic;
 
   /// Privacy notice paragraph about local storage
@@ -1056,10 +1164,10 @@ abstract class AppLocalizations {
   /// **'Your internet provider\'s name is also kept on this device to speed up later connections.'**
   String get privacyNoticeLocal;
 
-  /// Privacy notice line under the consent checkbox
+  /// Privacy notice hint under the consent checkbox. Use the names shown for Settings and for the Diagnostics & Experiments entry in this language.
   ///
   /// In en, this message translates to:
-  /// **'You can change your choice at any time in Settings.'**
+  /// **'You can change this at any time in Settings › Diagnostics & Experiments.'**
   String get privacyNoticeChangeLater;
 
   /// Privacy notice line on Android and iOS

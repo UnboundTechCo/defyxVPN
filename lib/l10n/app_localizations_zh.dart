@@ -248,16 +248,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelModeOnly => '仅限所选';
 
   @override
+  String get splitTunnelReconnectNote => '分流设置的更改将在连接或重新连接后生效。';
+
+  @override
   String get splitTunnelTabAddresses => '地址';
 
   @override
   String get splitTunnelTabApps => '应用';
 
   @override
+  String get pressBackAgainToExit => '再按一次返回键退出';
+
+  @override
   String get splitTunnelSearch => '搜索';
 
   @override
   String get splitTunnelAddressHint => '在此输入 ...';
+
+  @override
+  String get splitTunnelInvalidDomain => '请输入有效的域名，例如 example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      '请输入国家代码、IP 地址或 CIDR 范围，例如 ir、8.8.8.8 或 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => '输入或选择路径 ...';
@@ -469,6 +482,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get privateDnsDismiss => '以后再说';
 
   @override
+  String get marketplaceInfoDescription => '此高级订阅直接购自 Defyx。';
+
+  @override
+  String get marketplaceInfoRemainingData => '剩余流量';
+
+  @override
+  String get marketplaceInfoRemainingTime => '剩余时间';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => '天';
+
+  @override
+  String get marketplaceInfoUsageError => '无法加载用量信息。请检查网络连接后重试。';
+
+  @override
+  String get marketplaceInfoRetry => '重试';
+
+  @override
+  String get marketplaceInfoJumpDescription => '在不更改位置的情况下切换服务器。';
+
+  @override
+  String get marketplaceInfoJump => '切换';
+
+  @override
+  String get marketplaceInfoJumpSuccess => '服务器切换成功。';
+
+  @override
+  String get marketplaceInfoJumpFailed => '无法切换服务器';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN 将断开连接';
+
+  @override
+  String get jumpDisconnectMessage => '切换服务器会断开您的 VPN。是否继续？';
+
+  @override
+  String get jumpDisconnectConfirm => '是，切换服务器';
+
+  @override
   String get privacyNoticeTitle => '隐私声明';
 
   @override
@@ -476,27 +531,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• 应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
+      '应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
 
   @override
   String get privacyNoticeTelemetry =>
-      '• 仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
+      '仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
 
   @override
-  String get privacyNoticeAds => '• 广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
+  String get privacyNoticeAds => '广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
 
   @override
-  String get privacyNoticeSpeedTest => '• 运行测速时，测速结果会发送至 Cloudflare。';
+  String get privacyNoticeSpeedTest => '运行测速时，测速结果会发送至 Cloudflare。';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      '• VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
+      'VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
 
   @override
   String get privacyNoticeLocal => '您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。';
 
   @override
-  String get privacyNoticeChangeLater => '您可以随时在设置中更改此选择。';
+  String get privacyNoticeChangeLater => '您可以随时在“设置”>“诊断与实验”中更改此选择。';
 
   @override
   String get privacyNoticeVpnProfile => '继续即表示您同意安装 VPN 配置文件。';

@@ -319,8 +319,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
     // Use hasActiveAdProvider as single source of truth for ad visibility
     final hasActiveAd = ref.watch(hasActiveAdProvider);
+    final settings = ref.read(settingsProvider.notifier);
 
-    bool shouldShowAd = hasActiveAd;
+    bool shouldShowAd = hasActiveAd && !settings.isPremiumCustomer();
     Widget? mainContent;
 
     switch (status) {

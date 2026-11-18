@@ -7,6 +7,7 @@ import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:defyx_vpn/core/utils/plans_price.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class PremiumPlanDetails extends StatefulWidget {
@@ -69,61 +70,73 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
   }
 
   Widget _buildPlanDetails(PlansResponse plan) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'What You\'ll Get',
-          style: TextStyle(
-            color: const Color(0xFFA9A9AA),
-            fontSize: 30.sp,
-            fontWeight: FontWeight.w300,
-          ),
-        ),
-        SizedBox(height: 16.h),
-        Text(
-          plan.description,
-          style: TextStyle(color: const Color(0xFF575757), fontSize: 18.sp),
-        ),
-        SizedBox(height: 20.h),
-        DashedDivider(
-          color: const Color(0xFFA9A9AA),
-          thickness: 1,
-          dashWidth: 6,
-          dashSpace: 4,
-        ),
-        SizedBox(height: 20.h),
-        Row(
-          // mainAxisAlignment: MainAxisAlignment.center,
+    return FutureBuilder<String>(
+      future: calculateInternationalPrice(plan),
+      builder: (context, snapshot) {
+        final price = snapshot.data ?? plan.price.toStringAsFixed(2);
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${plan.price.toStringAsFixed(2)} Credits',
+              'What You\'ll Get',
               style: TextStyle(
-                color: const Color(0xFF4CAF7F),
-                fontSize: 34.sp,
-                fontWeight: FontWeight.bold,
+                color: const Color(0xFFA9A9AA),
+                fontSize: 30.sp,
+                fontWeight: FontWeight.w300,
               ),
             ),
-            SizedBox(width: 4.w),
+            SizedBox(height: 16.h),
             Text(
-              '/ ',
-              style: TextStyle(color: const Color(0xFF515151), fontSize: 20.sp),
+              plan.description,
+              style: TextStyle(color: const Color(0xFF575757), fontSize: 18.sp),
             ),
-            Text(
-              '${(plan.duration_days / 30).round()}',
-              style: TextStyle(
-                color: const Color(0xFF515151),
-                fontSize: 20.sp,
-                fontWeight: FontWeight.w600,
-              ),
+            SizedBox(height: 20.h),
+            DashedDivider(
+              color: const Color(0xFFA9A9AA),
+              thickness: 1,
+              dashWidth: 6,
+              dashSpace: 4,
             ),
-            Text(
-              ' Months',
-              style: TextStyle(color: const Color(0xFF515151), fontSize: 20.sp),
+            SizedBox(height: 20.h),
+            Row(
+              // mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  '$price Credits',
+                  style: TextStyle(
+                    color: const Color(0xFF4CAF7F),
+                    fontSize: 34.sp,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(width: 4.w),
+                Text(
+                  '/ ',
+                  style: TextStyle(
+                    color: const Color(0xFF515151),
+                    fontSize: 20.sp,
+                  ),
+                ),
+                Text(
+                  '${(plan.duration_days / 30).round()}',
+                  style: TextStyle(
+                    color: const Color(0xFF515151),
+                    fontSize: 20.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                Text(
+                  ' Months',
+                  style: TextStyle(
+                    color: const Color(0xFF515151),
+                    fontSize: 20.sp,
+                  ),
+                ),
+              ],
             ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
