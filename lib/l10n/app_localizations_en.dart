@@ -549,23 +549,23 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.';
+      'When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.';
 
   @override
   String get privacyNoticeTelemetry =>
-      '• Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.';
+      'Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.';
 
   @override
   String get privacyNoticeAds =>
-      '• Ads come from Google AdMob, which may ask for your consent to personalize them.';
+      'Ads come from Google AdMob, which may ask for your consent to personalize them.';
 
   @override
   String get privacyNoticeSpeedTest =>
-      '• Speed test results go to Cloudflare when you run a test.';
+      'Speed test results go to Cloudflare when you run a test.';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      '• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.';
+      'While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.';
 
   @override
   String get privacyNoticeLocal =>
@@ -573,7 +573,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privacyNoticeChangeLater =>
-      'You can change your choice at any time in Settings.';
+      'You can change this at any time in Settings › Diagnostics & Experiments.';
 
   @override
   String get privacyNoticeVpnProfile =>

@@ -531,27 +531,27 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      '• 应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
+      '应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
 
   @override
   String get privacyNoticeTelemetry =>
-      '• 仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
+      '仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
 
   @override
-  String get privacyNoticeAds => '• 广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
+  String get privacyNoticeAds => '广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
 
   @override
-  String get privacyNoticeSpeedTest => '• 运行测速时，测速结果会发送至 Cloudflare。';
+  String get privacyNoticeSpeedTest => '运行测速时，测速结果会发送至 Cloudflare。';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      '• VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
+      'VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
 
   @override
   String get privacyNoticeLocal => '您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。';
 
   @override
-  String get privacyNoticeChangeLater => '您可以随时在设置中更改此选择。';
+  String get privacyNoticeChangeLater => '您可以随时在“设置”>“诊断与实验”中更改此选择。';
 
   @override
   String get privacyNoticeVpnProfile => '继续即表示您同意安装 VPN 配置文件。';

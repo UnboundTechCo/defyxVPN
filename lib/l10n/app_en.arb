@@ -866,29 +866,29 @@
     "description": "First line of the privacy notice, followed by a list"
   },
 
-  "privacyNoticeConnection": "• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN's servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.",
+  "privacyNoticeConnection": "When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN's servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.",
   "@privacyNoticeConnection": {
-    "description": "Privacy notice item about the app's own requests"
+    "description": "Privacy notice item about the app's own requests. Shown as a list item; the app draws the bullet, so do not add one."
   },
 
-  "privacyNoticeTelemetry": "• Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider's name, the connection method and the country of the VPN exit.",
+  "privacyNoticeTelemetry": "Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider's name, the connection method and the country of the VPN exit.",
   "@privacyNoticeTelemetry": {
-    "description": "Privacy notice item about Firebase; only sent after consent"
+    "description": "Privacy notice item about Firebase; only sent after consent. Shown as a list item; the app draws the bullet, so do not add one."
   },
 
-  "privacyNoticeAds": "• Ads come from Google AdMob, which may ask for your consent to personalize them.",
+  "privacyNoticeAds": "Ads come from Google AdMob, which may ask for your consent to personalize them.",
   "@privacyNoticeAds": {
-    "description": "Privacy notice item about AdMob"
+    "description": "Privacy notice item about AdMob. Shown as a list item; the app draws the bullet, so do not add one."
   },
 
-  "privacyNoticeSpeedTest": "• Speed test results go to Cloudflare when you run a test.",
+  "privacyNoticeSpeedTest": "Speed test results go to Cloudflare when you run a test.",
   "@privacyNoticeSpeedTest": {
-    "description": "Privacy notice item about the speed test"
+    "description": "Privacy notice item about the speed test. Shown as a list item; the app draws the bullet, so do not add one."
   },
 
-  "privacyNoticeOwnTraffic": "• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.",
+  "privacyNoticeOwnTraffic": "While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.",
   "@privacyNoticeOwnTraffic": {
-    "description": "Privacy notice item: the app's own traffic also goes through the VPN"
+    "description": "Privacy notice item: the app's own traffic also goes through the VPN. Shown as a list item; the app draws the bullet, so do not add one."
   },
 
   "privacyNoticeLocal": "Your internet provider's name is also kept on this device to speed up later connections.",
@@ -896,9 +896,9 @@
     "description": "Privacy notice paragraph about local storage"
   },
 
-  "privacyNoticeChangeLater": "You can change your choice at any time in Settings.",
+  "privacyNoticeChangeLater": "You can change this at any time in Settings › Diagnostics & Experiments.",
   "@privacyNoticeChangeLater": {
-    "description": "Privacy notice line under the consent checkbox"
+    "description": "Privacy notice hint under the consent checkbox. Use the names shown for Settings and for the Diagnostics & Experiments entry in this language."
   },
 
   "privacyNoticeVpnProfile": "By continuing, you agree to install the VPN profile.",
