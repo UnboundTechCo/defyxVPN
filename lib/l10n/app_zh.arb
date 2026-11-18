@@ -74,7 +74,7 @@
   "settingsSplitTunnel": "分离隧道",
   "settingsKillSwitch": "终止开关",
   "settingsDeepScan": "深度扫描",
-  "settingsHealthCheck": "健康监测",
+  "settingsAutoReconnect": "自动重连",
   "settingsIncluded": "已包含",
   "splitTunnelPreferences": "偏好设置",
   "splitTunnelModeOff": "关闭",
@@ -164,6 +164,5 @@
   "privacyNoticeVpnProfile": "继续即表示您同意安装 VPN 配置文件。",
   "privacyNoticeShareDiagnostics": "发送使用统计和崩溃报告",
   "privacyNoticeGotIt": "知道了",
-  "settingsPrivacy": "隐私",
   "settingsShareDiagnostics": "发送诊断数据"
 }

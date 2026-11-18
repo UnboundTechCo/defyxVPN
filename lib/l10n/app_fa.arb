@@ -74,7 +74,7 @@
   "settingsSplitTunnel": "تونل تقسیم شده",
   "settingsKillSwitch": "کلید قطع",
   "settingsDeepScan": "اسکن عمیق",
-  "settingsHealthCheck": "بررسی سلامت",
+  "settingsAutoReconnect": "اتصال مجدد خودکار",
   "settingsIncluded": "شامل شده",
   "splitTunnelPreferences": "تنظیمات",
   "splitTunnelModeOff": "خاموش",
@@ -164,6 +164,5 @@
   "privacyNoticeVpnProfile": "با ادامه، با نصب پروفایل VPN موافقت می‌کنید.",
   "privacyNoticeShareDiagnostics": "ارسال آمار استفاده و گزارش‌های خرابی",
   "privacyNoticeGotIt": "متوجه شدم",
-  "settingsPrivacy": "حریم خصوصی",
   "settingsShareDiagnostics": "ارسال داده‌های عیب‌یابی"
 }

@@ -371,9 +371,9 @@
     "description": "Settings section - deep scan"
   },
 
-  "settingsHealthCheck": "HEALTH MONITOR",
-  "@settingsHealthCheck": {
-    "description": "Settings section - health check"
+  "settingsAutoReconnect": "Auto Reconnect",
+  "@settingsAutoReconnect": {
+    "description": "Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working"
   },
 
   "settingsIncluded": "INCLUDED",
@@ -827,13 +827,8 @@
     "description": "Button that closes the privacy notice"
   },
 
-  "settingsPrivacy": "PRIVACY",
-  "@settingsPrivacy": {
-    "description": "Title of the privacy group in Settings"
-  },
-
-  "settingsShareDiagnostics": "SHARE DIAGNOSTICS",
+  "settingsShareDiagnostics": "Share Diagnostics",
   "@settingsShareDiagnostics": {
-    "description": "Settings toggle for sending usage statistics and crash reports"
+    "description": "Diagnostics dialog - toggle for sending usage statistics and crash reports"
   }
 }

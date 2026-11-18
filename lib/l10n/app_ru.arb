@@ -74,7 +74,7 @@
   "settingsSplitTunnel": "РАЗДЕЛЬНОЕ ТУННЕЛИРОВАНИЕ",
   "settingsKillSwitch": "АВАРИЙНОЕ ОТКЛЮЧЕНИЕ",
   "settingsDeepScan": "ГЛУБОКОЕ СКАНИРОВАНИЕ",
-  "settingsHealthCheck": "МОНИТОРИНГ СОСТОЯНИЯ",
+  "settingsAutoReconnect": "Автопереподключение",
   "settingsIncluded": "ВКЛЮЧЕНО",
   "splitTunnelPreferences": "Настройки",
   "splitTunnelModeOff": "ВЫКЛ",
@@ -164,6 +164,5 @@
   "privacyNoticeVpnProfile": "Продолжая, вы соглашаетесь установить профиль VPN.",
   "privacyNoticeShareDiagnostics": "Отправлять статистику использования и отчёты о сбоях",
   "privacyNoticeGotIt": "Понятно",
-  "settingsPrivacy": "КОНФИДЕНЦИАЛЬНОСТЬ",
-  "settingsShareDiagnostics": "ОТПРАВКА ДИАГНОСТИКИ"
+  "settingsShareDiagnostics": "Отправка диагностики"
 }

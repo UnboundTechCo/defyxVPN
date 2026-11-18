@@ -540,11 +540,11 @@ abstract class AppLocalizations {
   /// **'DEEP SCAN'**
   String get settingsDeepScan;
 
-  /// Settings section - health check
+  /// Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working
   ///
   /// In en, this message translates to:
-  /// **'HEALTH MONITOR'**
-  String get settingsHealthCheck;
+  /// **'Auto Reconnect'**
+  String get settingsAutoReconnect;
 
   /// Settings label - included items
   ///
@@ -1080,16 +1080,10 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get privacyNoticeGotIt;
 
-  /// Title of the privacy group in Settings
+  /// Diagnostics dialog - toggle for sending usage statistics and crash reports
   ///
   /// In en, this message translates to:
-  /// **'PRIVACY'**
-  String get settingsPrivacy;
-
-  /// Settings toggle for sending usage statistics and crash reports
-  ///
-  /// In en, this message translates to:
-  /// **'SHARE DIAGNOSTICS'**
+  /// **'Share Diagnostics'**
   String get settingsShareDiagnostics;
 }
 

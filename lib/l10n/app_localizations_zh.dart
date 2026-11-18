@@ -230,7 +230,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDeepScan => '深度扫描';
 
   @override
-  String get settingsHealthCheck => '健康监测';
+  String get settingsAutoReconnect => '自动重连';
 
   @override
   String get settingsIncluded => '已包含';
@@ -506,9 +506,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privacyNoticeGotIt => '知道了';
-
-  @override
-  String get settingsPrivacy => '隐私';
 
   @override
   String get settingsShareDiagnostics => '发送诊断数据';

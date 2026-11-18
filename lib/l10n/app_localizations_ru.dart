@@ -232,7 +232,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsDeepScan => 'ГЛУБОКОЕ СКАНИРОВАНИЕ';
 
   @override
-  String get settingsHealthCheck => 'МОНИТОРИНГ СОСТОЯНИЯ';
+  String get settingsAutoReconnect => 'Автопереподключение';
 
   @override
   String get settingsIncluded => 'ВКЛЮЧЕНО';
@@ -529,8 +529,5 @@ class AppLocalizationsRu extends AppLocalizations {
   String get privacyNoticeGotIt => 'Понятно';
 
   @override
-  String get settingsPrivacy => 'КОНФИДЕНЦИАЛЬНОСТЬ';
-
-  @override
-  String get settingsShareDiagnostics => 'ОТПРАВКА ДИАГНОСТИКИ';
+  String get settingsShareDiagnostics => 'Отправка диагностики';
 }

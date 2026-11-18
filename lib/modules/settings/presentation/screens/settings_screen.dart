@@ -13,7 +13,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
-import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import '../../constants/settings_constants.dart';
 import '../../models/settings_group.dart';
 import '../../models/split_tunnel_config.dart';
@@ -403,7 +402,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final groups = settingsState.groupList
         .map((group) => _withSplitTunnelSubtitle(group, splitTunnelMode))
-        .map(_withTelemetryConsent)
+        .map(_withoutAutoReconnect)
         .toList();
     return Column(
       children: groups
@@ -461,16 +460,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  // The privacy dialog can change the choice too, so the toggle shows the
-  // stored choice rather than the saved settings.
-  SettingsGroup _withTelemetryConsent(SettingsGroup group) {
-    if (group.id != SettingsGroupId.privacy) return group;
+  // Auto Reconnect is saved with this group but toggled from the
+  // Diagnostics & Experiments dialog.
+  SettingsGroup _withoutAutoReconnect(SettingsGroup group) {
+    if (group.id != SettingsGroupId.trafficControl) return group;
     return group.copyWith(
       items: [
         for (final item in group.items)
-          item.id == SettingsItemId.shareDiagnostics
-              ? item.copyWith(isEnabled: TelemetryConsent.isGranted)
-              : item,
+          if (item.id != SettingsItemId.healthCheck) item,
       ],
     );
   }

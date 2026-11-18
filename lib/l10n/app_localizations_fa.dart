@@ -232,7 +232,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsDeepScan => 'اسکن عمیق';
 
   @override
-  String get settingsHealthCheck => 'بررسی سلامت';
+  String get settingsAutoReconnect => 'اتصال مجدد خودکار';
 
   @override
   String get settingsIncluded => 'شامل شده';
@@ -524,9 +524,6 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeGotIt => 'متوجه شدم';
-
-  @override
-  String get settingsPrivacy => 'حریم خصوصی';
 
   @override
   String get settingsShareDiagnostics => 'ارسال داده‌های عیب‌یابی';
