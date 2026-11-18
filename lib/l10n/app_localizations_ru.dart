@@ -157,19 +157,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get defyxGoal =>
-      'Цель Defyx — обеспечить безопасный доступ к общедоступной информации и предоставить бесплатный просмотр.';
+      'Цель Defyx — обеспечить безопасный доступ к общедоступной информации и свободный интернет-сёрфинг.';
 
   @override
   String get statusIsChilling => 'отдыхает.';
 
   @override
-  String get statusIs => 'это';
+  String get statusIs => '';
 
   @override
-  String get statusFailed => 'не удалось.';
+  String get statusFailed => 'дал сбой.';
 
   @override
-  String get statusHas => 'имеет';
+  String get statusHas => '';
 
   @override
   String get statusIsReturning => 'возвращается';
@@ -178,13 +178,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusToStandbyMode => 'в режим ожидания.';
 
   @override
-  String get statusPluggingIn => 'подключение ...';
+  String get statusPluggingIn => 'подключается ...';
 
   @override
-  String get statusPoweredUp => 'включен';
+  String get statusPoweredUp => 'включён';
 
   @override
-  String get statusDoingScience => 'выполняется работа ...';
+  String get statusDoingScience => 'занимается наукой ...';
 
   @override
   String get statusExitedMatrix => 'вышел из матрицы';
@@ -193,10 +193,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusSorry => 'нам очень жаль :(';
 
   @override
-  String get statusConnectAlready => 'Подключиться сейчас';
+  String get statusConnectAlready => 'Пора подключаться';
 
   @override
-  String get statusTestingSpeed => 'тестирование скорости ...';
+  String get statusTestingSpeed => 'тестирует скорость ...';
 
   @override
   String get statusIsReady => 'готов';
@@ -211,7 +211,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusToSpeedTest => 'к тесту скорости';
 
   @override
-  String get statusYoursToShape => 'создан для вас';
+  String get statusYoursToShape => 'в ваших руках';
 
   @override
   String get settingsConnectionMethod => 'МЕТОД ПОДКЛЮЧЕНИЯ';
@@ -235,7 +235,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsAutoReconnect => 'Автопереподключение';
 
   @override
-  String get settingsIncluded => 'ВКЛЮЧЕНО';
+  String get settingsIncluded => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
   String get splitTunnelPreferences => 'Настройки';
@@ -274,14 +274,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelNoApps => 'Приложения не найдены';
 
   @override
-  String get settingsExcluded => 'ИСКЛЮЧЕНО';
+  String get settingsExcluded => 'КРОМЕ ВЫБРАННЫХ';
 
   @override
   String get settingsAtLeastOneCoreRequired =>
-      'Должен оставаться включенным хотя бы один модуль';
+      'Хотя бы один метод подключения должен оставаться включённым';
 
   @override
-  String get settingsResetToDefault => 'Сброс';
+  String get settingsResetToDefault => 'Сбросить';
 
   @override
   String get settingsDiagnosticsExperiments => 'Диагностика и эксперименты';
@@ -402,7 +402,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get premiumImportDescription =>
-      'Если ваши премиум-подписки не могут быть загружены из-за ограничений интернета и вы не можете подключиться доступными методами, вы можете импортировать файл, полученный из Маркетплейса, в приложение.';
+      'Если ваши премиум-подписки не загружаются из-за интернет-ограничений и вы не можете подключиться доступными методами, импортируйте в приложение файл, полученный в Магазине.';
 
   @override
   String get planningToExit => 'Планируете выйти?';
@@ -437,7 +437,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Получите премиум-доступ к VPN с\nбыстрыми и надежными подключениями.';
 
   @override
-  String get loggedIn => 'ВОШЛИ В СИСТЕМУ';
+  String get loggedIn => 'ВХОД ВЫПОЛНЕН';
 
   @override
   String get loginOrRegister => 'ВОЙТИ ИЛИ ЗАРЕГИСТРИРОВАТЬСЯ';
