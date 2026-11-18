@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
-  String get settingsHealthCheck => 'HEALTH MONITOR';
+  String get settingsAutoReconnect => 'Auto Reconnect';
 
   @override
   String get settingsIncluded => 'INCLUDED';
@@ -587,8 +587,5 @@ class AppLocalizationsEn extends AppLocalizations {
   String get privacyNoticeGotIt => 'Got it';
 
   @override
-  String get settingsPrivacy => 'PRIVACY';
-
-  @override
-  String get settingsShareDiagnostics => 'SHARE DIAGNOSTICS';
+  String get settingsShareDiagnostics => 'Share Diagnostics';
 }

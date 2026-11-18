@@ -258,7 +258,7 @@
 
   "statusIs": "is",
   "@statusIs": {
-    "description": "Status connector word"
+    "description": "Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is one of: 'plugging in ...', 'powered up', 'doing science ...', 'testing speed ...', 'yours to shape'."
   },
 
   "statusFailed": "failed.",
@@ -268,7 +268,7 @@
 
   "statusHas": "has",
   "@statusHas": {
-    "description": "Status connector word"
+    "description": "Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is 'exited the matrix' (no internet)."
   },
 
   "statusIsReturning": "is returning",
@@ -318,7 +318,7 @@
 
   "statusIsReady": "is ready",
   "@statusIsReady": {
-    "description": "Status message - ready state"
+    "description": "Speed test headline line 1 after the Defyx logo; line 2 is 'to speed test'. Translate the two lines together."
   },
 
   "statusIsInTrouble": "is in trouble.",
@@ -333,7 +333,7 @@
 
   "statusToSpeedTest": "to speed test",
   "@statusToSpeedTest": {
-    "description": "Status message - ready for speed test"
+    "description": "Speed test headline line 2, after 'Defyx is ready'. Translate the two lines together."
   },
 
   "statusYoursToShape": "yours to shape",
@@ -371,9 +371,9 @@
     "description": "Settings section - deep scan"
   },
 
-  "settingsHealthCheck": "HEALTH MONITOR",
-  "@settingsHealthCheck": {
-    "description": "Settings section - health check"
+  "settingsAutoReconnect": "Auto Reconnect",
+  "@settingsAutoReconnect": {
+    "description": "Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working"
   },
 
   "settingsIncluded": "INCLUDED",
@@ -653,7 +653,7 @@
 
   "signedInAs": "You are currently signed in with the email address",
   "@signedInAs": {
-    "description": "Premium trouble dialog - signed in message prefix"
+    "description": "Premium trouble dialog - text placed directly before the email address, which is followed by a period"
   },
 
   "premiumImportDescription": "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
@@ -916,13 +916,8 @@
     "description": "Button that closes the privacy notice"
   },
 
-  "settingsPrivacy": "PRIVACY",
-  "@settingsPrivacy": {
-    "description": "Title of the privacy group in Settings"
-  },
-
-  "settingsShareDiagnostics": "SHARE DIAGNOSTICS",
+  "settingsShareDiagnostics": "Share Diagnostics",
   "@settingsShareDiagnostics": {
-    "description": "Settings toggle for sending usage statistics and crash reports"
+    "description": "Diagnostics dialog - toggle for sending usage statistics and crash reports"
   }
 }

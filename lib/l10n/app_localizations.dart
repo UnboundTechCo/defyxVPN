@@ -402,7 +402,7 @@ abstract class AppLocalizations {
   /// **'is chilling.'**
   String get statusIsChilling;
 
-  /// Status connector word
+  /// Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is one of: 'plugging in ...', 'powered up', 'doing science ...', 'testing speed ...', 'yours to shape'.
   ///
   /// In en, this message translates to:
   /// **'is'**
@@ -414,7 +414,7 @@ abstract class AppLocalizations {
   /// **'failed.'**
   String get statusFailed;
 
-  /// Status connector word
+  /// Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is 'exited the matrix' (no internet).
   ///
   /// In en, this message translates to:
   /// **'has'**
@@ -474,7 +474,7 @@ abstract class AppLocalizations {
   /// **'testing speed ...'**
   String get statusTestingSpeed;
 
-  /// Status message - ready state
+  /// Speed test headline line 1 after the Defyx logo; line 2 is 'to speed test'. Translate the two lines together.
   ///
   /// In en, this message translates to:
   /// **'is ready'**
@@ -492,7 +492,7 @@ abstract class AppLocalizations {
   /// **'DXcore down.'**
   String get statusDXcoreDown;
 
-  /// Status message - ready for speed test
+  /// Speed test headline line 2, after 'Defyx is ready'. Translate the two lines together.
   ///
   /// In en, this message translates to:
   /// **'to speed test'**
@@ -540,11 +540,11 @@ abstract class AppLocalizations {
   /// **'DEEP SCAN'**
   String get settingsDeepScan;
 
-  /// Settings section - health check
+  /// Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working
   ///
   /// In en, this message translates to:
-  /// **'HEALTH MONITOR'**
-  String get settingsHealthCheck;
+  /// **'Auto Reconnect'**
+  String get settingsAutoReconnect;
 
   /// Settings label - included items
   ///
@@ -876,7 +876,7 @@ abstract class AppLocalizations {
   /// **'Having trouble?'**
   String get havingTrouble;
 
-  /// Premium trouble dialog - signed in message prefix
+  /// Premium trouble dialog - text placed directly before the email address, which is followed by a period
   ///
   /// In en, this message translates to:
   /// **'You are currently signed in with the email address'**
@@ -1188,16 +1188,10 @@ abstract class AppLocalizations {
   /// **'Got it'**
   String get privacyNoticeGotIt;
 
-  /// Title of the privacy group in Settings
+  /// Diagnostics dialog - toggle for sending usage statistics and crash reports
   ///
   /// In en, this message translates to:
-  /// **'PRIVACY'**
-  String get settingsPrivacy;
-
-  /// Settings toggle for sending usage statistics and crash reports
-  ///
-  /// In en, this message translates to:
-  /// **'SHARE DIAGNOSTICS'**
+  /// **'Share Diagnostics'**
   String get settingsShareDiagnostics;
 }
 
