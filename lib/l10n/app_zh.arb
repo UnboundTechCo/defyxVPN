@@ -169,7 +169,7 @@
   "marketplaceInfoJumpFailed": "无法切换服务器",
   "jumpDisconnectTitle": "VPN 将断开连接",
   "jumpDisconnectMessage": "切换服务器会断开您的 VPN。是否继续？",
-  "jumpDisconnectConfirm": "是，切换服务器"
+  "jumpDisconnectConfirm": "是，切换服务器",
   "privacyNoticeTitle": "隐私声明",
   "privacyNoticeIntro": "DefyxVPN 发送哪些数据以及发送到哪里：",
   "privacyNoticeConnection": "• 应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。",

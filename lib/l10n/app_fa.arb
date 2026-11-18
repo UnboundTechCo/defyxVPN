@@ -169,7 +169,7 @@
   "marketplaceInfoJumpFailed": "تغییر سرور ممکن نشد",
   "jumpDisconnectTitle": "VPN قطع می‌شود",
   "jumpDisconnectMessage": "با تغییر سرور، VPN شما قطع می‌شود. ادامه می‌دهید؟",
-  "jumpDisconnectConfirm": "بله، سرور را تغییر بده"
+  "jumpDisconnectConfirm": "بله، سرور را تغییر بده",
   "privacyNoticeTitle": "اطلاعیه حریم خصوصی",
   "privacyNoticeIntro": "آنچه DefyxVPN ارسال می‌کند و مقصد آن:",
   "privacyNoticeConnection": "• هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.",

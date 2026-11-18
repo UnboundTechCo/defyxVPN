@@ -540,6 +540,8 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => 'Yes, switch server';
+
+  @override
   String get privacyNoticeTitle => 'Privacy Notice';
 
   @override

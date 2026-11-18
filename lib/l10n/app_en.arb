@@ -855,6 +855,7 @@
   "jumpDisconnectConfirm": "Yes, switch server",
   "@jumpDisconnectConfirm": {
     "description": "Button that confirms disconnecting the VPN and switching server"
+  },
   "privacyNoticeTitle": "Privacy Notice",
   "@privacyNoticeTitle": {
     "description": "Title of the privacy notice shown on first launch"

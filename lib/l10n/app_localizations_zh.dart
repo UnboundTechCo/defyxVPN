@@ -522,6 +522,8 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => '是，切换服务器';
+
+  @override
   String get privacyNoticeTitle => '隐私声明';
 
   @override

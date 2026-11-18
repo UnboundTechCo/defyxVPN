@@ -543,6 +543,8 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => 'Да, сменить сервер';
+
+  @override
   String get privacyNoticeTitle => 'Уведомление о конфиденциальности';
 
   @override

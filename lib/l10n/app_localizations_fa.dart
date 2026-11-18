@@ -539,6 +539,8 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => 'بله، سرور را تغییر بده';
+
+  @override
   String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
 
   @override
