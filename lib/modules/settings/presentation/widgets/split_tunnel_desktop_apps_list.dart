@@ -13,6 +13,7 @@ import 'split_tunnel_type_chip.dart';
 
 const String _appPrefix = 'app';
 const Color _browseIconColor = Color(0xFFFFC927);
+const double _listMaxHeightFactor = 0.5;
 
 enum _BrowseTarget { file, folder }
 
@@ -31,6 +32,7 @@ class SplitTunnelDesktopAppsList extends ConsumerWidget {
     final notifier = ref.read(splitTunnelProvider.notifier);
 
     return SplitTunnelListCard(
+      maxHeight: _listMaxHeightFactor.sh,
       itemCount: visibleApps.length,
       itemBuilder: (context, index) {
         final app = visibleApps[index];

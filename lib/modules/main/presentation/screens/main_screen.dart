@@ -20,6 +20,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/tips_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/game.dart';
@@ -76,6 +77,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final adReadiness = ref.read(adReadinessCoordinatorProvider);
       if (adReadiness.canShowPrivacyDialog) {
         _showPrivacyNoticeDialog();
+      } else if (TelemetryConsent.isSupported && !TelemetryConsent.isDecided) {
+        // Users who accepted an earlier notice were never asked about
+        // telemetry, which now stays off until they answer.
+        PrivacyNoticeDialog.show(
+          context,
+          () async => true,
+          mentionVpnProfile: false,
+        );
       }
 
       _checkInitialConnectionState();
@@ -310,8 +319,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
     // Use hasActiveAdProvider as single source of truth for ad visibility
     final hasActiveAd = ref.watch(hasActiveAdProvider);
+    final settings = ref.read(settingsProvider.notifier);
 
-    bool shouldShowAd = hasActiveAd;
+    bool shouldShowAd = hasActiveAd && !settings.isPremiumCustomer();
     Widget? mainContent;
 
     switch (status) {

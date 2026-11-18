@@ -258,7 +258,7 @@
 
   "statusIs": "is",
   "@statusIs": {
-    "description": "Status connector word"
+    "description": "Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is one of: 'plugging in ...', 'powered up', 'doing science ...', 'testing speed ...', 'yours to shape'."
   },
 
   "statusFailed": "failed.",
@@ -268,7 +268,7 @@
 
   "statusHas": "has",
   "@statusHas": {
-    "description": "Status connector word"
+    "description": "Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is 'exited the matrix' (no internet)."
   },
 
   "statusIsReturning": "is returning",
@@ -318,7 +318,7 @@
 
   "statusIsReady": "is ready",
   "@statusIsReady": {
-    "description": "Status message - ready state"
+    "description": "Speed test headline line 1 after the Defyx logo; line 2 is 'to speed test'. Translate the two lines together."
   },
 
   "statusIsInTrouble": "is in trouble.",
@@ -333,7 +333,7 @@
 
   "statusToSpeedTest": "to speed test",
   "@statusToSpeedTest": {
-    "description": "Status message - ready for speed test"
+    "description": "Speed test headline line 2, after 'Defyx is ready'. Translate the two lines together."
   },
 
   "statusYoursToShape": "yours to shape",
@@ -371,9 +371,9 @@
     "description": "Settings section - deep scan"
   },
 
-  "settingsHealthCheck": "HEALTH MONITOR",
-  "@settingsHealthCheck": {
-    "description": "Settings section - health check"
+  "settingsAutoReconnect": "Auto Reconnect",
+  "@settingsAutoReconnect": {
+    "description": "Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working"
   },
 
   "settingsIncluded": "INCLUDED",
@@ -401,6 +401,11 @@
     "description": "Split tunnel mode - tunnel only the selected items"
   },
 
+  "splitTunnelReconnectNote": "changes to the split tunneling settings will take effect after connecting or reconnecting.",
+  "@splitTunnelReconnectNote": {
+    "description": "Note under the split tunnel mode selector explaining when changes apply"
+  },
+
   "splitTunnelTabAddresses": "ADDRESSES",
   "@splitTunnelTabAddresses": {
     "description": "Split tunnel tab - addresses"
@@ -409,6 +414,11 @@
   "splitTunnelTabApps": "APPS",
   "@splitTunnelTabApps": {
     "description": "Split tunnel tab - apps"
+  },
+
+  "pressBackAgainToExit": "Press back again to exit",
+  "@pressBackAgainToExit": {
+    "description": "Toast shown on the first Back press on the home screen"
   },
 
   "splitTunnelSearch": "Search",
@@ -421,7 +431,17 @@
     "description": "Split tunnel address input hint"
   },
 
-  "splitTunnelAppHint": "type or route it ...",
+  "splitTunnelInvalidDomain": "enter a valid domain, e.g. example.com",
+  "@splitTunnelInvalidDomain": {
+    "description": "Error shown when a split tunnel domain rule is not a valid domain"
+  },
+
+  "splitTunnelInvalidGeoip": "enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8",
+  "@splitTunnelInvalidGeoip": {
+    "description": "Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range"
+  },
+
+  "splitTunnelAppHint":"type or route it ...",
   "@splitTunnelAppHint": {
     "description": "Split tunnel app path input hint"
   },
@@ -633,7 +653,7 @@
 
   "signedInAs": "You are currently signed in with the email address",
   "@signedInAs": {
-    "description": "Premium trouble dialog - signed in message prefix"
+    "description": "Premium trouble dialog - text placed directly before the email address, which is followed by a period"
   },
 
   "premiumImportDescription": "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
@@ -765,5 +785,139 @@
   "privateDnsDismiss": "Not now",
   "@privateDnsDismiss": {
     "description": "Button that closes the Private DNS notice"
+  },
+
+  "marketplaceInfoDescription": "This premium subscription was purchased directly from Defyx.",
+  "@marketplaceInfoDescription": {
+    "description": "Text under the subscription name in the marketplace info sheet"
+  },
+
+  "marketplaceInfoRemainingData": "Remaining data",
+  "@marketplaceInfoRemainingData": {
+    "description": "Label inside the data usage ring of the marketplace info sheet"
+  },
+
+  "marketplaceInfoRemainingTime": "Remaining time",
+  "@marketplaceInfoRemainingTime": {
+    "description": "Label inside the time usage ring of the marketplace info sheet"
+  },
+
+  "marketplaceInfoGigabytes": "GB",
+  "@marketplaceInfoGigabytes": {
+    "description": "Gigabytes unit shown after the total data volume"
+  },
+
+  "marketplaceInfoDays": "Days",
+  "@marketplaceInfoDays": {
+    "description": "Days unit shown after the total subscription days"
+  },
+
+  "marketplaceInfoUsageError": "Could not load your usage. Check your connection and try again.",
+  "@marketplaceInfoUsageError": {
+    "description": "Warning shown in the marketplace info sheet when the usage request fails"
+  },
+
+  "marketplaceInfoRetry": "Retry",
+  "@marketplaceInfoRetry": {
+    "description": "Button that reloads the usage in the marketplace info sheet"
+  },
+
+  "marketplaceInfoJumpDescription": "Switch server without changing location.",
+  "@marketplaceInfoJumpDescription": {
+    "description": "Text of the jump card in the marketplace info sheet"
+  },
+
+  "marketplaceInfoJump": "Jump",
+  "@marketplaceInfoJump": {
+    "description": "Button that moves the subscription to another server in the same location"
+  },
+
+  "marketplaceInfoJumpSuccess": "Server switched successfully.",
+  "@marketplaceInfoJumpSuccess": {
+    "description": "Toast shown after the subscription moved to another server"
+  },
+
+  "marketplaceInfoJumpFailed": "Could not switch server",
+  "@marketplaceInfoJumpFailed": {
+    "description": "Toast shown when moving the subscription to another server fails. The reason is appended after a colon."
+  },
+
+  "jumpDisconnectTitle": "VPN will be disconnected",
+  "@jumpDisconnectTitle": {
+    "description": "Title of the warning shown before switching server while the VPN is running"
+  },
+
+  "jumpDisconnectMessage": "Switching server disconnects your VPN. Do you want to continue?",
+  "@jumpDisconnectMessage": {
+    "description": "Body of the warning shown before switching server while the VPN is running"
+  },
+
+  "jumpDisconnectConfirm": "Yes, switch server",
+  "@jumpDisconnectConfirm": {
+    "description": "Button that confirms disconnecting the VPN and switching server"
+  },
+  "privacyNoticeTitle": "Privacy Notice",
+  "@privacyNoticeTitle": {
+    "description": "Title of the privacy notice shown on first launch"
+  },
+
+  "privacyNoticeIntro": "What DefyxVPN sends, and where:",
+  "@privacyNoticeIntro": {
+    "description": "First line of the privacy notice, followed by a list"
+  },
+
+  "privacyNoticeConnection": "When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN's servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.",
+  "@privacyNoticeConnection": {
+    "description": "Privacy notice item about the app's own requests. Shown as a list item; the app draws the bullet, so do not add one."
+  },
+
+  "privacyNoticeTelemetry": "Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider's name, the connection method and the country of the VPN exit.",
+  "@privacyNoticeTelemetry": {
+    "description": "Privacy notice item about Firebase; only sent after consent. Shown as a list item; the app draws the bullet, so do not add one."
+  },
+
+  "privacyNoticeAds": "Ads come from Google AdMob, which may ask for your consent to personalize them.",
+  "@privacyNoticeAds": {
+    "description": "Privacy notice item about AdMob. Shown as a list item; the app draws the bullet, so do not add one."
+  },
+
+  "privacyNoticeSpeedTest": "Speed test results go to Cloudflare when you run a test.",
+  "@privacyNoticeSpeedTest": {
+    "description": "Privacy notice item about the speed test. Shown as a list item; the app draws the bullet, so do not add one."
+  },
+
+  "privacyNoticeOwnTraffic": "While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.",
+  "@privacyNoticeOwnTraffic": {
+    "description": "Privacy notice item: the app's own traffic also goes through the VPN. Shown as a list item; the app draws the bullet, so do not add one."
+  },
+
+  "privacyNoticeLocal": "Your internet provider's name is also kept on this device to speed up later connections.",
+  "@privacyNoticeLocal": {
+    "description": "Privacy notice paragraph about local storage"
+  },
+
+  "privacyNoticeChangeLater": "You can change this at any time in Settings › Diagnostics & Experiments.",
+  "@privacyNoticeChangeLater": {
+    "description": "Privacy notice hint under the consent checkbox. Use the names shown for Settings and for the Diagnostics & Experiments entry in this language."
+  },
+
+  "privacyNoticeVpnProfile": "By continuing, you agree to install the VPN profile.",
+  "@privacyNoticeVpnProfile": {
+    "description": "Privacy notice line on Android and iOS"
+  },
+
+  "privacyNoticeShareDiagnostics": "Share usage statistics and crash reports",
+  "@privacyNoticeShareDiagnostics": {
+    "description": "Label of the consent checkbox in the privacy notice"
+  },
+
+  "privacyNoticeGotIt": "Got it",
+  "@privacyNoticeGotIt": {
+    "description": "Button that closes the privacy notice"
+  },
+
+  "settingsShareDiagnostics": "Share Diagnostics",
+  "@settingsShareDiagnostics": {
+    "description": "Diagnostics dialog - toggle for sending usage statistics and crash reports"
   }
 }

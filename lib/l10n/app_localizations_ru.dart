@@ -157,19 +157,19 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get defyxGoal =>
-      'Цель Defyx — обеспечить безопасный доступ к общедоступной информации и предоставить бесплатный просмотр.';
+      'Цель Defyx — обеспечить безопасный доступ к общедоступной информации и свободный интернет-сёрфинг.';
 
   @override
   String get statusIsChilling => 'отдыхает.';
 
   @override
-  String get statusIs => 'это';
+  String get statusIs => '';
 
   @override
-  String get statusFailed => 'не удалось.';
+  String get statusFailed => 'дал сбой.';
 
   @override
-  String get statusHas => 'имеет';
+  String get statusHas => '';
 
   @override
   String get statusIsReturning => 'возвращается';
@@ -178,13 +178,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusToStandbyMode => 'в режим ожидания.';
 
   @override
-  String get statusPluggingIn => 'подключение ...';
+  String get statusPluggingIn => 'подключается ...';
 
   @override
-  String get statusPoweredUp => 'включен';
+  String get statusPoweredUp => 'включён';
 
   @override
-  String get statusDoingScience => 'выполняется работа ...';
+  String get statusDoingScience => 'занимается наукой ...';
 
   @override
   String get statusExitedMatrix => 'вышел из матрицы';
@@ -193,10 +193,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusSorry => 'нам очень жаль :(';
 
   @override
-  String get statusConnectAlready => 'Подключиться сейчас';
+  String get statusConnectAlready => 'Пора подключаться';
 
   @override
-  String get statusTestingSpeed => 'тестирование скорости ...';
+  String get statusTestingSpeed => 'тестирует скорость ...';
 
   @override
   String get statusIsReady => 'готов';
@@ -211,7 +211,7 @@ class AppLocalizationsRu extends AppLocalizations {
   String get statusToSpeedTest => 'к тесту скорости';
 
   @override
-  String get statusYoursToShape => 'создан для вас';
+  String get statusYoursToShape => 'в ваших руках';
 
   @override
   String get settingsConnectionMethod => 'МЕТОД ПОДКЛЮЧЕНИЯ';
@@ -232,10 +232,10 @@ class AppLocalizationsRu extends AppLocalizations {
   String get settingsDeepScan => 'ГЛУБОКОЕ СКАНИРОВАНИЕ';
 
   @override
-  String get settingsHealthCheck => 'МОНИТОРИНГ СОСТОЯНИЯ';
+  String get settingsAutoReconnect => 'Автопереподключение';
 
   @override
-  String get settingsIncluded => 'ВКЛЮЧЕНО';
+  String get settingsIncluded => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
   String get splitTunnelPreferences => 'Настройки';
@@ -250,16 +250,31 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelModeOnly => 'ТОЛЬКО ВЫБРАННЫЕ';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'изменения настроек раздельного туннелирования вступят в силу после подключения или переподключения.';
+
+  @override
   String get splitTunnelTabAddresses => 'АДРЕСА';
 
   @override
   String get splitTunnelTabApps => 'ПРИЛОЖЕНИЯ';
 
   @override
+  String get pressBackAgainToExit => 'Нажмите «Назад» ещё раз, чтобы выйти';
+
+  @override
   String get splitTunnelSearch => 'Поиск';
 
   @override
   String get splitTunnelAddressHint => 'введите здесь ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'введите корректный домен, например example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'введите код страны, IP-адрес или диапазон CIDR, например ir, 8.8.8.8 или 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'введите или выберите путь ...';
@@ -274,14 +289,14 @@ class AppLocalizationsRu extends AppLocalizations {
   String get splitTunnelNoApps => 'Приложения не найдены';
 
   @override
-  String get settingsExcluded => 'ИСКЛЮЧЕНО';
+  String get settingsExcluded => 'КРОМЕ ВЫБРАННЫХ';
 
   @override
   String get settingsAtLeastOneCoreRequired =>
-      'Должен оставаться включенным хотя бы один модуль';
+      'Хотя бы один метод подключения должен оставаться включённым';
 
   @override
-  String get settingsResetToDefault => 'Сброс';
+  String get settingsResetToDefault => 'Сбросить';
 
   @override
   String get settingsDiagnosticsExperiments => 'Диагностика и эксперименты';
@@ -402,7 +417,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get premiumImportDescription =>
-      'Если ваши премиум-подписки не могут быть загружены из-за ограничений интернета и вы не можете подключиться доступными методами, вы можете импортировать файл, полученный из Маркетплейса, в приложение.';
+      'Если ваши премиум-подписки не загружаются из-за интернет-ограничений и вы не можете подключиться доступными методами, импортируйте в приложение файл, полученный в Магазине.';
 
   @override
   String get planningToExit => 'Планируете выйти?';
@@ -437,7 +452,7 @@ class AppLocalizationsRu extends AppLocalizations {
       'Получите премиум-доступ к VPN с\nбыстрыми и надежными подключениями.';
 
   @override
-  String get loggedIn => 'ВОШЛИ В СИСТЕМУ';
+  String get loggedIn => 'ВХОД ВЫПОЛНЕН';
 
   @override
   String get loginOrRegister => 'ВОЙТИ ИЛИ ЗАРЕГИСТРИРОВАТЬСЯ';
@@ -482,4 +497,98 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => 'Не сейчас';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'Эта премиум-подписка была приобретена напрямую у Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Осталось трафика';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Осталось времени';
+
+  @override
+  String get marketplaceInfoGigabytes => 'ГБ';
+
+  @override
+  String get marketplaceInfoDays => 'дн.';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Не удалось загрузить данные об использовании. Проверьте соединение и повторите попытку.';
+
+  @override
+  String get marketplaceInfoRetry => 'Повторить';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Смените сервер, не меняя локацию.';
+
+  @override
+  String get marketplaceInfoJump => 'Сменить';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Сервер успешно изменён.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Не удалось сменить сервер';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN будет отключён';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'При смене сервера VPN отключится. Продолжить?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Да, сменить сервер';
+
+  @override
+  String get privacyNoticeTitle => 'Уведомление о конфиденциальности';
+
+  @override
+  String get privacyNoticeIntro => 'Что отправляет DefyxVPN и куда:';
+
+  @override
+  String get privacyNoticeConnection =>
+      'При запуске приложения и при подключении загружаются настройки подключения, а ваш интернет-провайдер определяется по IP-адресу — через серверы DefyxVPN и службы определения IP, например freeipapi.com и ip.sb. При входе в Premium отправляются данные вашей учётной записи.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      'Только если вы разрешите это ниже: статистика использования и отчёты о сбоях отправляются в Google Firebase. Они включают название вашего интернет-провайдера, способ подключения и страну выхода VPN.';
+
+  @override
+  String get privacyNoticeAds =>
+      'Реклама предоставляется Google AdMob, который может запросить ваше согласие на её персонализацию.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      'Результаты теста скорости отправляются в Cloudflare, когда вы запускаете тест.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      'Пока VPN подключён, приложение направляет через него и собственные соединения, кроме тех, которые устанавливают сам VPN.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'Название вашего интернет-провайдера также хранится на этом устройстве, чтобы ускорить последующие подключения.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'Изменить выбор можно в любое время в настройках, в разделе «Диагностика и эксперименты».';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'Продолжая, вы соглашаетесь установить профиль VPN.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'Отправлять статистику использования и отчёты о сбоях';
+
+  @override
+  String get privacyNoticeGotIt => 'Понятно';
+
+  @override
+  String get settingsShareDiagnostics => 'Отправка диагностики';
 }

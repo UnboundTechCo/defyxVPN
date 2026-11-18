@@ -11,6 +11,7 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../constants/settings_constants.dart';
@@ -198,7 +199,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 8.h),
                               _buildDiagnosticsExperimentsRow(context),
-                              SizedBox(height: 130.h),
+                              SizedBox(
+                                height:
+                                    DefyxNavBar.coveredHeight(context) + 48.h,
+                              ),
                             ],
                           ),
                         ),
@@ -402,6 +406,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final groups = settingsState.groupList
         .map((group) => _withSplitTunnelSubtitle(group, splitTunnelMode))
+        .map(_withoutAutoReconnect)
         .toList();
     return Column(
       children: groups
@@ -459,10 +464,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  // Auto Reconnect is saved with this group but toggled from the
+  // Diagnostics & Experiments dialog.
+  SettingsGroup _withoutAutoReconnect(SettingsGroup group) {
+    if (group.id != SettingsGroupId.trafficControl) return group;
+    return group.copyWith(
+      items: [
+        for (final item in group.items)
+          if (item.id != SettingsItemId.healthCheck) item,
+      ],
+    );
+  }
+
   Widget _buildDiagnosticsExperimentsRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: EdgeInsets.only(left: 15.w),
+      padding: EdgeInsetsDirectional.only(start: 14.w),
       child: TvFocusable(
         onTap: () => DiagnosticsExperimentsDialog.show(context),
         borderRadius: BorderRadius.circular(6.r),

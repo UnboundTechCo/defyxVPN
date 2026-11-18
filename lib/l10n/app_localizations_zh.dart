@@ -47,7 +47,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get upload => '上传';
 
   @override
-  String get ping => '延迟';
+  String get ping => 'Ping';
 
   @override
   String get latency => '延迟';
@@ -77,7 +77,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ourWebsite => '我们的网站';
 
   @override
-  String get marketplace => '市场';
+  String get marketplace => '商店';
 
   @override
   String get telegramBot => 'Telegram 机器人';
@@ -125,7 +125,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get analyzing => '分析中';
 
   @override
-  String get mbps => '兆比特/秒';
+  String get mbps => 'Mbps';
 
   @override
   String get ms => '毫秒';
@@ -155,25 +155,25 @@ class AppLocalizationsZh extends AppLocalizations {
   String get learnMore => '了解更多';
 
   @override
-  String get defyxGoal => 'Defyx的目标是确保安全访问公共信息，并提供免费的浏览体验。';
+  String get defyxGoal => 'Defyx 的目标是确保安全地获取公共信息，并提供自由的浏览体验。';
 
   @override
   String get statusIsChilling => '正在休息。';
 
   @override
-  String get statusIs => '是';
+  String get statusIs => '';
 
   @override
   String get statusFailed => '失败了。';
 
   @override
-  String get statusHas => '有';
+  String get statusHas => '';
 
   @override
   String get statusIsReturning => '正在返回';
 
   @override
-  String get statusToStandbyMode => '到待机模式。';
+  String get statusToStandbyMode => '待机模式。';
 
   @override
   String get statusPluggingIn => '连接中 ...';
@@ -194,34 +194,34 @@ class AppLocalizationsZh extends AppLocalizations {
   String get statusConnectAlready => '立即连接';
 
   @override
-  String get statusTestingSpeed => '测试速度中 ...';
+  String get statusTestingSpeed => '正在测速 ...';
 
   @override
   String get statusIsReady => '已准备好';
 
   @override
-  String get statusIsInTrouble => '遇到麻烦了.';
+  String get statusIsInTrouble => '遇到麻烦了。';
 
   @override
-  String get statusDXcoreDown => 'DXcore 已关闭.';
+  String get statusDXcoreDown => 'DXcore 出故障了。';
 
   @override
   String get statusToSpeedTest => '进行速度测试';
 
   @override
-  String get statusYoursToShape => '由您塑造';
+  String get statusYoursToShape => '任您定制';
 
   @override
   String get settingsConnectionMethod => '连接方式';
 
   @override
-  String get settingsEscapeMode => '逃逸模式';
+  String get settingsEscapeMode => '流量控制';
 
   @override
   String get settingsDestination => '目的地';
 
   @override
-  String get settingsSplitTunnel => '分离隧道';
+  String get settingsSplitTunnel => '拆分隧道';
 
   @override
   String get settingsKillSwitch => '终止开关';
@@ -230,7 +230,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDeepScan => '深度扫描';
 
   @override
-  String get settingsHealthCheck => '健康监测';
+  String get settingsAutoReconnect => '自动重连';
 
   @override
   String get settingsIncluded => '已包含';
@@ -248,16 +248,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get splitTunnelModeOnly => '仅限所选';
 
   @override
+  String get splitTunnelReconnectNote => '分流设置的更改将在连接或重新连接后生效。';
+
+  @override
   String get splitTunnelTabAddresses => '地址';
 
   @override
   String get splitTunnelTabApps => '应用';
 
   @override
+  String get pressBackAgainToExit => '再按一次返回键退出';
+
+  @override
   String get splitTunnelSearch => '搜索';
 
   @override
   String get splitTunnelAddressHint => '在此输入 ...';
+
+  @override
+  String get splitTunnelInvalidDomain => '请输入有效的域名，例如 example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      '请输入国家代码、IP 地址或 CIDR 范围，例如 ir、8.8.8.8 或 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => '输入或选择路径 ...';
@@ -275,7 +288,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsExcluded => '已排除';
 
   @override
-  String get settingsAtLeastOneCoreRequired => '至少需要保留一个核心';
+  String get settingsAtLeastOneCoreRequired => '至少需要启用一种连接方式';
 
   @override
   String get settingsResetToDefault => '重置';
@@ -387,11 +400,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get havingTrouble => '遇到问题？';
 
   @override
-  String get signedInAs => '您当前已使用电子邮件地址登录';
+  String get signedInAs => '您当前登录所用的邮箱地址为';
 
   @override
   String get premiumImportDescription =>
-      '如果由于互联网限制无法加载您的高级订阅，并且您无法使用可用方法连接，您可以将从市场获得的文件导入应用程序。';
+      '如果由于网络限制无法加载您的高级订阅，且无法通过现有连接方式连接，您可以将从商店获取的文件导入应用。';
 
   @override
   String get planningToExit => '打算退出？';
@@ -467,4 +480,88 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => '以后再说';
+
+  @override
+  String get marketplaceInfoDescription => '此高级订阅直接购自 Defyx。';
+
+  @override
+  String get marketplaceInfoRemainingData => '剩余流量';
+
+  @override
+  String get marketplaceInfoRemainingTime => '剩余时间';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => '天';
+
+  @override
+  String get marketplaceInfoUsageError => '无法加载用量信息。请检查网络连接后重试。';
+
+  @override
+  String get marketplaceInfoRetry => '重试';
+
+  @override
+  String get marketplaceInfoJumpDescription => '在不更改位置的情况下切换服务器。';
+
+  @override
+  String get marketplaceInfoJump => '切换';
+
+  @override
+  String get marketplaceInfoJumpSuccess => '服务器切换成功。';
+
+  @override
+  String get marketplaceInfoJumpFailed => '无法切换服务器';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN 将断开连接';
+
+  @override
+  String get jumpDisconnectMessage => '切换服务器会断开您的 VPN。是否继续？';
+
+  @override
+  String get jumpDisconnectConfirm => '是，切换服务器';
+
+  @override
+  String get privacyNoticeTitle => '隐私声明';
+
+  @override
+  String get privacyNoticeIntro => 'DefyxVPN 发送哪些数据以及发送到哪里：';
+
+  @override
+  String get privacyNoticeConnection =>
+      '应用启动和连接时，会获取连接设置，并根据您的 IP 地址识别您的网络服务提供商，所用的是 DefyxVPN 的服务器以及 freeipapi.com、ip.sb 等 IP 查询服务。登录高级版时会发送您的账户信息。';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      '仅在您于下方允许时：使用统计和崩溃报告会发送至 Google Firebase，其中包括您的网络服务提供商名称、连接方式以及 VPN 出口所在国家。';
+
+  @override
+  String get privacyNoticeAds => '广告由 Google AdMob 提供，它可能会征求您对个性化广告的同意。';
+
+  @override
+  String get privacyNoticeSpeedTest => '运行测速时，测速结果会发送至 Cloudflare。';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      'VPN 连接期间，应用自身的连接也会经过 VPN，建立 VPN 本身的连接除外。';
+
+  @override
+  String get privacyNoticeLocal => '您的网络服务提供商名称还会保存在本设备上，以加快之后的连接。';
+
+  @override
+  String get privacyNoticeChangeLater => '您可以随时在“设置”>“诊断与实验”中更改此选择。';
+
+  @override
+  String get privacyNoticeVpnProfile => '继续即表示您同意安装 VPN 配置文件。';
+
+  @override
+  String get privacyNoticeShareDiagnostics => '发送使用统计和崩溃报告';
+
+  @override
+  String get privacyNoticeGotIt => '知道了';
+
+  @override
+  String get settingsShareDiagnostics => '发送诊断数据';
 }

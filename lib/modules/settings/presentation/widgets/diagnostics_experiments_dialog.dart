@@ -4,8 +4,11 @@ import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
+import 'package:defyx_vpn/modules/settings/constants/settings_constants.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
@@ -39,6 +42,9 @@ class _DiagnosticsExperimentsDialogState
   final FocusNode _firstLanguageOptionFocusNode = FocusNode(
     debugLabel: 'FirstLanguageOption',
   );
+
+  // TelemetryConsent doesn't notify listeners, so the switch keeps its own copy.
+  bool _shareDiagnostics = TelemetryConsent.isGranted;
 
   bool get _isMobilePlatform =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
@@ -108,6 +114,10 @@ class _DiagnosticsExperimentsDialogState
     final languageState = ref.watch(languageProvider);
     final languageNotifier = ref.read(languageProvider.notifier);
     final hapticsEnabled = ref.watch(hapticsProvider);
+    ref.watch(settingsProvider);
+    final autoReconnectEnabled = ref
+        .read(settingsProvider.notifier)
+        .isHealthCheckEnabled();
 
     final dialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
@@ -136,7 +146,34 @@ class _DiagnosticsExperimentsDialogState
             _buildLanguageRow(l10n, languageState, languageNotifier),
             if (_isMobilePlatform) ...[
               SizedBox(height: 12.h),
-              _buildHapticsRow(l10n, hapticsEnabled),
+              _buildSwitchRow(
+                label: l10n.settingsHapticFeedback,
+                value: hapticsEnabled,
+                onChanged: (value) =>
+                    ref.read(hapticsProvider.notifier).setEnabled(value),
+              ),
+            ],
+            SizedBox(height: 12.h),
+            _buildSwitchRow(
+              label: l10n.settingsAutoReconnect,
+              value: autoReconnectEnabled,
+              onChanged: (_) => ref
+                  .read(settingsProvider.notifier)
+                  .toggleSetting(
+                    SettingsGroupId.trafficControl,
+                    SettingsItemId.healthCheck,
+                  ),
+            ),
+            if (TelemetryConsent.isSupported) ...[
+              SizedBox(height: 12.h),
+              _buildSwitchRow(
+                label: l10n.settingsShareDiagnostics,
+                value: _shareDiagnostics,
+                onChanged: (value) {
+                  setState(() => _shareDiagnostics = value);
+                  TelemetryConsent.set(value);
+                },
+              ),
             ],
             SizedBox(height: 12.h),
             _buildAppLogsRow(l10n),
@@ -278,18 +315,19 @@ class _DiagnosticsExperimentsDialogState
     );
   }
 
-  Widget _buildHapticsRow(AppLocalizations l10n, bool hapticsEnabled) {
+  Widget _buildSwitchRow({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l10n.settingsHapticFeedback.toUpperCase(), style: _labelStyle),
-          DefyxSwitch(
-            value: hapticsEnabled,
-            onChanged: (value) =>
-                ref.read(hapticsProvider.notifier).setEnabled(value),
-          ),
+          Flexible(child: Text(label.toUpperCase(), style: _labelStyle)),
+          SizedBox(width: 12.w),
+          DefyxSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );

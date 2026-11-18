@@ -2,17 +2,20 @@
 
 # Update ad value in AndroidManifest.xml and Info.plist from DEFYX_AD_ID
 update_ad_id() {
-    local android_ad_app_id="$1"
-    local ios_ad_app_id="$2"
+    # .env values may be quoted or end in \r; neither belongs in the XML.
+    local android_ad_app_id
+    local ios_ad_app_id
+    android_ad_app_id=$(printf '%s' "$1" | tr -d "\"'\r")
+    ios_ad_app_id=$(printf '%s' "$2" | tr -d "\"'\r")
     local android_manifest="$PROJECT_ROOT/android/app/src/main/AndroidManifest.xml"
     local ios_info_plist="$PROJECT_ROOT/ios/Runner/Info.plist"
 
     # AndroidManifest.xml
     if [ -n "$android_ad_app_id" ]; then
         if [[ "$(uname)" == "Darwin" ]]; then
-            sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
+            sed -i '' 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value=.*/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
         else
-            sed -i 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="[^"]*"/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
+            sed -i 's|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value=.*/>|<meta-data android:name="com.google.android.gms.ads.APPLICATION_ID" android:value="'$android_ad_app_id'"/>|' "$android_manifest"
         fi
         echo -e "${GREEN}✅ Updated Android ad id in AndroidManifest.xml${NC}"
     else

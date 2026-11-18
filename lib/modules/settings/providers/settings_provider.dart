@@ -95,6 +95,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     );
     // }
 
+    // Share Diagnostics moved to the Diagnostics & Experiments dialog; drop
+    // the privacy group that dev builds saved for it.
+    updatedGroups.remove('privacy');
+
     state = state.copyWith(groups: updatedGroups);
 
     // Only save if we have connection_method loaded (not empty state)
@@ -391,6 +395,13 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
           ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
 
     return items.map((item) => item.title).join(',');
+  }
+
+  bool isPremiumCustomer() {
+    final group = state.groups[SettingsGroupId.connectionMethod];
+    if (group == null) return false;
+
+    return group.items.any((item) => item.isPremium);
   }
 
   String getPattern() => getConnectionMethodPattern();

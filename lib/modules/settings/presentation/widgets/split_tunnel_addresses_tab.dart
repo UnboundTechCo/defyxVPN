@@ -23,8 +23,17 @@ class _SplitTunnelAddressesTabState
     extends ConsumerState<SplitTunnelAddressesTab> {
   SplitTunnelRuleType _type = SplitTunnelRuleType.geoip;
 
+  String? _validate(AppLocalizations l10n, String value) {
+    if (SplitTunnelRule.normalize(_type, value) != null) return null;
+    return switch (_type) {
+      SplitTunnelRuleType.domain => l10n.splitTunnelInvalidDomain,
+      SplitTunnelRuleType.geoip => l10n.splitTunnelInvalidGeoip,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final rules = ref.watch(splitTunnelProvider.select((c) => c.rules));
     final query = widget.query.trim().toLowerCase();
     final visibleRules = query.isEmpty
@@ -49,7 +58,8 @@ class _SplitTunnelAddressesTabState
           onSelected: (name) =>
               setState(() => _type = SplitTunnelRuleType.fromName(name)!),
         ),
-        hint: AppLocalizations.of(context).splitTunnelAddressHint,
+        hint: l10n.splitTunnelAddressHint,
+        validator: (value) => _validate(l10n, value),
         onSubmit: (value) => notifier.addRule(_type, value),
       ),
     );

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 enum SplitTunnelMode {
   off('off'),
@@ -26,6 +27,46 @@ class SplitTunnelRule {
   final String value;
 
   const SplitTunnelRule({required this.type, required this.value});
+
+  static const int _maxDomainLength = 253;
+  static const int _maxIpv4Prefix = 32;
+  static const int _maxIpv6Prefix = 128;
+
+  static final RegExp _domainPattern = RegExp(
+    r'^([a-z0-9_]([a-z0-9_-]{0,61}[a-z0-9_])?\.)+'
+    r'[a-z]([a-z0-9-]{0,61}[a-z0-9])$',
+  );
+  static final RegExp _countryCodePattern = RegExp(r'^[a-z]{2}$');
+  static final RegExp _prefixPattern = RegExp(r'^\d{1,3}$');
+
+  static String? normalize(SplitTunnelRuleType type, String raw) {
+    final value = raw.trim().toLowerCase();
+    if (value.isEmpty) return null;
+    final isValid = switch (type) {
+      SplitTunnelRuleType.domain => _isDomain(value),
+      SplitTunnelRuleType.geoip =>
+        _countryCodePattern.hasMatch(value) || _isIpRange(value),
+    };
+    return isValid ? value : null;
+  }
+
+  static bool _isDomain(String value) =>
+      value.length <= _maxDomainLength &&
+      _domainPattern.hasMatch(value) &&
+      !_isIpRange(value);
+
+  static bool _isIpRange(String value) {
+    final parts = value.split('/');
+    if (parts.length > 2 || parts.first.contains('%')) return false;
+    final address = InternetAddress.tryParse(parts.first);
+    if (address == null) return false;
+    if (parts.length == 1) return true;
+    if (!_prefixPattern.hasMatch(parts.last)) return false;
+    final maxPrefix = address.type == InternetAddressType.IPv4
+        ? _maxIpv4Prefix
+        : _maxIpv6Prefix;
+    return int.parse(parts.last) <= maxPrefix;
+  }
 
   static SplitTunnelRule? parse(String raw) {
     final separator = raw.indexOf(':');

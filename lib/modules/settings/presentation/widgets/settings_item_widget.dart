@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/common/helpers/truncate_text.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/marketplace_info_sheet.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_toast_message.dart';
 import 'package:defyx_vpn/shared/utils/tv_keyboard_helper.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
@@ -161,6 +162,7 @@ class SettingsItemWidget extends StatelessWidget {
                       SettingsToastMessage.show(item.description ?? ""),
                 ),
               Flexible(
+                fit: item.isPremium ? FlexFit.tight : FlexFit.loose,
                 child: Text(
                   truncateText(item.title.toUpperCase(), 20),
                   maxLines: 1,
@@ -173,19 +175,15 @@ class SettingsItemWidget extends StatelessWidget {
                   ),
                 ),
               ),
-              if (item.description != null &&
-                  item.description!.isNotEmpty &&
-                  !item.isPremium)
-                InkWell(
-                  canRequestFocus: false,
-                  child: AppIcons.info(
-                    height: 22,
-                    width: 20,
-                    colorFilter: const ColorFilter.mode(
-                      Color(0xFF8C8C8C),
-                      BlendMode.srcIn,
-                    ),
+              if (item.isPremium)
+                Padding(
+                  padding: EdgeInsetsDirectional.only(end: 12.w),
+                  child: _buildInfoIcon(
+                    onTap: () => MarketplaceInfoSheet.show(context, item),
                   ),
+                )
+              else if (item.description != null && item.description!.isNotEmpty)
+                _buildInfoIcon(
                   onTap: () =>
                       SettingsToastMessage.show(item.description ?? ""),
                 ),
@@ -252,6 +250,18 @@ class SettingsItemWidget extends StatelessWidget {
       onFocusChange: onFocusChange,
       borderRadius: BorderRadius.circular(8.r),
       child: content,
+    );
+  }
+
+  Widget _buildInfoIcon({required VoidCallback onTap}) {
+    return InkWell(
+      canRequestFocus: false,
+      onTap: onTap,
+      child: AppIcons.info(
+        height: 22,
+        width: 20,
+        colorFilter: const ColorFilter.mode(Color(0xFF8C8C8C), BlendMode.srcIn),
+      ),
     );
   }
 

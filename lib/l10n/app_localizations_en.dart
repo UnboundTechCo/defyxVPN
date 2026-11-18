@@ -232,7 +232,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
-  String get settingsHealthCheck => 'HEALTH MONITOR';
+  String get settingsAutoReconnect => 'Auto Reconnect';
 
   @override
   String get settingsIncluded => 'INCLUDED';
@@ -250,16 +250,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitTunnelModeOnly => 'ONLY SELECTED';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'changes to the split tunneling settings will take effect after connecting or reconnecting.';
+
+  @override
   String get splitTunnelTabAddresses => 'ADDRESSES';
 
   @override
   String get splitTunnelTabApps => 'APPS';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get splitTunnelSearch => 'Search';
 
   @override
   String get splitTunnelAddressHint => 'type here ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'enter a valid domain, e.g. example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'type or route it ...';
@@ -479,4 +494,98 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get privateDnsDismiss => 'Not now';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'This premium subscription was purchased directly from Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Remaining data';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Remaining time';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => 'Days';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Could not load your usage. Check your connection and try again.';
+
+  @override
+  String get marketplaceInfoRetry => 'Retry';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Switch server without changing location.';
+
+  @override
+  String get marketplaceInfoJump => 'Jump';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Server switched successfully.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Could not switch server';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN will be disconnected';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'Switching server disconnects your VPN. Do you want to continue?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Yes, switch server';
+
+  @override
+  String get privacyNoticeTitle => 'Privacy Notice';
+
+  @override
+  String get privacyNoticeIntro => 'What DefyxVPN sends, and where:';
+
+  @override
+  String get privacyNoticeConnection =>
+      'When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      'Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.';
+
+  @override
+  String get privacyNoticeAds =>
+      'Ads come from Google AdMob, which may ask for your consent to personalize them.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      'Speed test results go to Cloudflare when you run a test.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      'While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'Your internet provider\'s name is also kept on this device to speed up later connections.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'You can change this at any time in Settings › Diagnostics & Experiments.';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'By continuing, you agree to install the VPN profile.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'Share usage statistics and crash reports';
+
+  @override
+  String get privacyNoticeGotIt => 'Got it';
+
+  @override
+  String get settingsShareDiagnostics => 'Share Diagnostics';
 }

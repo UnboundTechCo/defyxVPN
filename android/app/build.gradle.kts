@@ -46,8 +46,9 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 shrinks and obfuscates the DEX; Play flags 0% obfuscation otherwise.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig =
                 if (keystorePropertiesFile.exists()) signingConfigs.getByName("release")
                 else signingConfigs.getByName("debug")
@@ -86,6 +87,8 @@ dependencies {
 
     implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.core:core-ktx:1.12.0")
+    // Web view proxy override, see AppProxy. Same version webview_flutter uses.
+    implementation("androidx.webkit:webkit:1.15.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }
