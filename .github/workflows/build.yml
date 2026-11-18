@@ -9,7 +9,20 @@ on:
       - release
 
 jobs:
+  # Builds only when .github/dxcore.lock pins the newest DXcore release. If a
+  # newer one is out, this opens a pull request that pins it and nothing is
+  # built; merging the pull request pushes to release and builds the app.
+  dxcore-lock:
+    uses: ./.github/workflows/update-dxcore-lock.yml
+    secrets:
+      DXCORE_PRIVATE_ACCESS_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+    permissions:
+      contents: write
+      pull-requests: write
+
   android:
+    needs: dxcore-lock
+    if: needs.dxcore-lock.outputs.build == 'true'
     uses: ./.github/workflows/android.yml
     secrets: inherit
     # Signs build provenance for the APKs and the AAB, see android.yml.
@@ -24,10 +37,14 @@ jobs:
     secrets: inherit
 
   windows:
+    needs: dxcore-lock
+    if: needs.dxcore-lock.outputs.build == 'true'
     uses: ./.github/workflows/windows.yml
     secrets: inherit
 
   linux:
+    needs: dxcore-lock
+    if: needs.dxcore-lock.outputs.build == 'true'
     uses: ./.github/workflows/linux.yml
     secrets: inherit
 

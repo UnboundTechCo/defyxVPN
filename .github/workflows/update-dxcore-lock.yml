@@ -1,0 +1,116 @@
+name: Update DXcore lock
+
+# Keeps .github/dxcore.lock on the newest DXcore release, through a pull
+# request, so that a new core is still a reviewed change (audit APP-04).
+#
+# build.yml runs this first on every push to release:
+# - the lock pins the newest release: the build goes ahead;
+# - a newer release is out: this writes its hashes, opens a pull request
+#   into release (or updates the open one), and nothing is built. Merging
+#   the pull request pushes to release, which builds with the new core;
+# - anything here fails: nothing is built.
+
+on:
+  workflow_call:
+    secrets:
+      DXCORE_PRIVATE_ACCESS_TOKEN:
+        required: true
+    outputs:
+      build:
+        description: "'true' when the lock pins the newest DXcore release"
+        value: ${{ jobs.update.outputs.build }}
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    concurrency:
+      group: update-dxcore-lock
+      cancel-in-progress: false
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    env:
+      GH_REPO: ${{ github.repository }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: release
+
+      - name: Compare the lock with the newest DXcore release
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+        run: |
+          set -euo pipefail
+          lock=.github/dxcore.lock
+          tag=$(gh api repos/UnboundTechCo/DXcore-private/releases/latest --jq .tag_name)
+          if ! [[ "$tag" =~ ^r[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "::error::'$tag' is not a DXcore tag such as r6.2.0"
+            exit 1
+          fi
+          current=$(sed -n 's/^tag=//p' "$lock" | tr -d '\r')
+          hashes=$(grep -cE '^DXcore-(android|ios|linux|windows)\.zip=[0-9a-f]{64}$' "$lock" || true)
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+          if [ "$current" = "$tag" ] && [ "$hashes" = 4 ]; then
+            echo "The lock pins the newest DXcore, $tag."
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "DXcore $tag is out, the lock pins ${current:-nothing}."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Write the lock
+        if: steps.check.outputs.build == 'false'
+        env:
+          GITHUB_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+          TAG: ${{ steps.check.outputs.tag }}
+        run: scripts/update_dxcore_lock.sh "$TAG"
+
+      - name: Open the pull request
+        if: steps.check.outputs.build == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.check.outputs.tag }}
+          CURRENT: ${{ steps.check.outputs.current }}
+        run: |
+          set -euo pipefail
+          lock=.github/dxcore.lock
+          branch="dxcore-lock/$TAG-into-release"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add "$lock"
+          git commit -m "ci: pin DXcore $TAG"
+          git push --force origin "HEAD:refs/heads/$branch"
+
+          url=$(gh pr list --head "$branch" --base release --state open --json url --jq '.[0].url')
+          if [ -z "$url" ]; then
+            {
+              echo "Pins the app to DXcore **$TAG** (currently **${CURRENT:-none}**)."
+              echo
+              echo "- Release: https://github.com/UnboundTechCo/DXcore-private/releases/tag/$TAG"
+              if [ -n "$CURRENT" ]; then
+                echo "- Core changes: https://github.com/UnboundTechCo/DXcore-private/compare/$CURRENT...$TAG"
+              fi
+              echo
+              echo '```'
+              sed -n '/^tag=/,$p' "$lock"
+              echo '```'
+              echo
+              echo "Pushes to \`release\` are not built until this is merged. Merging it builds the app with DXcore $TAG."
+            } > "$RUNNER_TEMP/pr-body.md"
+            url=$(gh pr create --base release --head "$branch" \
+              --title "ci: pin DXcore $TAG" --body-file "$RUNNER_TEMP/pr-body.md")
+          fi
+
+          msg="DXcore $TAG is out, so the build waits for $url. Merging it builds the app with $TAG."
+          echo "::notice title=Build waits for DXcore $TAG::$msg"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
