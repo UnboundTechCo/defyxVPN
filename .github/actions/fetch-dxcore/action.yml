@@ -29,7 +29,7 @@ runs:
         tag=$(sed -n 's/^tag=//p' "$lock" | tr -d '\r')
         expected=$(sed -n "s/^${ASSET}=//p" "$lock" | tr -d '\r')
         if [ -z "$tag" ] || ! [[ "$expected" =~ ^[0-9a-f]{64}$ ]]; then
-          echo "::error::$lock has no tag or no SHA-256 for $ASSET. Run scripts/update_dxcore_lock.sh."
+          echo "::error::$lock has no tag or no SHA-256 for $ASSET. Run the Update DXcore lock workflow, or scripts/update_dxcore_lock.sh."
           exit 1
         fi
 

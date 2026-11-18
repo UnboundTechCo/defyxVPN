@@ -62,8 +62,8 @@ done
 
 {
   echo "# The DXcore release every build uses, and the SHA-256 of each asset."
-  echo "# CI refuses an asset whose hash differs. Change it with"
-  echo "# scripts/update_dxcore_lock.sh, never by hand."
+  echo "# CI refuses an asset whose hash differs. Change it with the Update DXcore"
+  echo "# lock workflow or scripts/update_dxcore_lock.sh, never by hand."
   printf '%s\n' "${lines[@]}"
 } > "$lock"
 echo "Wrote $lock"
