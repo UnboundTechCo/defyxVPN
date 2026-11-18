@@ -9,7 +9,21 @@ on:
       - release
 
 jobs:
+  # Opens a pull request when a newer DXcore release is out. While it waits
+  # to be merged this push is not built; merging it is a push to release that
+  # builds the app with the new core. If this job fails, the build goes ahead
+  # with the pinned core.
+  dxcore-lock:
+    uses: ./.github/workflows/update-dxcore-lock.yml
+    secrets:
+      DXCORE_PRIVATE_ACCESS_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+    permissions:
+      contents: write
+      pull-requests: write
+
   android:
+    needs: dxcore-lock
+    if: ${{ !cancelled() && needs.dxcore-lock.outputs.build != 'false' }}
     uses: ./.github/workflows/android.yml
     secrets: inherit
     # Signs build provenance for the APKs and the AAB, see android.yml.
@@ -24,19 +38,27 @@ jobs:
     secrets: inherit
 
   windows:
+    needs: dxcore-lock
+    if: ${{ !cancelled() && needs.dxcore-lock.outputs.build != 'false' }}
     uses: ./.github/workflows/windows.yml
     secrets: inherit
 
   linux:
+    needs: dxcore-lock
+    if: ${{ !cancelled() && needs.dxcore-lock.outputs.build != 'false' }}
     uses: ./.github/workflows/linux.yml
     secrets: inherit
 
+  # The results are checked by hand because the default success() also
+  # looks at dxcore-lock, and a failed lock check must not stop a release.
   release-to-telegram:
     needs: [android, windows, linux]
+    if: ${{ !cancelled() && needs.android.result == 'success' && needs.windows.result == 'success' && needs.linux.result == 'success' }}
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
     needs: [android, windows, linux]
+    if: ${{ !cancelled() && needs.android.result == 'success' && needs.windows.result == 'success' && needs.linux.result == 'success' }}
     uses: ./.github/workflows/release.yml
     secrets: inherit

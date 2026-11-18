@@ -4,11 +4,26 @@ name: Update DXcore lock
 # Builds keep using the old pin until someone merges that pull request, so
 # moving to a new core is still a reviewed change (audit APP-04).
 #
-# Runs by hand for a chosen tag, and once a day for the newest release.
-# A scheduled run does not reopen a pull request that was closed unmerged;
+# build.yml calls this first on every push to release. When a newer DXcore
+# release is out, this opens or updates the pull request and that push is
+# not built: merging the pull request is itself a push to release, and that
+# one builds the app with the new core. Every pubspec version is uploaded
+# once, so it is built with the core it ships with. When the pull request
+# for the newest core was closed unmerged, the build uses the pinned core.
+#
+# It also runs once a day, and by hand for a chosen tag or for dev. An
+# automatic run does not reopen a pull request that was closed unmerged;
 # run it by hand to do that.
 
 on:
+  workflow_call:
+    secrets:
+      DXCORE_PRIVATE_ACCESS_TOKEN:
+        required: true
+    outputs:
+      build:
+        description: "'false' while a pull request for a newer DXcore waits to be merged"
+        value: ${{ jobs.update.outputs.build }}
   workflow_dispatch:
     inputs:
       tag:
@@ -19,9 +34,9 @@ on:
         description: "Branch the pull request goes into"
         type: choice
         options:
-          - dev
           - release
-        default: dev
+          - dev
+        default: release
   schedule:
     - cron: "23 5 * * *"
 
@@ -29,22 +44,24 @@ permissions:
   contents: write
   pull-requests: write
 
-concurrency:
-  group: update-dxcore-lock
-  cancel-in-progress: false
-
 jobs:
   update:
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    concurrency:
+      group: update-dxcore-lock
+      cancel-in-progress: false
+    outputs:
+      build: ${{ steps.pr.outputs.build || steps.plan.outputs.build }}
     env:
-      BASE: ${{ inputs.base || 'dev' }}
+      BASE: ${{ inputs.base || 'release' }}
       GH_REPO: ${{ github.repository }}
+      EVENT: ${{ github.event_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ inputs.base || 'dev' }}
+          ref: ${{ inputs.base || 'release' }}
 
       - name: Choose the DXcore tag
         id: plan
@@ -52,7 +69,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           DXCORE_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
           INPUT_TAG: ${{ inputs.tag }}
-          EVENT: ${{ github.event_name }}
         run: |
           set -euo pipefail
           lock=.github/dxcore.lock
@@ -77,13 +93,15 @@ jobs:
           if [ "$current" = "$tag" ] && [ "$hashes" = 4 ]; then
             echo "$BASE already pins DXcore $tag."
             echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          if [ "$EVENT" = schedule ] && \
+          if [ "$EVENT" != workflow_dispatch ] && \
              [ -n "$(gh pr list --head "$branch" --base "$BASE" --state closed --json number --jq '.[].number')" ]; then
-            echo "A pull request pinning DXcore $tag into $BASE was closed before. Run this workflow by hand to open it again."
+            echo "A pull request pinning DXcore $tag into $BASE was closed unmerged, so $BASE stays on $current. Run this workflow by hand to open it again."
             echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "build=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -96,6 +114,7 @@ jobs:
         run: scripts/update_dxcore_lock.sh "$TAG"
 
       - name: Open the pull request
+        id: pr
         if: steps.plan.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -107,6 +126,7 @@ jobs:
           lock=.github/dxcore.lock
           if git diff --quiet -- "$lock"; then
             echo "$lock on $BASE already holds these hashes."
+            echo "build=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -117,33 +137,40 @@ jobs:
           git commit -m "ci: pin DXcore $TAG" -m "Written by the Update DXcore lock workflow from the $TAG release assets."
           git push --force origin "HEAD:refs/heads/$BRANCH"
 
-          open=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json url --jq '.[0].url')
-          if [ -n "$open" ]; then
-            echo "Updated the open pull request $open"
-            exit 0
-          fi
-
-          release=https://github.com/UnboundTechCo/DXcore-private/releases/tag/$TAG
-          if [ -n "$CURRENT" ]; then
-            changes="Core changes since $CURRENT: https://github.com/UnboundTechCo/DXcore-private/compare/$CURRENT...$TAG"
+          url=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json url --jq '.[0].url')
+          if [ -n "$url" ]; then
+            echo "Updated the open pull request $url"
           else
-            changes="The lock pinned no release before."
-          fi
-          {
-            echo "Pins the app to DXcore **$TAG** (currently **${CURRENT:-none}**)."
-            echo
-            echo "- Release: $release"
-            echo "- $changes"
-            echo
-            echo "\`scripts/update_dxcore_lock.sh\` downloaded the four assets on the runner. Where the release publishes \`SHA256SUMS\`, it checked each hash against that file."
-            echo
-            echo '```'
-            sed -n '/^tag=/,$p' "$lock"
-            echo '```'
-            echo
-            echo "Builds keep using the current core until this is merged and reaches \`release\`."
-          } > "$RUNNER_TEMP/pr-body.md"
+            release=https://github.com/UnboundTechCo/DXcore-private/releases/tag/$TAG
+            if [ -n "$CURRENT" ]; then
+              changes="Core changes since $CURRENT: https://github.com/UnboundTechCo/DXcore-private/compare/$CURRENT...$TAG"
+            else
+              changes="The lock pinned no release before."
+            fi
+            {
+              echo "Pins the app to DXcore **$TAG** (currently **${CURRENT:-none}**)."
+              echo
+              echo "- Release: $release"
+              echo "- $changes"
+              echo
+              echo "\`scripts/update_dxcore_lock.sh\` downloaded the four assets on the runner. Where the release publishes \`SHA256SUMS\`, it checked each hash against that file."
+              echo
+              echo '```'
+              sed -n '/^tag=/,$p' "$lock"
+              echo '```'
+              echo
+              echo "Pushes to \`release\` are not built while this is open. Merging it builds the app with DXcore $TAG. To build with **${CURRENT:-the current pin}** instead, close this pull request and use *Re-run all jobs* on the build that waited."
+            } > "$RUNNER_TEMP/pr-body.md"
 
-          gh pr create --base "$BASE" --head "$BRANCH" \
-            --title "ci: pin DXcore $TAG" \
-            --body-file "$RUNNER_TEMP/pr-body.md"
+            url=$(gh pr create --base "$BASE" --head "$BRANCH" \
+              --title "ci: pin DXcore $TAG" \
+              --body-file "$RUNNER_TEMP/pr-body.md")
+            echo "Opened $url"
+          fi
+
+          echo "build=false" >> "$GITHUB_OUTPUT"
+          if [ "$EVENT" = push ]; then
+            msg="DXcore $TAG is out and $BASE pins ${CURRENT:-nothing}, so this push is not built. Merge $url to build it with $TAG, or close it and use Re-run all jobs here to build with ${CURRENT:-the current pin}."
+            echo "::notice title=Build waits for DXcore $TAG::$msg"
+            echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+          fi
