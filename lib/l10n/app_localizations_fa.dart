@@ -539,4 +539,53 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => 'بله، سرور را تغییر بده';
+  String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
+
+  @override
+  String get privacyNoticeIntro => 'آنچه DefyxVPN ارسال می‌کند و مقصد آن:';
+
+  @override
+  String get privacyNoticeConnection =>
+      '• هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      '• فقط اگر در پایین اجازه دهید: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال می‌شود. این داده‌ها شامل نام ارائه‌دهنده اینترنت شما، روش اتصال و کشور خروجی VPN است.';
+
+  @override
+  String get privacyNoticeAds =>
+      '• تبلیغات از Google AdMob نمایش داده می‌شود که ممکن است برای شخصی‌سازی آن‌ها از شما رضایت بخواهد.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      '• هنگام اجرای تست سرعت، نتایج آن به Cloudflare ارسال می‌شود.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      '• هنگام اتصال VPN، برنامه اتصال‌های خودش را هم از طریق آن می‌فرستد، به جز اتصال‌هایی که خود VPN را برقرار می‌کنند.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'نام ارائه‌دهنده اینترنت شما همچنین روی همین دستگاه نگه داشته می‌شود تا اتصال‌های بعدی سریع‌تر برقرار شوند.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'هر زمان می‌توانید انتخاب خود را در تنظیمات تغییر دهید.';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'با ادامه، با نصب پروفایل VPN موافقت می‌کنید.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'ارسال آمار استفاده و گزارش‌های خرابی';
+
+  @override
+  String get privacyNoticeGotIt => 'متوجه شدم';
+
+  @override
+  String get settingsPrivacy => 'حریم خصوصی';
+
+  @override
+  String get settingsShareDiagnostics => 'ارسال داده‌های عیب‌یابی';
 }

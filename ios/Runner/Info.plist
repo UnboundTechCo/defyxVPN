@@ -115,5 +115,10 @@
 		<array>
 			<string>group.de.unboundtech.defyxvpn</string>
 		</array>
-	</dict>
+		<!-- Telemetry stays off until the user agrees to it, see TelemetryConsent. -->
+	<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+	<false/>
+	<key>FirebaseCrashlyticsCollectionEnabled</key>
+	<false/>
+</dict>
 </plist>

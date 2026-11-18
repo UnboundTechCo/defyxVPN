@@ -1,0 +1,59 @@
+name: "Fetch DXcore"
+description: >
+  Downloads one asset of the DXcore release pinned in .github/dxcore.lock and
+  fails unless its SHA-256 matches the one recorded there.
+
+inputs:
+  asset:
+    description: "Release asset name, such as DXcore-android.zip"
+    required: true
+  path:
+    description: "Where to save the downloaded asset"
+    required: true
+  token:
+    description: "Token with read access to the DXcore release"
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Download and verify ${{ inputs.asset }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.token }}
+        ASSET: ${{ inputs.asset }}
+        OUTPUT: ${{ inputs.path }}
+      run: |
+        set -euo pipefail
+        lock=.github/dxcore.lock
+        tag=$(sed -n 's/^tag=//p' "$lock" | tr -d '\r')
+        expected=$(sed -n "s/^${ASSET}=//p" "$lock" | tr -d '\r')
+        if [ -z "$tag" ] || ! [[ "$expected" =~ ^[0-9a-f]{64}$ ]]; then
+          echo "::error::$lock has no tag or no SHA-256 for $ASSET. Run scripts/update_dxcore_lock.sh."
+          exit 1
+        fi
+
+        api=https://api.github.com/repos/UnboundTechCo/DXcore-private
+        asset_id=$(curl -fsSL -H "Authorization: token $GITHUB_TOKEN" "$api/releases/tags/$tag" \
+          | jq -r --arg name "$ASSET" '.assets[] | select(.name == $name) | .id')
+        if [ -z "$asset_id" ] || [ "$asset_id" = null ]; then
+          echo "::error::DXcore $tag has no asset named $ASSET"
+          exit 1
+        fi
+        curl -fsSL \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/octet-stream" \
+          "$api/releases/assets/$asset_id" \
+          -o "$OUTPUT"
+
+        if command -v sha256sum >/dev/null 2>&1; then
+          actual=$(sha256sum "$OUTPUT" | awk '{print $1}')
+        else
+          actual=$(shasum -a 256 "$OUTPUT" | awk '{print $1}')
+        fi
+        if [ "$actual" != "$expected" ]; then
+          rm -f "$OUTPUT"
+          echo "::error::$ASSET of DXcore $tag has SHA-256 $actual, expected $expected"
+          exit 1
+        fi
+        echo "DXcore $tag $ASSET verified: $actual"

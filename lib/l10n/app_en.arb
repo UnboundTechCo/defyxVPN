@@ -855,5 +855,73 @@
   "jumpDisconnectConfirm": "Yes, switch server",
   "@jumpDisconnectConfirm": {
     "description": "Button that confirms disconnecting the VPN and switching server"
+  "privacyNoticeTitle": "Privacy Notice",
+  "@privacyNoticeTitle": {
+    "description": "Title of the privacy notice shown on first launch"
+  },
+
+  "privacyNoticeIntro": "What DefyxVPN sends, and where:",
+  "@privacyNoticeIntro": {
+    "description": "First line of the privacy notice, followed by a list"
+  },
+
+  "privacyNoticeConnection": "• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN's servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.",
+  "@privacyNoticeConnection": {
+    "description": "Privacy notice item about the app's own requests"
+  },
+
+  "privacyNoticeTelemetry": "• Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider's name, the connection method and the country of the VPN exit.",
+  "@privacyNoticeTelemetry": {
+    "description": "Privacy notice item about Firebase; only sent after consent"
+  },
+
+  "privacyNoticeAds": "• Ads come from Google AdMob, which may ask for your consent to personalize them.",
+  "@privacyNoticeAds": {
+    "description": "Privacy notice item about AdMob"
+  },
+
+  "privacyNoticeSpeedTest": "• Speed test results go to Cloudflare when you run a test.",
+  "@privacyNoticeSpeedTest": {
+    "description": "Privacy notice item about the speed test"
+  },
+
+  "privacyNoticeOwnTraffic": "• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.",
+  "@privacyNoticeOwnTraffic": {
+    "description": "Privacy notice item: the app's own traffic also goes through the VPN"
+  },
+
+  "privacyNoticeLocal": "Your internet provider's name is also kept on this device to speed up later connections.",
+  "@privacyNoticeLocal": {
+    "description": "Privacy notice paragraph about local storage"
+  },
+
+  "privacyNoticeChangeLater": "You can change your choice at any time in Settings.",
+  "@privacyNoticeChangeLater": {
+    "description": "Privacy notice line under the consent checkbox"
+  },
+
+  "privacyNoticeVpnProfile": "By continuing, you agree to install the VPN profile.",
+  "@privacyNoticeVpnProfile": {
+    "description": "Privacy notice line on Android and iOS"
+  },
+
+  "privacyNoticeShareDiagnostics": "Share usage statistics and crash reports",
+  "@privacyNoticeShareDiagnostics": {
+    "description": "Label of the consent checkbox in the privacy notice"
+  },
+
+  "privacyNoticeGotIt": "Got it",
+  "@privacyNoticeGotIt": {
+    "description": "Button that closes the privacy notice"
+  },
+
+  "settingsPrivacy": "PRIVACY",
+  "@settingsPrivacy": {
+    "description": "Title of the privacy group in Settings"
+  },
+
+  "settingsShareDiagnostics": "SHARE DIAGNOSTICS",
+  "@settingsShareDiagnostics": {
+    "description": "Settings toggle for sending usage statistics and crash reports"
   }
 }

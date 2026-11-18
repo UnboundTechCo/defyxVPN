@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/settings_item.dart';
@@ -95,6 +96,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     );
     // }
 
+    if (TelemetryConsent.isSupported) {
+      updatedGroups[SettingsGroupId.privacy] = _createPrivacyGroup(text);
+    }
+
     state = state.copyWith(groups: updatedGroups);
 
     // Only save if we have connection_method loaded (not empty state)
@@ -130,6 +135,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         savedGroup?.items,
         SettingsItemId.healthCheck,
       ),
+    );
+  }
+
+  SettingsGroup _createPrivacyGroup(SettingsText text) {
+    return SettingsFactory.createPrivacyGroup(
+      title: text.privacyTitle,
+      shareDiagnosticsTitle: text.shareDiagnosticsTitle,
+      shareDiagnosticsEnabled: TelemetryConsent.isGranted,
     );
   }
 
@@ -314,6 +327,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final group = state.groups[groupId];
     if (group == null) return;
 
+    // The choice lives in TelemetryConsent, which applies it to Firebase.
+    if (groupId == SettingsGroupId.privacy &&
+        itemId == SettingsItemId.shareDiagnostics) {
+      final granted = !TelemetryConsent.isGranted;
+      TelemetryConsent.set(granted);
+      _updateGroup(_createPrivacyGroup(SettingsText(context)));
+      return;
+    }
+
     final updatedItems = group.items.map((item) {
       if (item.id == itemId && item.isAccessible) {
         return item.copyWith(isEnabled: !item.isEnabled);
@@ -473,6 +495,10 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         title: text.escapeModeTitle,
         items: updatedItems,
       );
+    }
+
+    if (updatedGroups.containsKey(SettingsGroupId.privacy)) {
+      updatedGroups[SettingsGroupId.privacy] = _createPrivacyGroup(text);
     }
 
     state = state.copyWith(groups: updatedGroups);

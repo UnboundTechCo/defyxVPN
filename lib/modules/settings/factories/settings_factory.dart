@@ -219,6 +219,30 @@ class SettingsFactory {
     );
   }
 
+  /// The privacy group: one toggle for usage statistics and crash reports.
+  /// Its state comes from TelemetryConsent, not from the saved settings.
+  static SettingsGroup createPrivacyGroup({
+    required String title,
+    required String shareDiagnosticsTitle,
+    bool shareDiagnosticsEnabled = false,
+  }) {
+    return SettingsGroup(
+      id: SettingsGroupId.privacy,
+      title: title,
+      isDraggable: false,
+      items: [
+        SettingsItem(
+          id: SettingsItemId.shareDiagnostics,
+          title: shareDiagnosticsTitle,
+          isEnabled: shareDiagnosticsEnabled,
+          isAccessible: true,
+          sortOrder: 0,
+          itemType: SettingsItemType.toggle,
+        ),
+      ],
+    );
+  }
+
   // ============== Helper Methods ==============
 
   /// Converts flowline data to settings items

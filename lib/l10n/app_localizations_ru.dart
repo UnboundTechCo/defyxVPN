@@ -543,4 +543,53 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get jumpDisconnectConfirm => 'Да, сменить сервер';
+  String get privacyNoticeTitle => 'Уведомление о конфиденциальности';
+
+  @override
+  String get privacyNoticeIntro => 'Что отправляет DefyxVPN и куда:';
+
+  @override
+  String get privacyNoticeConnection =>
+      '• При запуске приложения и при подключении загружаются настройки подключения, а ваш интернет-провайдер определяется по IP-адресу — через серверы DefyxVPN и службы определения IP, например freeipapi.com и ip.sb. При входе в Premium отправляются данные вашей учётной записи.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      '• Только если вы разрешите это ниже: статистика использования и отчёты о сбоях отправляются в Google Firebase. Они включают название вашего интернет-провайдера, способ подключения и страну выхода VPN.';
+
+  @override
+  String get privacyNoticeAds =>
+      '• Реклама предоставляется Google AdMob, который может запросить ваше согласие на её персонализацию.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      '• Результаты теста скорости отправляются в Cloudflare, когда вы запускаете тест.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      '• Пока VPN подключён, приложение направляет через него и собственные соединения, кроме тех, которые устанавливают сам VPN.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'Название вашего интернет-провайдера также хранится на этом устройстве, чтобы ускорить последующие подключения.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'Вы можете изменить свой выбор в любое время в настройках.';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'Продолжая, вы соглашаетесь установить профиль VPN.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'Отправлять статистику использования и отчёты о сбоях';
+
+  @override
+  String get privacyNoticeGotIt => 'Понятно';
+
+  @override
+  String get settingsPrivacy => 'КОНФИДЕНЦИАЛЬНОСТЬ';
+
+  @override
+  String get settingsShareDiagnostics => 'ОТПРАВКА ДИАГНОСТИКИ';
 }

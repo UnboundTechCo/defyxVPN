@@ -1115,6 +1115,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Yes, switch server'**
   String get jumpDisconnectConfirm;
+
+  /// Title of the privacy notice shown on first launch
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Notice'**
+  String get privacyNoticeTitle;
+
+  /// First line of the privacy notice, followed by a list
+  ///
+  /// In en, this message translates to:
+  /// **'What DefyxVPN sends, and where:'**
+  String get privacyNoticeIntro;
+
+  /// Privacy notice item about the app's own requests
+  ///
+  /// In en, this message translates to:
+  /// **'• When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.'**
+  String get privacyNoticeConnection;
+
+  /// Privacy notice item about Firebase; only sent after consent
+  ///
+  /// In en, this message translates to:
+  /// **'• Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.'**
+  String get privacyNoticeTelemetry;
+
+  /// Privacy notice item about AdMob
+  ///
+  /// In en, this message translates to:
+  /// **'• Ads come from Google AdMob, which may ask for your consent to personalize them.'**
+  String get privacyNoticeAds;
+
+  /// Privacy notice item about the speed test
+  ///
+  /// In en, this message translates to:
+  /// **'• Speed test results go to Cloudflare when you run a test.'**
+  String get privacyNoticeSpeedTest;
+
+  /// Privacy notice item: the app's own traffic also goes through the VPN
+  ///
+  /// In en, this message translates to:
+  /// **'• While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.'**
+  String get privacyNoticeOwnTraffic;
+
+  /// Privacy notice paragraph about local storage
+  ///
+  /// In en, this message translates to:
+  /// **'Your internet provider\'s name is also kept on this device to speed up later connections.'**
+  String get privacyNoticeLocal;
+
+  /// Privacy notice line under the consent checkbox
+  ///
+  /// In en, this message translates to:
+  /// **'You can change your choice at any time in Settings.'**
+  String get privacyNoticeChangeLater;
+
+  /// Privacy notice line on Android and iOS
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to install the VPN profile.'**
+  String get privacyNoticeVpnProfile;
+
+  /// Label of the consent checkbox in the privacy notice
+  ///
+  /// In en, this message translates to:
+  /// **'Share usage statistics and crash reports'**
+  String get privacyNoticeShareDiagnostics;
+
+  /// Button that closes the privacy notice
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get privacyNoticeGotIt;
+
+  /// Title of the privacy group in Settings
+  ///
+  /// In en, this message translates to:
+  /// **'PRIVACY'**
+  String get settingsPrivacy;
+
+  /// Settings toggle for sending usage statistics and crash reports
+  ///
+  /// In en, this message translates to:
+  /// **'SHARE DIAGNOSTICS'**
+  String get settingsShareDiagnostics;
 }
 
 class _AppLocalizationsDelegate
