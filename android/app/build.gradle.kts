@@ -82,7 +82,13 @@ dependencies {
     // Android TV support
     implementation("androidx.leanback:leanback:1.0.0")
 
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    // DXcore-android.zip also carries DXcore-sources.jar; as a dependency its
+    // .java files would be packaged into the APK as resources.
+    implementation(fileTree(mapOf(
+        "dir" to "libs",
+        "include" to listOf("*.jar"),
+        "exclude" to listOf("*-sources.jar"),
+    )))
     implementation(files("libs/DXcore.aar"))
 
     implementation("androidx.activity:activity-ktx:1.7.2")
