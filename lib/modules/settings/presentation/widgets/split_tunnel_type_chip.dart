@@ -58,6 +58,7 @@ class SplitTunnelTypeChip extends StatelessWidget {
   Widget _buildMenuButton(Widget chip) {
     return PopupMenuButton<String>(
       tooltip: '',
+      useRootNavigator: true,
       padding: EdgeInsets.zero,
       color: _chipColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
