@@ -69,15 +69,20 @@ class _SplitTunnelListCardState extends State<SplitTunnelListCard> {
           children: [
             ConstrainedBox(
               constraints: BoxConstraints(maxHeight: maxHeight),
-              child: Scrollbar(
-                controller: _scrollController,
-                child: ListView.builder(
+              child: MediaQuery.removePadding(
+                context: context,
+                removeTop: true,
+                removeBottom: true,
+                child: Scrollbar(
                   controller: _scrollController,
-                  shrinkWrap: true,
-                  padding: EdgeInsets.zero,
-                  physics: const ClampingScrollPhysics(),
-                  itemCount: widget.itemCount,
-                  itemBuilder: widget.itemBuilder,
+                  child: ListView.builder(
+                    controller: _scrollController,
+                    shrinkWrap: true,
+                    padding: EdgeInsets.zero,
+                    physics: const ClampingScrollPhysics(),
+                    itemCount: widget.itemCount,
+                    itemBuilder: widget.itemBuilder,
+                  ),
                 ),
               ),
             ),
