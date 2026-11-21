@@ -24,10 +24,36 @@ class PremiumWalletView extends StatefulWidget {
   State<PremiumWalletView> createState() => _PremiumWalletViewState();
 }
 
-class _PremiumWalletViewState extends State<PremiumWalletView> {
+class _PremiumWalletViewState extends State<PremiumWalletView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _refreshController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  );
+  bool _isRefreshing = false;
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
   Future<void> _refetchBalance(WidgetRef ref) async {
-    ref.invalidate(balanceProvider);
-    await ref.read(balanceProvider.future);
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    _refreshController.repeat();
+    try {
+      ref.invalidate(balanceProvider);
+      await ref.read(balanceProvider.future);
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        _refreshController
+          ..stop()
+          ..reset();
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   @override
@@ -123,10 +149,13 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                                 shape: BoxShape.circle,
                                 color: Colors.black.withValues(alpha: 0.6),
                               ),
-                              child: Icon(
-                                Icons.refresh,
-                                color: Colors.white,
-                                size: 20.w,
+                              child: RotationTransition(
+                                turns: _refreshController,
+                                child: Icon(
+                                  Icons.refresh,
+                                  color: Colors.white,
+                                  size: 20.w,
+                                ),
                               ),
                             ),
                           ),
