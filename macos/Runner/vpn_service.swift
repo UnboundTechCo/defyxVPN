@@ -37,9 +37,31 @@ class VpnService {
                     print("✅ VPN Manager found: \(vpnManager?.localizedDescription ?? "Unknown")")
                 }
                 print("✅ VPN Manager prepared")
-                
+
                 try await vpnManager?.loadFromPreferences()
                 observeVPNStatus(vpnManager!)
+                completion(.success(()))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+
+    // Like prepareVPN, but never creates the profile, so it never asks the
+    // user for permission.
+    func isVPNPrepared(completion: @escaping (Result<Void, Error>) -> Void) {
+        Task {
+            do {
+                let managers = try await NETunnelProviderManager.loadAllFromPreferences()
+                guard let manager = managers.first else {
+                    completion(.failure(NSError(
+                        domain: "DefyxVPN", code: 0,
+                        userInfo: [NSLocalizedDescriptionKey: "VPN Manager not initialized"])))
+                    return
+                }
+                vpnManager = manager
+                try await manager.loadFromPreferences()
+                observeVPNStatus(manager)
                 completion(.success(()))
             } catch {
                 completion(.failure(error))
