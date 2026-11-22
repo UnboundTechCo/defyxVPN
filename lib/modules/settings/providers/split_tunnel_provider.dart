@@ -114,7 +114,7 @@ final splitTunnelProvider =
 final installedAppsProvider = FutureProvider.autoDispose<List<InstalledApp>>((
   ref,
 ) async {
-  if (Platform.isIOS) return _popularApps();
+  if (Platform.isIOS || Platform.isMacOS) return _popularApps();
   final apps = await VpnBridge().getInstalledApps();
   return [...apps]
     ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));

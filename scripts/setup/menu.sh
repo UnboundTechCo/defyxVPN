@@ -55,14 +55,22 @@ select_platform() {
   echo "4) Android - GitHub"
   echo "5) Windows - Microsoft Store"
   echo "6) Windows - GitHub"
-  echo "7) Exit"
+  echo "7) macOS - TestFlight"
+  echo "8) macOS - App Store"
+  echo "9) Exit"
 
-  echo -n "Enter your choice (1-7): "
+  echo -n "Enter your choice (1-9): "
   read choice
   SELECTED_PLATFORM=$choice
 }
 execute_build() {
     local choice=$1
+
+    # Leave before any credentials are written, since exiting skips the restore below.
+    if [ "$choice" == "9" ]; then
+        echo -e "${BLUE}👋 Goodbye!${NC}"
+        exit 0
+    fi
 
     env_file="$PROJECT_ROOT/.env"
     android_ad_app_id=$(grep '^ANDROID_AD_APP_ID=' "$env_file" | cut -d'=' -f2-)
@@ -79,6 +87,7 @@ execute_build() {
     # Inject Firebase credentials before build
     inject_firebase_android
     inject_firebase_ios
+    inject_firebase_macos
 
     case $choice in
         1) build_ios "testFlight" ;;
@@ -87,9 +96,8 @@ execute_build() {
         4) build_android "github" ;;
         5) build_windows "microsoftStore" ;;
         6) build_windows "github" ;;
-        7)
-            echo -e "${BLUE}👋 Goodbye!${NC}"
-            exit 0 ;;
+        7) build_macos "testFlight" ;;
+        8) build_macos "appStore" ;;
         *)
             echo -e "${RED}❌ Invalid choice${NC}"
             ;;
@@ -99,5 +107,6 @@ execute_build() {
     update_ad_id "$orig_ad_id" "$orig_ad_id"
     restore_firebase_android
     restore_firebase_ios
+    restore_firebase_macos
     echo -e "${GREEN}✅ Build process completed!${NC}"
 }
