@@ -496,28 +496,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildDiagnosticsExperimentsRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsetsDirectional.only(start: 14.w),
-      child: TvFocusable(
-        onTap: () => DiagnosticsExperimentsDialog.show(context),
-        borderRadius: BorderRadius.circular(6.r),
-        ringOutset: 4,
-        child: Row(
-          children: [
-            Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
-            SizedBox(width: 8.w),
-            Text(
-              l10n.settingsDiagnosticsExperiments.toUpperCase(),
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontFamily: AppTheme.fontFamily,
-                fontWeight: FontWeight.w400,
-                color: Colors.grey[400],
-                letterSpacing: 0.5,
-              ),
+    return TvFocusable(
+      onTap: () => DiagnosticsExperimentsDialog.show(context),
+      borderRadius: BorderRadius.circular(6.r),
+      ringOutset: 4,
+      child: Row(
+        children: [
+          Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
+          SizedBox(width: 8.w),
+          Text(
+            l10n.settingsDiagnosticsExperiments.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontFamily: AppTheme.fontFamily,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey[400],
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
