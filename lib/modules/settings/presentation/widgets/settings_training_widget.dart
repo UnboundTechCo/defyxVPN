@@ -1,0 +1,99 @@
+import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+class SettingsTrainingWidget extends ConsumerWidget {
+  final WidgetRef ref;
+  final bool shouldExecuteAction;
+  final bool Function()? onTapBefore;
+
+  const SettingsTrainingWidget({
+    super.key,
+    required this.ref,
+    this.shouldExecuteAction = true,
+    this.onTapBefore,
+  });
+
+  void _handleOpenTrainingPage(BuildContext context, WidgetRef ref) {
+    const url = 'https://www.youtube.com/@UnboundTechCo/videos';
+    final l10n = AppLocalizations.of(context);
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) =>
+            CustomWebViewScreen(url: url, title: l10n.settingsTrainingCenter),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+
+    // The whole card is one focus stop for the remote.
+    return TvFocusable(
+      behavior: HitTestBehavior.translucent,
+      borderRadius: BorderRadius.circular(10.r),
+      onTap: () {
+        if (shouldExecuteAction) {
+          bool shouldExecute = onTapBefore?.call() ?? true;
+          if (shouldExecute) {
+            _handleOpenTrainingPage(context, ref);
+          }
+        }
+      },
+      child: Container(
+        padding: EdgeInsets.all(15.w),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10.r),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.16),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.settingsTrainingCenter.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: 17.sp,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+                SizedBox(height: 4.h),
+                SizedBox(
+                  width: 206.w,
+                  child: Text(
+                    l10n.settingsTrainingCenterDescription,
+                    style: TextStyle(fontSize: 13.sp, color: Colors.white60),
+                    maxLines: 3,
+                    softWrap: true,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(width: 10.w),
+            Container(
+              width: 50,
+              height: 50,
+              padding: EdgeInsets.all(13.w),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(50.r),
+                color: const Color(0xFF6F7987),
+              ),
+              child: AppIcons.youtube(width: 24, height: 24),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

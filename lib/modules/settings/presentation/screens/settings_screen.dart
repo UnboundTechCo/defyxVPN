@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_training_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
@@ -35,6 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _horizontalSliderScrollController;
   final GlobalKey _premiumWidgetKey = GlobalKey();
   final GlobalKey _donateWidgetKey = GlobalKey();
+  final GlobalKey _trainingWidgetKey = GlobalKey();
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
@@ -120,13 +122,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Get the viewport bounds
       final viewportLeft = scrollOffset;
-      final viewportRight =
-          scrollOffset +
+      final viewportRight = scrollOffset +
           _horizontalSliderScrollController.position.viewportDimension;
 
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
-      final isVisible =
-          widgetCenterInContent >= viewportLeft &&
+      final isVisible = widgetCenterInContent >= viewportLeft &&
           widgetCenterInContent <= viewportRight;
 
       return isVisible;
@@ -354,6 +354,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool _handleTrainingWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_trainingWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_trainingWidgetKey);
+      return false;
+    }
+  }
+
   Widget _buildSliderSection() {
     return Listener(
       onPointerMove: (event) {},
@@ -390,6 +399,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ],
+                SizedBox(width: 15.w),
+                Container(
+                  key: _trainingWidgetKey,
+                  child: SettingsTrainingWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleTrainingWidgetTap,
+                  ),
+                ),
               ],
             ),
           ),

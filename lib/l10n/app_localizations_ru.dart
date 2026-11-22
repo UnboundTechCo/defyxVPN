@@ -351,6 +351,13 @@ class AppLocalizationsRu extends AppLocalizations {
       'Помогите нам разрушить стены цифровой цензуры и интернет-фильтрации.';
 
   @override
+  String get settingsTrainingCenter => 'Учебный центр';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'Узнайте, как пользоваться DefyxVPN, из наших видеоуроков на YouTube.';
+
+  @override
   String get authenticationRequired => 'Требуется аутентификация';
 
   @override

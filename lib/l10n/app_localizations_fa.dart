@@ -351,6 +351,13 @@ class AppLocalizationsFa extends AppLocalizations {
       'به ما کمک کنید دیوارهای سانسور دیجیتال و فیلترینگ اینترنت را فرو بریزیم.';
 
   @override
+  String get settingsTrainingCenter => 'مرکز آموزش';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'نحوه استفاده از دیفیکس را از طریق آموزش‌های یوتیوب ما بیاموزید.';
+
+  @override
   String get authenticationRequired => 'احراز هویت لازم است';
 
   @override

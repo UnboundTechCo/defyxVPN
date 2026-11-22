@@ -65,7 +65,7 @@ import 'app_localizations_zh.dart';
 /// property.
 abstract class AppLocalizations {
   AppLocalizations(String locale)
-    : localeName = intl.Intl.canonicalizedLocale(locale.toString());
+      : localeName = intl.Intl.canonicalizedLocale(locale.toString());
 
   final String localeName;
 
@@ -88,11 +88,11 @@ abstract class AppLocalizations {
   /// of delegates is preferred or required.
   static const List<LocalizationsDelegate<dynamic>> localizationsDelegates =
       <LocalizationsDelegate<dynamic>>[
-        delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ];
+    delegate,
+    GlobalMaterialLocalizations.delegate,
+    GlobalCupertinoLocalizations.delegate,
+    GlobalWidgetsLocalizations.delegate,
+  ];
 
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
@@ -761,6 +761,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help us break down the walls of digital censorship and internet filtering.'**
   String get settingsDonationDescription;
+
+  /// Training center widget title
+  ///
+  /// In en, this message translates to:
+  /// **'Training center'**
+  String get settingsTrainingCenter;
+
+  /// Training center widget description text
+  ///
+  /// In en, this message translates to:
+  /// **'Learn how to use DefyxVPN through our YouTube tutorials.'**
+  String get settingsTrainingCenterDescription;
 
   /// Premium login dialog title
   ///

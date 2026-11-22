@@ -111,6 +111,8 @@
   "notNow": "بعداً",
   "settingsDonation": "حمایت مالی",
   "settingsDonationDescription": "به ما کمک کنید دیوارهای سانسور دیجیتال و فیلترینگ اینترنت را فرو بریزیم.",
+  "settingsTrainingCenter": "مرکز آموزش",
+  "settingsTrainingCenterDescription": "نحوه استفاده از دیفیکس را از طریق آموزش‌های یوتیوب ما بیاموزید.",
   "authenticationRequired": "احراز هویت لازم است",
   "premiumLoginDescription": "برای دسترسی به اشتراک‌های پرمیوم خود، باید از طریق وب‌سایت دیفیکس وارد حساب خود شوید یا حساب جدیدی بسازید.",
   "email": "ایمیل",
