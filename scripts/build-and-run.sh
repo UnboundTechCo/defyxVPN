@@ -123,6 +123,9 @@ build_and_run() {
     local device_arg=""
     if [[ -n "${FLUTTER_DEVICE}" ]]; then
         device_arg="-d ${FLUTTER_DEVICE}"
+    elif [[ "${platform}" == "macos" ]]; then
+        # The Mac is the only device a macOS build can run on.
+        device_arg="-d macos"
     fi
     
     # Use run.sh if it exists (handles Firebase injection)

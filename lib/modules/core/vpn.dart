@@ -514,7 +514,9 @@ class VPN {
       connectionNotifier?.setDisconnecting();
     }
     await _stopDesktopTunnel();
-    if (Platform.isIOS || (Platform.isAndroid && proxyLost)) {
+    if (Platform.isIOS ||
+        Platform.isMacOS ||
+        (Platform.isAndroid && proxyLost)) {
       await _vpnBridge.disconnectVpn();
     }
     await vpnData?.disableVPN();
@@ -541,6 +543,7 @@ class VPN {
       case 'android':
         return await _vpnBridge.grantVpnPermission();
       case "ios":
+      case "macos":
         return await _vpnBridge.connectVpn();
       case "windows":
       case "linux":
@@ -564,6 +567,7 @@ class VPN {
             ) ??
             false;
       case "ios":
+      case "macos":
         return await _vpnBridge.startTunnel(
           mode: splitTunnel.mode.coreValue,
           rules: splitTunnel.rulesPayloadWith(
