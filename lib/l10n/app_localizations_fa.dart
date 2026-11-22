@@ -157,7 +157,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get defyxGoal =>
-      'هدف Defyx این است که دسترسی امن به اطلاعات عمومی را تضمین کند و تجربه‌ای آزاد از وب‌گردی فراهم کند.';
+      'هدف دیفیکس این است که دسترسی امن به اطلاعات عمومی را تضمین کند و تجربه‌ای آزاد از وب‌گردی فراهم نماید.';
 
   @override
   String get statusIsChilling => 'در حال استراحت است.';
@@ -326,7 +326,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get updateRequiredMessage =>
-      'برای ادامه استفاده از Defyx، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
+      'برای ادامه استفاده از دیفیکس، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
 
   @override
   String get updateNow => 'به‌روزرسانی';
@@ -355,7 +355,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get premiumLoginDescription =>
-      'برای دسترسی به اشتراک‌های پرمیوم خود، باید از طریق وب‌سایت Defyx وارد حساب خود شوید یا حساب جدیدی بسازید.';
+      'برای دسترسی به اشتراک‌های پرمیوم خود، باید از طریق وب‌سایت دیفیکس وارد حساب خود شوید یا حساب جدیدی بسازید.';
 
   @override
   String get email => 'ایمیل';
@@ -497,7 +497,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get marketplaceInfoDescription =>
-      'این اشتراک پریمیوم مستقیماً از Defyx خریداری شده است.';
+      'این اشتراک پریمیوم مستقیماً از دیفیکس خریداری شده است.';
 
   @override
   String get marketplaceInfoRemainingData => 'حجم باقی‌مانده';
@@ -544,11 +544,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
 
   @override
-  String get privacyNoticeIntro => 'DefyxVPN چه چیزهایی را به کجا می‌فرستد:';
+  String get privacyNoticeIntro => 'دیفیکس چه چیزهایی را به کجا می‌فرستد:';
 
   @override
   String get privacyNoticeConnection =>
-      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی آیپی شناسایی می‌شود؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
 
   @override
   String get privacyNoticeTelemetry =>
