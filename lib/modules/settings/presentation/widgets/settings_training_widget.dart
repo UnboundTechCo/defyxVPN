@@ -3,6 +3,7 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/custom_webview_screen.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -19,7 +20,7 @@ class SettingsTrainingWidget extends ConsumerWidget {
   });
 
   void _handleOpenTrainingPage(BuildContext context, WidgetRef ref) {
-    const url = 'https://www.youtube.com/@UnboundTechCo/videos';
+    final url = dotenv.env['YOUTUBE_CHANNEL'] ?? "";
     final l10n = AppLocalizations.of(context);
     Navigator.of(context).push(
       MaterialPageRoute(

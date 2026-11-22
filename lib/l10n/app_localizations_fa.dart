@@ -251,7 +251,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get splitTunnelReconnectNote =>
-      'تغییرات تنظیمات تانل تفکیکی پس از اتصال، یا اتصال مجدد اعمال می‌شود.';
+      'تغییرات تفکیک ترافیک پس از اتصال، یا اتصال مجدد اعمال می‌شود.';
 
   @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
@@ -555,7 +555,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی آیپی شناسایی می‌شود؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پریمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پریمیوم، اطلاعات حساب شما ارسال می‌شود.';
 
   @override
   String get privacyNoticeTelemetry =>

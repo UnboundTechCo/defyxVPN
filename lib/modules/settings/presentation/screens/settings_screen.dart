@@ -122,11 +122,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Get the viewport bounds
       final viewportLeft = scrollOffset;
-      final viewportRight = scrollOffset +
+      final viewportRight =
+          scrollOffset +
           _horizontalSliderScrollController.position.viewportDimension;
 
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
-      final isVisible = widgetCenterInContent >= viewportLeft &&
+      final isVisible =
+          widgetCenterInContent >= viewportLeft &&
           widgetCenterInContent <= viewportRight;
 
       return isVisible;
@@ -388,7 +390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     autofocus: TvSupport.isTv,
                   ),
                 ),
-                if (!Platform.isIOS) ...[
+                if (!Platform.isIOS && !Platform.isMacOS) ...[
                   SizedBox(width: 15.w),
                   Container(
                     key: _donateWidgetKey,
