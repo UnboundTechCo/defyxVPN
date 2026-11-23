@@ -12,12 +12,14 @@ build_android() {
 
     if [ "$build_type" == "googlePlay" ]; then
         # The TV bundle goes first: both builds write to the same path, and
-        # app-release.aab must end up being the phone bundle.
+        # app-release.aab must end up being the phone bundle. Paths start at
+        # PROJECT_ROOT because the script may run from another directory.
+        local bundle_dir="$PROJECT_ROOT/build/app/outputs/bundle"
         echo -e "${GREEN}Building Android TV appbundle for Google Play...${NC}"
         flutter build appbundle --release -P tvBuild=true || exit 1
-        mkdir -p build/app/outputs/bundle/tv
-        mv build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/tv/app-tv-release.aab
-        echo -e "${GREEN}✅ TV AAB built: build/app/outputs/bundle/tv/app-tv-release.aab${NC}"
+        mkdir -p "$bundle_dir/tv"
+        mv "$bundle_dir/release/app-release.aab" "$bundle_dir/tv/app-tv-release.aab" || exit 1
+        echo -e "${GREEN}✅ TV AAB built: $bundle_dir/tv/app-tv-release.aab${NC}"
 
         echo -e "${GREEN}Building appbundle for Google Play...${NC}"
         flutter build appbundle --release || exit 1
@@ -32,7 +34,7 @@ build_android() {
         local version_name=$(echo "$version" | cut -d'+' -f1)
         
         # Rename APK files
-        local apk_dir="build/app/outputs/flutter-apk"
+        local apk_dir="$PROJECT_ROOT/build/app/outputs/flutter-apk"
         
         if [ -f "$apk_dir/app-armeabi-v7a-release.apk" ]; then
             mv "$apk_dir/app-armeabi-v7a-release.apk" "$apk_dir/DefyxVPN-$version_name-armeabi-v7a.apk"
