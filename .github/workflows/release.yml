@@ -50,6 +50,13 @@ jobs:
           name: android-github
           path: android-release/
 
+      # Kept out of android-release/, whose AABs go to the phone tracks.
+      - name: Download Android TV Google Play artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: android-googleplay-tv
+          path: android-tv-release/
+
       - name: Download Windows artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -113,6 +120,18 @@ jobs:
           packageName: de.unboundtech.defyxvpn
           releaseFiles: android-release/**/*.aab
           track: internal
+          status: draft
+
+      # Android TV uses Play's dedicated TV tracks, which only take the TV
+      # bundle (leanback required). tv:qa is TV internal testing.
+      - name: Upload Android TV AAB to Google Play Store
+        if: steps.create_tag.outputs.created == 'true'
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: de.unboundtech.defyxvpn
+          releaseFiles: android-tv-release/app-tv-release.aab
+          track: "tv:qa"
           status: draft
 
       - name: Upload to TestFlight
