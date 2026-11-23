@@ -11,8 +11,16 @@ build_android() {
     flutter pub get
 
     if [ "$build_type" == "googlePlay" ]; then
+        # The TV bundle goes first: both builds write to the same path, and
+        # app-release.aab must end up being the phone bundle.
+        echo -e "${GREEN}Building Android TV appbundle for Google Play...${NC}"
+        flutter build appbundle --release -P tvBuild=true || exit 1
+        mkdir -p build/app/outputs/bundle/tv
+        mv build/app/outputs/bundle/release/app-release.aab build/app/outputs/bundle/tv/app-tv-release.aab
+        echo -e "${GREEN}✅ TV AAB built: build/app/outputs/bundle/tv/app-tv-release.aab${NC}"
+
         echo -e "${GREEN}Building appbundle for Google Play...${NC}"
-        flutter build appbundle --release
+        flutter build appbundle --release || exit 1
         echo -e "${GREEN}✅ AAB built successfully${NC}"
     elif [ "$build_type" == "github" ]; then
         echo -e "${GREEN}Building APKs for GitHub...${NC}"

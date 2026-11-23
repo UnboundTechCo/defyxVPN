@@ -8,6 +8,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
+// Play's dedicated Android TV track only takes bundles that require
+// android.software.leanback, and every bundle needs its own version code.
+// Build that bundle with: flutter build appbundle -P tvBuild=true
+val tvBuild = (project.findProperty("tvBuild") as String?)?.toBoolean() == true
+val tvVersionCodeOffset = 1_000_000
+
 plugins {
     id("com.android.application")
     id("com.google.gms.google-services")
@@ -29,8 +35,9 @@ android {
         applicationId = "de.unboundtech.defyxvpn"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = flutter.versionCode + if (tvBuild) tvVersionCodeOffset else 0
         versionName = flutter.versionName
+        manifestPlaceholders["leanbackRequired"] = tvBuild.toString()
     }
 
     signingConfigs {

@@ -9,10 +9,11 @@
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Support both Android TV and mobile devices. -->
+    <!-- Support both Android TV and mobile devices. The TV bundle requires
+         leanback, see tvBuild in build.gradle.kts. -->
     <uses-feature
         android:name="android.software.leanback"
-        android:required="false" />
+        android:required="${leanbackRequired}" />
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
