@@ -351,6 +351,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Help us break down the walls of digital censorship and internet filtering.';
 
   @override
+  String get settingsTrainingCenter => 'Training center';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'Learn how to use DefyxVPN through our YouTube tutorials.';
+
+  @override
   String get authenticationRequired => 'Authentication Required';
 
   @override

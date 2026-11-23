@@ -556,6 +556,16 @@
     "description": "Donation widget description text"
   },
 
+  "settingsTrainingCenter": "Training center",
+  "@settingsTrainingCenter": {
+    "description": "Training center widget title"
+  },
+
+  "settingsTrainingCenterDescription": "Learn how to use DefyxVPN through our YouTube tutorials.",
+  "@settingsTrainingCenterDescription": {
+    "description": "Training center widget description text"
+  },
+
   "authenticationRequired": "Authentication Required",
   "@authenticationRequired": {
     "description": "Premium login dialog title"

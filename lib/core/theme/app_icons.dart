@@ -29,6 +29,7 @@ class AppIcons {
   static const String linkedinPath = 'assets/icons/linkedin.svg';
   static const String websitePath = 'assets/icons/website.svg';
   static const String telegramBotPath = 'assets/icons/telegram_bot.svg';
+  static const String youtubePath = 'assets/icons/youtube.svg';
 
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
@@ -157,6 +158,10 @@ class AppIcons {
 
   static SvgPicture telegramBot({double? width, double? height}) {
     return SvgPicture.asset(telegramBotPath, width: width, height: height);
+  }
+
+  static SvgPicture youtube({double? width, double? height}) {
+    return SvgPicture.asset(youtubePath, width: width, height: height);
   }
 
   static SvgPicture importConfig({double? width, double? height}) {

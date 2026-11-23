@@ -762,6 +762,18 @@ abstract class AppLocalizations {
   /// **'Help us break down the walls of digital censorship and internet filtering.'**
   String get settingsDonationDescription;
 
+  /// Training center widget title
+  ///
+  /// In en, this message translates to:
+  /// **'Training center'**
+  String get settingsTrainingCenter;
+
+  /// Training center widget description text
+  ///
+  /// In en, this message translates to:
+  /// **'Learn how to use DefyxVPN through our YouTube tutorials.'**
+  String get settingsTrainingCenterDescription;
+
   /// Premium login dialog title
   ///
   /// In en, this message translates to:

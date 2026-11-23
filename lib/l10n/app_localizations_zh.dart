@@ -343,6 +343,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get settingsDonationDescription => '帮助我们打破数字审查和互联网过滤的壁垒。';
 
   @override
+  String get settingsTrainingCenter => '培训中心';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      '通过我们的 YouTube 教程学习如何使用 DefyxVPN。';
+
+  @override
   String get authenticationRequired => '需要身份验证';
 
   @override
