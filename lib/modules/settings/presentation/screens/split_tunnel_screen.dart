@@ -36,7 +36,8 @@ class _SplitTunnelScreenState extends ConsumerState<SplitTunnelScreen> {
   SplitTunnelTab _tab = SplitTunnelTab.addresses;
   String _query = '';
 
-  bool get _listsInstalledApps => Platform.isAndroid || Platform.isIOS;
+  bool get _listsInstalledApps =>
+      Platform.isAndroid || Platform.isIOS || Platform.isMacOS;
 
   void _selectTab(SplitTunnelTab tab) {
     if (tab == _tab) return;

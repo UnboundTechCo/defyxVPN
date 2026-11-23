@@ -10,6 +10,7 @@ source "$SETUP_DIR/validate_env.sh"
 source "$SETUP_DIR/ads.sh"
 
 source "$PLATFORM_DIR/firebase/firebase_ios.sh"
+source "$PLATFORM_DIR/firebase/firebase_macos.sh"
 source "$PLATFORM_DIR/firebase/firebase_android.sh"
 
 set -e
@@ -24,6 +25,7 @@ orig_ad_id="ca-app-pub-0000000000000000~0000000000"
 cleanup() {
     echo -e "\n${YELLOW}🧹 Running cleanup...${NC}"
     restore_firebase_ios
+    restore_firebase_macos
     restore_firebase_android
     update_ad_id "$orig_ad_id" "$orig_ad_id"
     echo -e "${GREEN}✅ Cleanup complete${NC}"
@@ -40,6 +42,7 @@ fi
 
 
 inject_firebase_ios
+inject_firebase_macos
 inject_firebase_android
 
 flutter run "$@"

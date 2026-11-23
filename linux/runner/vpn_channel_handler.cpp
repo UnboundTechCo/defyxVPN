@@ -4,6 +4,8 @@
 #include <chrono>
 #include <cstring>
 #include <filesystem>
+#include <functional>
+#include <string>
 #include <system_error>
 
 #include "defyx_core.h"
@@ -261,6 +263,50 @@ namespace
 
         auto *result_data = new std::pair<AsyncFlagTask *, std::string>(task, flag_result);
         g_idle_add(DeliverFlagResult, result_data);
+    }
+
+    struct AsyncLoginTask
+    {
+        FlMethodCall *method_call;
+        std::string token;
+
+        AsyncLoginTask(FlMethodCall *call) : method_call(call)
+        {
+            g_object_ref(method_call);
+        }
+
+        ~AsyncLoginTask()
+        {
+            if (method_call)
+            {
+                g_object_unref(method_call);
+            }
+        }
+    };
+
+    gboolean DeliverLoginResult(gpointer user_data)
+    {
+        auto *task = static_cast<AsyncLoginTask *>(user_data);
+        FinishWithString(task->method_call, task->token);
+        delete task;
+        return FALSE;
+    }
+
+    void RunLoginInBackground(FlMethodCall *method_call, std::function<std::string()> login)
+    {
+        auto *task = new AsyncLoginTask(method_call);
+        std::thread([task, login = std::move(login)]()
+                    {
+            try
+            {
+                task->token = login();
+            }
+            catch (...)
+            {
+                task->token.clear();
+            }
+            g_idle_add(DeliverLoginResult, task); })
+            .detach();
     }
 
 } // namespace
@@ -828,6 +874,31 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             auto *gateway_task = new AsyncGatewayTask(method_call);
             std::thread(ExecuteGatewayHandshakeInBackground, gateway_task).detach();
+        }
+        else if (strcmp(method, "login") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string email = LookupString(args, "email");
+            std::string password = LookupString(args, "password");
+            if (email.empty() || password.empty())
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "email or password is missing or empty");
+                return;
+            }
+            RunLoginInBackground(method_call, [email, password]()
+                                 { return defyx_core::Login(email, password); });
+        }
+        else if (strcmp(method, "loginByCode") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string code = LookupString(args, "code");
+            if (code.empty())
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "code is missing or empty");
+                return;
+            }
+            RunLoginInBackground(method_call, [code]()
+                                 { return defyx_core::LoginByCode(code); });
         }
         else
         {

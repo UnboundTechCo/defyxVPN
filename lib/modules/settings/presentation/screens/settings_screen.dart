@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_training_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
@@ -35,6 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _horizontalSliderScrollController;
   final GlobalKey _premiumWidgetKey = GlobalKey();
   final GlobalKey _donateWidgetKey = GlobalKey();
+  final GlobalKey _trainingWidgetKey = GlobalKey();
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
@@ -354,6 +356,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool _handleTrainingWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_trainingWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_trainingWidgetKey);
+      return false;
+    }
+  }
+
   Widget _buildSliderSection() {
     return Listener(
       onPointerMove: (event) {},
@@ -379,7 +390,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     autofocus: TvSupport.isTv,
                   ),
                 ),
-                if (!Platform.isIOS) ...[
+                if (!Platform.isIOS && !Platform.isMacOS) ...[
                   SizedBox(width: 15.w),
                   Container(
                     key: _donateWidgetKey,
@@ -390,6 +401,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ],
+                SizedBox(width: 15.w),
+                Container(
+                  key: _trainingWidgetKey,
+                  child: SettingsTrainingWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleTrainingWidgetTap,
+                  ),
+                ),
               ],
             ),
           ),
@@ -478,28 +498,25 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Widget _buildDiagnosticsExperimentsRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsetsDirectional.only(start: 14.w),
-      child: TvFocusable(
-        onTap: () => DiagnosticsExperimentsDialog.show(context),
-        borderRadius: BorderRadius.circular(6.r),
-        ringOutset: 4,
-        child: Row(
-          children: [
-            Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
-            SizedBox(width: 8.w),
-            Text(
-              l10n.settingsDiagnosticsExperiments.toUpperCase(),
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontFamily: AppTheme.fontFamily,
-                fontWeight: FontWeight.w400,
-                color: Colors.grey[400],
-                letterSpacing: 0.5,
-              ),
+    return TvFocusable(
+      onTap: () => DiagnosticsExperimentsDialog.show(context),
+      borderRadius: BorderRadius.circular(6.r),
+      ringOutset: 4,
+      child: Row(
+        children: [
+          Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
+          SizedBox(width: 8.w),
+          Text(
+            l10n.settingsDiagnosticsExperiments.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontFamily: AppTheme.fontFamily,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey[400],
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

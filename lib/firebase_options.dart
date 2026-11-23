@@ -25,6 +25,8 @@ class DefaultFirebaseOptions {
         return android;
       case TargetPlatform.iOS:
         return ios;
+      case TargetPlatform.macOS:
+        return macos;
       case TargetPlatform.windows:
         return windows;
       case TargetPlatform.linux:
@@ -58,6 +60,10 @@ class DefaultFirebaseOptions {
         storageBucket:
             '${dotenv.env['FIREBASE_PROJECT_ID']}.firebasestorage.app',
       );
+
+  // The macOS app has the iOS app's bundle ID, and Firebase allows one Apple
+  // app per bundle ID, so both use the same Firebase app.
+  static FirebaseOptions get macos => ios;
 
   static FirebaseOptions get ios => FirebaseOptions(
         apiKey: dotenv.env['FIREBASE_IOS_API_KEY'] ?? '',

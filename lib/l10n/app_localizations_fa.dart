@@ -63,7 +63,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get tapHere => 'اینجا ضربه بزنید';
 
   @override
-  String get settings => 'تنظیمات';
+  String get settings => 'ترجیحات';
 
   @override
   String get introduction => 'معرفی';
@@ -157,7 +157,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get defyxGoal =>
-      'هدف Defyx این است که دسترسی امن به اطلاعات عمومی را تضمین کند و تجربه‌ای آزاد از وب‌گردی فراهم کند.';
+      'هدف دیفیکس این است که دسترسی امن به اطلاعات عمومی را تضمین کند و تجربه‌ای آزاد از وب‌گردی فراهم نماید.';
 
   @override
   String get statusIsChilling => 'در حال استراحت است.';
@@ -223,7 +223,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsDestination => 'مقصد';
 
   @override
-  String get settingsSplitTunnel => 'تونل‌زنی انتخابی';
+  String get settingsSplitTunnel => 'تفکیک ترافیک';
 
   @override
   String get settingsKillSwitch => 'قطع اضطراری';
@@ -238,7 +238,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsIncluded => 'فقط انتخاب‌شده‌ها';
 
   @override
-  String get splitTunnelPreferences => 'تنظیمات';
+  String get splitTunnelPreferences => 'ترجیحات';
 
   @override
   String get splitTunnelModeOff => 'خاموش';
@@ -251,7 +251,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get splitTunnelReconnectNote =>
-      'تغییرات تنظیمات تونل تفکیکی پس از اتصال یا اتصال مجدد اعمال می‌شود.';
+      'تغییرات تفکیک ترافیک پس از اتصال، یا اتصال مجدد اعمال می‌شود.';
 
   @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
@@ -326,7 +326,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get updateRequiredMessage =>
-      'برای ادامه استفاده از Defyx، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
+      'برای ادامه استفاده از دیفیکس، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
 
   @override
   String get updateNow => 'به‌روزرسانی';
@@ -351,11 +351,18 @@ class AppLocalizationsFa extends AppLocalizations {
       'به ما کمک کنید دیوارهای سانسور دیجیتال و فیلترینگ اینترنت را فرو بریزیم.';
 
   @override
+  String get settingsTrainingCenter => 'مرکز آموزش';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'نحوه استفاده از دیفیکس را از طریق آموزش‌های یوتیوب ما بیاموزید.';
+
+  @override
   String get authenticationRequired => 'احراز هویت لازم است';
 
   @override
   String get premiumLoginDescription =>
-      'برای دسترسی به اشتراک‌های پرمیوم خود، باید از طریق وب‌سایت Defyx وارد حساب خود شوید یا حساب جدیدی بسازید.';
+      'برای دسترسی به اشتراک‌های پریمیوم خود، باید از طریق وب‌سایت دیفیکس وارد حساب خود شوید یا حساب جدیدی بسازید.';
 
   @override
   String get email => 'ایمیل';
@@ -405,7 +412,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get premiumLoginByCodeDescription =>
-      'برای دسترسی به اشتراک‌های پرمیوم خود، کد دسترسی‌ای را که دریافت کرده‌اید وارد کنید.';
+      'برای دسترسی به اشتراک‌های پریمیوم خود، کد دسترسی‌ای را که دریافت کرده‌اید وارد کنید.';
 
   @override
   String get havingTrouble => 'مشکل دارید؟';
@@ -415,7 +422,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get premiumImportDescription =>
-      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پرمیوم شما بارگیری نمی‌شود و با روش‌های موجود هم نمی‌توانید متصل شوید، می‌توانید فایلی را که از فروشگاه گرفته‌اید در برنامه وارد کنید.';
+      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیوم شما بارگیری نمی‌شود و با روش‌های موجود هم نمی‌توانید متصل شوید، می‌توانید فایلی را که از فروشگاه گرفته‌اید در برنامه وارد کنید.';
 
   @override
   String get planningToExit => 'قصد خروج دارید؟';
@@ -443,11 +450,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteAccountFailed => 'حذف حساب کاربری ناموفق بود';
 
   @override
-  String get settingsMarketplace => 'پرمیوم';
+  String get settingsMarketplace => 'پریمیوم';
 
   @override
   String get marketplaceDescription =>
-      'دسترسی VPN پرمیوم با\nاتصال سریع و پایدار.';
+      'دسترسی VPN پریمیوم با\nاتصال سریع و پایدار.';
 
   @override
   String get loggedIn => 'وارد شده‌اید';
@@ -497,7 +504,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get marketplaceInfoDescription =>
-      'این اشتراک پریمیوم مستقیماً از Defyx خریداری شده است.';
+      'این اشتراک پریمیوم مستقیماً از دیفیکس خریداری شده است.';
 
   @override
   String get marketplaceInfoRemainingData => 'حجم باقی‌مانده';
@@ -519,7 +526,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get marketplaceInfoRetry => 'تلاش دوباره';
 
   @override
-  String get marketplaceInfoJumpDescription => 'تغییر سرور بدون تغییر موقعیت.';
+  String get marketplaceInfoJumpDescription => 'تغییر سرور، بدون تغییر موقعیت.';
 
   @override
   String get marketplaceInfoJump => 'پرش';
@@ -544,11 +551,11 @@ class AppLocalizationsFa extends AppLocalizations {
   String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
 
   @override
-  String get privacyNoticeIntro => 'DefyxVPN چه چیزهایی را به کجا می‌فرستد:';
+  String get privacyNoticeIntro => 'دیفیکس چه چیزهایی را به کجا می‌فرستد:';
 
   @override
   String get privacyNoticeConnection =>
-      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای DefyxVPN و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پرمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پریمیوم، اطلاعات حساب شما ارسال می‌شود.';
 
   @override
   String get privacyNoticeTelemetry =>
@@ -572,7 +579,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeChangeLater =>
-      'هر زمان می‌توانید این انتخاب را در تنظیمات، بخش «عیب‌یابی و آزمایش‌ها»، تغییر دهید.';
+      'هر زمان می‌توانید این انتخاب را در ترجیحات، بخش «عیب‌یابی و آزمایش‌ها»، تغییر دهید.';
 
   @override
   String get privacyNoticeVpnProfile =>
