@@ -33,6 +33,9 @@ void SetConnectionMethod(const std::string& method);
 void SetCacheDir(const std::string& cacheDir);
 bool IsTunnelRunning();
 
+std::string Login(const std::string& email, const std::string& password);
+std::string LoginByCode(const std::string& code);
+
 // Shared library callback and logging setup
 void EnableVerboseLogs(bool enable);
 void RegisterProgressHandler(std::function<void(std::string)> handler);
