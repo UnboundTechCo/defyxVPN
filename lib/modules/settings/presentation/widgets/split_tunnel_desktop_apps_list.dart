@@ -70,6 +70,7 @@ class _BrowseButton extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     return PopupMenuButton<_BrowseTarget>(
       tooltip: '',
+      useRootNavigator: true,
       padding: EdgeInsets.zero,
       color: const Color(0xFF1D1D1D),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.r)),
