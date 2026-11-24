@@ -606,4 +606,96 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get adClickToLearnMore => 'برای اطلاعات بیشتر کلیک کنید';
+
+  @override
+  String get premiumTitle => 'پریمیوم';
+
+  @override
+  String get premiumTabAccount => 'حساب کاربری';
+
+  @override
+  String get premiumTabPlans => 'پلن‌ها';
+
+  @override
+  String get premiumTabWallet => 'کیف پول';
+
+  @override
+  String get premiumTabSupport => 'پشتیبانی';
+
+  @override
+  String get selectPlanDuration =>
+      'مدت پلنی که می‌خواهید خریداری کنید را انتخاب کنید:';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price اعتبار';
+  }
+
+  @override
+  String get choose => 'انتخاب';
+
+  @override
+  String get payNow => 'پرداخت';
+
+  @override
+  String get whatYoullGet => 'چه چیزی دریافت می‌کنید';
+
+  @override
+  String get months => 'ماه';
+
+  @override
+  String get subscriptionSuccess => 'اشتراک پلن با موفقیت انجام شد!';
+
+  @override
+  String get selectTopUpAmount => 'لطفاً مبلغ شارژ کیف پول را انتخاب کنید:';
+
+  @override
+  String get paymentSuccessful => 'پرداخت موفق بود';
+
+  @override
+  String get walletToppedUp => 'کیف پول شما شارژ شد';
+
+  @override
+  String get continueAction => 'ادامه';
+
+  @override
+  String get purchaseCredits => 'خرید اعتبار';
+
+  @override
+  String get back => 'بازگشت';
+
+  @override
+  String get selectAmount => 'لطفاً یک مبلغ انتخاب کنید';
+
+  @override
+  String get balance => 'موجودی';
+
+  @override
+  String get topUp => 'شارژ';
+
+  @override
+  String get registerToAccessPremium =>
+      'برای دسترسی به امکانات پریمیوم باید ثبت‌نام کنید.';
+
+  @override
+  String get continueWithApple => 'ادامه با Apple';
+
+  @override
+  String get goToLoginSection => 'رفتن به بخش ورود';
+
+  @override
+  String get easyLogin => 'ورود آسان';
+
+  @override
+  String get needHelp => 'به کمک نیاز دارید؟';
+
+  @override
+  String get supportContactDescription =>
+      'از طریق راه‌های ارتباطی زیر با تیم پشتیبانی ما در تماس باشید:';
+
+  @override
+  String get telegram => 'تلگرام';
+
+  @override
+  String get website => 'وب‌سایت';
 }

@@ -610,4 +610,97 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get adClickToLearnMore => 'Нажмите, чтобы узнать больше';
+
+  @override
+  String get premiumTitle => 'Премиум';
+
+  @override
+  String get premiumTabAccount => 'АККАУНТ';
+
+  @override
+  String get premiumTabPlans => 'ПЛАНЫ';
+
+  @override
+  String get premiumTabWallet => 'КОШЕЛЁК';
+
+  @override
+  String get premiumTabSupport => 'ПОДДЕРЖКА';
+
+  @override
+  String get selectPlanDuration =>
+      'Выберите длительность плана, который хотите приобрести:';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price кредитов';
+  }
+
+  @override
+  String get choose => 'Выбрать';
+
+  @override
+  String get payNow => 'Оплатить';
+
+  @override
+  String get whatYoullGet => 'Что вы получите';
+
+  @override
+  String get months => 'мес.';
+
+  @override
+  String get subscriptionSuccess => 'Подписка на план успешно оформлена!';
+
+  @override
+  String get selectTopUpAmount =>
+      'Пожалуйста, выберите сумму пополнения кошелька:';
+
+  @override
+  String get paymentSuccessful => 'Оплата прошла успешно';
+
+  @override
+  String get walletToppedUp => 'Ваш кошелёк пополнен';
+
+  @override
+  String get continueAction => 'Продолжить';
+
+  @override
+  String get purchaseCredits => 'Купить кредиты';
+
+  @override
+  String get back => 'Назад';
+
+  @override
+  String get selectAmount => 'Пожалуйста, выберите сумму';
+
+  @override
+  String get balance => 'БАЛАНС';
+
+  @override
+  String get topUp => 'Пополнить';
+
+  @override
+  String get registerToAccessPremium =>
+      'Для доступа к премиум-функциям необходимо зарегистрироваться.';
+
+  @override
+  String get continueWithApple => 'Продолжить с Apple';
+
+  @override
+  String get goToLoginSection => 'Перейти к разделу входа';
+
+  @override
+  String get easyLogin => 'Простой вход';
+
+  @override
+  String get needHelp => 'Нужна помощь?';
+
+  @override
+  String get supportContactDescription =>
+      'Свяжитесь с нашей службой поддержки по следующим каналам:';
+
+  @override
+  String get telegram => 'Telegram';
+
+  @override
+  String get website => 'Веб-сайт';
 }

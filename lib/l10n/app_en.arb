@@ -949,5 +949,155 @@
   "adClickToLearnMore": "Click to learn more",
   "@adClickToLearnMore": {
     "description": "Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on desktop"
+  },
+
+  "premiumTitle": "Premium",
+  "@premiumTitle": {
+    "description": "Premium screen title"
+  },
+
+  "premiumTabAccount": "ACCOUNT",
+  "@premiumTabAccount": {
+    "description": "Premium tab - account"
+  },
+
+  "premiumTabPlans": "PLANS",
+  "@premiumTabPlans": {
+    "description": "Premium tab - plans"
+  },
+
+  "premiumTabWallet": "WALLET",
+  "@premiumTabWallet": {
+    "description": "Premium tab - wallet"
+  },
+
+  "premiumTabSupport": "SUPPORT",
+  "@premiumTabSupport": {
+    "description": "Premium tab - support"
+  },
+
+  "selectPlanDuration": "Select the plan duration you'd like to purchase:",
+  "@selectPlanDuration": {
+    "description": "Plans screen - prompt to pick a plan duration"
+  },
+
+  "creditsPrice": "{price} Credits",
+  "@creditsPrice": {
+    "description": "Price label shown next to a plan or top-up amount",
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+
+  "choose": "Choose",
+  "@choose": {
+    "description": "Button that confirms the selected plan"
+  },
+
+  "payNow": "Pay Now",
+  "@payNow": {
+    "description": "Button that starts plan payment"
+  },
+
+  "whatYoullGet": "What You'll Get",
+  "@whatYoullGet": {
+    "description": "Plan details section title"
+  },
+
+  "months": "Months",
+  "@months": {
+    "description": "Unit label for plan duration in months"
+  },
+
+  "subscriptionSuccess": "Successfully subscribed to the plan!",
+  "@subscriptionSuccess": {
+    "description": "Toast shown after a successful plan subscription"
+  },
+
+  "selectTopUpAmount": "Please select the wallet top-up amount:",
+  "@selectTopUpAmount": {
+    "description": "Wallet top-up screen prompt"
+  },
+
+  "paymentSuccessful": "Payment Successful",
+  "@paymentSuccessful": {
+    "description": "Title of the payment success dialog"
+  },
+
+  "walletToppedUp": "Your wallet has been topped up",
+  "@walletToppedUp": {
+    "description": "Message in the payment success dialog"
+  },
+
+  "continueAction": "Continue",
+  "@continueAction": {
+    "description": "Continue button in the payment success dialog"
+  },
+
+  "purchaseCredits": "Purchase credits",
+  "@purchaseCredits": {
+    "description": "Button that starts a wallet top-up purchase"
+  },
+
+  "back": "Back",
+  "@back": {
+    "description": "Back button label"
+  },
+
+  "selectAmount": "Please select an amount",
+  "@selectAmount": {
+    "description": "Snackbar shown when no top-up amount is selected"
+  },
+
+  "balance": "BALANCE",
+  "@balance": {
+    "description": "Wallet balance label"
+  },
+
+  "topUp": "Top up",
+  "@topUp": {
+    "description": "Button that opens the wallet top-up form"
+  },
+
+  "registerToAccessPremium": "You need to register to access premium features.",
+  "@registerToAccessPremium": {
+    "description": "Dialog shown when a guest tries to use premium features"
+  },
+
+  "continueWithApple": "Continue with Apple",
+  "@continueWithApple": {
+    "description": "Sign in / register with Apple button"
+  },
+
+  "goToLoginSection": "Go to login section",
+  "@goToLoginSection": {
+    "description": "Button that opens the premium login section"
+  },
+
+  "easyLogin": "Easy Login",
+  "@easyLogin": {
+    "description": "Button that opens login by code"
+  },
+
+  "needHelp": "Need Help?",
+  "@needHelp": {
+    "description": "Support screen title"
+  },
+
+  "supportContactDescription": "Contact our support team through the following channels:",
+  "@supportContactDescription": {
+    "description": "Support screen description"
+  },
+
+  "telegram": "Telegram",
+  "@telegram": {
+    "description": "Telegram support channel label"
+  },
+
+  "website": "Website",
+  "@website": {
+    "description": "Website support channel label"
   }
 }
