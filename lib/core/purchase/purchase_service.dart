@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_android/in_app_purchase_android.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 
@@ -65,7 +66,7 @@ class BalancePurchaseService extends ChangeNotifier {
 
       await Future.wait(<Future<void>>[
         _loadProducts(),
-        Future<void>.sync(_refreshBalance),
+        _recoverGooglePlayPurchases().then((_) => _refreshBalance()),
       ]);
     } catch (error) {
       _logStage('initialization', error: error);
@@ -95,6 +96,63 @@ class BalancePurchaseService extends ChangeNotifier {
           'success returned=${_products.length} not_found=${missingProductIds.join(',')}',
     );
     notifyListeners();
+  }
+
+  /// Credits Google Play purchases that were paid for but never credited, such
+  /// as when the app closed before verification. The backend consumes a
+  /// purchase once it credits it, so one still held here was not credited, and
+  /// Play will not sell that product again until it is consumed.
+  Future<void> _recoverGooglePlayPurchases() async {
+    if (!Platform.isAndroid) {
+      return;
+    }
+
+    try {
+      final response = await _store
+          .getPlatformAddition<InAppPurchaseAndroidPlatformAddition>()
+          .queryPastPurchases();
+
+      if (response.error != null) {
+        _logStage('purchase_recovery', error: response.error);
+        return;
+      }
+
+      for (final purchase in response.pastPurchases) {
+        if (purchase.status != PurchaseStatus.purchased ||
+            !productIds.contains(purchase.productID)) {
+          continue;
+        }
+
+        final key = _purchaseKey(purchase);
+        if (!_processing.add(key)) {
+          continue;
+        }
+
+        try {
+          _logStage(
+            'purchase_recovery',
+            productId: purchase.productID,
+            outcome: 'started',
+          );
+          await _creditOnBackend(purchase);
+          _logStage(
+            'purchase_recovery',
+            productId: purchase.productID,
+            outcome: 'credited',
+          );
+        } catch (error) {
+          _logStage(
+            'purchase_recovery',
+            productId: purchase.productID,
+            error: error,
+          );
+        } finally {
+          _processing.remove(key);
+        }
+      }
+    } catch (error) {
+      _logStage('purchase_recovery', error: error);
+    }
   }
 
   ProductDetails? productById(String productId) {
@@ -132,6 +190,8 @@ class BalancePurchaseService extends ChangeNotifier {
     try {
       final started = await _store.buyConsumable(
         purchaseParam: PurchaseParam(productDetails: product),
+        // StoreKit requires true. On Google Play the backend consumes the
+        // purchase once it credits it, and refuses one the app consumed.
         autoConsume: Platform.isIOS || Platform.isMacOS,
       );
 
@@ -225,9 +285,33 @@ class BalancePurchaseService extends ChangeNotifier {
     }
   }
 
+  String _purchaseKey(PurchaseDetails purchase) =>
+      purchase.purchaseID ?? purchase.verificationData.serverVerificationData;
+
+  /// Has the backend verify [purchase] and credit the balance, then updates
+  /// [balance]. For Google Play the backend also consumes the purchase.
+  Future<void> _creditOnBackend(PurchaseDetails purchase) async {
+    final premiumService = await ref.read(premiumApiServiceProvider.future);
+    final response = await premiumService.verifyAndCredit(purchase);
+
+    final data = response.data;
+    final value = data?['balance'];
+    final verified = data?['success'] == true && value is num;
+    _logStage(
+      'backend_verification_response',
+      productId: purchase.productID,
+      outcome: 'http=${response.statusCode} verified=$verified',
+    );
+
+    if (!verified) {
+      throw StateError('The store purchase could not be verified');
+    }
+
+    balance = value.toDouble();
+  }
+
   Future<void> _verifyAndCredit(PurchaseDetails purchase) async {
-    final proof = purchase.verificationData.serverVerificationData;
-    final key = purchase.purchaseID ?? proof;
+    final key = _purchaseKey(purchase);
 
     if (!_processing.add(key)) {
       return;
@@ -240,30 +324,16 @@ class BalancePurchaseService extends ChangeNotifier {
         productId: purchase.productID,
         outcome: 'started',
       );
-      final premiumService = await ref.read(premiumApiServiceProvider.future);
-      final response = await premiumService.verifyAndCredit(purchase);
-
-      final data = response.data;
-      final value = data?['balance'];
-      final verified = data?['success'] == true && value is num;
-      _logStage(
-        'backend_verification_response',
-        productId: purchase.productID,
-        outcome: 'http=${response.statusCode} verified=$verified',
-      );
-
-      if (!verified) {
-        throw StateError('The store purchase could not be verified');
-      }
-
+      await _creditOnBackend(purchase);
       _logStage(
         'backend_verification',
         productId: purchase.productID,
-        outcome: 'verified http=${response.statusCode}',
+        outcome: 'verified',
       );
-      balance = value.toDouble();
 
-      if (purchase.pendingCompletePurchase) {
+      // Consuming a Google Play purchase acknowledges it, and the backend did
+      // that while crediting, so only StoreKit transactions are finished here.
+      if (purchase.pendingCompletePurchase && !Platform.isAndroid) {
         failureStage = 'transaction_completion';
         _logStage(
           failureStage,

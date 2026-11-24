@@ -2,10 +2,12 @@ import 'dart:io';
 
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:android_id/android_id.dart';
 
 class Register {
   final WidgetRef ref;
@@ -48,15 +50,24 @@ class Register {
     return result;
   }
 
-  Future<bool> guestModeLoginApple() async {
-    final uniqueIdentifier = await getAppleDeviceId();
-    if (uniqueIdentifier == null) {
+  /// Platforms that can open a guest account from the device ID, and so buy
+  /// credits and plans without signing up first.
+  static bool get supportsGuestLogin =>
+      Platform.isIOS || Platform.isMacOS || Platform.isAndroid;
+
+  /// Signs in to the guest account tied to this device, creating it on first
+  /// use.
+  Future<bool> guestModeLogin() async {
+    final uniqueIdentifier = await getDeviceId();
+    if (uniqueIdentifier == null || uniqueIdentifier.isEmpty) {
       return false;
     }
 
     final premiumApiService = await ref.read(premiumApiServiceProvider.future);
-    final result = await premiumApiService
-        .guestModeLoginApple(uniqueIdentifier)
+    final login = Platform.isAndroid
+        ? premiumApiService.guestModeLoginAndroid(uniqueIdentifier)
+        : premiumApiService.guestModeLoginApple(uniqueIdentifier);
+    final result = await login
         .then((result) async {
           final authService = ref.read(authProvider.notifier);
 
@@ -80,14 +91,19 @@ class Register {
     return info.systemGUID;
   }
 
-  Future<String?> getAppleDeviceId() async {
-    final isApple = Platform.isIOS || Platform.isMacOS;
-    if (isApple) {
-      if (Platform.isIOS) {
-        return await _getIosDeviceId();
-      } else if (Platform.isMacOS) {
-        return await _getMacDeviceId();
-      }
+  Future<String?> _getAndroidDeviceId() async {
+    const androidIdPlugin = AndroidId();
+    final String? androidId = await androidIdPlugin.getId();
+    return androidId;
+  }
+
+  Future<String?> getDeviceId() async {
+    if (Platform.isIOS) {
+      return await _getIosDeviceId();
+    } else if (Platform.isMacOS) {
+      return await _getMacDeviceId();
+    } else if (Platform.isAndroid) {
+      return await _getAndroidDeviceId();
     }
     return null;
   }

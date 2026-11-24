@@ -54,9 +54,11 @@ dependencies:
   msix: ^3.16.12
   flutter_native_splash: ^2.4.7
   in_app_purchase: ^3.3.0
+  in_app_purchase_android: ^0.5.3
   in_app_purchase_storekit: ^0.4.13
   sign_in_with_apple: ^8.2.0
   device_info_plus: ^13.3.0
+  android_id: ^1.0.0
   file_picker: ^13.1.0
 
 dev_dependencies:

@@ -128,7 +128,8 @@ class PremiumApiService {
       final response = await _dio.post<Map<String, dynamic>>(
         '/iap/verify',
         data: <String, dynamic>{
-          'platform': Platform.isIOS ? 'ios' : 'android',
+          // macOS buys through the App Store too, so its receipts go as 'ios'.
+          'platform': Platform.isAndroid ? 'android' : 'ios',
           'product_id': purchase.productID,
           'verification_data': proof,
         },
@@ -157,10 +158,19 @@ class PremiumApiService {
     }
   }
 
-  Future<LoginResponse> guestModeLoginApple(String uniqueIdentifier) async {
+  Future<LoginResponse> guestModeLoginApple(String uniqueIdentifier) =>
+      _guestModeLogin('/auth/customer/apple/guest', uniqueIdentifier);
+
+  Future<LoginResponse> guestModeLoginAndroid(String uniqueIdentifier) =>
+      _guestModeLogin('/auth/customer/android/guest', uniqueIdentifier);
+
+  Future<LoginResponse> _guestModeLogin(
+    String path,
+    String uniqueIdentifier,
+  ) async {
     try {
       final response = await _dio.post(
-        '/auth/customer/apple/guest',
+        path,
         data: {'unique_identifier': uniqueIdentifier},
       );
 

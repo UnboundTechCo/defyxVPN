@@ -64,9 +64,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
     try {
       final isLoggedIn = widget.ref.read(authProvider.notifier).isLoggedIn;
       if (!isLoggedIn) {
-        final registered = await Register(
-          ref: widget.ref,
-        ).guestModeLoginApple();
+        final registered = await Register(ref: widget.ref).guestModeLogin();
         if (!mounted || !registered) return;
       }
 

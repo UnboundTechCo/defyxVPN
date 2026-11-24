@@ -144,7 +144,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     });
     final auth = await widget.ref.read(authProvider.future);
     if (!auth.isLoggedIn) {
-      final registered = await Register(ref: widget.ref).guestModeLoginApple();
+      final registered = await Register(ref: widget.ref).guestModeLogin();
       if (!registered) {
         setState(() {
           _isLoading = false;

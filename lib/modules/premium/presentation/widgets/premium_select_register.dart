@@ -26,7 +26,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
 
   Future<void> _register() async {
     final register = Register(ref: widget.ref);
-    await register.guestModeLoginApple();
+    await register.guestModeLogin();
     if (context.mounted) {
       Navigator.of(context).pop();
     }

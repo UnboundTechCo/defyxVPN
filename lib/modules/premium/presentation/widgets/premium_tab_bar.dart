@@ -1,7 +1,6 @@
-import 'dart:io';
-
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
@@ -29,7 +28,6 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final isApple = Platform.isIOS || Platform.isMacOS;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Center(
@@ -42,7 +40,7 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               PremiumTab.account,
               false,
             ),
-            if (isApple) ...[
+            if (Register.supportsGuestLogin) ...[
               SizedBox(width: 24.w),
               _buildTabButton(
                 AppIcons.plansPath,
