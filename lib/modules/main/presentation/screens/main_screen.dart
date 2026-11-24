@@ -217,8 +217,13 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         bottom: false,
         child: Align(
           alignment: Alignment.topCenter,
+          // Full height, so the tips card below is placed from the bottom of
+          // the screen rather than from the end of the page content.
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 393.w),
+            constraints: BoxConstraints(
+              maxWidth: 393.w,
+              minHeight: double.infinity,
+            ),
             child: Stack(
               children: [
                 // Never scrolls; it only keeps tall content on short screens
@@ -300,11 +305,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     ),
                   ),
                 ),
+                // Sits a fixed gap above the nav bar on every device.
                 if (showTips)
                   Positioned(
                     left: 24.w,
                     right: 24.w,
-                    bottom: 100.h + MediaQuery.of(context).padding.bottom,
+                    bottom: DefyxNavBar.coveredHeight(context) + 15.h,
                     child: const TipsSlider(),
                   ),
               ],
