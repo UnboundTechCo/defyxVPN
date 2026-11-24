@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/purchase/purchase_service.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
@@ -72,7 +73,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
       final amount = _selectedAmount;
       if (amount == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an amount')),
+          SnackBar(content: Text(AppLocalizations.of(context).selectAmount)),
         );
         return;
       }
@@ -107,7 +108,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  'Payment Successful',
+                  AppLocalizations.of(context).paymentSuccessful,
                   style: TextStyle(
                     color: Colors.black,
                     fontSize: 24.sp,
@@ -116,13 +117,13 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                 ),
                 SizedBox(height: 8.h),
                 Text(
-                  'Your wallet has been topped up',
+                  AppLocalizations.of(context).walletToppedUp,
                   style: TextStyle(color: Colors.grey, fontSize: 18.sp),
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 24.h),
                 AppButton(
-                  label: 'Continue',
+                  label: AppLocalizations.of(context).continueAction,
                   onPressed: () {
                     Navigator.pop(context);
                     widget.closeTopUpForm();
@@ -183,9 +184,8 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
                   child: Text(
                     '${amount.toInt()}',
                     style: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF2563EB)
-                          : Colors.black,
+                      color:
+                          isSelected ? const Color(0xFF2563EB) : Colors.black,
                       fontSize: 28.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -211,7 +211,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Please select the wallet top-up amount:',
+                AppLocalizations.of(context).selectTopUpAmount,
                 style: TextStyle(
                   color: Colors.black,
                   fontSize: 30.sp,
@@ -222,7 +222,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
               _buildAmountPicker(),
               SizedBox(height: 24.h),
               AppButton(
-                label: 'Purchase credits',
+                label: AppLocalizations.of(context).purchaseCredits,
                 onPressed: _handleTopUpPayment,
                 variant: AppButtonVariant.blue,
                 size: AppButtonSize.medium,
@@ -232,7 +232,7 @@ class _PremiumTopUpState extends State<PremiumTopUp> {
               ),
               SizedBox(height: 16.h),
               AppButton(
-                label: 'Back',
+                label: AppLocalizations.of(context).back,
                 onPressed: widget.closeTopUpForm,
                 variant: AppButtonVariant.tertiary,
                 size: AppButtonSize.medium,

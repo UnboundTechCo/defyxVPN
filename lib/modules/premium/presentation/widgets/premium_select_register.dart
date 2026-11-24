@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/common/components/dialog.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_tab_provider.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +40,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            "You need to register to access premium features.",
+            AppLocalizations.of(context).registerToAccessPremium,
             style: TextStyle(
               fontSize: 16.sp,
               fontFamily: AppTheme.fontFamily,
@@ -50,7 +51,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
           SizedBox(height: 24.h),
           if (Platform.isIOS) ...[
             AppButton(
-              label: "Continue with Apple",
+              label: AppLocalizations.of(context).continueWithApple,
               onPressed: _register,
               variant: AppButtonVariant.primary,
               size: AppButtonSize.medium,
@@ -59,7 +60,7 @@ class _PremiumSelectRegisterState extends State<PremiumSelectRegister> {
             SizedBox(height: 12.h),
           ],
           AppButton(
-            label: "Go to login section",
+            label: AppLocalizations.of(context).goToLoginSection,
             onPressed: _goToLoginPage,
             variant: AppButtonVariant.secondary,
             size: AppButtonSize.medium,
