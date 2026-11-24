@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/utils/plans_price.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +14,7 @@ class PremiumPlanSelect extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final selectedPlan = ref.watch(selectedPlanProvider);
 
     final planIsSelected = selectedPlan != null;
@@ -24,7 +26,7 @@ class PremiumPlanSelect extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'Select the plan duration you\'d like to purchase:',
+            l10n.selectPlanDuration,
             style: TextStyle(
               color: Colors.black,
               fontSize: 30.sp,
@@ -98,7 +100,7 @@ class PremiumPlanSelect extends ConsumerWidget {
                                   ),
                                 ),
                                 Text(
-                                  '$price Credits',
+                                  l10n.creditsPrice(price),
                                   style: TextStyle(
                                     color: isSelectedPlan
                                         ? const Color(0xFF21AD86)
@@ -120,12 +122,12 @@ class PremiumPlanSelect extends ConsumerWidget {
             loading: () {
               return const Center(child: CircularProgressIndicator());
             },
-            error: (error, stackTrace) => Center(child: Text('Error: $error')),
+            error: (error, stackTrace) =>
+                Center(child: Text('${l10n.error}: $error')),
           ),
-
           SizedBox(height: 32.h),
           AppButton(
-            label: 'Choose',
+            label: l10n.choose,
             onPressed: navigateToDetails,
             variant: AppButtonVariant.outline,
             round: AppButtonRound.circle,

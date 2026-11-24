@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/core/theme/app_icons.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/account_screen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/plans_screen.dart';
 import 'package:defyx_vpn/modules/premium/presentation/screens/support_screeen.dart';
@@ -56,7 +57,7 @@ class PremiumScreen extends ConsumerWidget {
                       clipBehavior: Clip.none,
                       children: [
                         Text(
-                          'Premium',
+                          AppLocalizations.of(context).premiumTitle,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 40.sp,

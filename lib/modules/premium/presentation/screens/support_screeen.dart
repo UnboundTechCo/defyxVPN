@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -6,6 +7,7 @@ class SupportScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -14,7 +16,7 @@ class SupportScreen extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Need Help?',
+                l10n.needHelp,
                 style: TextStyle(
                   fontSize: 18.sp,
                   color: Colors.black,
@@ -24,7 +26,7 @@ class SupportScreen extends StatelessWidget {
               ),
               SizedBox(height: 16.h),
               Text(
-                'Contact our support team through the following channels:',
+                l10n.supportContactDescription,
                 style: TextStyle(
                   fontSize: 14.sp,
                   color: Colors.grey[700],
@@ -34,7 +36,7 @@ class SupportScreen extends StatelessWidget {
               ),
               SizedBox(height: 24.h),
               _SupportButton(
-                label: 'Telegram',
+                label: l10n.telegram,
                 icon: Icons.send,
                 onTap: () {
                   // Open Telegram support
@@ -42,7 +44,7 @@ class SupportScreen extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
               _SupportButton(
-                label: 'Email',
+                label: l10n.email,
                 icon: Icons.email,
                 onTap: () {
                   // Open email client
@@ -50,7 +52,7 @@ class SupportScreen extends StatelessWidget {
               ),
               SizedBox(height: 12.h),
               _SupportButton(
-                label: 'Website',
+                label: l10n.website,
                 icon: Icons.language,
                 onTap: () {
                   // Open website
