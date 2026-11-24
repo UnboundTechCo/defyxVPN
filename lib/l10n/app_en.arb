@@ -6,6 +6,16 @@
     "description": "The application title"
   },
 
+  "headerTitleFirst": "D",
+  "@headerTitleFirst": {
+    "description": "First part of the header brand title (large letter)"
+  },
+
+  "headerTitleRest": "efyx",
+  "@headerTitleRest": {
+    "description": "Remaining part of the header brand title (smaller text)"
+  },
+
   "splashSubtitle": "Crafted for secure internet access,\ndesigned for everyone, everywhere",
   "@splashSubtitle": {
     "description": "Subtitle shown on splash screen"
