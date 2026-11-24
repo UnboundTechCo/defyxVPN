@@ -2,6 +2,8 @@
   "@@locale": "ru",
   
   "appTitle": "Defyx VPN",
+  "headerTitleFirst": "D",
+  "headerTitleRest": "efyx",
   "splashSubtitle": "Создан для безопасного доступа в интернет,\nразработан для всех, везде",
   "connect": "Подключить",
   "disconnect": "Отключить",

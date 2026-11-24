@@ -2,6 +2,8 @@
   "@@locale": "zh",
   
   "appTitle": "Defyx VPN",
+  "headerTitleFirst": "D",
+  "headerTitleRest": "efyx",
   "splashSubtitle": "为安全的互联网访问而设计，\n为所有人，在任何地方",
   "connect": "连接",
   "disconnect": "断开连接",

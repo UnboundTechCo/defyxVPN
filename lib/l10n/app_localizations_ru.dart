@@ -12,6 +12,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'D';
+
+  @override
+  String get headerTitleRest => 'efyx';
+
+  @override
   String get splashSubtitle =>
       'Создан для безопасного доступа в интернет,\nразработан для всех, везде';
 

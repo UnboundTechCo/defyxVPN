@@ -12,6 +12,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'D';
+
+  @override
+  String get headerTitleRest => 'efyx';
+
+  @override
   String get splashSubtitle => '为安全的互联网访问而设计，\n为所有人，在任何地方';
 
   @override

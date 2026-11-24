@@ -12,6 +12,12 @@ class AppLocalizationsFa extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'د';
+
+  @override
+  String get headerTitleRest => 'یفیکس';
+
+  @override
   String get splashSubtitle =>
       'ساخته‌شده برای دسترسی امن به اینترنت،\nبرای همه، در همه‌جا';
 

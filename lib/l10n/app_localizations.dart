@@ -108,6 +108,18 @@ abstract class AppLocalizations {
   /// **'Defyx VPN'**
   String get appTitle;
 
+  /// First part of the header brand title (large letter)
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get headerTitleFirst;
+
+  /// Remaining part of the header brand title (smaller text)
+  ///
+  /// In en, this message translates to:
+  /// **'efyx'**
+  String get headerTitleRest;
+
   /// Subtitle shown on splash screen
   ///
   /// In en, this message translates to:
