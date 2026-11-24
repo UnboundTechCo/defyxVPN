@@ -184,5 +184,7 @@
   "privacyNoticeVpnProfile": "继续即表示您同意安装 VPN 配置文件。",
   "privacyNoticeShareDiagnostics": "发送使用统计和崩溃报告",
   "privacyNoticeGotIt": "知道了",
-  "settingsShareDiagnostics": "发送诊断数据"
+  "settingsShareDiagnostics": "发送诊断数据",
+  "adTapToLearnMore": "点按了解更多",
+  "adClickToLearnMore": "点击了解更多"
 }

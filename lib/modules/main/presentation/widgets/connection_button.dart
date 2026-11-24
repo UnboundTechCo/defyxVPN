@@ -19,6 +19,16 @@ class ConnectionButton extends StatefulWidget {
 
   const ConnectionButton({super.key, required this.onTap});
 
+  /// Side of the shield button itself.
+  static double get shieldSize => 120.w;
+
+  /// Side of the whole widget (the outermost pulse ring); the shield sits in
+  /// its centre.
+  static double get outerSize => 350.w;
+
+  /// Distance from the widget's top edge to the bottom tip of the shield.
+  static double get shieldBottom => (outerSize + shieldSize) / 2;
+
   @override
   State<ConnectionButton> createState() => _ConnectionButtonState();
 }
@@ -56,10 +66,10 @@ class _ConnectionButtonState extends State<ConnectionButton>
 
   void _initializeDimensions() {
     // Base dimensions that scale properly with screen size
-    _buttonSize = 120.w;
+    _buttonSize = ConnectionButton.shieldSize;
     _iconSize = 55.w;
     _animationSize = 105.w; // Extra large to completely fill shield
-    _pulseMaxSize = 350.w;
+    _pulseMaxSize = ConnectionButton.outerSize;
   }
 
   void _setupAnimations() {

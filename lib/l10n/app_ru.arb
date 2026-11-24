@@ -184,5 +184,7 @@
   "privacyNoticeVpnProfile": "Продолжая, вы соглашаетесь установить профиль VPN.",
   "privacyNoticeShareDiagnostics": "Отправлять статистику использования и отчёты о сбоях",
   "privacyNoticeGotIt": "Понятно",
-  "settingsShareDiagnostics": "Отправка диагностики"
+  "settingsShareDiagnostics": "Отправка диагностики",
+  "adTapToLearnMore": "Нажмите, чтобы узнать больше",
+  "adClickToLearnMore": "Нажмите, чтобы узнать больше"
 }

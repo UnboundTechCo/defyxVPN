@@ -571,4 +571,10 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsShareDiagnostics => '发送诊断数据';
+
+  @override
+  String get adTapToLearnMore => '点按了解更多';
+
+  @override
+  String get adClickToLearnMore => '点击了解更多';
 }

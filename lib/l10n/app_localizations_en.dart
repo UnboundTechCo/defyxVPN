@@ -595,4 +595,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsShareDiagnostics => 'Share Diagnostics';
+
+  @override
+  String get adTapToLearnMore => 'Tap to learn more';
+
+  @override
+  String get adClickToLearnMore => 'Click to learn more';
 }

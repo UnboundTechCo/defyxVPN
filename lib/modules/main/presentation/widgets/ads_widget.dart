@@ -20,7 +20,8 @@
 /// - MainScreen: Controls when to show/hide ads widget
 ///
 /// **UI Features:**
-/// - "ADVERTISEMENT" label (top-right corner)
+/// - "ADVERTISEMENT" label (top-right corner; bottom-right on in-house ads,
+///   whose top edge holds the "tap to learn more" cue)
 /// - 25-second countdown timer (bottom-left corner)
 /// - Ad carousel rotation with fade transitions (300ms)
 /// - Automatic hiding when countdown expires
@@ -30,6 +31,7 @@ library;
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
@@ -84,6 +86,8 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       return const SizedBox.shrink();
     }
 
+    final labelAtBottom = activeStrategy is InternalAdStrategy;
+
     // Render ad container with active strategy
     // Size is constrained by parent (main_screen.dart: 280.h x 336.w)
     return Stack(
@@ -117,18 +121,26 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
             ),
           ),
         ),
-        // ADVERTISEMENT label (top-right)
+        // ADVERTISEMENT label: top-right, except on in-house ads, where the
+        // top edge holds the "tap to learn more" cue and the label moves to
+        // the bottom-right corner.
         Positioned(
-          top: 0,
+          top: labelAtBottom ? null : 0,
+          bottom: labelAtBottom ? 0 : null,
           right: 0,
           child: Container(
             padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
             decoration: BoxDecoration(
               color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(widget.cornerRadius),
-                bottomLeft: Radius.circular(3.r),
-              ),
+              borderRadius: labelAtBottom
+                  ? BorderRadius.only(
+                      bottomRight: Radius.circular(widget.cornerRadius),
+                      topLeft: Radius.circular(3.r),
+                    )
+                  : BorderRadius.only(
+                      topRight: Radius.circular(widget.cornerRadius),
+                      bottomLeft: Radius.circular(3.r),
+                    ),
             ),
             child: Text(
               "ADVERTISEMENT",

@@ -594,4 +594,10 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsShareDiagnostics => 'ارسال داده‌های عیب‌یابی';
+
+  @override
+  String get adTapToLearnMore => 'برای اطلاعات بیشتر ضربه بزنید';
+
+  @override
+  String get adClickToLearnMore => 'برای اطلاعات بیشتر کلیک کنید';
 }

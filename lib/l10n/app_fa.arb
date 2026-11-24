@@ -184,5 +184,7 @@
   "privacyNoticeVpnProfile": "با ادامه، با نصب پروفایل VPN موافقت می‌کنید.",
   "privacyNoticeShareDiagnostics": "ارسال آمار استفاده و گزارش‌های خرابی",
   "privacyNoticeGotIt": "متوجه شدم",
-  "settingsShareDiagnostics": "ارسال داده‌های عیب‌یابی"
+  "settingsShareDiagnostics": "ارسال داده‌های عیب‌یابی",
+  "adTapToLearnMore": "برای اطلاعات بیشتر ضربه بزنید",
+  "adClickToLearnMore": "برای اطلاعات بیشتر کلیک کنید"
 }

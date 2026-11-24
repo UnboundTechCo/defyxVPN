@@ -598,4 +598,10 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsShareDiagnostics => 'Отправка диагностики';
+
+  @override
+  String get adTapToLearnMore => 'Нажмите, чтобы узнать больше';
+
+  @override
+  String get adClickToLearnMore => 'Нажмите, чтобы узнать больше';
 }

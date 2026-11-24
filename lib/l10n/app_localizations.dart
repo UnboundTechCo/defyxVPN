@@ -1205,6 +1205,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share Diagnostics'**
   String get settingsShareDiagnostics;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on phones
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to learn more'**
+  String get adTapToLearnMore;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on desktop
+  ///
+  /// In en, this message translates to:
+  /// **'Click to learn more'**
+  String get adClickToLearnMore;
 }
 
 class _AppLocalizationsDelegate

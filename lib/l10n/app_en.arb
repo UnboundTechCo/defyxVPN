@@ -929,5 +929,15 @@
   "settingsShareDiagnostics": "Share Diagnostics",
   "@settingsShareDiagnostics": {
     "description": "Diagnostics dialog - toggle for sending usage statistics and crash reports"
+  },
+
+  "adTapToLearnMore": "Tap to learn more",
+  "@adTapToLearnMore": {
+    "description": "Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on phones"
+  },
+
+  "adClickToLearnMore": "Click to learn more",
+  "@adClickToLearnMore": {
+    "description": "Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on desktop"
   }
 }
