@@ -27,6 +27,7 @@ class PremiumTabBar extends StatefulWidget {
 class _PremiumTabBarState extends State<PremiumTabBar> {
   @override
   Widget build(BuildContext context) {
+    final isApple = Platform.isIOS || Platform.isMacOS;
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w),
       child: Center(
@@ -39,7 +40,7 @@ class _PremiumTabBarState extends State<PremiumTabBar> {
               PremiumTab.account,
               false,
             ),
-            if (Platform.isIOS) ...[
+            if (isApple) ...[
               SizedBox(width: 24.w),
               _buildTabButton(
                 AppIcons.plansPath,
