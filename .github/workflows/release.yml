@@ -132,11 +132,12 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.unboundtech.defyxvpn
           releaseFiles: android-release/**/*.aab
-          track: internal
+          tracks: internal
           status: draft
 
       # Android TV uses Play's dedicated TV tracks, which only take the TV
-      # bundle (leanback required). tv:qa is TV internal testing.
+      # bundle (leanback required). The Play API names TV internal testing
+      # tv:internal; there is no tv:qa track.
       - name: Upload Android TV AAB to Google Play Store
         if: steps.create_tag.outputs.created == 'true'
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5 # v1
@@ -144,7 +145,7 @@ jobs:
           serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
           packageName: de.unboundtech.defyxvpn
           releaseFiles: android-tv-release/app-tv-release.aab
-          track: "tv:qa"
+          tracks: "tv:internal"
           status: draft
 
       - name: Upload to TestFlight
