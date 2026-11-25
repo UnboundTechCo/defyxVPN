@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
 import 'package:defyx_vpn/app/router/dpad_shell_page.dart';
 import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
@@ -52,6 +53,14 @@ class _AppState extends ConsumerState<App> {
     // (fresh install) or change when new server settings are saved. Listening
     // also creates the provider eagerly, without rebuilding the app.
     ref.listen(adEnvironmentProvider, (previous, next) => _maybeStartAdFlow());
+
+    // Ads only for users known not to be premium. Once that is known (the
+    // settings loaded, or a plan ended), set ads up and fill the box.
+    ref.listen(adsAllowedProvider, (previous, allowed) {
+      if (!allowed) return;
+      _maybeStartAdFlow();
+      ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
+    });
 
     // Keep the vibration alert backend in sync with the Haptic Feedback setting
     ref.listen(hapticsProvider, (previous, next) {
@@ -120,6 +129,8 @@ class _AppState extends ConsumerState<App> {
   /// the privacy notice allow it. Safe to call repeatedly: the coordinator
   /// runs the flow once per launch.
   void _maybeStartAdFlow() {
+    // Premium users get no ads, so no ad consent form or AdMob setup either.
+    if (!ref.read(adsAllowedProvider)) return;
     final environment = ref.read(adEnvironmentProvider).valueOrNull;
     if (environment == null) return; // Server settings not saved yet.
     if (!environment.shouldInitializeAdMob) {

@@ -5,6 +5,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/ad_loading_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
 import 'package:flutter/material.dart';
@@ -413,6 +414,7 @@ final adStrategyManagerProvider = Provider<AdStrategyManager?>((ref) {
 /// - When GoogleAdStrategy hasn't loaded yet (nativeAdIsLoaded = false)
 /// - When InternalAdStrategy has no ad data (customImageUrl = null/empty)
 final hasActiveAdProvider = Provider.autoDispose<bool>((ref) {
+  if (!ref.watch(adsAllowedProvider)) return false; // Premium: no ads.
   final manager = ref.watch(adStrategyManagerProvider);
   final connectionState = ref.watch(conn.connectionStateProvider);
   final adsState = ref.watch(adsProvider);

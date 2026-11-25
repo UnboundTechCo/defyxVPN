@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import '../ads_state.dart';
 import '../internal_ad_view.dart';
@@ -47,6 +48,14 @@ class InternalAdStrategy implements AdLoadingStrategy {
 
   @override
   Future<AdLoadResult> loadAd({required Ref ref}) async {
+    // Premium users see no ads, in-house ones included.
+    if (!ref.read(adsAllowedProvider)) {
+      return const AdLoadResult.failure(
+        errorCode: 'PREMIUM',
+        errorMessage: 'No ads for premium users',
+      );
+    }
+
     try {
       // Track load attempt
       await _analytics.logEvent(

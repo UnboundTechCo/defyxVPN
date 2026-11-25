@@ -7,10 +7,10 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:defyx_vpn/modules/core/network.dart';
-import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import '../ads_state.dart';
 import '../models/ad_load_result.dart';
 import 'ad_loading_strategy.dart';
@@ -278,12 +278,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   }) async {
     final logPrefix = isPreload ? '[PRELOAD]' : '[LOAD]';
 
-    // Premium users never see ads; a request would only be thrown away.
-    if (ref.read(settingsProvider.notifier).isPremiumCustomer()) {
-      debugPrint('$logPrefix Premium user - no ad request');
+    // Premium users never see ads (nor users whose status is not known yet);
+    // a request would only be thrown away.
+    if (!ref.read(adsAllowedProvider)) {
+      debugPrint(
+        '$logPrefix Premium or unknown premium status - no ad request',
+      );
       return AdLoadResult.failure(
         errorCode: 'PREMIUM',
-        errorMessage: 'Premium users see no ads',
+        errorMessage: 'No ads for premium users',
       );
     }
 
