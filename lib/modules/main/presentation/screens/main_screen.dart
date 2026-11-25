@@ -12,6 +12,7 @@ import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.da
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads_widget.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
 import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
@@ -356,8 +357,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   }
 
   bool get _shouldShowAd =>
-      ref.watch(hasActiveAdProvider) &&
-      !ref.read(settingsProvider.notifier).isPremiumCustomer();
+      ref.watch(hasActiveAdProvider) && ref.watch(adsAllowedProvider);
 
   /// What sits under the header when no ad is showing (the dino game while
   /// offline).
