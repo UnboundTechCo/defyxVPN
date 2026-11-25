@@ -7,8 +7,9 @@
 
   This version fills whatever height it is given: the media view takes the
   space left after the headline row and the button. The optional body text
-  is left out to give the media room (TemplateView skips a missing body).
-  View ids must match TemplateView.java.
+  is left out to give the media room (TemplateView skips a missing body);
+  its id is still declared in values/native_template_ids.xml, or release
+  builds crash with NoSuchFieldError. View ids must match TemplateView.java.
 -->
 <merge xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:android="http://schemas.android.com/apk/res/android">

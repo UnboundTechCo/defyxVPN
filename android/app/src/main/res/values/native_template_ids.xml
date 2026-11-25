@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    layout/gnt_medium_template_view.xml (our override of google_mobile_ads'
+    native template) leaves out the body text view, but the plugin's
+    TemplateView still looks it up by R.id.body. With no resource declaring
+    that id, R8 drops it in release builds and the lookup throws
+    NoSuchFieldError as soon as an ad's card is inflated. Declaring the id
+    keeps it; findViewById then returns null, which TemplateView handles.
+  -->
+  <item name="body" type="id" />
+</resources>
