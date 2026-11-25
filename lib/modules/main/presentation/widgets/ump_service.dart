@@ -31,16 +31,9 @@ class UmpService {
       }
     }
 
-    // Check cache first to potentially skip UMP request
-    if (_cacheService != null) {
-      final canSkip = await _cacheService.canSkipConsentRequest();
-      if (canSkip) {
-        debugPrint('✅ Skipping UMP request - using cached consent');
-        finish();
-        return completer.future;
-      }
-    }
-
+    // Always ask: Google requires a consent info update on every launch (the
+    // consent may have expired or the requirements changed). The form only
+    // appears when consent is actually required.
     final consentInfo = ConsentInformation.instance;
     final params = ConsentRequestParameters(tagForUnderAgeOfConsent: false);
 

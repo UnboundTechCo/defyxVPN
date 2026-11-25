@@ -15,6 +15,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Goes up by one each time new flowline settings are saved, so whatever is
+/// derived from them (such as whether AdMob is on) can be worked out again.
+final flowlineSettingsRevisionProvider = StateProvider<int>((ref) => 0);
+
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
   return FlowlineService(secureStorage, ref.container);
@@ -102,6 +106,7 @@ class FlowlineService implements IFlowlineService {
             <String, dynamic>{};
         await _secureStorage.writeMap(apiAvertiseKey, advertiseStorageMap);
         await _secureStorage.writeMap(flowlineSettingsKey, settingsStorageMap);
+        _container.read(flowlineSettingsRevisionProvider.notifier).state++;
 
         // Save tips if available
         if (decoded['tips'] != null) {
@@ -147,10 +152,23 @@ class FlowlineService implements IFlowlineService {
   }
 
   @override
-  Future<FlowlineSettings> getFlowlineSettings() async {
+  Future<FlowlineSettings> getFlowlineSettings() async =>
+      await getSavedFlowlineSettings() ??
+      FlowlineSettings(disabledAdmob: [], baseUrls: []);
+
+  @override
+  Future<FlowlineSettings?> getSavedFlowlineSettings() async {
+    final String? settingsString;
     try {
-      final settingsString = await _secureStorage.read(flowlineSettingsKey);
-      final decodedSettings = json.decode(settingsString ?? "");
+      settingsString = await _secureStorage.read(flowlineSettingsKey);
+    } catch (e) {
+      debugPrint('Failed to read flowline settings: $e');
+      return null;
+    }
+    if (settingsString == null || settingsString.isEmpty) return null;
+
+    try {
+      final decodedSettings = json.decode(settingsString);
       return FlowlineSettings.fromJson(decodedSettings);
     } catch (e, stack) {
       debugPrint('Failed to read flowline settings: $e');

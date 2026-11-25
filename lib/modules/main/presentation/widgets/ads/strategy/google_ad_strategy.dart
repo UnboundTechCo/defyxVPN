@@ -45,6 +45,16 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   bool _isLoading = false;
   bool _hasInitialized = false;
   bool _isPreloading = false;
+  bool _disposed = false;
+  AdsNotifier? _adsNotifier;
+
+  // A failed load is tried again while the user stays disconnected: after
+  // 20s, then 60s. Only for errors that can pass (internal, network, no
+  // fill, mediation no fill); an invalid request would fail the same way.
+  static const _retryDelays = [Duration(seconds: 20), Duration(seconds: 60)];
+  static const _retryableErrorCodes = {'0', '2', '3', '9'};
+  Timer? _retryTimer;
+  int _retryAttempt = 0;
 
   // Visual properties
   final Color backgroundColor;
@@ -71,37 +81,20 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         return;
       }
 
-      // Check if we need to load a new ad
-      if (_nativeAd != null) {
-        final adsState = ref.read(adsProvider);
-        debugPrint(
-          'Cached ad found. State: nativeAdIsLoaded=${adsState.nativeAdIsLoaded}',
-        );
-        if (adsState.nativeAdIsLoaded) {
-          debugPrint('Using existing valid ad');
-          _hasInitialized = true;
-          return;
-        } else {
-          debugPrint(
-            'Cached ad exists but state says not loaded - will reload',
-          );
-        }
-      }
-
       // Mark as initialized
       _hasInitialized = true;
 
-      // Register disposal callback for countdown expiry
-      ref.read(adsProvider.notifier).setAdDisposalCallback(() {
-        _disposeAd(ref);
-      });
-      debugPrint('Registered ad disposal callback');
+      // Register the countdown callbacks, also when reusing a cached ad: this
+      // instance may replace an earlier one after the AdMob decision changed.
+      final adsNotifier = ref.read(adsProvider.notifier);
+      _adsNotifier = adsNotifier;
+      adsNotifier.setAdDisposalCallback(() => _disposeAd(ref));
+      adsNotifier.setAdRotationCallback(() => _rotateToNextAd(ref));
+      debugPrint('Registered ad disposal and rotation callbacks');
 
-      // Register rotation callback for ad carousel
-      ref.read(adsProvider.notifier).setAdRotationCallback(() {
-        _rotateToNextAd(ref);
-      });
-      debugPrint('Registered ad rotation callback');
+      if (_nativeAd != null && ref.read(adsProvider).nativeAdIsLoaded) {
+        debugPrint('Cached ad found and still valid - reusing it');
+      }
 
       // DON'T load ad on initialization - let connection state changes handle it
       // This prevents race conditions and timing issues
@@ -572,6 +565,43 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     return const SizedBox.shrink();
   }
 
+  /// Loads an ad and starts its countdown; on a failure that can pass, tries
+  /// again later while the user stays disconnected.
+  void _loadAndShow(Ref ref) {
+    _retryTimer?.cancel();
+    loadAd(ref: ref).then((result) {
+      if (_disposed) return;
+      if (result.success && _nativeAd != null) {
+        _retryAttempt = 0;
+        debugPrint('AdMob ad loaded - starting countdown');
+        ref.read(adsProvider.notifier).startCountdownTimer();
+        return;
+      }
+      _scheduleRetry(ref, result);
+    });
+  }
+
+  void _scheduleRetry(Ref ref, AdLoadResult result) {
+    if (!_retryableErrorCodes.contains(result.errorCode)) return;
+    if (_retryAttempt >= _retryDelays.length) {
+      debugPrint('AdMob load failed (${result.errorCode}) - no retries left');
+      return;
+    }
+    final delay = _retryDelays[_retryAttempt++];
+    debugPrint(
+      'AdMob load failed (${result.errorCode}: ${result.errorMessage}) - '
+      'retrying in ${delay.inSeconds}s',
+    );
+    _retryTimer = Timer(delay, () {
+      if (_disposed || _isLoading || _nativeAd != null) return;
+      if (ref.read(connectionStateProvider).status !=
+          ConnectionStatus.disconnected) {
+        return;
+      }
+      _loadAndShow(ref);
+    });
+  }
+
   @override
   void onConnectionStateChanged({
     required Ref ref,
@@ -595,6 +625,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     // Show ads immediately when disconnected (user has real IP)
     if (current == ConnectionStatus.disconnected) {
       final adsState = ref.read(adsProvider);
+
+      // A new disconnected period gets its own retries.
+      _retryTimer?.cancel();
+      _retryAttempt = 0;
 
       // Mark first connection when user connects (for analytics)
       // But don't gate ads on this - show ads immediately
@@ -622,12 +656,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
         // Load fresh AdMob ad with real IP
         debugPrint('Loading fresh AdMob ad with real IP');
-        loadAd(ref: ref).then((result) {
-          if (result.success && _nativeAd != null) {
-            debugPrint('Fresh AdMob ad loaded - starting countdown');
-            ref.read(adsProvider.notifier).startCountdownTimer();
-          }
-        });
+        _loadAndShow(ref);
       }
       // Initial disconnected state or coming from other states
       else {
@@ -645,12 +674,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           }
 
           debugPrint('Loading AdMob ad with real IP');
-          loadAd(ref: ref).then((result) {
-            if (result.success && _nativeAd != null) {
-              debugPrint('AdMob ad loaded - starting countdown');
-              ref.read(adsProvider.notifier).startCountdownTimer();
-            }
-          });
+          _loadAndShow(ref);
         } else {
           debugPrint('Already have valid ad - starting countdown');
           ref.read(adsProvider.notifier).startCountdownTimer();
@@ -675,6 +699,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   @override
   void dispose() {
     debugPrint('GoogleAdStrategy disposed');
+    _disposed = true;
+    _retryTimer?.cancel();
+    // The callbacks hold this instance's Ref, which is dead from here on. A
+    // replacement strategy registers its own.
+    _adsNotifier?.clearAdDisposalCallback();
+    _adsNotifier?.clearAdRotationCallback();
     // Keep static _nativeAd alive for reuse
   }
 }
