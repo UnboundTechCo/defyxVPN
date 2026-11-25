@@ -111,7 +111,7 @@ class _PremiumLoginState extends State<PremiumLogin> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final fontSize = (16.0 * (1.sw / 375.0)).clamp(14.0, 18.0).toDouble();
-
+    final isApple = Platform.isIOS || Platform.isMacOS;
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -166,10 +166,10 @@ class _PremiumLoginState extends State<PremiumLogin> {
                   variant: AppButtonVariant.primary,
                   isLoading: isSubmitting,
                 ),
-                if (Platform.isIOS) ...[
+                if (isApple) ...[
                   SizedBox(height: 10.h),
                   AppButton(
-                    label: "Continue with Apple",
+                    label: l10n.continueWithApple,
                     onPressed: _loginByApple,
                     size: AppButtonSize.medium,
                     variant: AppButtonVariant.blue,
@@ -178,7 +178,7 @@ class _PremiumLoginState extends State<PremiumLogin> {
                 ],
                 SizedBox(height: 10.h),
                 AppButton(
-                  label: "Easy Login",
+                  label: l10n.easyLogin,
                   onPressed: _openLoginByCodeDialog,
                   size: AppButtonSize.medium,
                   variant: AppButtonVariant.tertiary,

@@ -18,6 +18,7 @@ class HeaderSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     return Stack(
       children: [
         Column(
@@ -36,7 +37,7 @@ class HeaderSection extends ConsumerWidget {
                       text: TextSpan(
                         children: [
                           TextSpan(
-                            text: 'D',
+                            text: l10n.headerTitleFirst,
                             style: TextStyle(
                               fontSize: 35.sp,
                               fontFamily: AppTheme.fontFamily,
@@ -45,7 +46,7 @@ class HeaderSection extends ConsumerWidget {
                             ),
                           ),
                           TextSpan(
-                            text: 'efyx',
+                            text: l10n.headerTitleRest,
                             style: TextStyle(
                               fontSize: 32.sp,
                               fontFamily: AppTheme.fontFamily,

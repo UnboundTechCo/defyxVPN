@@ -3,6 +3,7 @@ import 'package:defyx_vpn/common/components/dashed_divider.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/core/register.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -49,13 +50,10 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
                 ),
               ),
               SizedBox(height: 24.h),
-
               _buildPlanDetails(plan),
-
               SizedBox(height: 24.h),
-
               AppButton(
-                label: 'Pay Now',
+                label: AppLocalizations.of(context).payNow,
                 onPressed: _handlePayNow,
                 variant: AppButtonVariant.blue,
                 round: AppButtonRound.circle,
@@ -78,7 +76,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'What You\'ll Get',
+              AppLocalizations.of(context).whatYoullGet,
               style: TextStyle(
                 color: const Color(0xFFA9A9AA),
                 fontSize: 30.sp,
@@ -102,7 +100,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
               // mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$price Credits',
+                  AppLocalizations.of(context).creditsPrice(price),
                   style: TextStyle(
                     color: const Color(0xFF4CAF7F),
                     fontSize: 34.sp,
@@ -126,7 +124,7 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
                   ),
                 ),
                 Text(
-                  ' Months',
+                  ' ${AppLocalizations.of(context).months}',
                   style: TextStyle(
                     color: const Color(0xFF515151),
                     fontSize: 20.sp,
@@ -157,19 +155,17 @@ class _PremiumPlanDetailsState extends State<PremiumPlanDetails> {
     final premiumService = await widget.ref.watch(
       premiumApiServiceProvider.future,
     );
-    await premiumService
-        .subscribeToPlan(widget.plan.id)
-        .then((_) {
-          ToastUtil.showToast('Successfully subscribed to the plan!');
-          widget.onPaymentSuccess();
-        })
-        .whenComplete(() {
-          setState(() {
-            _isLoading = false;
-          });
-        })
-        .catchError((error) {
-          ToastUtil.showToast(error.toString());
-        });
+    await premiumService.subscribeToPlan(widget.plan.id).then((_) {
+      ToastUtil.showToast(
+        AppLocalizations.of(context).subscriptionSuccess,
+      );
+      widget.onPaymentSuccess();
+    }).whenComplete(() {
+      setState(() {
+        _isLoading = false;
+      });
+    }).catchError((error) {
+      ToastUtil.showToast(error.toString());
+    });
   }
 }

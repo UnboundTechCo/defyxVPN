@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
@@ -47,7 +49,7 @@ class Register {
   }
 
   Future<bool> guestModeLoginApple() async {
-    final uniqueIdentifier = await getIosDeviceId();
+    final uniqueIdentifier = await getAppleDeviceId();
     if (uniqueIdentifier == null) {
       return false;
     }
@@ -68,8 +70,25 @@ class Register {
     return result;
   }
 
-  Future<String?> getIosDeviceId() async {
+  Future<String?> _getIosDeviceId() async {
     final info = await DeviceInfoPlugin().iosInfo;
     return info.identifierForVendor;
+  }
+
+  Future<String?> _getMacDeviceId() async {
+    final info = await DeviceInfoPlugin().macOsInfo;
+    return info.systemGUID;
+  }
+
+  Future<String?> getAppleDeviceId() async {
+    final isApple = Platform.isIOS || Platform.isMacOS;
+    if (isApple) {
+      if (Platform.isIOS) {
+        return await _getIosDeviceId();
+      } else if (Platform.isMacOS) {
+        return await _getMacDeviceId();
+      }
+    }
+    return null;
   }
 }

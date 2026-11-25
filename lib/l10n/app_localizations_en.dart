@@ -12,6 +12,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'D';
+
+  @override
+  String get headerTitleRest => 'efyx';
+
+  @override
   String get splashSubtitle =>
       'Crafted for secure internet access,\ndesigned for everyone, everywhere';
 
@@ -601,4 +607,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get adClickToLearnMore => 'Click to learn more';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String get premiumTabAccount => 'ACCOUNT';
+
+  @override
+  String get premiumTabPlans => 'PLANS';
+
+  @override
+  String get premiumTabWallet => 'WALLET';
+
+  @override
+  String get premiumTabSupport => 'SUPPORT';
+
+  @override
+  String get selectPlanDuration =>
+      'Select the plan duration you\'d like to purchase:';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price Credits';
+  }
+
+  @override
+  String get choose => 'Choose';
+
+  @override
+  String get payNow => 'Pay Now';
+
+  @override
+  String get whatYoullGet => 'What You\'ll Get';
+
+  @override
+  String get months => 'Months';
+
+  @override
+  String get subscriptionSuccess => 'Successfully subscribed to the plan!';
+
+  @override
+  String get selectTopUpAmount => 'Please select the wallet top-up amount:';
+
+  @override
+  String get paymentSuccessful => 'Payment Successful';
+
+  @override
+  String get walletToppedUp => 'Your wallet has been topped up';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get purchaseCredits => 'Purchase credits';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get selectAmount => 'Please select an amount';
+
+  @override
+  String get balance => 'BALANCE';
+
+  @override
+  String get topUp => 'Top up';
+
+  @override
+  String get registerToAccessPremium =>
+      'You need to register to access premium features.';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get goToLoginSection => 'Go to login section';
+
+  @override
+  String get easyLogin => 'Easy Login';
+
+  @override
+  String get needHelp => 'Need Help?';
+
+  @override
+  String get supportContactDescription =>
+      'Contact our support team through the following channels:';
+
+  @override
+  String get telegram => 'Telegram';
+
+  @override
+  String get website => 'Website';
 }
