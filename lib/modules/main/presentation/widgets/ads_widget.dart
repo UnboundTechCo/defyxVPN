@@ -20,9 +20,10 @@
 /// - MainScreen: Controls when to show/hide ads widget
 ///
 /// **UI Features:**
-/// - "ADVERTISEMENT" label (top-right corner; bottom-right on in-house ads,
-///   whose top edge holds the "tap to learn more" cue)
-/// - 25-second countdown timer (bottom-left corner)
+/// - "ADVERTISEMENT" label and countdown: in a strip above AdMob ads (nothing
+///   may cover them), in the bottom corners of in-house ads (whose top edge
+///   holds the "tap to learn more" cue)
+/// - Countdown: 30s per AdMob ad, 25s per in-house ad, paused while unseen
 /// - Ad carousel rotation with fade transitions (300ms)
 /// - Automatic hiding when countdown expires
 /// - Smooth fade animations (300ms)
@@ -56,6 +57,34 @@ class AdsWidget extends ConsumerStatefulWidget {
 
 /// Widget state - pure renderer, gets manager from provider
 class _AdsWidgetState extends ConsumerState<AdsWidget> {
+  late final AdsNotifier _ads;
+  late final AppLifecycleListener _lifecycle;
+
+  @override
+  void initState() {
+    super.initState();
+    // The countdown runs only while this box can be seen.
+    _ads = ref.read(adsProvider.notifier);
+    _lifecycle = AppLifecycleListener(
+      onStateChange: (state) =>
+          _ads.setAppInForeground(state == AppLifecycleState.resumed),
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // False while another page covers the main screen.
+    _ads.setAdOnScreen(TickerMode.valuesOf(context).enabled);
+  }
+
+  @override
+  void dispose() {
+    _lifecycle.dispose();
+    _ads.setAdOnScreen(false);
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     // Get manager from provider
@@ -86,99 +115,121 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       return const SizedBox.shrink();
     }
 
-    final labelAtBottom = activeStrategy is InternalAdStrategy;
+    final radius = Radius.circular(widget.cornerRadius);
+    final box = BoxDecoration(
+      color: widget.backgroundColor.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.all(radius),
+      border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
+    );
+    Widget content(BorderRadius clip) => AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      switchInCurve: Curves.easeIn,
+      switchOutCurve: Curves.easeOut,
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(opacity: animation, child: child);
+      },
+      child: ClipRRect(
+        key: ValueKey('ad_rotation_${adsState.rotationCount}'),
+        borderRadius: clip,
+        child: activeStrategy.buildAdWidget(
+          context: context,
+          state: adsState,
+          cornerRadius: widget.cornerRadius,
+        ),
+      ),
+    );
+    final countdownText = "Closing in ${adsState.countdown}s";
 
-    // Render ad container with active strategy
     // Size is constrained by parent (main_screen.dart: 280.h x 336.w)
+    if (activeStrategy is! InternalAdStrategy) {
+      // AdMob: nothing may cover the ad (AdChoices icon, button), so the
+      // labels sit in a strip above it.
+      return Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: box,
+        child: Column(
+          children: [
+            SizedBox(
+              height: 24.h,
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                child: Row(
+                  children: [
+                    _stripText("ADVERTISEMENT"),
+                    const Spacer(),
+                    if (adsState.showCountdown) _stripText(countdownText),
+                  ],
+                ),
+              ),
+            ),
+            Expanded(child: content(BorderRadius.vertical(bottom: radius))),
+          ],
+        ),
+      );
+    }
+
+    // In-house ads: labels over the picture; the top edge holds the "tap to
+    // learn more" cue, so ADVERTISEMENT sits bottom-right.
     return Stack(
       children: [
         Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: BoxDecoration(
-            color: widget.backgroundColor.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(widget.cornerRadius),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-              width: 1,
-            ),
-          ),
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            switchInCurve: Curves.easeIn,
-            switchOutCurve: Curves.easeOut,
-            transitionBuilder: (Widget child, Animation<double> animation) {
-              return FadeTransition(opacity: animation, child: child);
-            },
-            child: ClipRRect(
-              key: ValueKey('ad_rotation_${adsState.rotationCount}'),
-              borderRadius: BorderRadius.circular(widget.cornerRadius),
-              child: activeStrategy.buildAdWidget(
-                context: context,
-                state: adsState,
-                cornerRadius: widget.cornerRadius,
-              ),
-            ),
-          ),
+          decoration: box,
+          child: content(BorderRadius.all(radius)),
         ),
-        // ADVERTISEMENT label: top-right, except on in-house ads, where the
-        // top edge holds the "tap to learn more" cue and the label moves to
-        // the bottom-right corner.
         Positioned(
-          top: labelAtBottom ? null : 0,
-          bottom: labelAtBottom ? 0 : null,
+          bottom: 0,
           right: 0,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.3),
-              borderRadius: labelAtBottom
-                  ? BorderRadius.only(
-                      bottomRight: Radius.circular(widget.cornerRadius),
-                      topLeft: Radius.circular(3.r),
-                    )
-                  : BorderRadius.only(
-                      topRight: Radius.circular(widget.cornerRadius),
-                      bottomLeft: Radius.circular(3.r),
-                    ),
-            ),
-            child: Text(
-              "ADVERTISEMENT",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
-                letterSpacing: 1.2,
-              ),
+          child: _cornerTab(
+            "ADVERTISEMENT",
+            BorderRadius.only(
+              bottomRight: radius,
+              topLeft: Radius.circular(3.r),
             ),
           ),
         ),
-        // Countdown timer (bottom-left)
         if (adsState.showCountdown)
           Positioned(
             bottom: 0,
             left: 0,
-            child: Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(widget.cornerRadius),
-                  topRight: Radius.circular(3.r),
-                ),
-              ),
-              child: Text(
-                "Closing in ${adsState.countdown}s",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  letterSpacing: 1.2,
-                ),
+            child: _cornerTab(
+              countdownText,
+              BorderRadius.only(
+                bottomLeft: radius,
+                topRight: Radius.circular(3.r),
               ),
             ),
           ),
       ],
     );
   }
+
+  Widget _stripText(String text) => Text(
+    text,
+    style: TextStyle(
+      color: Colors.white.withValues(alpha: 0.7),
+      fontSize: 11.sp,
+      fontWeight: FontWeight.w500,
+      letterSpacing: 1.2,
+    ),
+  );
+
+  Widget _cornerTab(String text, BorderRadius borderRadius) => Container(
+    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 4.h),
+    decoration: BoxDecoration(
+      color: Colors.black.withValues(alpha: 0.3),
+      borderRadius: borderRadius,
+    ),
+    child: Text(
+      text,
+      style: TextStyle(
+        color: Colors.white,
+        fontSize: 12.sp,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 1.2,
+      ),
+    ),
+  );
 }

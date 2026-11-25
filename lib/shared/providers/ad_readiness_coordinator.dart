@@ -316,12 +316,10 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     return true;
   }
 
-  /// Get ad request extras for AdMob
+  /// Get ad request extras for AdMob. No 'npa': personalization follows the
+  /// UMP consent, and the SDK applies the iOS tracking answer itself.
   Map<String, String> getAdRequestExtras() {
-    return {
-      'npa': state.canUsePersonalizedAds ? '0' : '1',
-      'att_status': state.attStatus.name,
-    };
+    return {'att_status': state.attStatus.name};
   }
 
   // === Error Recovery ===

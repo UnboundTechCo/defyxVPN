@@ -13,8 +13,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:state_notifier/state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Countdown duration in seconds before ad is hidden (industry standard for native ads)
+/// Countdown duration in seconds before an in-house ad is hidden.
 const int countdownDuration = 25;
+
+/// Seconds each AdMob ad stays up before it rotates or hides: AdMob's
+/// minimum refresh interval. Faster rotation lowers what each ad earns.
+const int adMobDisplaySeconds = 30;
+
+/// How long before an AdMob ad's time is up the next one is requested, so it
+/// is ready for the rotation without loading ads that are never shown.
+const int adMobPreloadLeadSeconds = 10;
 
 /// Maximum number of ad rotations per connection cycle (conservative UX)
 const int maxAdRotations = 3;
@@ -175,6 +183,21 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// Callback for notifying strategies when next ad should be loaded (rotation)
   VoidCallback? _onAdShouldRotate;
 
+  /// Callback for requesting the next AdMob ad shortly before rotation.
+  VoidCallback? _onAdShouldPreload;
+
+  // The countdown only runs while the ad can be seen: AdMob counts on ads
+  // staying up for their full time, and says not to rotate unseen ads.
+  bool _adOnScreen = true;
+  bool _appInForeground = true;
+
+  /// Whether the ad box is on screen (false while another page covers it or
+  /// the main screen is gone). Pauses the countdown when false.
+  void setAdOnScreen(bool onScreen) => _adOnScreen = onScreen;
+
+  /// Whether the app is in the foreground. Pauses the countdown when false.
+  void setAppInForeground(bool foreground) => _appInForeground = foreground;
+
   /// Load persisted countdown state on initialization
   Future<void> _loadPersistedCountdown() async {
     try {
@@ -217,20 +240,20 @@ class AdsNotifier extends StateNotifier<AdsState> {
     }
   }
 
-  /// Start the countdown timer after ad is loaded and VPN connects
-  /// Restarts to 25 seconds on each connection (optimized for ad rotation)
-  void startCountdownTimer() {
+  /// Start the countdown for a freshly shown ad: [countdownDuration] for
+  /// in-house ads, [adMobDisplaySeconds] for AdMob.
+  void startCountdownTimer({int seconds = countdownDuration}) {
     _countdownTimer?.cancel();
 
     // Update state immediately (synchronous)
-    state = state.copyWith(countdown: countdownDuration, showCountdown: true);
+    state = state.copyWith(countdown: seconds, showCountdown: true);
 
     // Clear old and save new start time in background (async)
     _clearPersistedCountdown().then((_) {
       _saveCountdownStartTime();
     });
 
-    _startCountdownFromValue(countdownDuration);
+    _startCountdownFromValue(seconds);
   }
 
   /// Stop the countdown timer and clear persisted state
@@ -250,12 +273,22 @@ class AdsNotifier extends StateNotifier<AdsState> {
     _countdownTimer?.cancel();
 
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!_adOnScreen || !_appInForeground) return; // Paused while unseen.
+
       if (state.countdown > 0) {
         final newCount = state.countdown - 1;
         debugPrint(
           '⏱️ Countdown: $newCount, rotation=${state.rotationCount}/$maxAdRotations',
         );
         state = state.copyWith(countdown: newCount);
+
+        // AdMob ad showing and another rotation to come: fetch the next one.
+        if (newCount == adMobPreloadLeadSeconds &&
+            state.nativeAdIsLoaded &&
+            state.rotationCount < maxAdRotations &&
+            !state.nextAdReady) {
+          _onAdShouldPreload?.call();
+        }
       } else {
         debugPrint(
           '⏱️ Countdown finished - rotation=${state.rotationCount}/$maxAdRotations',
@@ -384,6 +417,16 @@ class AdsNotifier extends StateNotifier<AdsState> {
   void setAdRotationCallback(VoidCallback callback) {
     debugPrint('Registered ad rotation callback');
     _onAdShouldRotate = callback;
+  }
+
+  /// Register a callback to request the next AdMob ad before rotation.
+  void setAdPreloadCallback(VoidCallback callback) {
+    _onAdShouldPreload = callback;
+  }
+
+  /// Unregister the ad preload callback
+  void clearAdPreloadCallback() {
+    _onAdShouldPreload = null;
   }
 
   /// Unregister the ad disposal callback
