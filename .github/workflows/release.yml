@@ -6,7 +6,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 
 
@@ -39,39 +39,39 @@ jobs:
             .github/release_message.md >> release.md
 
       - name: Download Android Google Play artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-googleplay
           path: android-release/
 
       - name: Download Android GitHub artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-github
           path: android-release/
 
       # Kept out of android-release/, whose AABs go to the phone tracks.
       - name: Download Android TV Google Play artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-googleplay-tv
           path: android-tv-release/
 
       - name: Download Windows artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-release
           path: windows-release/
       
       - name: Download Linux artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: linux-release
           path: linux-release/
       
       - name: Download iOS artifacts
         if: false
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: ios-release
           path: ios-release/
@@ -79,7 +79,7 @@ jobs:
       - name: Create GitHub Release
         if: steps.create_tag.outputs.created == 'true'
         id: create_release
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           name: "v${{ steps.get_version.outputs.version }}"
@@ -94,18 +94,31 @@ jobs:
 
       - name: Delete existing release assets
         if: steps.create_tag.outputs.created == 'false'
-        uses: mknejp/delete-release-assets@a40d395589329c6e93ab51a02fc2e4c60fdfe48f # v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "v${{ steps.get_version.outputs.version }}"
-          assets: "*"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG: "v${{ steps.get_version.outputs.version }}"
+        run: |
+          set -euo pipefail
+          # Fails when the tag has no release, or the release has no assets.
+          assets=$(gh release view "$TAG" --json assets --jq '.assets[].name')
+          if [ -z "$assets" ]; then
+            echo "::error::Release $TAG has no assets to delete"
+            exit 1
+          fi
+          while IFS= read -r asset; do
+            gh release delete-asset "$TAG" "$asset" --yes
+          done <<< "$assets"
 
       - name: Update GitHub Release
         if: steps.create_tag.outputs.created == 'false'
-        uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           tag_name: "v${{ steps.get_version.outputs.version }}"
           name: "v${{ steps.get_version.outputs.version }}"
+          # v2.5+ publishes a reused draft unless this is true. An already
+          # published release stays published.
+          draft: true
           files: |
             android-release/**/*.apk
             windows-release/**
