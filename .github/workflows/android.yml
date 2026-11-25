@@ -3,7 +3,6 @@ on:
 
 jobs:
   googleplay:
-    if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
     runs-on: ubuntu-24.04
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}
@@ -126,7 +125,6 @@ jobs:
           path: build/app/outputs/bundle/tv/app-tv-release.aab
 
   github:
-    if: ${{ github.event.inputs.upload_to_app_store != 'true' }}
     runs-on: ubuntu-24.04
     outputs:
       app_version: ${{ steps.get_version.outputs.version }}

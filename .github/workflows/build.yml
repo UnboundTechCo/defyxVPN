@@ -4,21 +4,62 @@ permissions:
   contents: write
 
 on:
+  # Every push to release builds and publishes.
   push:
     branches:
       - release
+  # On demand, on release: Actions tab > Run workflow (the button shows once
+  # this is on the default branch). release-new-version.yml raises the
+  # version and then runs this with publish on.
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to Play internal (draft), GitHub Releases and Telegram. Off: build only."
+        type: boolean
+        default: false
 
 jobs:
-  # Builds only when .github/dxcore.lock pins the newest DXcore release. If a
-  # newer one is out, this opens a pull request that pins it and nothing is
-  # built; merging the pull request pushes to release and builds the app.
+  # Builds only when .github/dxcore.lock pins the newest DXcore release; if a
+  # newer one is out, opens a pull request that pins it instead.
   dxcore-lock:
+    if: github.ref == 'refs/heads/release'
     uses: ./.github/workflows/update-dxcore-lock.yml
     secrets:
       DXCORE_PRIVATE_ACCESS_TOKEN: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
     permissions:
       contents: write
       pull-requests: write
+
+  # Whether the version has no v<version> tag yet, checked before release.yml
+  # creates it. Telegram only posts new versions; release.yml skips released
+  # ones itself.
+  version:
+    if: github.ref == 'refs/heads/release'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      new: ${{ steps.check.outputs.new }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Get app version
+        id: get_version
+        uses: ./.github/actions/get-version
+
+      - name: Check for an existing tag
+        id: check
+        run: |
+          TAG="v${{ steps.get_version.outputs.version }}"
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "$TAG is already released."
+            echo "new=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
 
   android:
     needs: dxcore-lock
@@ -31,6 +72,7 @@ jobs:
       id-token: write
       attestations: write
 
+  # iOS release builds are off for now.
   ios:
     if: false
     uses: ./.github/workflows/ios.yml
@@ -48,12 +90,15 @@ jobs:
     uses: ./.github/workflows/linux.yml
     secrets: inherit
 
+  # Publishing: on every push; on manual runs only with publish on.
   release-to-telegram:
-    needs: [android, windows, linux]
+    needs: [version, android, windows, linux]
+    if: needs.version.outputs.new == 'true' && (github.event_name == 'push' || inputs.publish)
     uses: ./.github/workflows/telegram.yml
     secrets: inherit
 
   release:
     needs: [android, windows, linux]
+    if: github.event_name == 'push' || inputs.publish
     uses: ./.github/workflows/release.yml
     secrets: inherit
