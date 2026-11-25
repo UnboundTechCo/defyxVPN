@@ -1,0 +1,71 @@
+name: Release a New Version
+
+# Actions tab > "Release a New Version" > Run workflow, branch release.
+# (GitHub shows the button once this file is on the default branch.)
+#
+# Raises the version in pubspec.yaml on release - patch, minor or major, plus
+# the build number Play needs - and commits it as
+# "🚀 Build & Release | Defyx v<version>", as those commits were made by hand.
+# Then starts build.yml to build and publish it: a push made with
+# GITHUB_TOKEN starts no workflow run, but a dispatch does.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Which part of the version to raise
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # push the version commit
+      actions: write # start the build
+    steps:
+      - name: Only on release
+        if: github.ref != 'refs/heads/release'
+        run: |
+          echo "::error::Run this on the release branch (picked: ${{ github.ref_name }})."
+          exit 1
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Raise the version and commit it to release
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          CURRENT=$(grep '^version: ' pubspec.yaml | cut -d' ' -f2)
+          if [[ ! $CURRENT =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)\+([0-9]+)$ ]]; then
+            echo "::error::Unexpected version in pubspec.yaml: $CURRENT"
+            exit 1
+          fi
+          MAJOR=$((10#${BASH_REMATCH[1]}))
+          MINOR=$((10#${BASH_REMATCH[2]}))
+          PATCH=$((10#${BASH_REMATCH[3]}))
+          BUILD=$((10#${BASH_REMATCH[4]}))
+          case "$BUMP" in
+            major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+            minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+            patch) PATCH=$((PATCH + 1)) ;;
+          esac
+          # Play needs a higher build number (versionCode) every release.
+          NEW="$MAJOR.$MINOR.$PATCH+$((BUILD + 1))"
+
+          sed -i "s/^version: .*/version: $NEW/" pubspec.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "🚀 Build & Release | Defyx v$NEW"
+          git push origin HEAD:release
+          echo "Released version: $CURRENT -> $NEW" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build and publish it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build.yml --ref release -f publish=true
