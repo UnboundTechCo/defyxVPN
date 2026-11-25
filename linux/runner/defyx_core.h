@@ -25,7 +25,7 @@ long long MeasurePing();
 std::string GetFlag();
 void SetAsnName();
 void SetTimeZone(float tz);
-std::string GetFlowLine(bool isTest = false);
+std::string GetFlowLine(bool isTest = false, const std::string& token = "");
 std::string GetCachedFlowLine();
 std::string DecodeAndVerifyFlowline(const std::string& flowLine);
 std::string GetVpnStatus();
