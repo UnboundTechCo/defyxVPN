@@ -48,6 +48,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   static DateTime? _nativeAdLoadedAt;
   static bool _nativeAdSeen = false;
   static DateTime? _nextAdLoadedAt;
+
+  // When the last ad's time ran out; the box stays empty at least
+  // [adMobDisplaySeconds] after that before [refill] loads another.
+  static DateTime? _lastAdEndedAt;
   static const _unseenAdMaxAge = Duration(minutes: 50);
 
   // Instance state
@@ -55,6 +59,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   bool _hasInitialized = false;
   bool _isPreloading = false;
   bool _disposed = false;
+  bool _loadInFlight = false; // one load at a time, whatever triggered it
   AdsNotifier? _adsNotifier;
 
   // A failed load is tried again while the user stays disconnected: after
@@ -119,6 +124,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   /// Dispose the current ad instance and clear state
   void _disposeAd(Ref ref) {
+    _lastAdEndedAt = DateTime.now();
     debugPrint('Disposing AdMob ads due to countdown expiry');
     if (_nativeAd != null) {
       try {
@@ -148,14 +154,18 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       return;
     }
 
-    // Dispose current ad
-    if (_nativeAd != null) {
-      try {
-        _nativeAd!.dispose();
-        debugPrint('Disposed previous ad');
-      } catch (e) {
-        debugPrint('Error disposing previous ad: $e');
-      }
+    // Dispose the previous ad once the box's cross-fade (300ms) has run:
+    // disposing it at once left the fading-out half blank.
+    final previous = _nativeAd;
+    if (previous != null) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        try {
+          previous.dispose();
+          debugPrint('Disposed previous ad');
+        } catch (e) {
+          debugPrint('Error disposing previous ad: $e');
+        }
+      });
     }
 
     // Swap: next ad becomes current
@@ -626,8 +636,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   /// Loads an ad and starts its countdown; on a failure that can pass, tries
   /// again later while the user stays disconnected.
   void _loadAndShow(Ref ref) {
+    if (_loadInFlight) return;
+    _loadInFlight = true;
     _retryTimer?.cancel();
-    loadAd(ref: ref).then((result) {
+    loadAd(ref: ref).whenComplete(() => _loadInFlight = false).then((result) {
       if (_disposed) return;
       if (result.success && _nativeAd != null) {
         _retryAttempt = 0;
@@ -639,6 +651,32 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       }
       _scheduleRetry(ref, result);
     });
+  }
+
+  /// Puts an ad in the box when the user comes back to it (app resumed, or
+  /// back on the main screen) and it is empty. Ads otherwise load only when
+  /// the VPN disconnects, so users returning later saw an empty box. Waits
+  /// at least [adMobDisplaySeconds] after the last ad ended, like a rotation.
+  void refill(Ref ref) {
+    if (_disposed || _isLoading || _loadInFlight) return;
+    final adsState = ref.read(adsProvider);
+    if (adsState.nativeAdIsLoaded && adsState.showCountdown) return;
+    final endedAt = _lastAdEndedAt;
+    if (endedAt != null &&
+        DateTime.now().difference(endedAt) <
+            const Duration(seconds: adMobDisplaySeconds)) {
+      return;
+    }
+    if (!ref.read(adReadinessCoordinatorProvider).canLoadAds) return;
+
+    debugPrint('Ad box empty on return - showing an AdMob ad');
+    onConnectionStateChanged(
+      ref: ref,
+      previous: ConnectionStatus.disconnected,
+      current: ConnectionStatus.disconnected,
+      hasInitialized: true,
+      onRefreshNeeded: () {},
+    );
   }
 
   void _scheduleRetry(Ref ref, AdLoadResult result) {

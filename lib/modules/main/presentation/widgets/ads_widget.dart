@@ -59,6 +59,7 @@ class AdsWidget extends ConsumerStatefulWidget {
 class _AdsWidgetState extends ConsumerState<AdsWidget> {
   late final AdsNotifier _ads;
   late final AppLifecycleListener _lifecycle;
+  bool _onScreen = false;
 
   @override
   void initState() {
@@ -66,8 +67,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     // The countdown runs only while this box can be seen.
     _ads = ref.read(adsProvider.notifier);
     _lifecycle = AppLifecycleListener(
-      onStateChange: (state) =>
-          _ads.setAppInForeground(state == AppLifecycleState.resumed),
+      onStateChange: (state) {
+        final foreground = state == AppLifecycleState.resumed;
+        _ads.setAppInForeground(foreground);
+        if (foreground && _onScreen) _refillWhenEmpty();
+      },
     );
   }
 
@@ -75,7 +79,19 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     // False while another page covers the main screen.
-    _ads.setAdOnScreen(TickerMode.valuesOf(context).enabled);
+    final onScreen = TickerMode.valuesOf(context).enabled;
+    _ads.setAdOnScreen(onScreen);
+    if (onScreen && !_onScreen) _refillWhenEmpty();
+    _onScreen = onScreen;
+  }
+
+  /// The box is in view again (main screen shown, or the app back in the
+  /// foreground): fill it if it is empty.
+  void _refillWhenEmpty() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(adStrategyManagerProvider)?.refillGoogleAd();
+    });
   }
 
   @override

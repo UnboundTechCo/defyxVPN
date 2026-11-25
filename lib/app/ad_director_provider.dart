@@ -334,6 +334,16 @@ class AdStrategyManager {
     );
   }
 
+  /// Fills an empty ad box when the user comes back to it (see
+  /// [GoogleAdStrategy.refill]). Only while disconnected: connected, the box
+  /// holds in-house ads.
+  void refillGoogleAd() {
+    if (!_hasGoogleStrategy) return;
+    final status = _ref.read(conn.connectionStateProvider).status;
+    if (status != conn.ConnectionStatus.disconnected) return;
+    _googleStrategy!.refill(_ref);
+  }
+
   /// Dispose strategies and subscriptions
   void dispose() {
     debugPrint('AdStrategyManager - Disposing');
