@@ -2,8 +2,8 @@
   "@@locale": "fa",
   
   "appTitle": "Defyx VPN",
-  "headerTitleFirst": "د",
-  "headerTitleRest": "یفیکس",
+  "headerTitleFirst": "",
+  "headerTitleRest": "دیفیکس",
   "splashSubtitle": "ساخته‌شده برای دسترسی امن به اینترنت،\nبرای همه، در همه‌جا",
   "connect": "اتصال",
   "disconnect": "قطع اتصال",
