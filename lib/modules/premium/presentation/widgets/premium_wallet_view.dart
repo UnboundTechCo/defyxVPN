@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
@@ -74,7 +75,7 @@ class _PremiumWalletViewState extends State<PremiumWalletView>
                   child: Column(
                     children: [
                       Text(
-                        'BALANCE',
+                        AppLocalizations.of(context).balance,
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 18.sp,
@@ -92,39 +93,39 @@ class _PremiumWalletViewState extends State<PremiumWalletView>
                               ),
                             )
                           : widget.isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.black,
-                              ),
-                            )
-                          : RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: symbol,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 36.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.black,
                                   ),
-                                  TextSpan(
-                                    text: widget.balance.toStringAsFixed(2),
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 36.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                )
+                              : RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: symbol,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 36.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: widget.balance.toStringAsFixed(2),
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 36.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
                       SizedBox(height: 20.h),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AppButton(
-                            label: 'Top up',
+                            label: AppLocalizations.of(context).topUp,
                             onPressed: () {
                               widget.showTopUpForm();
                             },

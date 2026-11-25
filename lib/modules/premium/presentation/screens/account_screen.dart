@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_login.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_logged_in.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_login_by_code.dart';
@@ -41,7 +42,10 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
       loading: () =>
           const Center(child: CircularProgressIndicator(color: Colors.white)),
       error: (error, stack) => Center(
-        child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+        child: Text(
+          '${AppLocalizations.of(context).error}: $error',
+          style: const TextStyle(color: Colors.red),
+        ),
       ),
     );
   }

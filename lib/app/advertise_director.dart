@@ -12,40 +12,28 @@ class AdvertiseDirector {
 
   AdvertiseDirector(this.ref);
 
-  static Future<bool> shouldUseInternalAds(Ref ref) async {
-    // STRATEGY SELECTION (for backward compatibility with desktop):
-    // - Desktop (Windows/macOS/Linux) -> InternalAdStrategy only (no AdMob support)
-    // - Iranian users -> InternalAdStrategy only (AdMob disabled for Iran)
-    // - Mobile (Android/iOS) -> DUAL strategy approach:
-    //     * GoogleAdStrategy handles AdMob ads (disconnected state ONLY)
-    //     * InternalAdStrategy handles internal ads (connected state ONLY)
-    //     * AdsWidget coordinates between the two strategies
-    final flowlineSettings = await ref
-        .read(flowlineServiceProvider)
-        .getFlowlineSettings();
+  /// Whether AdMob is switched off on this device, or null while that cannot
+  /// be known yet: on a fresh install the server settings that list where
+  /// AdMob is off (`disabledAdmob`: "general" or time zone names) have not
+  /// been saved yet.
+  ///
+  /// - Desktop: always off (no AdMob support); in-house ads only.
+  /// - Mobile: off where `disabledAdmob` says so. Otherwise AdMob fills the
+  ///   disconnected state and in-house ads the connected state.
+  static Future<bool?> isAdMobDisabled(Ref ref) async {
+    if (!(Platform.isAndroid || Platform.isIOS)) return true;
 
-    if (flowlineSettings.disabledAdmob.contains("general")) {
-      return true;
-    }
+    final settings = await ref
+        .read(flowlineServiceProvider)
+        .getSavedFlowlineSettings();
+    if (settings == null) return null;
+
+    if (settings.disabledAdmob.contains("general")) return true;
 
     final String currentTimeZone = (await FlutterTimezone.getLocalTimezone())
         .identifier
         .toLowerCase();
-
-    if (flowlineSettings.disabledAdmob.contains(currentTimeZone)) {
-      return true;
-    }
-
-    if (Platform.isWindows || Platform.isMacOS || Platform.isLinux) {
-      return true;
-    }
-
-    // Mobile platforms use DUAL strategy (GoogleAdStrategy + InternalAdStrategy)
-    // AdsWidget automatically initializes both and routes based on connection state:
-    //   - When CONNECTED: InternalAdStrategy shows internal ads (timezone-specific or General)
-    //   - When DISCONNECTED: GoogleAdStrategy shows AdMob ads
-
-    return false; // Mobile uses dual strategy (both GoogleAdStrategy + InternalAdStrategy)
+    return settings.disabledAdmob.contains(currentTimeZone);
   }
 
   static Future<String> getCustomAdBanner(Ref ref) async {

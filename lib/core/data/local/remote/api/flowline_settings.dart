@@ -4,11 +4,15 @@ class FlowlineSettings {
 
   FlowlineSettings({required this.disabledAdmob, required this.baseUrls});
 
+  /// Missing fields (older flowline blobs carry none) read as empty lists.
   factory FlowlineSettings.fromJson(Map<String, dynamic> json) {
-    List<String> disabledAdmob = List<String>.from(json["disabledAdmob"]);
-    disabledAdmob = disabledAdmob.map((v) => v.toLowerCase()).toList();
+    final disabledAdmob = List<String>.from(
+      json["disabledAdmob"] as List? ?? const [],
+    ).map((v) => v.toLowerCase()).toList();
 
-    List<String> baseUrls = List<String>.from(json["backendUrls"]);
+    final baseUrls = List<String>.from(
+      json["backendUrls"] as List? ?? const [],
+    );
     return FlowlineSettings(disabledAdmob: disabledAdmob, baseUrls: baseUrls);
   }
 }

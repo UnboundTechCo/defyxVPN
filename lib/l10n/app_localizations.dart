@@ -108,6 +108,18 @@ abstract class AppLocalizations {
   /// **'Defyx VPN'**
   String get appTitle;
 
+  /// First part of the header brand title (large letter)
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get headerTitleFirst;
+
+  /// Remaining part of the header brand title (smaller text)
+  ///
+  /// In en, this message translates to:
+  /// **'efyx'**
+  String get headerTitleRest;
+
   /// Subtitle shown on splash screen
   ///
   /// In en, this message translates to:
@@ -1205,6 +1217,192 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Share Diagnostics'**
   String get settingsShareDiagnostics;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on phones
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to learn more'**
+  String get adTapToLearnMore;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on desktop
+  ///
+  /// In en, this message translates to:
+  /// **'Click to learn more'**
+  String get adClickToLearnMore;
+
+  /// Premium screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premiumTitle;
+
+  /// Premium tab - account
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get premiumTabAccount;
+
+  /// Premium tab - plans
+  ///
+  /// In en, this message translates to:
+  /// **'PLANS'**
+  String get premiumTabPlans;
+
+  /// Premium tab - wallet
+  ///
+  /// In en, this message translates to:
+  /// **'WALLET'**
+  String get premiumTabWallet;
+
+  /// Premium tab - support
+  ///
+  /// In en, this message translates to:
+  /// **'SUPPORT'**
+  String get premiumTabSupport;
+
+  /// Plans screen - prompt to pick a plan duration
+  ///
+  /// In en, this message translates to:
+  /// **'Select the plan duration you\'d like to purchase:'**
+  String get selectPlanDuration;
+
+  /// Price label shown next to a plan or top-up amount
+  ///
+  /// In en, this message translates to:
+  /// **'{price} Credits'**
+  String creditsPrice(String price);
+
+  /// Button that confirms the selected plan
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get choose;
+
+  /// Button that starts plan payment
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Now'**
+  String get payNow;
+
+  /// Plan details section title
+  ///
+  /// In en, this message translates to:
+  /// **'What You\'ll Get'**
+  String get whatYoullGet;
+
+  /// Unit label for plan duration in months
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get months;
+
+  /// Toast shown after a successful plan subscription
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully subscribed to the plan!'**
+  String get subscriptionSuccess;
+
+  /// Wallet top-up screen prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Please select the wallet top-up amount:'**
+  String get selectTopUpAmount;
+
+  /// Title of the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Successful'**
+  String get paymentSuccessful;
+
+  /// Message in the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet has been topped up'**
+  String get walletToppedUp;
+
+  /// Continue button in the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueAction;
+
+  /// Button that starts a wallet top-up purchase
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase credits'**
+  String get purchaseCredits;
+
+  /// Back button label
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// Snackbar shown when no top-up amount is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an amount'**
+  String get selectAmount;
+
+  /// Wallet balance label
+  ///
+  /// In en, this message translates to:
+  /// **'BALANCE'**
+  String get balance;
+
+  /// Button that opens the wallet top-up form
+  ///
+  /// In en, this message translates to:
+  /// **'Top up'**
+  String get topUp;
+
+  /// Dialog shown when a guest tries to use premium features
+  ///
+  /// In en, this message translates to:
+  /// **'You need to register to access premium features.'**
+  String get registerToAccessPremium;
+
+  /// Sign in / register with Apple button
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// Button that opens the premium login section
+  ///
+  /// In en, this message translates to:
+  /// **'Go to login section'**
+  String get goToLoginSection;
+
+  /// Button that opens login by code
+  ///
+  /// In en, this message translates to:
+  /// **'Easy Login'**
+  String get easyLogin;
+
+  /// Support screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Need Help?'**
+  String get needHelp;
+
+  /// Support screen description
+  ///
+  /// In en, this message translates to:
+  /// **'Contact our support team through the following channels:'**
+  String get supportContactDescription;
+
+  /// Telegram support channel label
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get telegram;
+
+  /// Website support channel label
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
 }
 
 class _AppLocalizationsDelegate

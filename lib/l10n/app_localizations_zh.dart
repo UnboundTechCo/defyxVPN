@@ -12,6 +12,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'D';
+
+  @override
+  String get headerTitleRest => 'efyx';
+
+  @override
   String get splashSubtitle => '为安全的互联网访问而设计，\n为所有人，在任何地方';
 
   @override
@@ -571,4 +577,99 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsShareDiagnostics => '发送诊断数据';
+
+  @override
+  String get adTapToLearnMore => '点按了解更多';
+
+  @override
+  String get adClickToLearnMore => '点击了解更多';
+
+  @override
+  String get premiumTitle => '高级版';
+
+  @override
+  String get premiumTabAccount => '账户';
+
+  @override
+  String get premiumTabPlans => '套餐';
+
+  @override
+  String get premiumTabWallet => '钱包';
+
+  @override
+  String get premiumTabSupport => '支持';
+
+  @override
+  String get selectPlanDuration => '请选择您要购买的套餐时长：';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price 点数';
+  }
+
+  @override
+  String get choose => '选择';
+
+  @override
+  String get payNow => '立即支付';
+
+  @override
+  String get whatYoullGet => '您将获得';
+
+  @override
+  String get months => '个月';
+
+  @override
+  String get subscriptionSuccess => '套餐订阅成功！';
+
+  @override
+  String get selectTopUpAmount => '请选择钱包充值金额：';
+
+  @override
+  String get paymentSuccessful => '支付成功';
+
+  @override
+  String get walletToppedUp => '您的钱包已充值';
+
+  @override
+  String get continueAction => '继续';
+
+  @override
+  String get purchaseCredits => '购买点数';
+
+  @override
+  String get back => '返回';
+
+  @override
+  String get selectAmount => '请选择金额';
+
+  @override
+  String get balance => '余额';
+
+  @override
+  String get topUp => '充值';
+
+  @override
+  String get registerToAccessPremium => '您需要注册才能使用高级功能。';
+
+  @override
+  String get continueWithApple => '通过 Apple 继续';
+
+  @override
+  String get goToLoginSection => '前往登录';
+
+  @override
+  String get easyLogin => '快速登录';
+
+  @override
+  String get needHelp => '需要帮助？';
+
+  @override
+  String get supportContactDescription => '请通过以下渠道联系我们的支持团队：';
+
+  @override
+  String get telegram => 'Telegram';
+
+  @override
+  String get website => '网站';
 }

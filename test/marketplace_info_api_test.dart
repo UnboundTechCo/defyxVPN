@@ -138,6 +138,10 @@ class _FakeFlowlineService implements IFlowlineService {
   @override
   Future<FlowlineSettings> getFlowlineSettings() async =>
       FlowlineSettings(disabledAdmob: [], baseUrls: []);
+
+  @override
+  Future<FlowlineSettings?> getSavedFlowlineSettings() async =>
+      FlowlineSettings(disabledAdmob: [], baseUrls: []);
 }
 
 class _FakePremiumApiNotifier extends PremiumApiServiceNotifier {

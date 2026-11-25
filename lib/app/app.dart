@@ -48,8 +48,10 @@ class _AppState extends ConsumerState<App> {
 
   @override
   Widget build(BuildContext context) {
-    // Eagerly trigger environment computation
-    final environmentAsync = ref.watch(adEnvironmentProvider);
+    // The AdMob decision can arrive after the privacy notice was accepted
+    // (fresh install) or change when new server settings are saved. Listening
+    // also creates the provider eagerly, without rebuilding the app.
+    ref.listen(adEnvironmentProvider, (previous, next) => _maybeStartAdFlow());
 
     // Keep the vibration alert backend in sync with the Haptic Feedback setting
     ref.listen(hapticsProvider, (previous, next) {
@@ -64,15 +66,7 @@ class _AppState extends ConsumerState<App> {
 
       // When canInitializeAdMob transitions to true, start the flow
       if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
-        environmentAsync.whenData((environment) {
-          if (environment.shouldInitializeAdMob) {
-            _initializeAdFlow();
-          } else {
-            debugPrint(
-              '📱 Using internal ads only (${environment.adMobIsDisabled ? "Iranian user" : "desktop platform"})',
-            );
-          }
-        });
+        _maybeStartAdFlow();
       }
 
       // When consent completes and we're disconnected, retry ad load
@@ -96,7 +90,7 @@ class _AppState extends ConsumerState<App> {
           _hasCheckedInitialization = true;
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _checkAndInitializeAds(environmentAsync);
+            _maybeStartAdFlow();
           });
         }
         return _buildApp(context);
@@ -122,18 +116,18 @@ class _AppState extends ConsumerState<App> {
     await AnimationService().init();
   }
 
-  /// Check if ad initialization should happen (for migration/restart cases)
-  void _checkAndInitializeAds(AsyncValue<AdEnvironment> environmentAsync) {
-    final adReadiness = ref.read(adReadinessCoordinatorProvider);
-
-    // If canInitializeAdMob is already true (e.g., after migration), trigger flow
-    if (adReadiness.canInitializeAdMob) {
-      environmentAsync.whenData((environment) {
-        if (environment.shouldInitializeAdMob) {
-          _initializeAdFlow();
-        }
-      });
+  /// Runs the consent check and AdMob setup once both the AdMob decision and
+  /// the privacy notice allow it. Safe to call repeatedly: the coordinator
+  /// runs the flow once per launch.
+  void _maybeStartAdFlow() {
+    final environment = ref.read(adEnvironmentProvider).valueOrNull;
+    if (environment == null) return; // Server settings not saved yet.
+    if (!environment.shouldInitializeAdMob) {
+      debugPrint('Using in-house ads only ($environment)');
+      return;
     }
+    if (!ref.read(adReadinessCoordinatorProvider).canInitializeAdMob) return;
+    _initializeAdFlow();
   }
 
   /// Initialize ad flow using the coordinator

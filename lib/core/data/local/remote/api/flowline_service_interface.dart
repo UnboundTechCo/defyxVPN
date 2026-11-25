@@ -10,4 +10,8 @@ abstract interface class IFlowlineService {
     bool forceUpdate = false,
   });
   Future<FlowlineSettings> getFlowlineSettings();
+
+  /// The saved settings, or null when none have been saved yet (a fresh
+  /// install before the first flowline arrives).
+  Future<FlowlineSettings?> getSavedFlowlineSettings();
 }
