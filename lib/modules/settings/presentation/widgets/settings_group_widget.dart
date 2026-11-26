@@ -9,19 +9,32 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import '../../models/country_names.dart';
+import '../../models/method_sections.dart';
 import '../../models/settings_group.dart';
 import '../../models/settings_item.dart';
+import 'marketplace_info_sheet.dart';
+import 'method_section_widgets.dart';
 import 'settings_item_widget.dart';
-import 'package:flutter_svg/flutter_svg.dart';
-import '../../../../shared/widgets/defyx_switch.dart';
+import 'settings_toast_message.dart';
 import '../../../../shared/providers/haptics_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Moves `blocks[oldIndex]` so it ends up at [newIndex]. [blocks] holds the
+/// item ids of each block in the list being reordered.
+typedef BlockReorderCallback =
+    void Function(List<List<String>> blocks, int oldIndex, int newIndex);
 
 class SettingsGroupWidget extends ConsumerStatefulWidget {
   final SettingsGroup group;
   final Function(String, String)? onToggle;
   final VoidCallback? onReset;
-  final ReorderCallback? onReorder;
+  final BlockReorderCallback? onReorderBlocks;
+  final ValueChanged<String>? onTogglePlan;
+
+  /// Called when the user opens or closes a section or plan, by its key.
+  final void Function(String key, bool expanded)? onExpandedChange;
   final Function(String)? onNavigate;
   final bool showSeparators;
 
@@ -30,7 +43,9 @@ class SettingsGroupWidget extends ConsumerStatefulWidget {
     required this.group,
     this.onToggle,
     this.onReset,
-    this.onReorder,
+    this.onReorderBlocks,
+    this.onTogglePlan,
+    this.onExpandedChange,
     this.onNavigate,
     this.showSeparators = false,
   });
@@ -45,15 +60,19 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
   final AnimationService _animationService = AnimationService();
   late AnimationController _rotationController;
   late Animation<double> _rotationAnimation;
-  int? _draggingIndex;
 
   // D-pad support. Rows of a reorderable list are rebuilt when they move, so
-  // the group owns their focus nodes to keep focus on a moving row.
-  final Map<String, FocusNode> _itemFocusNodes = {};
+  // the group owns their focus nodes to keep focus on a moving row. Keys are
+  // item ids, or the layout keys of section and plan headers.
+  final Map<String, FocusNode> _focusNodes = {};
   late FocusHighlightMode _highlightMode;
-  String? _focusedItemId;
-  String? _movingItemId;
+  String? _focusedKey;
+  String? _movingKey;
   bool _moveInFlight = false;
+
+  /// Opened and closed sections and plans, shown before the saved group
+  /// catches up.
+  final Map<String, bool> _expanded = {};
 
   @override
   void initState() {
@@ -76,7 +95,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     FocusManager.instance.removeHighlightModeListener(
       _handleHighlightModeChange,
     );
-    for (final node in _itemFocusNodes.values) {
+    for (final node in _focusNodes.values) {
       node.dispose();
     }
     _rotationController.dispose();
@@ -100,60 +119,76 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     setState(() => _highlightMode = mode);
   }
 
-  FocusNode _focusNodeFor(String itemId) => _itemFocusNodes.putIfAbsent(
-    itemId,
-    () => FocusNode(debugLabel: 'SettingsItem($itemId)'),
+  FocusNode _focusNodeFor(String key) => _focusNodes.putIfAbsent(
+    key,
+    () => FocusNode(debugLabel: 'SettingsItem($key)'),
   );
 
-  void _handleItemFocusChange(String itemId, bool hasFocus) {
+  void _handleFocusChange(String key, bool hasFocus) {
     if (hasFocus) {
-      if (_focusedItemId != itemId) setState(() => _focusedItemId = itemId);
-    } else if (_focusedItemId == itemId) {
+      if (_focusedKey != key) setState(() => _focusedKey = key);
+    } else if (_focusedKey == key) {
       setState(() {
-        _focusedItemId = null;
+        _focusedKey = null;
         // Focus left the row being moved (e.g. a dialog opened).
-        if (_movingItemId == itemId) _movingItemId = null;
+        if (_movingKey == key) _movingKey = null;
       });
     }
   }
 
-  void _startMove(SettingsItem item) {
+  bool _isExpanded(String key, {required bool byDefault}) =>
+      _expanded[key] ?? widget.group.expanded[key] ?? byDefault;
+
+  void _setExpanded(String key, bool expanded) {
+    if (ref.read(hapticsProvider)) {
+      HapticFeedback.selectionClick();
+    }
+    setState(() => _expanded[key] = expanded);
+    widget.onExpandedChange?.call(key, expanded);
+  }
+
+  void _startMove(String key) {
     if (ref.read(hapticsProvider)) {
       HapticFeedback.mediumImpact();
     }
-    setState(() => _movingItemId = item.id);
+    setState(() => _movingKey = key);
   }
 
   void _endMove() {
-    if (_movingItemId == null) return;
-    setState(() => _movingItemId = null);
+    if (_movingKey == null) return;
+    setState(() => _movingKey = null);
   }
 
   Future<bool> _handleBackButton() async {
-    if (_movingItemId == null) return false;
+    if (_movingKey == null) return false;
     _endMove();
     return true;
   }
 
-  /// Moves [itemId] one position up (-1) or down (+1) with the D-pad.
-  void _moveItem(String itemId, int delta, List<SettingsItem> draggableItems) {
+  /// Moves the block [key] one position up (-1) or down (+1) with the D-pad,
+  /// within the list whose block keys are [keys].
+  void _moveBlock(
+    String key,
+    int delta,
+    List<String> keys,
+    List<List<String>> blocks,
+  ) {
     // One move per frame: the index math needs the list rebuilt from the
     // previous move first (holding Up/Down repeats the key quickly).
     if (_moveInFlight) return;
-    final from = draggableItems.indexWhere((item) => item.id == itemId);
+    final from = keys.indexOf(key);
     final to = from + delta;
-    if (from < 0 || to < 0 || to >= draggableItems.length) return;
+    if (from < 0 || to < 0 || to >= keys.length) return;
 
     if (ref.read(hapticsProvider)) {
       HapticFeedback.selectionClick();
     }
     _moveInFlight = true;
-    // ReorderableListView index semantics: newIndex counts the moved item.
-    widget.onReorder?.call(from, delta > 0 ? to + 1 : to);
+    widget.onReorderBlocks?.call(blocks, from, to);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _moveInFlight = false;
-      final node = _itemFocusNodes[itemId];
+      final node = _focusNodes[key];
       if (!mounted || node == null) return;
       node.requestFocus();
       final rowContext = node.context;
@@ -168,160 +203,359 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     });
   }
 
-  Widget _buildDraggableItems() {
-    final draggableItems =
-        widget.group.items
-            .where((item) => item.itemType != SettingsItemType.navigation)
-            .toList()
-          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+  String? _dpadHint(String key, {required bool canMove}) {
+    if (_highlightMode != FocusHighlightMode.traditional ||
+        _focusedKey != key ||
+        !canMove ||
+        widget.onReorderBlocks == null) {
+      return null;
+    }
+    final l10n = AppLocalizations.of(context);
+    return _movingKey == key ? l10n.tvMoveModeHint : l10n.tvHoldOkToReorder;
+  }
 
+  /// A list the user can reorder: by dragging on touch screens, and with the
+  /// D-pad move mode on TV.
+  Widget _reorderableList({
+    required List<String> keys,
+    required List<List<String>> blocks,
+    required Widget Function(int index) buildRow,
+  }) {
+    Widget keyed(int index) => KeyedSubtree(
+      key: ValueKey('${widget.group.id}_${keys[index]}'),
+      child: buildRow(index),
+    );
+
+    // On TV the rows go straight into the page's scroll view. A
+    // ReorderableListView is a scrollable of its own, and Flutter's
+    // directional focus prefers targets in the focused widget's scrollable,
+    // so D-pad focus entering from above or below would skip the whole list.
+    // TVs reorder with the D-pad move mode, not by dragging.
+    if (TvSupport.isTv) {
+      return Column(children: [for (var i = 0; i < keys.length; i++) keyed(i)]);
+    }
+
+    return ReorderableListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      buildDefaultDragHandles: false,
+      itemCount: keys.length,
+      onReorderItem: (oldIndex, newIndex) {
+        if (ref.read(hapticsProvider)) {
+          HapticFeedback.lightImpact();
+        }
+        widget.onReorderBlocks?.call(blocks, oldIndex, newIndex);
+      },
+      proxyDecorator: (child, index, animation) => Material(
+        elevation: 8.0,
+        color: const Color.fromRGBO(29, 29, 29, 1),
+        borderRadius: BorderRadius.circular(12.r),
+        child: child,
+      ),
+      itemBuilder: (context, index) => keyed(index),
+    );
+  }
+
+  /// Opens or closes [child] with a short size animation.
+  Widget _collapsible({required bool expanded, required Widget child}) {
+    return AnimatedSize(
+      duration: _animationService.adjustDuration(
+        const Duration(milliseconds: 200),
+      ),
+      alignment: Alignment.topCenter,
+      child: expanded ? child : const SizedBox(width: double.infinity),
+    );
+  }
+
+  String _sectionTitle(MethodSection section, AppLocalizations l10n) =>
+      switch (section) {
+        MethodSection.premium => l10n.settingsMethodsPremium,
+        MethodSection.market => l10n.settingsMethodsMarket,
+        MethodSection.builtIn => l10n.settingsMethodsBuiltIn,
+        MethodSection.rewards => l10n.settingsMethodsRewards,
+      };
+
+  /// Seller or features, then days left.
+  String? _caption(SettingsItem item, DateTime now, AppLocalizations l10n) {
+    final parts = <String>[];
+    if (item.seller != null) {
+      parts.add(l10n.settingsMethodsBySeller(_isolate(item.seller!)));
+    } else {
+      parts.addAll(item.features);
+    }
+    final ends = item.expiresAt;
+    if (ends != null) {
+      if (!ends.isAfter(now)) {
+        parts.add(l10n.settingsMethodsExpired);
+      } else {
+        final days = (ends.difference(now).inMinutes / 1440).round();
+        parts.add(l10n.settingsMethodsDaysLeft(days < 1 ? 1 : days));
+      }
+    }
+    // Each part keeps its own direction, so Latin names and Persian text
+    // don't get reordered into each other.
+    return parts.isEmpty ? null : parts.map(_isolate).join(' · ');
+  }
+
+  /// [text] wrapped in a Unicode first-strong isolate.
+  static String _isolate(String text) => '\u2068$text\u2069';
+
+  /// A plan's SOS method holds every config the user has on one of its
+  /// servers, not every location, so it keeps the name users know it by.
+  /// Countries show by their full name.
+  String _locationTitle(SettingsItem item) {
+    if (item.isSos) return 'SOS';
+    final country = item.country;
+    if (country == null) return item.title;
+    final language = Localizations.localeOf(context).languageCode;
+    return CountryNames.of(country, language) ?? country;
+  }
+
+  /// A location's flag (the unknown-country flag for ones without), or a
+  /// lifebuoy for the SOS backup, so the names line up.
+  Widget _locationLeading(SettingsItem item) {
+    final width = 24.w;
+    final height = width * 3 / 4;
+    if (item.isSos) {
+      return SizedBox(
+        width: width,
+        height: height,
+        child: Icon(Icons.support, size: height, color: Colors.grey[400]),
+      );
+    }
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(3.r),
+      child: SvgPicture.asset(
+        CountryNames.flagAsset(item.country ?? ''),
+        width: width,
+        height: height,
+        fit: BoxFit.cover,
+      ),
+    );
+  }
+
+  Widget _buildMethodRow(
+    SettingsItem item, {
+    required int index,
+    required List<String> keys,
+    required List<List<String>> blocks,
+    required bool isLast,
+    required DateTime now,
+    String? titleOverride,
+    String? caption,
+    bool compact = false,
+    double indent = 0,
+    bool disabled = false,
+    Widget? leading,
+  }) {
+    // An expired method, or one in a plan that's off, isn't used, so its
+    // switch shows off and can't be changed.
+    final shown = disabled || item.isExpiredAt(now)
+        ? item.copyWith(isAccessible: false, isEnabled: false)
+        : item;
+    final canMove = widget.onReorderBlocks != null && shown.isAccessible;
+
+    return SettingsItemWidget(
+      item: shown,
+      titleOverride: titleOverride,
+      caption: caption,
+      compact: compact,
+      indent: indent,
+      leading: leading,
+      onToggle: shown.isAccessible
+          ? () => widget.onToggle?.call(widget.group.id, item.id)
+          : null,
+      onNavigate: widget.onNavigate,
+      isDraggable: shown.isAccessible,
+      isLastItem: isLast,
+      showDragHandle: true,
+      dragIndex: index,
+      showSeparator: true,
+      focusNode: _focusNodeFor(item.id),
+      onFocusChange: (hasFocus) => _handleFocusChange(item.id, hasFocus),
+      onSelectLongPress: canMove ? () => _startMove(item.id) : null,
+      isMoving: _movingKey == item.id,
+      onMove: (delta) => _moveBlock(item.id, delta, keys, blocks),
+      onMoveEnd: _endMove,
+      dpadHint: _dpadHint(item.id, canMove: canMove),
+    );
+  }
+
+  Widget _buildPlan(
+    MethodBlock plan, {
+    required int index,
+    required List<String> keys,
+    required List<List<String>> blocks,
+    required bool isLast,
+    required bool expandedByDefault,
+    required Set<String> disabledPlans,
+    required DateTime now,
+    required AppLocalizations l10n,
+  }) {
+    final planId = plan.planId!;
+    // The plan's row stands for its own config, if it has one; its switch
+    // turns the whole plan on or off.
+    final first = plan.main ?? plan.items.first;
+    final expanded = _isExpanded(plan.key, byDefault: expandedByDefault);
+    final isOn = !disabledPlans.contains(planId);
+    final canMove = widget.onReorderBlocks != null;
+    final description = first.description;
+
+    final locations = plan.locations;
+    final locationKeys = [for (final item in locations) item.id];
+    final locationBlocks = [
+      for (final id in locationKeys) [id],
+    ];
+
+    return Column(
+      children: [
+        MethodPlanHeader(
+          title: first.planName ?? first.title,
+          caption: _caption(first, now, l10n),
+          isPremium: first.section == MethodSection.premium,
+          isMarket: first.section == MethodSection.market,
+          onInfo: first.section == MethodSection.premium
+              ? () => MarketplaceInfoSheet.show(context, first)
+              : description != null && description.isNotEmpty
+              ? () => SettingsToastMessage.show(description)
+              : null,
+          isOn: isOn,
+          onToggle: widget.onTogglePlan == null
+              ? null
+              : () => widget.onTogglePlan!(planId),
+          expanded: expanded,
+          onTap: () => _setExpanded(plan.key, !expanded),
+          dragIndex: index,
+          focusNode: _focusNodeFor(plan.key),
+          onFocusChange: (hasFocus) => _handleFocusChange(plan.key, hasFocus),
+          onSelectLongPress: canMove ? () => _startMove(plan.key) : null,
+          isMoving: _movingKey == plan.key,
+          onMove: (delta) => _moveBlock(plan.key, delta, keys, blocks),
+          onMoveEnd: _endMove,
+          dpadHint: _dpadHint(plan.key, canMove: canMove),
+          showSeparator: expanded || !isLast,
+        ),
+        _collapsible(
+          expanded: expanded,
+          child: _reorderableList(
+            keys: locationKeys,
+            blocks: locationBlocks,
+            buildRow: (i) {
+              final location = locations[i];
+              return _buildMethodRow(
+                location,
+                index: i,
+                keys: locationKeys,
+                blocks: locationBlocks,
+                isLast: isLast && i == locations.length - 1,
+                now: now,
+                titleOverride: _locationTitle(location),
+                leading: _locationLeading(location),
+                caption: location.isExpiredAt(now)
+                    ? l10n.settingsMethodsExpired
+                    : null,
+                compact: true,
+                indent: 24.w,
+                // Off with the plan; back on, each follows its own switch.
+                disabled: !isOn,
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  List<Widget> _buildSection(
+    MethodSectionGroup section, {
+    required bool isFirst,
+    required Set<String> disabledPlans,
+    required DateTime now,
+    required AppLocalizations l10n,
+  }) {
+    final key = MethodLayout.sectionKey(section.section);
+    final expanded = _isExpanded(key, byDefault: isFirst);
+    final items = section.items.toList();
+    final active = items
+        .where((item) => MethodLayout.isActive(item, disabledPlans, now))
+        .length;
+
+    final blocks = section.blocks;
+    final keys = [for (final block in blocks) block.key];
+    final blockIds = [for (final block in blocks) block.itemIds];
+    final onlyPlan = blocks.where((block) => block.isPlan).length == 1;
+
+    return [
+      MethodSectionHeader(
+        key: ValueKey('${widget.group.id}_$key'),
+        title: _sectionTitle(section.section, l10n),
+        summary: l10n.settingsMethodsOnCount(active, items.length),
+        expanded: expanded,
+        showDivider: !isFirst,
+        focusNode: _focusNodeFor(key),
+        onFocusChange: (hasFocus) => _handleFocusChange(key, hasFocus),
+        onTap: () => _setExpanded(key, !expanded),
+      ),
+      _collapsible(
+        expanded: expanded,
+        child: _reorderableList(
+          keys: keys,
+          blocks: blockIds,
+          buildRow: (index) {
+            final block = blocks[index];
+            final isLast = index == blocks.length - 1;
+            if (block.isPlan) {
+              return _buildPlan(
+                block,
+                index: index,
+                keys: keys,
+                blocks: blockIds,
+                isLast: isLast,
+                expandedByDefault: onlyPlan,
+                disabledPlans: disabledPlans,
+                now: now,
+                l10n: l10n,
+              );
+            }
+            final item = block.items.single;
+            return _buildMethodRow(
+              item,
+              index: index,
+              keys: keys,
+              blocks: blockIds,
+              isLast: isLast,
+              now: now,
+              caption: _caption(item, now, l10n),
+            );
+          },
+        ),
+      ),
+    ];
+  }
+
+  Widget _buildDraggableItems() {
+    final l10n = AppLocalizations.of(context);
+    final now = DateTime.now();
+    final disabledPlans = widget.group.disabledPlans.toSet();
+    // Sections without methods are left out.
+    final sections = MethodLayout.sections(
+      widget.group.items.where(
+        (item) => item.itemType != SettingsItemType.navigation,
+      ),
+    );
     final navigationItems = widget.group.items
         .where((item) => item.itemType == SettingsItemType.navigation)
         .toList();
 
-    final canReorder = widget.onReorder != null;
-    final l10n = AppLocalizations.of(context);
-
-    Widget buildRow(int index, Key key) {
-      final item = draggableItems[index];
-      final isLastDraggable = index == draggableItems.length - 1;
-      final isMoving = _movingItemId == item.id;
-      // D-pad users see how to reorder right in the focused row.
-      final showReorderHint =
-          _highlightMode == FocusHighlightMode.traditional &&
-          _focusedItemId == item.id &&
-          canReorder &&
-          item.isAccessible;
-
-      return SettingsItemWidget(
-        key: key,
-        item: item,
-        onToggle: () => widget.onToggle?.call(widget.group.id, item.id),
-        onNavigate: widget.onNavigate,
-        isDraggable: item.isAccessible,
-        isLastItem: isLastDraggable && navigationItems.isEmpty,
-        showDragHandle: true,
-        dragIndex: index,
-        showSeparator: true,
-        focusNode: _focusNodeFor(item.id),
-        onFocusChange: (hasFocus) => _handleItemFocusChange(item.id, hasFocus),
-        onSelectLongPress: canReorder && item.isAccessible
-            ? () => _startMove(item)
-            : null,
-        isMoving: isMoving,
-        onMove: (delta) => _moveItem(item.id, delta, draggableItems),
-        onMoveEnd: _endMove,
-        dpadHint: showReorderHint
-            ? (isMoving ? l10n.tvMoveModeHint : l10n.tvHoldOkToReorder)
-            : null,
-      );
-    }
-
     return Column(
       children: [
-        // On TV the rows go straight into the page's scroll view. A
-        // ReorderableListView is a scrollable of its own, and Flutter's
-        // directional focus prefers targets in the focused widget's scrollable,
-        // so D-pad focus entering from above or below would skip the whole
-        // list. TVs reorder with the D-pad move mode, not by dragging.
-        if (TvSupport.isTv)
-          for (var index = 0; index < draggableItems.length; index++)
-            buildRow(
-              index,
-              ValueKey('${widget.group.id}_${draggableItems[index].id}'),
-            )
-        else
-          ReorderableListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            onReorder: (oldIndex, newIndex) {
-              if (ref.read(hapticsProvider)) {
-                HapticFeedback.lightImpact();
-              }
-              widget.onReorder?.call(oldIndex, newIndex);
-            },
-            onReorderStart: (index) {
-              setState(() {
-                _draggingIndex = index;
-              });
-            },
-            onReorderEnd: (index) {
-              setState(() {
-                _draggingIndex = null;
-              });
-            },
-            itemCount: draggableItems.length,
-            buildDefaultDragHandles: false,
-            proxyDecorator:
-                (Widget child, int index, Animation<double> animation) {
-                  final item = draggableItems[index];
-
-                  return AnimatedBuilder(
-                    animation: animation,
-                    builder: (BuildContext context, Widget? child) {
-                      return Material(
-                        elevation: 8.0,
-                        color: Colors.transparent,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color.fromRGBO(29, 29, 29, 1),
-                            borderRadius: BorderRadius.circular(12.r),
-                          ),
-                          child: Container(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12.w,
-                              vertical: 8.h,
-                            ),
-                            margin: EdgeInsets.symmetric(vertical: 2.h),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 24.w,
-                                  height: 24.h,
-                                  margin: EdgeInsets.only(right: 12.w),
-                                  child: SvgPicture.asset(
-                                    'assets/icons/draggable_setting_indicator.svg',
-                                    width: 24.w,
-                                    height: 24.h,
-                                    colorFilter: ColorFilter.mode(
-                                      Colors.grey[400]!,
-                                      BlendMode.srcIn,
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    item.title.toString().toUpperCase(),
-                                    style: TextStyle(
-                                      fontSize: 17.sp,
-                                      fontFamily: AppTheme.fontFamily,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                DefyxSwitch(
-                                  value: item.isEnabled,
-                                  onChanged: (value) => widget.onToggle?.call(
-                                    widget.group.id,
-                                    item.id,
-                                  ),
-                                  enabled: item.isAccessible,
-                                  focusable: false,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                    child: child,
-                  );
-                },
-            itemBuilder: (context, index) => buildRow(
-              index,
-              ValueKey('${widget.group.id}_${draggableItems[index].id}_$index'),
-            ),
+        for (var i = 0; i < sections.length; i++)
+          ..._buildSection(
+            sections[i],
+            isFirst: i == 0,
+            disabledPlans: disabledPlans,
+            now: now,
+            l10n: l10n,
           ),
         ...navigationItems.asMap().entries.map((entry) {
           final index = entry.key;
@@ -335,8 +569,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
             isLastItem: index == navigationItems.length - 1,
             showDragHandle: false,
             showSeparator: index < navigationItems.length - 1,
-            onFocusChange: (hasFocus) =>
-                _handleItemFocusChange(item.id, hasFocus),
+            onFocusChange: (hasFocus) => _handleFocusChange(item.id, hasFocus),
           );
         }),
       ],
@@ -359,7 +592,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
           isDraggable: false,
           isLastItem: index == sortedItems.length - 1,
           showDragHandle: false,
-          showSeparator: widget.showSeparators && _draggingIndex != index,
+          showSeparator: widget.showSeparators,
         );
       }).toList(),
     );
@@ -368,11 +601,17 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
   /// D-pad-only: the focused method's description under the list (touch
   /// users get it from the row's info icon, which isn't a focus stop).
   Widget _buildFocusedDescription() {
-    final focusedItem = _focusedItemId == null
+    final key = _focusedKey;
+    final focusedItem = key == null
         ? null
-        : widget.group.items
-              .where((item) => item.id == _focusedItemId)
-              .firstOrNull;
+        : widget.group.items.where((item) => item.id == key).firstOrNull ??
+              widget.group.items
+                  .where(
+                    (item) =>
+                        item.planId != null &&
+                        MethodLayout.planKey(item.planId!) == key,
+                  )
+                  .firstOrNull;
     final description = focusedItem?.description;
     final visible =
         _highlightMode == FocusHighlightMode.traditional &&

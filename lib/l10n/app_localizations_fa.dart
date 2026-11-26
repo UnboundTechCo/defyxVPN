@@ -698,4 +698,34 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get website => 'وب‌سایت';
+
+  @override
+  String get settingsMethodsPremium => 'پریمیوم';
+
+  @override
+  String get settingsMethodsMarket => 'فروشگاه';
+
+  @override
+  String get settingsMethodsBuiltIn => 'پیش‌فرض';
+
+  @override
+  String get settingsMethodsRewards => 'جوایز';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '$active از $total روشن';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return 'از $seller';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    return '$days روز مانده';
+  }
+
+  @override
+  String get settingsMethodsExpired => 'منقضی شده';
 }

@@ -4,6 +4,7 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.da
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../models/method_sections.dart';
 import '../models/settings_item.dart';
 import '../models/settings_group.dart';
 import '../constants/settings_constants.dart';
@@ -165,12 +166,83 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     List<dynamic> flowline,
     SettingsText text,
   ) {
-    final connectionItems = SettingsFactory.flowlineToItems(flowline);
-    return SettingsFactory.createConnectionMethodGroup(
-      title: text.connectionMethodTitle,
-      connectionItems: connectionItems,
-      destinationTitle: text.destinationTitle,
+    final flowItems = MethodLayout.rewardsBySoonestEnd(
+      MethodLayout.groupPlansByName(SettingsFactory.flowlineToItems(flowline)),
     );
+    final settled = MethodLayout.settlePlanMains(
+      MethodLayout.normalize([
+        for (var i = 0; i < flowItems.length; i++)
+          flowItems[i].copyWith(sortOrder: i),
+      ]),
+      const [],
+    );
+    final group = SettingsFactory.createConnectionMethodGroup(
+      title: text.connectionMethodTitle,
+      connectionItems: settled.items,
+      destinationTitle: text.destinationTitle,
+    ).copyWith(disabledPlans: settled.disabledPlans);
+    // Opened and closed sections are a view choice, not a setting to reset.
+    final saved = state.groups[SettingsGroupId.connectionMethod];
+    return saved == null ? group : group.copyWith(expanded: saved.expanded);
+  }
+
+  /// Merges the user's saved methods with the current flowline: keeps their
+  /// order and switches, takes everything else from the flowline, drops
+  /// methods the flowline no longer has, and places new ones.
+  List<SettingsItem> _mergeWithFlowline(
+    List<SettingsItem> saved,
+    List<Map<String, dynamic>> flowline,
+  ) {
+    // Each method as the flowline has it now, with plans found first so a
+    // new location can join its plan.
+    final seen = <String>{};
+    final flowByLabel = {
+      for (final item in MethodLayout.groupPlansByName(
+        SettingsFactory.flowlineToItems([
+          for (final flow in flowline)
+            if (flow['label'] is String && seen.add(flow['label'] as String))
+              flow,
+        ]),
+      ))
+        item.title: item,
+    };
+
+    final ordered = <SettingsItem>[];
+    final labels = <String>{};
+    for (final item in [
+      ...saved,
+    ]..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0))) {
+      final current = flowByLabel[item.title];
+      if (current == null || !labels.add(item.title)) continue;
+      ordered.add(current.copyWith(id: item.id, isEnabled: item.isEnabled));
+    }
+
+    final ids = {for (final item in ordered) item.id};
+    var newPaidCount = 0;
+    for (final entry in flowByLabel.entries) {
+      if (labels.contains(entry.key)) continue;
+      var id = entry.key + ordered.length.toString();
+      for (var n = ordered.length + 1; ids.contains(id); n++) {
+        id = entry.key + n.toString();
+      }
+      ids.add(id);
+      final item = entry.value.copyWith(id: id);
+      final at = MethodLayout.insertIndex(
+        ordered,
+        item,
+        newPaidCount: newPaidCount,
+      );
+      ordered.insert(at, item);
+      final isPaid =
+          item.section == MethodSection.premium ||
+          item.section == MethodSection.market;
+      if (isPaid && at <= newPaidCount) newPaidCount++;
+    }
+
+    return MethodLayout.normalize([
+      for (var i = 0; i < ordered.length; i++)
+        ordered[i].copyWith(sortOrder: i),
+    ]);
   }
 
   // ============== Connection Method Sync ==============
@@ -204,86 +276,46 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         return;
       }
 
-      // Get saved items - these contain user's drag order(sortOrder)
-      final List<dynamic> savedItems = List<dynamic>.from(
-        savedData[SettingsGroupId.connectionMethod]['items'] ?? [],
+      final savedGroup = SettingsGroup.fromJson(
+        Map<String, dynamic>.from(savedData[SettingsGroupId.connectionMethod]),
       );
+      final savedMethods = savedGroup.items
+          .where((item) => item.itemType != SettingsItemType.navigation)
+          .toList();
+      final navigationItems = savedGroup.items
+          .where((item) => item.itemType == SettingsItemType.navigation)
+          .toList();
 
-      final allFlowlineItems = flowline.toList();
-
-      // Filter saved items - keep items that exist in flowline OR are navigation items
-      // This preserves user's sortOrder!
-      final List<dynamic> mergedItems = savedItems.where((settingItem) {
-        if (settingItem['itemType'] == 'navigation') return true;
-        return allFlowlineItems.any(
-          (flowItem) => flowItem['label'] == settingItem['title'],
-        );
-      }).toList();
-
-      // Find max sortOrder from existing items
-      int maxSortOrder = 0;
-      for (var item in mergedItems) {
-        final order = item['sortOrder'] as int? ?? 0;
-        if (order > maxSortOrder) maxSortOrder = order;
-      }
-
-      // New items go to the end (after user's ordered items)
-      for (var flowItem in allFlowlineItems) {
-        final label = flowItem['label'] as String;
-        final existsInSaved = mergedItems.any(
-          (settingItem) =>
-              settingItem['title'] == label ||
-              settingItem['itemType'] == 'navigation',
-        );
-        if (!existsInSaved) {
-          final isPremium = flowItem['isPremium'] ?? false;
-          final isMarket = flowItem['isMarket'] ?? false;
-
-          final newItem = SettingsFactory.createFlowlineItem(
-            label: label,
-            description: flowItem['description'] ?? '',
-            sortOrder: isPremium ? -1 : maxSortOrder,
-            isEnabled: flowItem['enabled'] ?? false,
-            isPremium: isPremium,
-            isMarket: isMarket,
-          );
-          if (isPremium) {
-            maxSortOrder++;
-          }
-
-          if (newItem.isPremium) {
-            mergedItems.insert(0, newItem.toJson());
-          } else {
-            mergedItems.add(newItem.toJson());
-          }
-        }
-      }
+      final methods = _mergeWithFlowline(savedMethods, [
+        for (final flow in flowline)
+          if (flow is Map) Map<String, dynamic>.from(flow),
+      ]);
 
       if (SettingsFactory.config.showDestination) {
-        if (!mergedItems.any(
-          (item) => item['id'] == SettingsItemId.destination,
+        if (!navigationItems.any(
+          (item) => item.id == SettingsItemId.destination,
         )) {
-          mergedItems.add(
-            SettingsFactory.createDestinationItem(
-              title: text.destinationTitle,
-            ).toJson(),
+          navigationItems.add(
+            SettingsFactory.createDestinationItem(title: text.destinationTitle),
           );
         }
       } else {
-        mergedItems.removeWhere(
-          (item) => item['id'] == SettingsItemId.destination,
+        navigationItems.removeWhere(
+          (item) => item.id == SettingsItemId.destination,
         );
       }
 
-      // Rebuild group with merged items (preserving user's sortOrder)
-      final updatedGroupData = Map<String, dynamic>.from(
-        savedData[SettingsGroupId.connectionMethod],
+      final settled = MethodLayout.settlePlanMains(
+        methods,
+        savedGroup.disabledPlans,
       );
-      updatedGroupData['items'] = mergedItems;
-      updatedGroupData['title'] = text.connectionMethodTitle;
-
-      final updatedGroup = SettingsGroup.fromJson(updatedGroupData);
-      _updateGroup(updatedGroup);
+      _updateGroup(
+        savedGroup.copyWith(
+          title: text.connectionMethodTitle,
+          items: [...settled.items, ...navigationItems],
+          disabledPlans: settled.disabledPlans,
+        ),
+      );
     } catch (e) {
       debugPrint('Error updating connection method: $e');
       final flowline = await _loadFlowLine();
@@ -318,83 +350,119 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final group = state.groups[groupId];
     if (group == null) return;
 
+    final now = DateTime.now();
+    final target = group.items.where((item) => item.id == itemId).firstOrNull;
+    // A plan's methods follow its switch while it's off, and its own config
+    // is switched by the plan's switch.
+    if (target != null &&
+        (group.disabledPlans.contains(target.planId) ||
+            MethodLayout.isPlanMain(target, group.items))) {
+      return;
+    }
     final updatedItems = group.items.map((item) {
-      if (item.id == itemId && item.isAccessible) {
+      if (item.id == itemId && item.isAccessible && !item.isExpiredAt(now)) {
         return item.copyWith(isEnabled: !item.isEnabled);
       }
       return item;
     }).toList();
 
-    // Prevent disabling all connection methods
-    if (groupId == SettingsGroupId.connectionMethod &&
-        updatedItems.every((item) => !item.isEnabled)) {
-      // Show error message if context is available
-      if (context != null) {
-        final text = SettingsText(context);
-        SettingsToastMessage.show(text.atLeastOneCoreRequired);
-      }
-      return;
-    }
+    final updatedGroup = group.copyWith(items: updatedItems);
+    if (!_keepsAMethodOn(updatedGroup, context)) return;
 
-    _updateGroup(group.copyWith(items: updatedItems));
+    _updateGroup(updatedGroup);
     _saveSettings();
   }
 
-  void reorderItems(String groupId, int oldIndex, int newIndex) {
+  /// Switches a plan with several methods on or off. While it's off, none of
+  /// its methods are tried; back on, they follow their own switches again.
+  void togglePlan(String groupId, String planId, [BuildContext? context]) {
+    final group = state.groups[groupId];
+    if (group == null ||
+        !MethodLayout.multiLocationPlans(group.items).contains(planId)) {
+      return;
+    }
+
+    final disabled = group.disabledPlans.toSet();
+    if (!disabled.remove(planId)) disabled.add(planId);
+    final updatedGroup = group.copyWith(disabledPlans: disabled.toList());
+    if (!_keepsAMethodOn(updatedGroup, context)) return;
+
+    _updateGroup(updatedGroup);
+    _saveSettings();
+  }
+
+  /// False, with a message, when [group] is the connection methods and none
+  /// would be left for DXcore to try.
+  bool _keepsAMethodOn(SettingsGroup group, BuildContext? context) {
+    if (group.id != SettingsGroupId.connectionMethod) return true;
+    if (_activeMethods(group).isNotEmpty) return true;
+    if (context != null) {
+      SettingsToastMessage.show(SettingsText(context).atLeastOneCoreRequired);
+    }
+    return false;
+  }
+
+  /// Moves one block (a method, or a plan with its locations) within its
+  /// section, or one location within its plan, so it ends up at [newIndex].
+  /// [blocks] lists the item ids of every block in that list, in order.
+  void reorderBlocks(
+    String groupId,
+    List<List<String>> blocks,
+    int oldIndex,
+    int newIndex,
+  ) {
     final group = state.groups[groupId];
     if (group == null || !group.isDraggable) return;
 
-    final draggableItems =
-        group.items
-            .where((item) => item.itemType != SettingsItemType.navigation)
-            .toList()
-          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
-
+    final methods = group.items
+        .where((item) => item.itemType != SettingsItemType.navigation)
+        .toList();
     final navigationItems = group.items
         .where((item) => item.itemType == SettingsItemType.navigation)
         .toList();
 
-    if (newIndex > oldIndex) newIndex -= 1;
-
-    if (oldIndex < 0 ||
-        oldIndex >= draggableItems.length ||
-        newIndex < 0 ||
-        newIndex >= draggableItems.length) {
-      return;
-    }
-
-    final item = draggableItems.removeAt(oldIndex);
-    draggableItems.insert(newIndex, item);
-
-    final updatedDraggableItems = draggableItems
-        .asMap()
-        .entries
-        .map((entry) => entry.value.copyWith(sortOrder: entry.key))
-        .toList();
-
-    _updateGroup(
-      group.copyWith(items: [...updatedDraggableItems, ...navigationItems]),
+    final reordered = MethodLayout.reorderBlocks(
+      methods,
+      blocks,
+      oldIndex,
+      newIndex,
     );
+    if (identical(reordered, methods)) return;
+
+    _updateGroup(group.copyWith(items: [...reordered, ...navigationItems]));
+    _saveSettings();
+  }
+
+  /// Remembers that the user opened or closed a section or plan.
+  void setExpanded(String groupId, String key, bool expanded) {
+    final group = state.groups[groupId];
+    if (group == null) return;
+
+    _updateGroup(group.copyWith(expanded: {...group.expanded, key: expanded}));
     _saveSettings();
   }
 
   // ============== Query Methods ==============
 
+  /// The methods DXcore should try, in order.
+  List<SettingsItem> _activeMethods(SettingsGroup group) {
+    final now = DateTime.now();
+    final disabledPlans = group.disabledPlans.toSet();
+    return group.items
+        .where(
+          (item) =>
+              item.itemType != SettingsItemType.navigation &&
+              MethodLayout.isActive(item, disabledPlans, now),
+        )
+        .toList()
+      ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
+  }
+
   String getConnectionMethodPattern() {
     final group = state.groups[SettingsGroupId.connectionMethod];
     if (group == null) return '';
 
-    final items =
-        group.items
-            .where(
-              (item) =>
-                  item.isEnabled &&
-                  item.itemType != SettingsItemType.navigation,
-            )
-            .toList()
-          ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
-
-    return items.map((item) => item.title).join(',');
+    return _activeMethods(group).map((item) => item.title).join(',');
   }
 
   bool isPremiumCustomer() {

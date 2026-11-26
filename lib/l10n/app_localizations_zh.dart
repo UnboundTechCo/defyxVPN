@@ -672,4 +672,34 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get website => '网站';
+
+  @override
+  String get settingsMethodsPremium => '高级';
+
+  @override
+  String get settingsMethodsMarket => '商店';
+
+  @override
+  String get settingsMethodsBuiltIn => '内置';
+
+  @override
+  String get settingsMethodsRewards => '奖励';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '已开启 $active/$total';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return '由 $seller 提供';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    return '剩余 $days 天';
+  }
+
+  @override
+  String get settingsMethodsExpired => '已过期';
 }
