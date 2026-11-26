@@ -225,5 +225,6 @@
   "settingsMethodsOnCount": "{active}/{total}",
   "settingsMethodsBySeller": "由 {seller} 提供",
   "settingsMethodsDaysLeft": "剩余 {days} 天",
-  "settingsMethodsExpired": "已过期"
+  "settingsMethodsExpired": "已过期",
+  "settingsMethodsSubscription": "订阅"
 }

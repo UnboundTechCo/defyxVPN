@@ -302,25 +302,32 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
 
   /// A plan's SOS method holds every config the user has on one of its
   /// servers, not every location, so it keeps the name users know it by.
-  /// Countries show by their full name.
-  String _locationTitle(SettingsItem item) {
+  /// The plan's own config shows as its subscription link rather than the
+  /// plan's name again. Countries show by their full name.
+  String _locationTitle(SettingsItem item, {required bool isMain}) {
     if (item.isSos) return 'SOS';
+    if (isMain) return AppLocalizations.of(context).settingsMethodsSubscription;
     final country = item.country;
     if (country == null) return item.title;
     final language = Localizations.localeOf(context).languageCode;
     return CountryNames.of(country, language) ?? country;
   }
 
-  /// A location's flag (the unknown-country flag for ones without), or a
-  /// lifebuoy for the SOS backup, so the names line up.
-  Widget _locationLeading(SettingsItem item) {
+  /// A location's flag (the unknown-country flag for ones without), a link
+  /// for the plan's own config, or a lifebuoy for the SOS backup, so the
+  /// names line up.
+  Widget _locationLeading(SettingsItem item, {required bool isMain}) {
     final width = 24.w;
     final height = width * 3 / 4;
-    if (item.isSos) {
+    if (item.isSos || isMain) {
       return SizedBox(
         width: width,
         height: height,
-        child: Icon(Icons.support, size: height, color: Colors.grey[400]),
+        child: Icon(
+          item.isSos ? Icons.support : Icons.link,
+          size: height,
+          color: Colors.grey[400],
+        ),
       );
     }
     return ClipRRect(
@@ -393,15 +400,17 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
     required AppLocalizations l10n,
   }) {
     final planId = plan.planId!;
-    // The plan's row stands for its own config, if it has one; its switch
-    // turns the whole plan on or off.
-    final first = plan.main ?? plan.items.first;
+    // The plan's row takes its details from its own config, if it has one,
+    // which is also listed under it as the subscription link. The row's
+    // switch turns the whole plan on or off.
+    final main = plan.main;
+    final first = main ?? plan.items.first;
     final expanded = _isExpanded(plan.key, byDefault: expandedByDefault);
     final isOn = !disabledPlans.contains(planId);
     final canMove = widget.onReorderBlocks != null;
     final description = first.description;
 
-    final locations = plan.locations;
+    final locations = plan.items;
     final locationKeys = [for (final item in locations) item.id];
     final locationBlocks = [
       for (final id in locationKeys) [id],
@@ -449,8 +458,14 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
                 blocks: locationBlocks,
                 isLast: isLast && i == locations.length - 1,
                 now: now,
-                titleOverride: _locationTitle(location),
-                leading: _locationLeading(location),
+                titleOverride: _locationTitle(
+                  location,
+                  isMain: location.id == main?.id,
+                ),
+                leading: _locationLeading(
+                  location,
+                  isMain: location.id == main?.id,
+                ),
                 caption: location.isExpiredAt(now)
                     ? l10n.settingsMethodsExpired
                     : null,

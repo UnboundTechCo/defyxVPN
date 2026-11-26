@@ -702,4 +702,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get settingsMethodsExpired => '已过期';
+
+  @override
+  String get settingsMethodsSubscription => '订阅';
 }

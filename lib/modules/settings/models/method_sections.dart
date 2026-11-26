@@ -44,18 +44,10 @@ class MethodBlock {
 
   List<String> get itemIds => [for (final item in items) item.id];
 
-  /// For a plan: its own config, the method named just like the plan. The
-  /// plan's row stands for it, so it isn't listed again under the plan.
+  /// For a plan: its own config, the method named just like the plan. It's
+  /// listed under the plan like the others, by what it is (its subscription
+  /// link) rather than the plan's name again.
   SettingsItem? get main => isPlan ? MethodLayout.planMain(items) : null;
-
-  /// For a plan: the methods listed under it.
-  List<SettingsItem> get locations {
-    final main = this.main;
-    return [
-      for (final item in items)
-        if (item.id != main?.id) item,
-    ];
-  }
 }
 
 class MethodSectionGroup {
@@ -112,43 +104,17 @@ abstract class MethodLayout {
     return null;
   }
 
-  /// Whether [item] is the own config of a plan with several methods. It has
-  /// no switch of its own: the plan's switch turns it on and off.
-  static bool isPlanMain(SettingsItem item, Iterable<SettingsItem> items) {
-    final planId = item.planId;
-    if (planId == null) return false;
-    final planItems = [
-      for (final other in items)
-        if (other.planId == planId) other,
-    ];
-    return planItems.length > 1 && planMain(planItems)?.id == item.id;
-  }
-
-  /// Folds each plan's own config into its plan switch: the config is kept
-  /// switched on, and the plan is off only if the config and everything
-  /// under it were off. Lists saved before plans could hold `<plan>` off and
-  /// `<plan> SOS` on; that keeps the plan on rather than losing a backup that
-  /// works.
-  static ({List<SettingsItem> items, List<String> disabledPlans})
-  settlePlanMains(List<SettingsItem> items, Iterable<String> disabledPlans) {
+  /// The plans in [disabledPlans] that still have several methods in
+  /// [items]; a plan's switch only shows while it does.
+  static List<String> liveDisabledPlans(
+    Iterable<SettingsItem> items,
+    Iterable<String> disabledPlans,
+  ) {
     final plans = multiLocationPlans(items);
-    final disabled = {
+    return [
       for (final planId in disabledPlans)
         if (plans.contains(planId)) planId,
-    };
-    final result = [...items];
-    for (final planId in plans) {
-      final planItems = [
-        for (final item in items)
-          if (item.planId == planId) item,
-      ];
-      final main = planMain(planItems);
-      if (main == null || main.isEnabled) continue;
-      if (!planItems.any((item) => item.isEnabled)) disabled.add(planId);
-      final at = result.indexWhere((item) => item.id == main.id);
-      result[at] = main.copyWith(isEnabled: true);
-    }
-    return (items: result, disabledPlans: disabled.toList());
+    ];
   }
 
   /// Plans with more than one location, by id.
