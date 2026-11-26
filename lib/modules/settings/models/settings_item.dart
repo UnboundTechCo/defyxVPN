@@ -15,6 +15,31 @@ class SettingsItem {
   final bool isPremium;
   final bool isMarket;
 
+  // Where a connection method comes from, as the flowline describes it. All
+  // optional: older flowlines only send isPremium/isMarket.
+
+  /// premium, market, builtin, or a reward type (invite, trial, queue, gift…).
+  final String? kind;
+
+  /// The subscription this method belongs to; a plan's locations share it.
+  final String? planId;
+  final String? planName;
+
+  /// The location's country code, for a plan with several locations.
+  final String? country;
+
+  /// The plan's "any location" method (all of its locations together).
+  final bool isSos;
+
+  /// Who sells a market config.
+  final String? seller;
+
+  /// What a premium plan offers, shown next to its name.
+  final List<String> features;
+
+  /// When the method stops working, as an ISO 8601 date.
+  final String? expireAt;
+
   const SettingsItem({
     required this.id,
     required this.title,
@@ -29,7 +54,23 @@ class SettingsItem {
     this.showLeftIcon = false,
     this.isPremium = false,
     this.isMarket = false,
+    this.kind,
+    this.planId,
+    this.planName,
+    this.country,
+    this.isSos = false,
+    this.seller,
+    this.features = const [],
+    this.expireAt,
   });
+
+  DateTime? get expiresAt =>
+      expireAt == null ? null : DateTime.tryParse(expireAt!)?.toLocal();
+
+  bool isExpiredAt(DateTime now) {
+    final ends = expiresAt;
+    return ends != null && !ends.isAfter(now);
+  }
 
   SettingsItem copyWith({
     String? id,
@@ -45,6 +86,14 @@ class SettingsItem {
     bool? showLeftIcon,
     bool? isPremium,
     bool? isMarket,
+    String? kind,
+    String? planId,
+    String? planName,
+    String? country,
+    bool? isSos,
+    String? seller,
+    List<String>? features,
+    String? expireAt,
   }) {
     return SettingsItem(
       id: id ?? this.id,
@@ -60,6 +109,14 @@ class SettingsItem {
       showLeftIcon: showLeftIcon ?? this.showLeftIcon,
       isPremium: isPremium ?? this.isPremium,
       isMarket: isMarket ?? this.isMarket,
+      kind: kind ?? this.kind,
+      planId: planId ?? this.planId,
+      planName: planName ?? this.planName,
+      country: country ?? this.country,
+      isSos: isSos ?? this.isSos,
+      seller: seller ?? this.seller,
+      features: features ?? this.features,
+      expireAt: expireAt ?? this.expireAt,
     );
   }
 
@@ -81,6 +138,17 @@ class SettingsItem {
       showLeftIcon: json['showLeftIcon'] as bool? ?? false,
       isPremium: json['isPremium'] as bool? ?? false,
       isMarket: json['isMarket'] as bool? ?? false,
+      kind: json['kind'] as String?,
+      planId: json['planId'] as String?,
+      planName: json['planName'] as String?,
+      country: json['country'] as String?,
+      isSos: json['isSos'] as bool? ?? false,
+      seller: json['seller'] as String?,
+      features: [
+        for (final feature in json['features'] as List<dynamic>? ?? const [])
+          if (feature is String) feature,
+      ],
+      expireAt: json['expireAt'] as String?,
     );
   }
 
@@ -99,6 +167,14 @@ class SettingsItem {
       'showLeftIcon': showLeftIcon,
       'isPremium': isPremium,
       'isMarket': isMarket,
+      'kind': kind,
+      'planId': planId,
+      'planName': planName,
+      'country': country,
+      'isSos': isSos,
+      'seller': seller,
+      'features': features,
+      'expireAt': expireAt,
     };
   }
 }

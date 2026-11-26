@@ -217,5 +217,13 @@
   "needHelp": "به کمک نیاز دارید؟",
   "supportContactDescription": "از طریق راه‌های ارتباطی زیر با تیم پشتیبانی ما در تماس باشید:",
   "telegram": "تلگرام",
-  "website": "وب‌سایت"
+  "website": "وب‌سایت",
+  "settingsMethodsPremium": "پریمیوم",
+  "settingsMethodsMarket": "فروشگاه",
+  "settingsMethodsBuiltIn": "پیش‌فرض",
+  "settingsMethodsRewards": "جوایز",
+  "settingsMethodsOnCount": "{active} از {total}",
+  "settingsMethodsBySeller": "از {seller}",
+  "settingsMethodsDaysLeft": "{days} روز مانده",
+  "settingsMethodsExpired": "منقضی شده"
 }

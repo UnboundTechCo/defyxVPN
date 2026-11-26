@@ -1403,6 +1403,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Website'**
   String get website;
+
+  /// Connection methods section: subscriptions bought from Defyx
+  ///
+  /// In en, this message translates to:
+  /// **'PREMIUM'**
+  String get settingsMethodsPremium;
+
+  /// Connection methods section: configs bought from other sellers in the marketplace
+  ///
+  /// In en, this message translates to:
+  /// **'MARKET'**
+  String get settingsMethodsMarket;
+
+  /// Connection methods section: the methods every user has
+  ///
+  /// In en, this message translates to:
+  /// **'BUILT-IN'**
+  String get settingsMethodsBuiltIn;
+
+  /// Connection methods section: free methods with limited time and data (invites, free trial, queue, gifts)
+  ///
+  /// In en, this message translates to:
+  /// **'REWARDS'**
+  String get settingsMethodsRewards;
+
+  /// Connection methods section header: how many of its methods are switched on, e.g. 2 of 3
+  ///
+  /// In en, this message translates to:
+  /// **'{active} of {total}'**
+  String settingsMethodsOnCount(int active, int total);
+
+  /// Under a market config: who sells it
+  ///
+  /// In en, this message translates to:
+  /// **'by {seller}'**
+  String settingsMethodsBySeller(String seller);
+
+  /// Under a paid plan or reward: days until it ends
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day left} other{{days} days left}}'**
+  String settingsMethodsDaysLeft(int days);
+
+  /// Under a plan or reward that has ended
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get settingsMethodsExpired;
 }
 
 class _AppLocalizationsDelegate

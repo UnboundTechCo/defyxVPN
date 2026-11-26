@@ -217,5 +217,13 @@
   "needHelp": "Нужна помощь?",
   "supportContactDescription": "Свяжитесь с нашей службой поддержки по следующим каналам:",
   "telegram": "Telegram",
-  "website": "Веб-сайт"
+  "website": "Веб-сайт",
+  "settingsMethodsPremium": "ПРЕМИУМ",
+  "settingsMethodsMarket": "МАГАЗИН",
+  "settingsMethodsBuiltIn": "ВСТРОЕННЫЕ",
+  "settingsMethodsRewards": "БОНУСЫ",
+  "settingsMethodsOnCount": "{active} из {total}",
+  "settingsMethodsBySeller": "от {seller}",
+  "settingsMethodsDaysLeft": "{days, plural, one{Остался {days} день} few{Осталось {days} дня} many{Осталось {days} дней} other{Осталось {days} дня}}",
+  "settingsMethodsExpired": "Истёк"
 }

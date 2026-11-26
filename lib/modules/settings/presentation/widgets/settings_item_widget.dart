@@ -9,8 +9,49 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../models/method_sections.dart';
 import '../../models/settings_item.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+
+/// The most characters of a connection method's name a row shows; longer
+/// names end in "...".
+const methodTitleMaxLength = 20;
+
+/// [text] as a method row shows it: upper case, cut to
+/// [methodTitleMaxLength] characters with "...". A cut title is wrapped in a
+/// Unicode isolate so its "..." stays at the end of a Latin name in
+/// right-to-left text.
+String methodTitle(String text) {
+  final upper = text.toUpperCase();
+  final cut = truncateText(upper, methodTitleMaxLength);
+  return cut == upper ? upper : '\u2068$cut\u2069';
+}
+
+/// Key handling for a row being moved with the D-pad: Up/Down move it by one
+/// and OK ends the move. Ignores keys while [isMoving] is false.
+KeyEventResult handleDpadMoveKeys(
+  KeyEvent event, {
+  required bool isMoving,
+  ValueChanged<int>? onMove,
+  VoidCallback? onMoveEnd,
+}) {
+  if (!isMoving) return KeyEventResult.ignored;
+
+  final direction = TvKeyboardHelper.directionOf(event);
+  if (direction != null) {
+    if (event is! KeyUpEvent) {
+      if (direction == TraversalDirection.up) onMove?.call(-1);
+      if (direction == TraversalDirection.down) onMove?.call(1);
+    }
+    // Focus stays on the row while it is being moved.
+    return KeyEventResult.handled;
+  }
+  if (TvKeyboardHelper.isActivationKey(event)) {
+    if (event is KeyDownEvent) onMoveEnd?.call();
+    return KeyEventResult.handled;
+  }
+  return KeyEventResult.ignored;
+}
 
 /// A settings row. With a remote it is a single focus stop: OK runs the same
 /// action as a tap (toggle or open). Draggable rows can also be moved with the
@@ -44,6 +85,22 @@ class SettingsItemWidget extends StatelessWidget {
   /// A short D-pad hint shown next to the switch (e.g. how to reorder).
   final String? dpadHint;
 
+  /// Shown instead of the item's title (e.g. a plan location's country).
+  final String? titleOverride;
+
+  /// A small second line under the title (seller, days left…).
+  final String? caption;
+
+  /// Leaves out the premium/market icons and the info icon, for rows inside
+  /// a plan whose header already shows them.
+  final bool compact;
+
+  /// Extra space before the row's content, for rows inside a plan.
+  final double indent;
+
+  /// Shown before the title, e.g. a location's flag.
+  final Widget? leading;
+
   const SettingsItemWidget({
     super.key,
     required this.item,
@@ -61,6 +118,11 @@ class SettingsItemWidget extends StatelessWidget {
     this.onMove,
     this.onMoveEnd,
     this.dpadHint,
+    this.titleOverride,
+    this.caption,
+    this.compact = false,
+    this.indent = 0,
+    this.leading,
   });
 
   void _handleTap() {
@@ -72,27 +134,21 @@ class SettingsItemWidget extends StatelessWidget {
     }
   }
 
-  KeyEventResult _handleMoveKeys(FocusNode node, KeyEvent event) {
-    if (!isMoving) return KeyEventResult.ignored;
-
-    final direction = TvKeyboardHelper.directionOf(event);
-    if (direction != null) {
-      if (event is! KeyUpEvent) {
-        if (direction == TraversalDirection.up) onMove?.call(-1);
-        if (direction == TraversalDirection.down) onMove?.call(1);
-      }
-      // Focus stays on the row while it is being moved.
-      return KeyEventResult.handled;
-    }
-    if (TvKeyboardHelper.isActivationKey(event)) {
-      if (event is KeyDownEvent) onMoveEnd?.call();
-      return KeyEventResult.handled;
-    }
-    return KeyEventResult.ignored;
-  }
+  KeyEventResult _handleMoveKeys(FocusNode node, KeyEvent event) =>
+      handleDpadMoveKeys(
+        event,
+        isMoving: isMoving,
+        onMove: onMove,
+        onMoveEnd: onMoveEnd,
+      );
 
   @override
   Widget build(BuildContext context) {
+    // Badges follow the method's section, not its flags: the backend still
+    // marks free rewards isMarket for older apps.
+    final section = item.section;
+    final isPremium = section == MethodSection.premium;
+    final isMarket = section == MethodSection.market;
     final handleColor = isMoving
         ? TvFocusable.focusRingColor
         : item.isAccessible
@@ -107,7 +163,7 @@ class SettingsItemWidget extends StatelessWidget {
             child: Container(
               width: 24.w,
               height: 24.h,
-              margin: EdgeInsets.only(right: 12.w),
+              margin: EdgeInsetsDirectional.only(end: 12.w),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4.r),
                 color: Colors.transparent,
@@ -129,7 +185,7 @@ class SettingsItemWidget extends StatelessWidget {
           Container(
             width: 24.w,
             height: 24.h,
-            margin: EdgeInsets.only(right: 12.w),
+            margin: EdgeInsetsDirectional.only(end: 12.w),
             child: SvgPicture.asset(
               'assets/icons/draggable_setting_indicator.svg',
               width: 24.w,
@@ -139,55 +195,65 @@ class SettingsItemWidget extends StatelessWidget {
           ),
         ],
         Expanded(
-          child: Row(
-            // align center
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            spacing: 7.w,
-            children: [
-              // The info icons are touch-only; D-pad users see the
-              // description under the list instead.
-              if (item.isPremium)
-                InkWell(
-                  canRequestFocus: false,
-                  child: AppIcons.premium(height: 18, width: 18),
-                  onTap: () =>
-                      SettingsToastMessage.show(item.description ?? ""),
-                ),
-              if (item.isMarket)
-                InkWell(
-                  canRequestFocus: false,
-                  child: AppIcons.market(height: 18, width: 18),
-                  onTap: () =>
-                      SettingsToastMessage.show(item.description ?? ""),
-                ),
-              Flexible(
-                fit: item.isPremium ? FlexFit.tight : FlexFit.loose,
-                child: Text(
-                  truncateText(item.title.toUpperCase(), 20),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 17.sp,
-                    fontFamily: AppTheme.fontFamily,
-                    fontWeight: FontWeight.w400,
-                    color: item.isAccessible ? Colors.white : Colors.grey[600],
+          child: _withCaption(
+            Row(
+              // align center
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              spacing: 7.w,
+              children: [
+                if (leading != null)
+                  // Faded with the title when the row is off.
+                  Opacity(opacity: item.isAccessible ? 1 : 0.4, child: leading),
+                // The info icons are touch-only; D-pad users see the
+                // description under the list instead.
+                if (isPremium && !compact)
+                  InkWell(
+                    canRequestFocus: false,
+                    child: AppIcons.premium(height: 18, width: 18),
+                    onTap: () =>
+                        SettingsToastMessage.show(item.description ?? ""),
+                  ),
+                if (isMarket && !compact)
+                  InkWell(
+                    canRequestFocus: false,
+                    child: AppIcons.market(height: 18, width: 18),
+                    onTap: () =>
+                        SettingsToastMessage.show(item.description ?? ""),
+                  ),
+                Flexible(
+                  fit: isPremium && !compact ? FlexFit.tight : FlexFit.loose,
+                  child: Text(
+                    methodTitle(titleOverride ?? item.title),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 17.sp,
+                      fontFamily: AppTheme.fontFamily,
+                      fontWeight: FontWeight.w400,
+                      color: item.isAccessible
+                          ? Colors.white
+                          : Colors.grey[600],
+                    ),
                   ),
                 ),
-              ),
-              if (item.isPremium)
-                Padding(
-                  padding: EdgeInsetsDirectional.only(end: 12.w),
-                  child: _buildInfoIcon(
-                    onTap: () => MarketplaceInfoSheet.show(context, item),
+                if (compact)
+                  const SizedBox.shrink()
+                else if (isPremium)
+                  Padding(
+                    padding: EdgeInsetsDirectional.only(end: 12.w),
+                    child: _buildInfoIcon(
+                      onTap: () => MarketplaceInfoSheet.show(context, item),
+                    ),
+                  )
+                else if (item.description != null &&
+                    item.description!.isNotEmpty)
+                  _buildInfoIcon(
+                    onTap: () =>
+                        SettingsToastMessage.show(item.description ?? ""),
                   ),
-                )
-              else if (item.description != null && item.description!.isNotEmpty)
-                _buildInfoIcon(
-                  onTap: () =>
-                      SettingsToastMessage.show(item.description ?? ""),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
         if (dpadHint != null)
@@ -209,6 +275,8 @@ class SettingsItemWidget extends StatelessWidget {
               ),
             ),
           ),
+        // Long titles (full country names) stop short of the switch.
+        if (compact) SizedBox(width: 8.w),
         _buildTrailingWidget(),
       ],
     );
@@ -218,7 +286,12 @@ class SettingsItemWidget extends StatelessWidget {
         AnimatedContainer(
           duration: const Duration(milliseconds: 150),
           transform: Matrix4.identity(),
-          padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+          padding: EdgeInsetsDirectional.fromSTEB(
+            12.w + indent,
+            8.h,
+            12.w,
+            8.h,
+          ),
           margin: EdgeInsets.symmetric(vertical: 2.h),
           decoration: isMoving
               ? BoxDecoration(
@@ -250,6 +323,27 @@ class SettingsItemWidget extends StatelessWidget {
       onFocusChange: onFocusChange,
       borderRadius: BorderRadius.circular(8.r),
       child: content,
+    );
+  }
+
+  Widget _withCaption(Widget titleRow) {
+    if (caption == null) return titleRow;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        titleRow,
+        Text(
+          caption!,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontFamily: AppTheme.fontFamily,
+            color: Colors.grey[500],
+          ),
+        ),
+      ],
     );
   }
 

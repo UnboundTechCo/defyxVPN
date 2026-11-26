@@ -438,15 +438,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onToggle: (groupId, itemId) {
                 settingsNotifier.toggleSetting(groupId, itemId, context);
               },
-              onReorder: group.isDraggable
-                  ? (oldIndex, newIndex) {
-                      settingsNotifier.reorderItems(
+              onReorderBlocks: group.isDraggable
+                  ? (blocks, oldIndex, newIndex) {
+                      settingsNotifier.reorderBlocks(
                         group.id,
+                        blocks,
                         oldIndex,
                         newIndex,
                       );
                     }
                   : null,
+              onTogglePlan: (planId) {
+                settingsNotifier.togglePlan(group.id, planId, context);
+              },
+              onExpandedChange: (key, expanded) {
+                settingsNotifier.setExpanded(group.id, key, expanded);
+              },
               onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
                       settingsNotifier.resetGroupToDefault(
