@@ -1121,9 +1121,9 @@
     "description": "Connection methods section: free methods with limited time and data (invites, free trial, queue, gifts)"
   },
 
-  "settingsMethodsOnCount": "{active} of {total} on",
+  "settingsMethodsOnCount": "{active} of {total}",
   "@settingsMethodsOnCount": {
-    "description": "Connection methods section header: how many of its methods are switched on",
+    "description": "Connection methods section header: how many of its methods are switched on, e.g. 2 of 3",
     "placeholders": {
       "active": {
         "type": "int"

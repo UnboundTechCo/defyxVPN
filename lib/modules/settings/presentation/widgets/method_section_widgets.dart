@@ -174,7 +174,7 @@ class MethodPlanHeader extends StatelessWidget {
                   if (isMarket) AppIcons.market(height: 18, width: 18),
                   Flexible(
                     child: Text(
-                      title.toUpperCase(),
+                      methodTitle(title),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(

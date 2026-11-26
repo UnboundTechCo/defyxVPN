@@ -714,7 +714,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settingsMethodsOnCount(int active, int total) {
-    return '$active of $total on';
+    return '$active of $total';
   }
 
   @override

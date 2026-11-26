@@ -469,12 +469,18 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
   List<Widget> _buildSection(
     MethodSectionGroup section, {
     required bool isFirst,
+    required bool isOnly,
     required Set<String> disabledPlans,
     required DateTime now,
     required AppLocalizations l10n,
   }) {
     final key = MethodLayout.sectionKey(section.section);
-    final expanded = _isExpanded(key, byDefault: isFirst);
+    // The first section starts open. When it's the only one (a user with
+    // just the free methods), it opens every time, even if it was closed
+    // back when paid sections were above it, so the page never looks empty.
+    final expanded = isOnly
+        ? _expanded[key] ?? true
+        : _isExpanded(key, byDefault: isFirst);
     final items = section.items.toList();
     final active = items
         .where((item) => MethodLayout.isActive(item, disabledPlans, now))
@@ -553,6 +559,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
           ..._buildSection(
             sections[i],
             isFirst: i == 0,
+            isOnly: sections.length == 1,
             disabledPlans: disabledPlans,
             now: now,
             l10n: l10n,
@@ -651,7 +658,7 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
         children: [
           // Group title
           Padding(
-            padding: EdgeInsets.only(bottom: 12.h, left: 4.w),
+            padding: EdgeInsetsDirectional.only(bottom: 12.h, start: 4.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

@@ -222,7 +222,7 @@
   "settingsMethodsMarket": "商店",
   "settingsMethodsBuiltIn": "内置",
   "settingsMethodsRewards": "奖励",
-  "settingsMethodsOnCount": "已开启 {active}/{total}",
+  "settingsMethodsOnCount": "{active}/{total}",
   "settingsMethodsBySeller": "由 {seller} 提供",
   "settingsMethodsDaysLeft": "剩余 {days} 天",
   "settingsMethodsExpired": "已过期"
