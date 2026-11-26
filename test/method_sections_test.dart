@@ -218,7 +218,7 @@ void main() {
       expect(items['Silver sos']!.isSos, isTrue);
     });
 
-    test('a plan\'s own config is its row, not one of its locations', () {
+    test('finds a plan\'s own config, which stays one of its methods', () {
       final items = MethodLayout.groupPlansByName([
         _item('Silver', isPremium: true),
         _item('Silver sos', isPremium: true),
@@ -227,41 +227,18 @@ void main() {
       ]);
       final blocks = MethodLayout.sections(items).single.blocks;
       expect(blocks[0].main?.id, 'Silver');
-      expect([for (final i in blocks[0].locations) i.id], ['Silver sos']);
+      expect(blocks[0].itemIds, ['Silver', 'Silver sos']);
       expect(blocks[1].main, isNull);
-      expect(MethodLayout.isPlanMain(blocks[0].main!, items), isTrue);
-      expect(MethodLayout.isPlanMain(items.last, items), isFalse);
     });
 
-    test('a plan\'s own config folds into its switch: on if anything in the '
-        'plan was on', () {
-      List<SettingsItem> silver({required bool main, required bool sos}) =>
-          MethodLayout.groupPlansByName([
-            _item('Silver', isPremium: true, on: main),
-            _item('Silver sos', isPremium: true, on: sos),
-          ]);
-
-      final keepsBackup = MethodLayout.settlePlanMains(
-        silver(main: false, sos: true),
-        const [],
-      );
-      expect(keepsBackup.disabledPlans, isEmpty);
-      expect(keepsBackup.items.every((item) => item.isEnabled), isTrue);
-
-      final allOff = MethodLayout.settlePlanMains(
-        silver(main: false, sos: false),
-        const [],
-      );
-      expect(allOff.disabledPlans, ['name:premium:Silver']);
-      expect(allOff.items.first.isEnabled, isTrue);
-      expect(allOff.items.last.isEnabled, isFalse);
-
-      // Plans that no longer exist are dropped.
+    test('keeps switched-off plans only while they have several methods', () {
+      final items = MethodLayout.groupPlansByName([
+        _item('Silver', isPremium: true),
+        _item('Silver sos', isPremium: true),
+      ]);
       expect(
-        MethodLayout.settlePlanMains(silver(main: true, sos: true), [
-          'gone',
-        ]).disabledPlans,
-        isEmpty,
+        MethodLayout.liveDisabledPlans(items, ['name:premium:Silver', 'gone']),
+        ['name:premium:Silver'],
       );
     });
 
@@ -482,8 +459,8 @@ void main() {
       expect(calls.plans, ['g']);
     });
 
-    testWidgets('a plan with a config of its own lists only its SOS; the '
-        'row\'s switch turns the whole plan off', (tester) async {
+    testWidgets('a plan\'s own config is listed as its subscription link, '
+        'with its own switch', (tester) async {
       final above = FocusNode();
       addTearDown(above.dispose);
       final calls = await pump(
@@ -498,14 +475,20 @@ void main() {
         ),
       );
 
-      // Silver is the only plan in Premium, so it starts open.
+      // Silver is the only plan in Premium, so it starts open. Its name isn't
+      // repeated under it.
       expect(find.text('SILVER'), findsOneWidget);
+      expect(find.text('SUBSCRIPTION'), findsOneWidget);
       expect(find.text('SOS'), findsOneWidget);
+      expect(find.byIcon(Icons.link), findsOneWidget);
 
-      await tester.tap(find.byType(DefyxSwitch).first);
+      // The plan's switch turns the plan off; the link's switch only the link.
+      await tester.tap(find.byType(DefyxSwitch).at(0));
       await tester.pumpAndSettle();
       expect(calls.plans, ['name:premium:Silver']);
-      expect(calls.toggled, isEmpty);
+      await tester.tap(find.byType(DefyxSwitch).at(1));
+      await tester.pumpAndSettle();
+      expect(calls.toggled, ['Silver']);
     });
 
     testWidgets('while a plan is off, the rows under it show off and can\'t '
@@ -529,11 +512,15 @@ void main() {
           .widgetList<DefyxSwitch>(find.byType(DefyxSwitch))
           .toList();
       expect(switches[0].value, isFalse); // the plan
-      expect(switches[1].value, isFalse); // its SOS, saved as on
-      expect(switches[1].enabled, isFalse);
+      // Its subscription link and SOS, both saved as on.
+      for (final row in switches.sublist(1, 3)) {
+        expect(row.value, isFalse);
+        expect(row.enabled, isFalse);
+      }
 
+      await tester.tap(find.text('SUBSCRIPTION'));
       await tester.tap(find.text('SOS'));
-      await tester.tap(find.byType(DefyxSwitch).at(1));
+      await tester.tap(find.byType(DefyxSwitch).at(2));
       await tester.pumpAndSettle();
       expect(calls.toggled, isEmpty);
     });
@@ -915,18 +902,12 @@ void main() {
           .items
           .firstWhere((item) => item.title == title);
 
-      // The plan's own config has no switch of its own.
+      // The plan's own config has its own switch.
       notifier.toggleSetting(
         SettingsGroupId.connectionMethod,
         method('Silver').id,
       );
-      expect(notifier.getConnectionMethodPattern(), 'Silver,Silver sos,Warp');
-
-      notifier.toggleSetting(
-        SettingsGroupId.connectionMethod,
-        method('Silver sos').id,
-      );
-      expect(notifier.getConnectionMethodPattern(), 'Silver,Warp');
+      expect(notifier.getConnectionMethodPattern(), 'Silver sos,Warp');
 
       notifier.togglePlan(
         SettingsGroupId.connectionMethod,
@@ -934,22 +915,22 @@ void main() {
       );
       expect(notifier.getConnectionMethodPattern(), 'Warp');
 
-      // While the plan is off, its SOS can't be switched.
+      // While the plan is off, its methods can't be switched.
       notifier.toggleSetting(
         SettingsGroupId.connectionMethod,
-        method('Silver sos').id,
+        method('Silver').id,
       );
-      expect(method('Silver sos').isEnabled, isFalse);
+      expect(method('Silver').isEnabled, isFalse);
 
       notifier.togglePlan(
         SettingsGroupId.connectionMethod,
         'name:premium:Silver',
       );
-      expect(notifier.getConnectionMethodPattern(), 'Silver,Warp');
+      expect(notifier.getConnectionMethodPattern(), 'Silver sos,Warp');
     });
 
     test(
-      'a list saved with "Silver" off and its SOS on keeps the plan on',
+      'a list saved with "Silver" off and its SOS on stays that way',
       () async {
         final notifier = await start(
           saved: [
@@ -963,7 +944,7 @@ void main() {
             {'label': 'Warp', 'enabled': true},
           ],
         );
-        expect(notifier.getConnectionMethodPattern(), 'Silver,Silver sos,Warp');
+        expect(notifier.getConnectionMethodPattern(), 'Silver sos,Warp');
       },
     );
 

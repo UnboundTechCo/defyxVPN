@@ -225,5 +225,6 @@
   "settingsMethodsOnCount": "{active} از {total}",
   "settingsMethodsBySeller": "از {seller}",
   "settingsMethodsDaysLeft": "{days} روز مانده",
-  "settingsMethodsExpired": "منقضی شده"
+  "settingsMethodsExpired": "منقضی شده",
+  "settingsMethodsSubscription": "اشتراک"
 }

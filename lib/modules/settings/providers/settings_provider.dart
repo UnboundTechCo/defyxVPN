@@ -169,18 +169,15 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
     final flowItems = MethodLayout.rewardsBySoonestEnd(
       MethodLayout.groupPlansByName(SettingsFactory.flowlineToItems(flowline)),
     );
-    final settled = MethodLayout.settlePlanMains(
-      MethodLayout.normalize([
-        for (var i = 0; i < flowItems.length; i++)
-          flowItems[i].copyWith(sortOrder: i),
-      ]),
-      const [],
-    );
+    final connectionItems = MethodLayout.normalize([
+      for (var i = 0; i < flowItems.length; i++)
+        flowItems[i].copyWith(sortOrder: i),
+    ]);
     final group = SettingsFactory.createConnectionMethodGroup(
       title: text.connectionMethodTitle,
-      connectionItems: settled.items,
+      connectionItems: connectionItems,
       destinationTitle: text.destinationTitle,
-    ).copyWith(disabledPlans: settled.disabledPlans);
+    );
     // Opened and closed sections are a view choice, not a setting to reset.
     final saved = state.groups[SettingsGroupId.connectionMethod];
     return saved == null ? group : group.copyWith(expanded: saved.expanded);
@@ -305,15 +302,14 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
         );
       }
 
-      final settled = MethodLayout.settlePlanMains(
-        methods,
-        savedGroup.disabledPlans,
-      );
       _updateGroup(
         savedGroup.copyWith(
           title: text.connectionMethodTitle,
-          items: [...settled.items, ...navigationItems],
-          disabledPlans: settled.disabledPlans,
+          items: [...methods, ...navigationItems],
+          disabledPlans: MethodLayout.liveDisabledPlans(
+            methods,
+            savedGroup.disabledPlans,
+          ),
         ),
       );
     } catch (e) {
@@ -352,11 +348,8 @@ class SettingsNotifier extends StateNotifier<SettingsState> {
 
     final now = DateTime.now();
     final target = group.items.where((item) => item.id == itemId).firstOrNull;
-    // A plan's methods follow its switch while it's off, and its own config
-    // is switched by the plan's switch.
-    if (target != null &&
-        (group.disabledPlans.contains(target.planId) ||
-            MethodLayout.isPlanMain(target, group.items))) {
+    // A plan's methods follow its switch while it's off.
+    if (target != null && group.disabledPlans.contains(target.planId)) {
       return;
     }
     final updatedItems = group.items.map((item) {
