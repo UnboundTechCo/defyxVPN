@@ -1,9 +1,13 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/shared/services/desktop_analytics.dart';
 import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 
+/// Crash reports: Crashlytics on Android, iOS and macOS. Windows and Linux
+/// have no Crashlytics, so errors go to analytics as `exception` events
+/// through DesktopAnalytics, and to the local log (see DesktopErrorLogger).
 class CrashReportingService {
   CrashReportingService._internal();
   static final CrashReportingService _instance =
@@ -12,9 +16,7 @@ class CrashReportingService {
 
   FirebaseCrashlytics? _crashlytics;
 
-  bool get _isDesktopPlatform {
-    return Platform.isWindows || Platform.isLinux || Platform.isMacOS;
-  }
+  bool get _isDesktopPlatform => Platform.isWindows || Platform.isLinux;
 
   // Null until the user agrees to share crash reports. Uncaught crashes are
   // still kept on the device by the handlers in main.dart, see
@@ -34,7 +36,8 @@ class CrashReportingService {
     Iterable<Object> information = const [],
   }) async {
     if (_isDesktopPlatform) {
-      debugPrint('Crashlytics error (desktop): $exception');
+      debugPrint('Crash report (desktop): $exception');
+      await _recordDesktopException(exception, reason: reason, fatal: fatal);
       return;
     }
 
@@ -68,7 +71,8 @@ class CrashReportingService {
   /// Record a Flutter error (from FlutterErrorDetails)
   Future<void> recordFlutterFatalError(FlutterErrorDetails errorDetails) async {
     if (_isDesktopPlatform) {
-      debugPrint('Crashlytics Flutter error (desktop): ${errorDetails.exception}');
+      debugPrint('Flutter error (desktop): ${errorDetails.exception}');
+      await _recordDesktopException(errorDetails.exception, fatal: true);
       return;
     }
 
@@ -104,7 +108,7 @@ class CrashReportingService {
   /// Log a message to Crashlytics (appears in crash reports as breadcrumb)
   Future<void> log(String message) async {
     if (_isDesktopPlatform) {
-      debugPrint('Crashlytics log (desktop): $message');
+      debugPrint('Crash log (desktop): $message');
       return;
     }
 
@@ -124,8 +128,6 @@ class CrashReportingService {
     String? protocol,
     String? connectionMethod,
   }) async {
-    if (_isDesktopPlatform) return;
-
     try {
       // Set VPN context as custom keys
       if (vpnState != null) await setCustomKey('vpn_state', vpnState);
@@ -153,11 +155,6 @@ class CrashReportingService {
     String errorMessage,
     String stackTrace,
   ) async {
-    if (_isDesktopPlatform) {
-      debugPrint('Go panic (desktop): $functionName - $errorMessage');
-      return;
-    }
-
     try {
       await setCustomKey('go_panic_function', functionName);
       await log('Go panic in $functionName: $errorMessage');
@@ -172,5 +169,18 @@ class CrashReportingService {
     } catch (e) {
       debugPrint('Failed to record Go panic to Crashlytics: $e');
     }
+  }
+
+  Future<void> _recordDesktopException(
+    Object? exception, {
+    String? reason,
+    bool fatal = false,
+  }) async {
+    if (exception == null || !TelemetryConsent.isGranted) return;
+    await DesktopAnalytics.instance.logException(
+      exception,
+      reason: reason,
+      fatal: fatal,
+    );
   }
 }

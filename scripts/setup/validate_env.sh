@@ -39,18 +39,12 @@ validate_env_vars() {
                 "FIREBASE_IOS_APP_ID"
             )
             ;;
-        windows)
+        windows|linux)
             platform_vars=(
-                "FIREBASE_WINDOWS_API_KEY"
-                "FIREBASE_WINDOWS_APP_ID"
-                "FIREBASE_WINDOWS_MEASUREMENT_ID"
-            )
-            ;;
-        web)
-            platform_vars=(
-                "FIREBASE_WEB_API_KEY"
-                "FIREBASE_WEB_APP_ID"
-                "FIREBASE_WEB_MEASUREMENT_ID"
+                "FIREBASE_DESKTOP_API_KEY"
+                "FIREBASE_DESKTOP_APP_ID"
+                "FIREBASE_DESKTOP_MEASUREMENT_ID"
+                "FIREBASE_DESKTOP_MP_API_SECRET"
             )
             ;;
         *)
@@ -63,12 +57,10 @@ validate_env_vars() {
                 "FIREBASE_ANDROID_APP_ID"
                 "FIREBASE_IOS_API_KEY"
                 "FIREBASE_IOS_APP_ID"
-                "FIREBASE_WINDOWS_API_KEY"
-                "FIREBASE_WINDOWS_APP_ID"
-                "FIREBASE_WINDOWS_MEASUREMENT_ID"
-                "FIREBASE_WEB_API_KEY"
-                "FIREBASE_WEB_APP_ID"
-                "FIREBASE_WEB_MEASUREMENT_ID"
+                "FIREBASE_DESKTOP_API_KEY"
+                "FIREBASE_DESKTOP_APP_ID"
+                "FIREBASE_DESKTOP_MEASUREMENT_ID"
+                "FIREBASE_DESKTOP_MP_API_SECRET"
             )
             ;;
     esac
