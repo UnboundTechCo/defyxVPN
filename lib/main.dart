@@ -6,6 +6,7 @@ import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/services/app_traffic.dart';
+import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 import 'package:defyx_vpn/shared/services/desktop_error_logger.dart';
 import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
@@ -80,7 +81,8 @@ void main(List<String> arguments) async {
     await DesktopErrorLogger().logError('setCacheDir', e);
   }
 
-  // Initialize Firebase only on supported platforms (not Windows)
+  // The Firebase SDKs exist for Android, iOS and macOS. Windows and Linux
+  // report through DesktopAnalytics instead (see CrashReportingService).
   if (!Platform.isWindows && !Platform.isLinux) {
     await Firebase.initializeApp(
       name: "defyx-vpn",
@@ -104,18 +106,24 @@ void main(List<String> arguments) async {
       return true;
     };
   } else {
-    // Crashlytics is unavailable on desktop; log to a local file instead.
+    // Usage statistics and error events stay off until the user agrees.
+    await TelemetryConsent.load(prefs);
+
+    // No Crashlytics on Windows/Linux: errors go to a local file, and with
+    // consent to analytics as `exception` events.
     FlutterError.onError = (errorDetails) {
       DesktopErrorLogger().logError(
         'FlutterError',
         errorDetails.exception,
         errorDetails.stack,
       );
+      CrashReportingService().recordFlutterFatalError(errorDetails);
       FlutterError.presentError(errorDetails);
     };
 
     PlatformDispatcher.instance.onError = (error, stack) {
       DesktopErrorLogger().logError('PlatformDispatcher', error, stack);
+      CrashReportingService().recordError(error, stack, fatal: true);
       return true;
     };
   }
