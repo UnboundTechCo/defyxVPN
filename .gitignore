@@ -47,9 +47,12 @@ app.*.map.json
 /android/app/release
 .build
 
-# Firebase
-# android/app/google-services.json
-# ios/Runner/GoogleService-Info.plist
+# Firebase: the config files in git hold placeholders, filled in from .env
+# by scripts/platform/firebase and in CI. Never commit them filled in, nor
+# the backups the scripts make.
+android/app/google-services.json.bak
+ios/Runner/GoogleService-Info.plist.bak
+macos/Runner/GoogleService-Info.plist.bak
 
 # Windows
 defyx_complete.ps1
