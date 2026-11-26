@@ -703,4 +703,42 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get website => 'Веб-сайт';
+
+  @override
+  String get settingsMethodsPremium => 'ПРЕМИУМ';
+
+  @override
+  String get settingsMethodsMarket => 'МАГАЗИН';
+
+  @override
+  String get settingsMethodsBuiltIn => 'ВСТРОЕННЫЕ';
+
+  @override
+  String get settingsMethodsRewards => 'БОНУСЫ';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '$active из $total';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return 'от $seller';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: 'Осталось $days дня',
+      many: 'Осталось $days дней',
+      few: 'Осталось $days дня',
+      one: 'Остался $days день',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsMethodsExpired => 'Истёк';
 }

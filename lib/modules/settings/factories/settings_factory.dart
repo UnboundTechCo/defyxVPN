@@ -41,9 +41,18 @@ class SettingsFactory {
     bool isEnabled = false,
     bool isPremium = false,
     bool isMarket = false,
+    String? id,
+    String? kind,
+    String? planId,
+    String? planName,
+    String? country,
+    bool isSos = false,
+    String? seller,
+    List<String> features = const [],
+    String? expireAt,
   }) {
     return SettingsItem(
-      id: label + sortOrder.toString(),
+      id: id ?? label + sortOrder.toString(),
       title: label,
       isEnabled: isEnabled,
       isAccessible: true,
@@ -52,6 +61,53 @@ class SettingsFactory {
       itemType: SettingsItemType.toggle,
       isPremium: isPremium,
       isMarket: isMarket,
+      kind: kind,
+      planId: planId,
+      planName: planName,
+      country: country,
+      isSos: isSos,
+      seller: seller,
+      features: features,
+      expireAt: expireAt,
+    );
+  }
+
+  /// Creates a toggle item from one flowline method. [id], [sortOrder] and
+  /// [isEnabled] carry the user's saved state; the rest comes from [flow].
+  static SettingsItem itemFromFlow(
+    Map<String, dynamic> flow, {
+    required int sortOrder,
+    String? id,
+    bool? isEnabled,
+  }) {
+    String? text(String key) {
+      final value = flow[key];
+      if (value is String) return value.isEmpty ? null : value;
+      if (value is num) return value.toString();
+      return null;
+    }
+
+    return createFlowlineItem(
+      id: id,
+      label: text('label') ?? '',
+      description: text('description') ?? '',
+      sortOrder: sortOrder,
+      isEnabled: isEnabled ?? flow['enabled'] == true,
+      isPremium: flow['isPremium'] == true,
+      isMarket: flow['isMarket'] == true,
+      kind: text('kind'),
+      planId: text('planId'),
+      planName: text('planName'),
+      country: text('country'),
+      isSos: flow['sos'] == true,
+      seller: text('seller'),
+      features: [
+        if (flow['features'] case final List<dynamic> features)
+          for (final feature in features)
+            if (feature is String && feature.isNotEmpty) feature,
+      ],
+      // The backend already sends expire_at.
+      expireAt: text('expireAt') ?? text('expire_at'),
     );
   }
 
@@ -224,15 +280,8 @@ class SettingsFactory {
   /// Converts flowline data to settings items
   static List<SettingsItem> flowlineToItems(List<dynamic> flowline) {
     return flowline.asMap().entries.map((entry) {
-      final flow = entry.value as Map<String, dynamic>;
-      return createFlowlineItem(
-        label: flow['label'] ?? '',
-        description: flow['description'] ?? '',
-        sortOrder: entry.key,
-        isEnabled: flow['enabled'] ?? false,
-        isPremium: flow['isPremium'] ?? false,
-        isMarket: flow['isMarket'] ?? false,
-      );
+      final flow = Map<String, dynamic>.from(entry.value as Map);
+      return itemFromFlow(flow, sortOrder: entry.key);
     }).toList();
   }
 

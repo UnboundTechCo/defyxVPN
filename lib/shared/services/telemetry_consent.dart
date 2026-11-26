@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/shared/services/desktop_analytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
@@ -12,6 +13,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// settings requests, until [set] is called with true. Firebase Sessions
 /// follows Crashlytics. Crashes recorded before the choice stay on the device;
 /// they are sent after the user agrees and deleted if they decline.
+///
+/// Windows and Linux send through DesktopAnalytics, which sends nothing
+/// without consent and forgets the install's analytics ID when the user
+/// declines.
 class TelemetryConsent {
   TelemetryConsent._();
 
@@ -25,8 +30,12 @@ class TelemetryConsent {
   /// Whether the user has answered the question at all.
   static bool get isDecided => _decided;
 
-  /// Firebase runs everywhere but Windows and Linux.
-  static bool get isSupported => !(Platform.isWindows || Platform.isLinux);
+  static bool get _isDesktop => Platform.isWindows || Platform.isLinux;
+
+  /// Android, iOS and macOS have the Firebase SDKs. Windows and Linux only
+  /// report when the build has the Measurement Protocol stream set up.
+  static bool get isSupported =>
+      _isDesktop ? DesktopAnalytics.isSupported : true;
 
   /// Reads the stored choice and applies it. Call once Firebase is ready.
   static Future<void> load(SharedPreferences? prefs) async {
@@ -50,6 +59,10 @@ class TelemetryConsent {
 
   static Future<void> _apply({required bool discardStored}) async {
     if (!isSupported) return;
+    if (_isDesktop) {
+      if (discardStored) await DesktopAnalytics.instance.reset();
+      return;
+    }
     try {
       await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(_granted);
       await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(

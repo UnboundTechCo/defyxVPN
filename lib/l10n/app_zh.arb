@@ -217,5 +217,13 @@
   "needHelp": "需要帮助？",
   "supportContactDescription": "请通过以下渠道联系我们的支持团队：",
   "telegram": "Telegram",
-  "website": "网站"
+  "website": "网站",
+  "settingsMethodsPremium": "高级",
+  "settingsMethodsMarket": "商店",
+  "settingsMethodsBuiltIn": "内置",
+  "settingsMethodsRewards": "奖励",
+  "settingsMethodsOnCount": "{active}/{total}",
+  "settingsMethodsBySeller": "由 {seller} 提供",
+  "settingsMethodsDaysLeft": "剩余 {days} 天",
+  "settingsMethodsExpired": "已过期"
 }

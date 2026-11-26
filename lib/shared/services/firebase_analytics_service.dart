@@ -1,9 +1,12 @@
 import 'dart:io';
 
+import 'package:defyx_vpn/shared/services/desktop_analytics.dart';
 import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
 
+/// Usage statistics: the Firebase Analytics SDK on Android, iOS and macOS,
+/// DesktopAnalytics on Windows and Linux, which have no SDK.
 class FirebaseAnalyticsService {
   FirebaseAnalyticsService._internal();
   static final FirebaseAnalyticsService _instance =
@@ -12,109 +15,76 @@ class FirebaseAnalyticsService {
 
   FirebaseAnalytics? _analytics;
 
-  bool get _isDesktopPlatform {
-    return !(Platform.isAndroid || Platform.isIOS);
-  }
+  bool get _usesDesktopAnalytics => Platform.isWindows || Platform.isLinux;
 
   // Null until the user agrees to share usage statistics, so no event is even
   // handed to Firebase before that.
   FirebaseAnalytics? get _analyticsInstance {
-    if (_isDesktopPlatform || !TelemetryConsent.isGranted) return null;
+    if (_usesDesktopAnalytics || !TelemetryConsent.isGranted) return null;
     _analytics ??= FirebaseAnalytics.instance;
     return _analytics;
   }
 
   FirebaseAnalyticsObserver getAnalyticsObserver() {
-    if (_isDesktopPlatform) {
+    if (_usesDesktopAnalytics) {
       throw UnsupportedError(
-          'Firebase Analytics is not supported on desktop platforms');
+          'Firebase Analytics is not supported on Windows and Linux');
     }
     // Collection itself is off until consent, see TelemetryConsent.
     return FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance);
   }
 
-  Future<void> logVpnConnectAttempt(String connectionMethod) async {
-    if (_isDesktopPlatform) return;
+  Future<void> _log(String name, [Map<String, Object>? parameters]) async {
     try {
-      await _analyticsInstance?.logEvent(
-        name: 'vpn_connect_attempt',
-        parameters: {'connection_method': connectionMethod},
-      );
+      if (_usesDesktopAnalytics) {
+        if (TelemetryConsent.isGranted) {
+          await DesktopAnalytics.instance.logEvent(name, parameters);
+        }
+        return;
+      }
+      await _analyticsInstance?.logEvent(name: name, parameters: parameters);
     } catch (e) {
       debugPrint('Analytics error: $e');
     }
   }
+
+  Future<void> logVpnConnectAttempt(String connectionMethod) => _log(
+        'vpn_connect_attempt',
+        {'connection_method': connectionMethod},
+      );
 
   Future<void> logVpnConnected(
-      String connectionMethod, String? server, int durationSeconds) async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(
-        name: 'vpn_connected',
-        parameters: {
-          'connection_method': connectionMethod,
-          'connection_duration_seconds': durationSeconds,
-          if (server != null) 'server': server,
-        },
-      );
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+          String connectionMethod, String? server, int durationSeconds) =>
+      _log('vpn_connected', {
+        'connection_method': connectionMethod,
+        'connection_duration_seconds': durationSeconds,
+        if (server != null) 'server': server,
+      });
 
   Future<void> logVpnConnectionFailed(
-      String connectionMethod, String? server, int durationSeconds) async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(
-        name: 'vpn_connection_failed',
-        parameters: {
-          'connection_method': connectionMethod,
-          'attempt_duration_seconds': durationSeconds,
-          if (server != null) 'server': server,
-        },
-      );
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+          String connectionMethod, String? server, int durationSeconds) =>
+      _log('vpn_connection_failed', {
+        'connection_method': connectionMethod,
+        'attempt_duration_seconds': durationSeconds,
+        if (server != null) 'server': server,
+      });
 
-  Future<void> logVpnDisconnected() async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(name: 'vpn_disconnected');
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+  Future<void> logVpnDisconnected() => _log('vpn_disconnected');
 
-  Future<void> logConnectionMethodChanged(String newMethod) async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(
-        name: 'connection_method_changed',
-        parameters: {'method': newMethod},
-      );
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+  Future<void> logConnectionMethodChanged(String newMethod) =>
+      _log('connection_method_changed', {'method': newMethod});
 
-  Future<void> logServerSelected(String serverName) async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(
-        name: 'server_selected',
-        parameters: {'server': serverName},
-      );
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+  Future<void> logServerSelected(String serverName) =>
+      _log('server_selected', {'server': serverName});
 
   Future<void> setUserId(String? userId) async {
-    if (_isDesktopPlatform) return;
     try {
+      if (_usesDesktopAnalytics) {
+        if (TelemetryConsent.isGranted) {
+          DesktopAnalytics.instance.setUserId(userId);
+        }
+        return;
+      }
       await _analyticsInstance?.setUserId(id: userId);
     } catch (e) {
       debugPrint('Analytics error: $e');
@@ -146,19 +116,19 @@ class FirebaseAnalyticsService {
   }
 
   Future<void> logCoreData(String event, Map<String, String> parameters) async {
-    if (_isDesktopPlatform) return;
     final filtered = filterCoreEvent(event, parameters);
     if (filtered == null) return;
-    try {
-      await _analyticsInstance?.logEvent(name: event, parameters: filtered);
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
+    await _log(event, filtered);
   }
 
   Future<void> setUserProperty(String name, String? value) async {
-    if (_isDesktopPlatform) return;
     try {
+      if (_usesDesktopAnalytics) {
+        if (TelemetryConsent.isGranted) {
+          DesktopAnalytics.instance.setUserProperty(name, value);
+        }
+        return;
+      }
       await _analyticsInstance?.setUserProperty(name: name, value: value);
     } catch (e) {
       debugPrint('Analytics error: $e');
@@ -169,12 +139,6 @@ class FirebaseAnalyticsService {
   Future<void> logEvent({
     required String name,
     Map<String, String>? parameters,
-  }) async {
-    if (_isDesktopPlatform) return;
-    try {
-      await _analyticsInstance?.logEvent(name: name, parameters: parameters);
-    } catch (e) {
-      debugPrint('Analytics error: $e');
-    }
-  }
+  }) =>
+      _log(name, parameters);
 }

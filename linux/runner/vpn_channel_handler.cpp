@@ -703,7 +703,9 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FlValue *args = fl_method_call_get_args(method_call);
             std::string is_test_str = LookupString(args, "isTest");
-            std::string flowLine = defyx_core::GetFlowLine();
+            std::string token = LookupString(args, "token");
+            bool is_test = (is_test_str == "true" || is_test_str == "1");
+            std::string flowLine = defyx_core::GetFlowLine(is_test, token);
             // Keep empty as empty: an empty string here must not be treated as a
             // valid flowline by the Dart side, or it overwrites good cached data.
             FinishWithString(method_call, flowLine);

@@ -26,8 +26,10 @@ build_android() {
         echo -e "${GREEN}✅ AAB built successfully${NC}"
     elif [ "$build_type" == "github" ]; then
         echo -e "${GREEN}Building APKs for GitHub...${NC}"
-        flutter build apk --release
-        flutter build apk --split-per-abi --release
+        # Stop on a failed build: going on hid the error, and CI only failed
+        # later, at attestation, with "Could not find subject".
+        flutter build apk --release || exit 1
+        flutter build apk --split-per-abi --release || exit 1
         
         # Get version for file renaming
         local version=$(grep "^version: " "$PUBSPEC_FILE" | cut -d' ' -f2)
@@ -56,6 +58,10 @@ build_android() {
             echo -e "${GREEN}✅ Renamed to DefyxVPN-$version_name-universal.apk${NC}"
         fi
         
+        if ! compgen -G "$apk_dir/DefyxVPN-$version_name-*.apk" >/dev/null; then
+            echo -e "${RED}❌ No APKs found in $apk_dir${NC}"
+            exit 1
+        fi
         echo -e "${GREEN}✅ APKs built and renamed successfully${NC}"
     else
         echo -e "${RED}❌ Invalid Android build type: $build_type${NC}"

@@ -1099,5 +1099,64 @@
   "website": "Website",
   "@website": {
     "description": "Website support channel label"
+  },
+
+  "settingsMethodsPremium": "PREMIUM",
+  "@settingsMethodsPremium": {
+    "description": "Connection methods section: subscriptions bought from Defyx"
+  },
+
+  "settingsMethodsMarket": "MARKET",
+  "@settingsMethodsMarket": {
+    "description": "Connection methods section: configs bought from other sellers in the marketplace"
+  },
+
+  "settingsMethodsBuiltIn": "BUILT-IN",
+  "@settingsMethodsBuiltIn": {
+    "description": "Connection methods section: the methods every user has"
+  },
+
+  "settingsMethodsRewards": "REWARDS",
+  "@settingsMethodsRewards": {
+    "description": "Connection methods section: free methods with limited time and data (invites, free trial, queue, gifts)"
+  },
+
+  "settingsMethodsOnCount": "{active} of {total}",
+  "@settingsMethodsOnCount": {
+    "description": "Connection methods section header: how many of its methods are switched on, e.g. 2 of 3",
+    "placeholders": {
+      "active": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+
+  "settingsMethodsBySeller": "by {seller}",
+  "@settingsMethodsBySeller": {
+    "description": "Under a market config: who sells it",
+    "placeholders": {
+      "seller": {
+        "type": "String",
+        "example": "NovaNet"
+      }
+    }
+  },
+
+  "settingsMethodsDaysLeft": "{days, plural, =1{1 day left} other{{days} days left}}",
+  "@settingsMethodsDaysLeft": {
+    "description": "Under a paid plan or reward: days until it ends",
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+
+  "settingsMethodsExpired": "Expired",
+  "@settingsMethodsExpired": {
+    "description": "Under a plan or reward that has ended"
   }
 }
