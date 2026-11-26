@@ -1451,6 +1451,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Expired'**
   String get settingsMethodsExpired;
+
+  /// Under a plan: the row for the plan's own config (its subscription), next to its locations and SOS backup
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get settingsMethodsSubscription;
 }
 
 class _AppLocalizationsDelegate

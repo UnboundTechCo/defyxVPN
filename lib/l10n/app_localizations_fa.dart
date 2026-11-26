@@ -728,4 +728,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get settingsMethodsExpired => 'منقضی شده';
+
+  @override
+  String get settingsMethodsSubscription => 'اشتراک';
 }

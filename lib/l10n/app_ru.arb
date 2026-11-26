@@ -225,5 +225,6 @@
   "settingsMethodsOnCount": "{active} из {total}",
   "settingsMethodsBySeller": "от {seller}",
   "settingsMethodsDaysLeft": "{days, plural, one{Остался {days} день} few{Осталось {days} дня} many{Осталось {days} дней} other{Осталось {days} дня}}",
-  "settingsMethodsExpired": "Истёк"
+  "settingsMethodsExpired": "Истёк",
+  "settingsMethodsSubscription": "Подписка"
 }

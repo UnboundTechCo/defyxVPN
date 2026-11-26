@@ -1158,5 +1158,10 @@
   "settingsMethodsExpired": "Expired",
   "@settingsMethodsExpired": {
     "description": "Under a plan or reward that has ended"
+  },
+
+  "settingsMethodsSubscription": "Subscription",
+  "@settingsMethodsSubscription": {
+    "description": "Under a plan: the row for the plan's own config (its subscription), next to its locations and SOS backup"
   }
 }

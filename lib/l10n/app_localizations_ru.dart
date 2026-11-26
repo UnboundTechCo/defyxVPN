@@ -741,4 +741,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get settingsMethodsExpired => 'Истёк';
+
+  @override
+  String get settingsMethodsSubscription => 'Подписка';
 }

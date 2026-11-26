@@ -735,4 +735,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settingsMethodsExpired => 'Expired';
+
+  @override
+  String get settingsMethodsSubscription => 'Subscription';
 }
