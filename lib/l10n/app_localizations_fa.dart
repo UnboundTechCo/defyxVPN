@@ -713,7 +713,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String settingsMethodsOnCount(int active, int total) {
-    return '$active از $total روشن';
+    return '$active از $total';
   }
 
   @override

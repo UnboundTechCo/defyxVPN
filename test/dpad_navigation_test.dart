@@ -509,7 +509,7 @@ void main() {
 
       // The methods sit in their section, open because it's the first one.
       expect(find.text('BUILT-IN'), findsOneWidget);
-      expect(find.text('3 of 3 on'), findsOneWidget);
+      expect(find.text('3 of 3'), findsOneWidget);
 
       if (tv) {
         // Entering from above must land on the list, not skip past it: first

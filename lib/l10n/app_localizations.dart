@@ -1428,10 +1428,10 @@ abstract class AppLocalizations {
   /// **'REWARDS'**
   String get settingsMethodsRewards;
 
-  /// Connection methods section header: how many of its methods are switched on
+  /// Connection methods section header: how many of its methods are switched on, e.g. 2 of 3
   ///
   /// In en, this message translates to:
-  /// **'{active} of {total} on'**
+  /// **'{active} of {total}'**
   String settingsMethodsOnCount(int active, int total);
 
   /// Under a market config: who sells it

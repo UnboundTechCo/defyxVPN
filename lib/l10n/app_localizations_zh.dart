@@ -687,7 +687,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String settingsMethodsOnCount(int active, int total) {
-    return '已开启 $active/$total';
+    return '$active/$total';
   }
 
   @override

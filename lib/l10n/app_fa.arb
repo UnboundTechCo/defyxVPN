@@ -222,7 +222,7 @@
   "settingsMethodsMarket": "فروشگاه",
   "settingsMethodsBuiltIn": "پیش‌فرض",
   "settingsMethodsRewards": "جوایز",
-  "settingsMethodsOnCount": "{active} از {total} روشن",
+  "settingsMethodsOnCount": "{active} از {total}",
   "settingsMethodsBySeller": "از {seller}",
   "settingsMethodsDaysLeft": "{days} روز مانده",
   "settingsMethodsExpired": "منقضی شده"

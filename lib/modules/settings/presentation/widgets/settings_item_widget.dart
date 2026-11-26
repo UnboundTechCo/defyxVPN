@@ -9,8 +9,23 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../../models/method_sections.dart';
 import '../../models/settings_item.dart';
 import '../../../../shared/widgets/defyx_switch.dart';
+
+/// The most characters of a connection method's name a row shows; longer
+/// names end in "...".
+const methodTitleMaxLength = 20;
+
+/// [text] as a method row shows it: upper case, cut to
+/// [methodTitleMaxLength] characters with "...". A cut title is wrapped in a
+/// Unicode isolate so its "..." stays at the end of a Latin name in
+/// right-to-left text.
+String methodTitle(String text) {
+  final upper = text.toUpperCase();
+  final cut = truncateText(upper, methodTitleMaxLength);
+  return cut == upper ? upper : '\u2068$cut\u2069';
+}
 
 /// Key handling for a row being moved with the D-pad: Up/Down move it by one
 /// and OK ends the move. Ignores keys while [isMoving] is false.
@@ -129,6 +144,11 @@ class SettingsItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Badges follow the method's section, not its flags: the backend still
+    // marks free rewards isMarket for older apps.
+    final section = item.section;
+    final isPremium = section == MethodSection.premium;
+    final isMarket = section == MethodSection.market;
     final handleColor = isMoving
         ? TvFocusable.focusRingColor
         : item.isAccessible
@@ -187,14 +207,14 @@ class SettingsItemWidget extends StatelessWidget {
                   Opacity(opacity: item.isAccessible ? 1 : 0.4, child: leading),
                 // The info icons are touch-only; D-pad users see the
                 // description under the list instead.
-                if (item.isPremium && !compact)
+                if (isPremium && !compact)
                   InkWell(
                     canRequestFocus: false,
                     child: AppIcons.premium(height: 18, width: 18),
                     onTap: () =>
                         SettingsToastMessage.show(item.description ?? ""),
                   ),
-                if (item.isMarket && !compact)
+                if (isMarket && !compact)
                   InkWell(
                     canRequestFocus: false,
                     child: AppIcons.market(height: 18, width: 18),
@@ -202,20 +222,10 @@ class SettingsItemWidget extends StatelessWidget {
                         SettingsToastMessage.show(item.description ?? ""),
                   ),
                 Flexible(
-                  fit: item.isPremium && !compact
-                      ? FlexFit.tight
-                      : FlexFit.loose,
+                  fit: isPremium && !compact ? FlexFit.tight : FlexFit.loose,
                   child: Text(
-                    // Rows inside a plan have no icons, so their title (e.g.
-                    // a country's full name) gets the whole width, and a
-                    // second line when it's still too long.
-                    compact
-                        ? (titleOverride ?? item.title).toUpperCase()
-                        : truncateText(
-                            (titleOverride ?? item.title).toUpperCase(),
-                            20,
-                          ),
-                    maxLines: compact ? 2 : 1,
+                    methodTitle(titleOverride ?? item.title),
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       fontSize: 17.sp,
@@ -229,7 +239,7 @@ class SettingsItemWidget extends StatelessWidget {
                 ),
                 if (compact)
                   const SizedBox.shrink()
-                else if (item.isPremium)
+                else if (isPremium)
                   Padding(
                     padding: EdgeInsetsDirectional.only(end: 12.w),
                     child: _buildInfoIcon(

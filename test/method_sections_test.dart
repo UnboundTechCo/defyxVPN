@@ -12,6 +12,7 @@ import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/settings/models/settings_group.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_group_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_item_widget.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
@@ -373,6 +374,8 @@ void main() {
       required FocusNode above,
       List<SettingsItem>? methods,
       List<String> disabledPlans = const [],
+      Map<String, bool> expanded = const {},
+      Locale? locale,
     }) async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
@@ -387,6 +390,7 @@ void main() {
           child: ScreenUtilInit(
             designSize: const Size(393, 852),
             builder: (context, child) => MaterialApp(
+              locale: locale,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               home: Scaffold(
@@ -405,6 +409,7 @@ void main() {
                           items: methods ?? items,
                           isDraggable: true,
                           disabledPlans: disabledPlans,
+                          expanded: expanded,
                         ),
                         onToggle: (groupId, itemId) => toggled.add(itemId),
                         onReorderBlocks: (blocks, from, to) {},
@@ -434,8 +439,8 @@ void main() {
       expect(find.text('MARKET'), findsOneWidget);
       expect(find.text('BUILT-IN'), findsOneWidget);
       expect(find.text('REWARDS'), findsNothing);
-      expect(find.text('3 of 3 on'), findsOneWidget);
-      expect(find.text('1 of 2 on'), findsOneWidget);
+      expect(find.text('3 of 3'), findsOneWidget);
+      expect(find.text('1 of 2'), findsOneWidget);
 
       // The plan shows its locations under its own name, with their flags.
       expect(find.text('GOLD'), findsOneWidget);
@@ -531,6 +536,159 @@ void main() {
       await tester.tap(find.byType(DefyxSwitch).at(1));
       await tester.pumpAndSettle();
       expect(calls.toggled, isEmpty);
+    });
+
+    testWidgets('a user with only the free methods sees them open, even if '
+        'they once closed them', (tester) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        methods: MethodLayout.normalize([_item('Warp'), _item('Psiphon')]),
+        expanded: const {'section:builtIn': false},
+      );
+      expect(find.text('BUILT-IN'), findsOneWidget);
+      expect(find.text('WARP'), findsOneWidget);
+      expect(find.text('PSIPHON'), findsOneWidget);
+    });
+
+    testWidgets('with paid sections above, a closed Built-in stays closed', (
+      tester,
+    ) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        methods: MethodLayout.normalize([
+          _item('Gold', isPremium: true),
+          _item('Warp'),
+        ]),
+        expanded: const {'section:builtIn': false},
+      );
+      expect(find.text('GOLD'), findsOneWidget);
+      expect(find.text('WARP'), findsNothing);
+    });
+
+    testWidgets('long location and plan names end in "..." after 20 '
+        'characters', (tester) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        methods: MethodLayout.normalize(
+          MethodLayout.groupPlansByName([
+            _item(
+              'Platinum Unlimited Pro Frankfurt Am Main Datacenter',
+              isPremium: true,
+            ),
+            _item('Platinum Unlimited Pro SOS', isPremium: true),
+          ]),
+        ),
+      );
+      // Cut titles are wrapped in a Unicode isolate for right-to-left text.
+      expect(find.text('\u2068PLATINUM UNLIMITED P...\u2069'), findsOneWidget);
+      expect(find.text('\u2068FRANKFURT AM MAIN DA...\u2069'), findsOneWidget);
+    });
+
+    testWidgets('in Persian, rows run right to left: handle, flag and name '
+        'on the right, switch on the left', (tester) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        locale: const Locale('fa'),
+        methods: MethodLayout.normalize(
+          MethodLayout.groupPlansByName([
+            _item('Gold DE', isPremium: true),
+            _item('Gold SOS', isPremium: true),
+          ]),
+        ),
+      );
+
+      final name = tester.getCenter(find.text('آلمان'));
+      final flag = tester.getCenter(
+        find.byWidgetPredicate(
+          (widget) =>
+              widget is SvgPicture &&
+              widget.bytesLoader is SvgAssetLoader &&
+              (widget.bytesLoader as SvgAssetLoader).assetName ==
+                  'assets/flags/de.svg',
+        ),
+      );
+      final row = find.ancestor(
+        of: find.text('آلمان'),
+        matching: find.byType(SettingsItemWidget),
+      );
+      final handle = tester.getCenter(
+        find.descendant(
+          of: row,
+          matching: find.byType(ReorderableDragStartListener),
+        ),
+      );
+      final toggle = tester.getCenter(
+        find.descendant(of: row, matching: find.byType(DefyxSwitch)),
+      );
+      expect(handle.dx, greaterThan(flag.dx));
+      expect(flag.dx, greaterThan(name.dx));
+      expect(name.dx, greaterThan(toggle.dx));
+
+      // The section header too: title on the right, count and chevron left.
+      expect(
+        tester.getCenter(find.text('پریمیوم')).dx,
+        greaterThan(tester.getCenter(find.text('2 از 2')).dx),
+      );
+    });
+
+    testWidgets('badges follow the section: a reward the backend marks '
+        'isMarket gets none', (tester) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        methods: MethodLayout.normalize([
+          const SettingsItem(
+            id: 'Fast',
+            title: 'Fast',
+            isEnabled: true,
+            isAccessible: true,
+            isMarket: true,
+            kind: 'market',
+          ),
+          const SettingsItem(
+            id: 'Welcome',
+            title: 'Welcome',
+            isEnabled: true,
+            isAccessible: true,
+            isMarket: true,
+            kind: 'free_trial',
+          ),
+        ]),
+        expanded: const {'section:rewards': true},
+      );
+      Finder badge(String path) => find.byWidgetPredicate(
+        (widget) =>
+            widget is SvgPicture &&
+            widget.bytesLoader is SvgAssetLoader &&
+            (widget.bytesLoader as SvgAssetLoader).assetName == path,
+      );
+      expect(find.text('WELCOME'), findsOneWidget);
+      // Only the market config has the market badge.
+      expect(badge('assets/icons/market.svg'), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.ancestor(
+            of: find.text('WELCOME'),
+            matching: find.byType(SettingsItemWidget),
+          ),
+          matching: badge('assets/icons/market.svg'),
+        ),
+        findsNothing,
+      );
     });
 
     testWidgets('TV: OK opens and closes; Right reaches the plan switch', (

@@ -718,7 +718,7 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String settingsMethodsOnCount(int active, int total) {
-    return 'Вкл. $active из $total';
+    return '$active из $total';
   }
 
   @override
