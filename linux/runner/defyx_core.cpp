@@ -27,7 +27,7 @@ typedef void (*dx_set_tunnel_dns_fn)(const char*);
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
-typedef char* (*dx_get_flowline_fn)(int);
+typedef char* (*dx_get_flowline_fn)(int, const char*);
 typedef char* (*dx_get_cached_flowline_fn)();
 typedef char* (*dx_decode_verify_flowline_fn)(const char*);
 typedef char* (*dx_get_vpn_status_fn)();
@@ -450,12 +450,12 @@ void SetTimeZone(float tz) {
   (void)tz;
 }
 
-std::string GetFlowLine(bool isTest) {
+std::string GetFlowLine(bool isTest, const std::string& token) {
   try {
     defyx_core::LogMessage("GetFlowLine called isTest=" + std::to_string(isTest));
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_flowline) {
-      char* line = g_get_flowline(isTest ? 1 : 0);
+      char* line = g_get_flowline(isTest ? 1 : 0,token.c_str());
       std::string result;
       if (line && line[0] != '\0') {
         result = std::string(line);

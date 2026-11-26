@@ -319,9 +319,10 @@ void HandleMethodCall(FlMethodChannel* channel,
     } else if (strcmp(method, "getFlowLine") == 0) {
       FlValue* args = fl_method_call_get_args(method_call);
       std::string is_test_str = LookupString(args, "isTest");
+      std::string token = LookupString(args, "token");
       bool is_test = (is_test_str == "true" || is_test_str == "1");
 
-      std::string flowLine = defyx_core::GetFlowLine(is_test);
+      std::string flowLine = defyx_core::GetFlowLine(is_test, token);
       if (flowLine.empty()) {
         flowLine = "{}";
       }
