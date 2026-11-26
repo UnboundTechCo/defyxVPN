@@ -699,4 +699,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get website => 'Website';
+
+  @override
+  String get settingsMethodsPremium => 'PREMIUM';
+
+  @override
+  String get settingsMethodsMarket => 'MARKET';
+
+  @override
+  String get settingsMethodsBuiltIn => 'BUILT-IN';
+
+  @override
+  String get settingsMethodsRewards => 'REWARDS';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '$active of $total on';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return 'by $seller';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsMethodsExpired => 'Expired';
 }

@@ -3,6 +3,7 @@
 
 import 'package:defyx_vpn/app/router/dpad_shell_page.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/modules/settings/models/method_sections.dart';
 import 'package:defyx_vpn/modules/settings/models/settings_group.dart';
 import 'package:defyx_vpn/modules/settings/models/settings_item.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_group_widget.dart';
@@ -426,18 +427,6 @@ void main() {
       description: 'About $name',
     );
 
-    List<SettingsItem> reorder(List<SettingsItem> items, int from, int to) {
-      final sorted = [...items]
-        ..sort((a, b) => (a.sortOrder ?? 0).compareTo(b.sortOrder ?? 0));
-      if (to > from) to -= 1;
-      final moved = sorted.removeAt(from);
-      sorted.insert(to, moved);
-      return [
-        for (var i = 0; i < sorted.length; i++)
-          sorted[i].copyWith(sortOrder: i),
-      ];
-    }
-
     /// Runs the connection-method list the way the Settings page shows it:
     /// inside the page's scroll view, with other controls above and below.
     Future<void> exerciseConnectionMethods(
@@ -487,9 +476,16 @@ void main() {
                             isDraggable: true,
                           ),
                           onToggle: (groupId, itemId) => toggled.add(itemId),
-                          onReorder: (from, to) {
+                          onReorderBlocks: (blocks, from, to) {
                             reorders.add((from, to));
-                            setState(() => items = reorder(items, from, to));
+                            setState(
+                              () => items = MethodLayout.reorderBlocks(
+                                items,
+                                blocks,
+                                from,
+                                to,
+                              ),
+                            );
                           },
                         ),
                       ),
@@ -511,10 +507,18 @@ void main() {
       FocusNode rowFocus(String title) =>
           Focus.of(tester.element(find.text(title)));
 
+      // The methods sit in their section, open because it's the first one.
+      expect(find.text('BUILT-IN'), findsOneWidget);
+      expect(find.text('3 of 3 on'), findsOneWidget);
+
       if (tv) {
-        // Entering from above must land on the list, not skip past it.
+        // Entering from above must land on the list, not skip past it: first
+        // the section header, then its first method.
         above.requestFocus();
         await tester.pumpAndSettle();
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+        expect(rowFocus('BUILT-IN').hasPrimaryFocus, isTrue);
         await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
         await tester.pumpAndSettle();
         expect(rowFocus('ALPHA').hasPrimaryFocus, isTrue);
@@ -540,7 +544,7 @@ void main() {
       // Down moves it below BRAVO; focus stays on the moved row.
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
-      expect(reorders, [(0, 2)]);
+      expect(reorders, [(0, 1)]);
       expect(
         tester.getTopLeft(find.text('BRAVO')).dy,
         lessThan(tester.getTopLeft(find.text('ALPHA')).dy),
@@ -556,7 +560,7 @@ void main() {
       // Down navigates again instead of moving.
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
-      expect(reorders, [(0, 2)]);
+      expect(reorders, [(0, 1)]);
       expect(rowFocus('CHARLIE').hasPrimaryFocus, isTrue);
 
       if (tv) {
