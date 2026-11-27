@@ -15,7 +15,7 @@ build_ios() {
     flutter pub get
 
     # CI signs manually and points this at the export options it wrote
-    # (.github/actions/ios-signing). Without it, Xcode exports with the
+    # (.github/actions/apple-signing). Without it, Xcode exports with the
     # project's automatic signing, as on a developer's Mac.
     local export_options=()
     if [ -n "${IOS_EXPORT_OPTIONS_PLIST:-}" ]; then

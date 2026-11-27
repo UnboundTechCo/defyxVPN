@@ -39,5 +39,8 @@
 		<false />
 		<key>FirebaseCrashlyticsCollectionEnabled</key>
 		<false />
+		<!-- Export compliance: see ios/Runner/Info.plist. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false />
 	</dict>
 </plist>

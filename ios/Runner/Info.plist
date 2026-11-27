@@ -120,5 +120,11 @@
 	<false/>
 	<key>FirebaseCrashlyticsCollectionEnabled</key>
 	<false/>
+	<!-- Export compliance, the owner's declaration (2026-11-27): no encryption
+	     documentation needed, so App Store Connect stops asking per build. The
+	     tunnel uses standard algorithms; Apple wants a French encryption
+	     declaration for that only if the app is on the App Store in France. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 </dict>
 </plist>
