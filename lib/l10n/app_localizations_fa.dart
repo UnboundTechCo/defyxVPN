@@ -280,7 +280,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get splitTunnelInvalidGeoip =>
-      'کد کشور، آدرس IP یا محدوده CIDR وارد کنید، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
+      'کد کشور، آدرس IP یا محدوده CIDR وارد کن، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'مسیر رو بنویس، یا انتخاب کن ...';
@@ -377,67 +377,67 @@ class AppLocalizationsFa extends AppLocalizations {
   String get emailHint => 'example@domain.com';
 
   @override
-  String get emailValidation => 'لطفاً ایمیل خود را وارد کنید';
+  String get emailValidation => 'لطفاً ایمیلت رو وارد کن';
 
   @override
   String get password => 'رمز عبور';
 
   @override
-  String get passwordHint => 'رمز عبور خود را وارد کنید';
+  String get passwordHint => 'رمز عبورت رو وارد کن';
 
   @override
-  String get passwordValidation => 'لطفاً رمز عبور خود را وارد کنید';
+  String get passwordValidation => 'لطفاً رمز عبورت رو وارد کن';
 
   @override
-  String get passwordMinLength => 'رمز عبور باید حداقل ۶ کاراکتر باشد';
+  String get passwordMinLength => 'رمز عبور باید حداقل ۶ کاراکتر باشه';
 
   @override
   String get login => 'ورود';
 
   @override
-  String get noAccount => 'حساب کاربری ندارید؟';
+  String get noAccount => 'حساب کاربری نداری؟';
 
   @override
   String get signUp => 'ثبت‌نام';
 
   @override
   String get loginFailed =>
-      'ورود ناموفق بود. لطفاً اطلاعات ورود خود را بررسی کنید و دوباره تلاش کنید.';
+      'ورود ناموفق بود. لطفاً اطلاعات ورودت رو بررسی کن و دوباره تلاش کن.';
 
   @override
-  String get loginSuccess => 'با موفقیت وارد شدید!';
+  String get loginSuccess => 'با موفقیت وارد شدی!';
 
   @override
   String get code => 'کد';
 
   @override
-  String get codeHint => 'کد دسترسی خود را وارد کنید';
+  String get codeHint => 'کد دسترسی خودت رو وارد کن';
 
   @override
-  String get codeValidation => 'لطفاً کد خود را وارد کنید';
+  String get codeValidation => 'لطفاً کدت رو وارد کن';
 
   @override
   String get premiumLoginByCodeDescription =>
-      'برای دسترسی به اشتراک‌های پریمیوم خود، کد دسترسی‌ای را که دریافت کرده‌اید وارد کنید.';
+      'برای دسترسی به اشتراک‌های پریمیوم خودت، کد دسترسی‌ای رو که گرفتی وارد کن.';
 
   @override
-  String get havingTrouble => 'مشکل دارید؟';
+  String get havingTrouble => 'مشکل داری؟';
 
   @override
-  String get signedInAs => 'ایمیلی که با آن وارد شده‌اید:';
+  String get signedInAs => 'ایمیلی که با اون وارد شدی:';
 
   @override
   String get premiumImportDescription =>
-      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیوم شما بارگیری نمی‌شود و با روش‌های موجود هم نمی‌توانید متصل شوید، می‌توانید فایلی را که از مارکت‌پلیس گرفته‌اید در برنامه وارد کنید.';
+      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیومت بارگیری نمیشن و با روش‌های موجود هم نمی‌تونی وصل بشی، می‌تونی فایلی رو که از مارکت‌پلیس گرفتی توی برنامه وارد کنی.';
 
   @override
-  String get planningToExit => 'قصد خروج دارید؟';
+  String get planningToExit => 'قصد خروج داری؟';
 
   @override
   String get signOut => 'خروج از حساب';
 
   @override
-  String get signOutSuccess => 'با موفقیت از حساب خارج شدید!';
+  String get signOutSuccess => 'با موفقیت از حسابت خارج شدی!';
 
   @override
   String get cancel => 'انصراف';
@@ -447,7 +447,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get deleteAccountConfirmation =>
-      'این کار حساب شما را برای همیشه حذف می‌کند و قابل بازگشت نیست. ادامه می‌دهید؟';
+      'این کار حسابت رو برای همیشه حذف می‌کنه و قابل بازگشت نیست. ادامه میدی؟';
 
   @override
   String get deleteAccountSuccess => 'حساب کاربری با موفقیت حذف شد.';
@@ -479,14 +479,14 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get connectionRequiredDescription =>
-      'برای اینکه ورود یا ثبت‌نام به‌صورت امن انجام شود، ابتدا باید با یکی از متدهای اتصال موجود متصل شوید.';
+      'برای اینکه ورود یا ثبت‌نام به‌صورت امن انجام بشه، اول باید با یکی از متدهای اتصال موجود وصل بشی.';
 
   @override
   String get speedTestFailed => 'تست سرعت ناموفق بود؛ لطفاً دوباره تلاش کن.';
 
   @override
   String get speedTestConnectionUnstable =>
-      'اتصال شما کند یا ناپایدار به نظر می‌رسه.';
+      'اتصالت کند یا ناپایدار به نظر می‌رسه.';
 
   @override
   String get tvHoldOkToReorder => 'برای جابه‌جایی، دکمه OK رو نگه‌دار';
@@ -499,7 +499,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String privateDnsMessage(String host) {
-    return 'گوشی شما درخواست‌های DNS رو به $host می‌فرسته. اگر هنگام اتصال سایت‌ها باز نمیشن، در تنظیمات شبکه، DNS خصوصی رو روی «خودکار» یا «خاموش» بذار.';
+    return 'گوشیت درخواست‌های DNS رو به $host می‌فرسته. اگر هنگام اتصال سایت‌ها باز نمیشن، در تنظیمات شبکه، DNS خصوصی رو روی «خودکار» یا «خاموش» بذار.';
   }
 
   @override
@@ -548,7 +548,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get jumpDisconnectMessage =>
-      'با تغییر سرور، VPN شما قطع میشه. ادامه میدی؟';
+      'با تغییر سرور، VPN قطع میشه. ادامه میدی؟';
 
   @override
   String get jumpDisconnectConfirm => 'بله، سرور رو تغییر بده';
@@ -561,31 +561,31 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get privacyNoticeConnection =>
-      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت می‌شود و ارائه‌دهنده اینترنت شما از روی نشانی IP شناسایی می‌شود؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مانند freeipapi.com و ip.sb انجام می‌شود. هنگام ورود به حساب پریمیوم، اطلاعات حساب شما ارسال می‌شود.';
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت میشه و ارائه‌دهنده اینترنتت از روی نشانی IP شناسایی میشه؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مثل freeipapi.com و ip.sb انجام میشه. هنگام ورود به حساب پریمیوم، اطلاعات حسابت ارسال میشه.';
 
   @override
   String get privacyNoticeTelemetry =>
-      'فقط اگر در پایین اجازه دهید: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال می‌شود. این داده‌ها شامل نام ارائه‌دهنده اینترنت شما، متد اتصال و کشور خروجی VPN است.';
+      'فقط اگر پایین اجازه بدی: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال میشه. این داده‌ها اسم ارائه‌دهنده اینترنتت، متد اتصال و کشور خروجی VPN رو هم داره.';
 
   @override
   String get privacyNoticeAds =>
-      'تبلیغات از Google AdMob نمایش داده می‌شود که ممکن است برای شخصی‌سازی آن‌ها از شما رضایت بخواهد.';
+      'تبلیغات از Google AdMob نمایش داده میشه که ممکنه برای شخصی‌سازیشون ازت رضایت بخواد.';
 
   @override
   String get privacyNoticeSpeedTest =>
-      'هنگام اجرای تست سرعت، نتایج آن به Cloudflare ارسال می‌شود.';
+      'هنگام اجرای تست سرعت، نتایجش به کلودفلر ارسال میشه.';
 
   @override
   String get privacyNoticeOwnTraffic =>
-      'هنگام اتصال VPN، برنامه اتصال‌های خودش را هم از طریق آن می‌فرستد، به جز اتصال‌هایی که خود VPN را برقرار می‌کنند.';
+      'هنگام اتصال VPN، برنامه اتصال‌های خودش رو هم از طریق اون می‌فرسته، به جز اتصال‌هایی که خود VPN رو برقرار می‌کنن.';
 
   @override
   String get privacyNoticeLocal =>
-      'نام ارائه‌دهنده اینترنت شما همچنین روی همین دستگاه نگه داشته می‌شود تا اتصال‌های بعدی سریع‌تر برقرار شوند.';
+      'نام ارائه‌دهنده اینترنتت روی همین دستگاه نگه داشته میشه، تا اتصال‌های بعدی سریع‌تر برقرار بشن.';
 
   @override
   String get privacyNoticeChangeLater =>
-      'هر زمان می‌توانید این انتخاب را در ترجیحات، بخش «عیب‌یابی و آزمایش‌ها»، تغییر دهید.';
+      'هر وقت خواستی می‌تونی این انتخاب رو توی ترجیحات، بخش «عیب‌یابی و آزمایش‌ها»، عوض کنی.';
 
   @override
   String get privacyNoticeVpnProfile =>
