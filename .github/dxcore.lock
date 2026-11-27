@@ -1,9 +1,9 @@
 # The DXcore release every build uses, and the SHA-256 of each asset.
 # CI refuses an asset whose hash differs. Change it with the Update DXcore
 # lock workflow or scripts/update_dxcore_lock.sh, never by hand.
-tag=r6.4.1
-DXcore-android.zip=52a6c2973777ace2505e669466958c5492e5122dba7cba921e361ed47d1613f4
-DXcore-ios.zip=ab9765ca03129eec5564e33f95f89ce9546288e8aa077433287265f994852f52
-DXcore-linux.zip=efd95d31daedc5935d695e8c99575ada94ffc7d4a909e8b1bc4889deb2d37c02
-DXcore-windows.zip=bd3eac0fd0f16e1467b20c053dbb47f704aec64994e59d7e89bf9cddab0b64d5
-DXcore-macos.zip=ac1ff619a11277fd6b05fcb21c1a556abeb1723c552cb9a847035e23b6ee34fc
+tag=r6.4.2
+DXcore-android.zip=cd2c599ed192df1c248107f4418ff41de12057177b86b4675ef7c19fcf368b6e
+DXcore-ios.zip=c5b7acd87420c308658cb7cc105bb1ce0c7eb8691143e9dc9ee0515102f7eb71
+DXcore-linux.zip=1e87688238de6b6c6fdcb5be1f4f772caed7300b232ef92dd68e74a35b1debc3
+DXcore-windows.zip=dd9842a8e6d2cd21b324916367467070e043109f5bedf68e9dcdf59edf256c9f
+DXcore-macos.zip=ae1f360ad1eb37e24ceb2249fbbfbe63f7016df83685cb338b16dbd30034f5a8
