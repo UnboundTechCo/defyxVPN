@@ -14,7 +14,6 @@ import '../../models/country_names.dart';
 import '../../models/method_sections.dart';
 import '../../models/settings_group.dart';
 import '../../models/settings_item.dart';
-import 'marketplace_info_sheet.dart';
 import 'method_section_widgets.dart';
 import 'settings_item_widget.dart';
 import 'settings_toast_message.dart';
@@ -423,9 +422,9 @@ class _SettingsGroupWidgetState extends ConsumerState<SettingsGroupWidget>
           caption: _caption(first, now, l10n),
           isPremium: first.section == MethodSection.premium,
           isMarket: first.section == MethodSection.market,
-          onInfo: first.section == MethodSection.premium
-              ? () => MarketplaceInfoSheet.show(context, first)
-              : description != null && description.isNotEmpty
+          // Usage and server jump are per location, on the rows under the
+          // plan; the plan's own icon tells what the plan is.
+          onInfo: description != null && description.isNotEmpty
               ? () => SettingsToastMessage.show(description)
               : null,
           isOn: isOn,
