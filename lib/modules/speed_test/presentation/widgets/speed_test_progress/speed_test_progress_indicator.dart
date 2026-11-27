@@ -1,5 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -39,75 +41,51 @@ class SpeedTestProgressIndicator extends StatefulWidget {
   });
 
   @override
-  State<SpeedTestProgressIndicator> createState() => _SpeedTestProgressIndicatorState();
+  State<SpeedTestProgressIndicator> createState() =>
+      _SpeedTestProgressIndicatorState();
 }
 
 class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
     with TickerProviderStateMixin {
   final AnimationService _animationService = AnimationService();
-  late AnimationController _uploadAnimationController;
-  late AnimationController _downloadAnimationController;
-  late Animation<double> _uploadProgressAnimation;
-  late Animation<double> _downloadProgressAnimation;
-  late AnimationController _gridAnimationController;
-  late Animation<double> _gridAnimation;
+
+  // The controllers' values are the arc fills (0..1).
+  late final AnimationController _uploadArc;
+  late final AnimationController _downloadArc;
+  late final AnimationController _gridAnimationController;
+  late final Animation<double> _gridAnimation;
   double _uploadProgress = 0.0;
   double _downloadProgress = 0.0;
 
   @override
   void initState() {
     super.initState();
-    _initializeAnimations();
-  }
-
-  void _initializeAnimations() {
-    _uploadAnimationController = AnimationController(
-      vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
-    );
-    _uploadProgressAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _uploadAnimationController,
-      curve: Curves.easeInOut,
-    ));
-
-    _downloadAnimationController = AnimationController(
-      vsync: this,
-      duration: _animationService.adjustDuration(const Duration(milliseconds: 300)),
-    );
-    _downloadProgressAnimation = Tween<double>(
-      begin: 0.0,
-      end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _downloadAnimationController,
-      curve: Curves.easeInOut,
-    ));
+    _uploadArc = AnimationController(vsync: this);
+    _downloadArc = AnimationController(vsync: this);
 
     _gridAnimationController = AnimationController(
       vsync: this,
       duration: _animationService.adjustDuration(const Duration(seconds: 3)),
     );
     _animationService.conditionalRepeat(_gridAnimationController);
-
     _gridAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(_gridAnimationController);
 
-    _updateStepProgress();
+    _updateArcs();
   }
 
   @override
   void didUpdateWidget(SpeedTestProgressIndicator oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.progress != widget.progress || oldWidget.currentStep != widget.currentStep) {
-      _updateStepProgress();
+    if (oldWidget.progress != widget.progress ||
+        oldWidget.currentStep != widget.currentStep) {
+      _updateArcs();
     }
   }
 
-  void _updateStepProgress() {
+  void _updateArcs() {
     if (widget.currentStep == SpeedTestStep.upload) {
       _uploadProgress = widget.progress;
       _downloadProgress = 0.0;
@@ -119,111 +97,96 @@ class _SpeedTestProgressIndicatorState extends State<SpeedTestProgressIndicator>
       _downloadProgress = widget.progress;
     }
 
-    _updateUploadAnimation();
-    _updateDownloadAnimation();
+    _animateArc(_uploadArc, _uploadProgress);
+    _animateArc(_downloadArc, _downloadProgress);
   }
 
-  void _updateUploadAnimation() {
-    final currentValue = _uploadProgressAnimation.value;
-    final isDecreasing = _uploadProgress < currentValue;
-
-    final duration =
-        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
-
-    _uploadAnimationController.duration = _animationService.adjustDuration(duration);
-
-    _uploadProgressAnimation = Tween<double>(
-      begin: currentValue,
-      end: _uploadProgress,
-    ).animate(CurvedAnimation(
-      parent: _uploadAnimationController,
-      curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
-    ));
-    _animationService.conditionalForward(_uploadAnimationController, from: 0.0);
-  }
-
-  void _updateDownloadAnimation() {
-    final currentValue = _downloadProgressAnimation.value;
-    final isDecreasing = _downloadProgress < currentValue;
-
-    final duration =
-        isDecreasing ? const Duration(milliseconds: 1200) : const Duration(milliseconds: 400);
-
-    _downloadAnimationController.duration = _animationService.adjustDuration(duration);
-
-    _downloadProgressAnimation = Tween<double>(
-      begin: currentValue,
-      end: _downloadProgress,
-    ).animate(CurvedAnimation(
-      parent: _downloadAnimationController,
-      curve: isDecreasing ? Curves.easeOutCubic : Curves.easeInOut,
-    ));
-    _animationService.conditionalForward(_downloadAnimationController, from: 0.0);
+  /// Glides the arc from wherever it is to [target]. A new value arriving
+  /// mid-animation continues the movement instead of restarting it.
+  void _animateArc(AnimationController arc, double target) {
+    if ((arc.value - target).abs() < 0.001) return;
+    if (!_animationService.shouldAnimate()) {
+      arc.value = target;
+      return;
+    }
+    final falling = target < arc.value;
+    arc.animateTo(
+      target,
+      duration: Duration(milliseconds: falling ? 600 : 400),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   @override
   void dispose() {
-    _uploadAnimationController.dispose();
-    _downloadAnimationController.dispose();
+    _uploadArc.dispose();
+    _downloadArc.dispose();
     _gridAnimationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: Listenable.merge([_uploadProgressAnimation, _downloadProgressAnimation]),
-      builder: (context, child) {
-        return SizedBox(
-          width: 350.w,
-          height: 435.h,
-          child: Stack(
-            alignment: Alignment.topCenter,
-            children: [
-              Positioned(
-                top: 0.h,
-                bottom: 100.h,
-                left: 0.w,
-                right: 0.w,
-                child: InkWell(
-                  onTap: widget.onStop,
-                  child: ProgressArcStack(
-                    uploadProgress: _uploadProgress,
-                    downloadProgress: _downloadProgress,
-                    color: widget.color,
-                    uploadProgressAnimation: _uploadProgressAnimation,
-                    downloadProgressAnimation: _downloadProgressAnimation,
-                    gridAnimation: _gridAnimation,
-                    showLoadingIndicator: widget.showLoadingIndicator,
-                    showButton: widget.showButton,
-                    button: widget.button,
-                    currentStep: widget.currentStep,
-                    centerContent: _buildCenterContent(),
-                  ),
+    // The arc painters repaint from the controllers on their own, so the
+    // rest of this tree only rebuilds when the widget changes.
+    return SizedBox(
+      width: 350.w,
+      height: 435.h,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          Positioned(
+            top: 0.h,
+            bottom: 100.h,
+            left: 0.w,
+            right: 0.w,
+            child: TvFocusRing(
+              // Only while a test runs; before that the start button
+              // inside this area is the focus target and has its own ring.
+              enabled: widget.onStop != null,
+              borderRadius: BorderRadius.circular(24.r),
+              fillWhenFocused: false,
+              child: InkWell(
+                onTap: widget.onStop,
+                // While a test runs, OK on the remote stops it.
+                autofocus: TvSupport.isTv && widget.onStop != null,
+                child: ProgressArcStack(
+                  uploadProgress: _uploadProgress,
+                  downloadProgress: _downloadProgress,
+                  color: widget.color,
+                  uploadProgressAnimation: _uploadArc,
+                  downloadProgressAnimation: _downloadArc,
+                  gridAnimation: _gridAnimation,
+                  showLoadingIndicator: widget.showLoadingIndicator,
+                  showButton: widget.showButton,
+                  button: widget.button,
+                  currentStep: widget.currentStep,
+                  centerContent: _buildCenterContent(),
                 ),
               ),
-              if (widget.result != null &&
-                  (widget.currentStep != SpeedTestStep.ready && widget.result!.ping > 0))
-                Positioned(
-                  bottom: 10.h,
-                  left: 0.w,
-                  right: 0.w,
-                  child: SpeedTestMetricsDisplay(
-                    downloadSpeed: widget.result!.downloadSpeed,
-                    uploadSpeed: widget.result!.uploadSpeed,
-                    ping: widget.result!.ping,
-                    latency: widget.result!.latency,
-                    packetLoss: widget.result!.packetLoss,
-                    jitter: widget.result!.jitter,
-                    showDownload: true,
-                    showUpload: true,
-                    connectionStatus: widget.connectionStatus,
-                  ),
-                ),
-            ],
+            ),
           ),
-        );
-      },
+          if (widget.result != null &&
+              (widget.currentStep != SpeedTestStep.ready &&
+                  widget.result!.ping > 0))
+            Positioned(
+              bottom: 10.h,
+              left: 0.w,
+              right: 0.w,
+              child: SpeedTestMetricsDisplay(
+                downloadSpeed: widget.result!.downloadSpeed,
+                uploadSpeed: widget.result!.uploadSpeed,
+                ping: widget.result!.ping,
+                latency: widget.result!.latency,
+                packetLoss: widget.result!.packetLoss,
+                jitter: widget.result!.jitter,
+                showDownload: true,
+                showUpload: true,
+                connectionStatus: widget.connectionStatus,
+              ),
+            ),
+        ],
+      ),
     );
   }
 

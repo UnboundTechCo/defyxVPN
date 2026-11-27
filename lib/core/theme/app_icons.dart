@@ -29,6 +29,7 @@ class AppIcons {
   static const String linkedinPath = 'assets/icons/linkedin.svg';
   static const String websitePath = 'assets/icons/website.svg';
   static const String telegramBotPath = 'assets/icons/telegram_bot.svg';
+  static const String youtubePath = 'assets/icons/youtube.svg';
 
   static const String importConfigPath = 'assets/icons/Icon_Import_API.svg';
   static const String vpnCloudPath = 'assets/icons/vpn_cloud.svg';
@@ -42,6 +43,8 @@ class AppIcons {
   static const String applePath = 'assets/icons/apple.svg';
   static const String crownPath = 'assets/icons/crown.svg';
   static const String supportPath = 'assets/icons/support.svg';
+  static const String premiumVerifiedPath = 'assets/icons/premium_verified.svg';
+  static const String jumpPath = 'assets/icons/jump.svg';
 
   static SvgPicture logo({double? width, double? height}) {
     return SvgPicture.asset(logoPath, width: width, height: height);
@@ -157,6 +160,10 @@ class AppIcons {
     return SvgPicture.asset(telegramBotPath, width: width, height: height);
   }
 
+  static SvgPicture youtube({double? width, double? height}) {
+    return SvgPicture.asset(youtubePath, width: width, height: height);
+  }
+
   static SvgPicture importConfig({double? width, double? height}) {
     return SvgPicture.asset(importConfigPath, width: width, height: height);
   }
@@ -180,6 +187,14 @@ class AppIcons {
 
   static SvgPicture premium({double? width, double? height}) {
     return SvgPicture.asset(premiumPath, width: width, height: height);
+  }
+
+  static SvgPicture premiumVerified({double? width, double? height}) {
+    return SvgPicture.asset(premiumVerifiedPath, width: width, height: height);
+  }
+
+  static SvgPicture jump({double? width, double? height}) {
+    return SvgPicture.asset(jumpPath, width: width, height: height);
   }
 
   static SvgPicture market({double? width, double? height}) {

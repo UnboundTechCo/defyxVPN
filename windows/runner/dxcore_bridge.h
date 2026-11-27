@@ -27,6 +27,10 @@ class DXCoreBridge {
   void SetSplitTunnel(const std::string& mode, const std::string& rules,
                       const std::string& apps);
   void StopTunnel();
+  // Resolver of the connected step, for the tunnel process; empty when the
+  // DLL is too old to say.
+  std::string GetTunnelDNS();
+  void SetTunnelDNS(const std::string& address);
   void SetAsnName();
   int SetTimeZone(float tz);
   std::string GetFlowLine(bool is_test, const std::string& token);
@@ -58,6 +62,8 @@ class DXCoreBridge {
   using WinStartTunnel_t = int (*)();
   using WinSetSplitTunnel_t = void (*)(const char*, const char*, const char*);
   using WinStopTunnel_t = void (*)();
+  using WinGetTunnelDNS_t = const char* (*)();
+  using WinSetTunnelDNS_t = void (*)(const char*);
   using WinSetAsnName_t = void (*)();
   using WinSetTimeZone_t = int (*)(float);
   using WinGetFlowLine_t = const char* (*)(int, const char*);
@@ -82,6 +88,8 @@ class DXCoreBridge {
   WinStartTunnel_t pStartTunnel_ = nullptr;
   WinSetSplitTunnel_t pSetSplitTunnel_ = nullptr;
   WinStopTunnel_t pStopTunnel_ = nullptr;
+  WinGetTunnelDNS_t pGetTunnelDNS_ = nullptr;
+  WinSetTunnelDNS_t pSetTunnelDNS_ = nullptr;
   WinSetAsnName_t pSetAsnName_ = nullptr;
   WinSetTimeZone_t pSetTimeZone_ = nullptr;
   WinGetFlowLine_t pGetFlowLine_ = nullptr;

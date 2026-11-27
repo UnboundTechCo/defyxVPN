@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'app_colors.dart';
@@ -5,6 +6,31 @@ import 'app_colors.dart';
 class AppTheme {
   static const String _latinFontFamily = 'Lato';
   static const String _farsiFontFamily = 'Vazir';
+
+  // On Android TV the focus indicator must be easy to see from the couch.
+  // Material's default focus overlay (12% black) is invisible on the app's
+  // dark screens, so TV builds use a gold highlight instead.
+  static const Color _tvFocusRingColor = Color(0xFFFFD700);
+  static const Color _tvFocusFillColor = Color(0x59FFD700);
+
+  static Color? get _focusColor => TvSupport.isTv ? _tvFocusFillColor : null;
+
+  /// A 2px gold border while a button is focused on TV. Returns null off TV
+  /// so the button styles stay unchanged there.
+  static WidgetStateProperty<BorderSide?>? _tvFocusSide([
+    BorderSide? unfocused,
+  ]) {
+    if (!TvSupport.isTv) return null;
+    return WidgetStateProperty.resolveWith(
+      (states) => states.contains(WidgetState.focused)
+          ? const BorderSide(color: _tvFocusRingColor, width: 2)
+          : unfocused,
+    );
+  }
+
+  static IconButtonThemeData get _iconButtonTheme => IconButtonThemeData(
+    style: TvSupport.isTv ? ButtonStyle(side: _tvFocusSide()) : null,
+  );
 
   static String _fontFamily = _latinFontFamily;
 
@@ -35,6 +61,7 @@ class AppTheme {
         error: Colors.red,
       ),
       scaffoldBackgroundColor: Colors.white,
+      focusColor: _focusColor,
       textTheme: _buildTextTheme(Colors.black87),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -48,6 +75,7 @@ class AppTheme {
           color: Colors.white,
         ),
       ),
+      iconButtonTheme: _iconButtonTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -62,7 +90,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-        ),
+        ).copyWith(side: _tvFocusSide()),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -73,7 +101,7 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             letterSpacing: 0.1,
           ),
-        ),
+        ).copyWith(side: _tvFocusSide()),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -89,6 +117,8 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        ).copyWith(
+          side: _tvFocusSide(BorderSide(color: AppColors.primary, width: 1.5)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -153,6 +183,7 @@ class AppTheme {
         error: Colors.redAccent,
       ),
       scaffoldBackgroundColor: const Color(0xFF121212),
+      focusColor: _focusColor,
       textTheme: _buildTextTheme(Colors.white),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.primary,
@@ -166,6 +197,7 @@ class AppTheme {
           color: Colors.white,
         ),
       ),
+      iconButtonTheme: _iconButtonTheme,
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
@@ -180,7 +212,7 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
-        ),
+        ).copyWith(side: _tvFocusSide()),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
@@ -191,7 +223,7 @@ class AppTheme {
             fontWeight: FontWeight.w500,
             letterSpacing: 0.1,
           ),
-        ),
+        ).copyWith(side: _tvFocusSide()),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
@@ -207,6 +239,10 @@ class AppTheme {
             borderRadius: BorderRadius.circular(8.r),
           ),
           padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 12.h),
+        ).copyWith(
+          side: _tvFocusSide(
+            const BorderSide(color: Colors.white70, width: 1.5),
+          ),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(

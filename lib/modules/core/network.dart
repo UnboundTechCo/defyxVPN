@@ -54,6 +54,7 @@ class NetworkStatus {
       'sk',
       'tr',
       'us',
+      'ru',
       'xx',
     ];
     try {

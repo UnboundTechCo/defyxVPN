@@ -9,6 +9,7 @@ import 'package:defyx_vpn/modules/core/log.dart';
 import 'package:defyx_vpn/modules/core/network.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/private_dns_dialog.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/models/popular_app.dart';
 import 'package:defyx_vpn/modules/settings/models/split_tunnel_config.dart';
@@ -24,6 +25,7 @@ import 'package:defyx_vpn/shared/services/crash_reporting_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/data/local/vpn_data/vpn_data.dart';
 
@@ -259,8 +261,10 @@ class VPN {
 
     final networkIsConnected = await _networkStatus.checkConnectivity();
     if (!networkIsConnected) {
-      connectionNotifier?.setNoInternet();
-      alertService.error();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        connectionNotifier?.setNoInternet();
+        alertService.error();
+      });
 
       // Report network connectivity failure
       crashReportingService.recordVpnError(
@@ -377,6 +381,7 @@ class VPN {
     vpnData?.enableVPN();
     await refreshPing();
     alertService.success();
+    unawaited(_noticePrivateDns());
 
     final settings = _container?.read(settingsProvider.notifier);
     final groupState = _container?.read(groupStateProvider);
@@ -399,6 +404,35 @@ class VPN {
     await _container
         ?.read(flowlineServiceProvider)
         .saveFlowline(offlineMode: false);
+  }
+
+  static const _privateDnsNoticeKey = 'private_dns_notice_host';
+
+  /// With Private DNS set to a hostname, Android sends all DNS to that server
+  /// through the VPN, and servers that only answer their own country or
+  /// customers then fail, so no site opens. The user is told once per
+  /// hostname, since many such servers work fine.
+  Future<void> _noticePrivateDns() async {
+    if (!Platform.isAndroid) return;
+    try {
+      final host = await _vpnBridge.getPrivateDnsHost();
+      if (host.isEmpty) return;
+
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getString(_privateDnsNoticeKey) == host) return;
+
+      final context = rootNavigatorKey.currentContext;
+      if (context == null || !context.mounted) return;
+      await prefs.setString(_privateDnsNoticeKey, host);
+      if (!context.mounted) return;
+
+      final openSettings = await PrivateDnsDialog.show(context, host);
+      if (openSettings == true) {
+        await _vpnBridge.openNetworkSettings();
+      }
+    } catch (e) {
+      debugPrint('Private DNS notice failed: $e');
+    }
   }
 
   Future<void> _onLoading() async {
@@ -480,7 +514,9 @@ class VPN {
       connectionNotifier?.setDisconnecting();
     }
     await _stopDesktopTunnel();
-    if (Platform.isIOS || (Platform.isAndroid && proxyLost)) {
+    if (Platform.isIOS ||
+        Platform.isMacOS ||
+        (Platform.isAndroid && proxyLost)) {
       await _vpnBridge.disconnectVpn();
     }
     await vpnData?.disableVPN();
@@ -507,6 +543,7 @@ class VPN {
       case 'android':
         return await _vpnBridge.grantVpnPermission();
       case "ios":
+      case "macos":
         return await _vpnBridge.connectVpn();
       case "windows":
       case "linux":
@@ -523,13 +560,14 @@ class VPN {
 
     switch (Platform.operatingSystem) {
       case 'android':
-        await _vpnBridge.connectVpn(
-          mode: splitTunnel.mode.coreValue,
-          rules: splitTunnel.rulesPayload,
-          apps: splitTunnel.appsPayload,
-        );
-        return true;
+        return await _vpnBridge.connectVpn(
+              mode: splitTunnel.mode.coreValue,
+              rules: splitTunnel.rulesPayload,
+              apps: splitTunnel.appsPayload,
+            ) ??
+            false;
       case "ios":
+      case "macos":
         return await _vpnBridge.startTunnel(
           mode: splitTunnel.mode.coreValue,
           rules: splitTunnel.rulesPayloadWith(
@@ -592,6 +630,7 @@ class VPN {
       mode: splitTunnel.mode.coreValue,
       rules: splitTunnel.rulesPayload,
       apps: splitTunnel.appsPayload,
+      dns: await _vpnBridge.getTunnelDns(),
     );
     if (!isStarted) {
       log.addLog(
@@ -640,6 +679,20 @@ class VPN {
       case ConnectionStatus.loading:
       default:
         break;
+    }
+  }
+
+  Future<void> disconnectIfRunning(WidgetRef ref) async {
+    switch (ref.read(connectionStateProvider).status) {
+      case ConnectionStatus.connected:
+        await _disconnect(ref);
+        return;
+      case ConnectionStatus.analyzing:
+      case ConnectionStatus.loading:
+        await _stopVPN(ref);
+        return;
+      default:
+        return;
     }
   }
 

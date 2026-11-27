@@ -4,9 +4,14 @@ import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/logs_widget.dart';
+import 'package:defyx_vpn/modules/settings/constants/settings_constants.dart';
+import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/providers/haptics_provider.dart';
 import 'package:defyx_vpn/shared/providers/language_provider.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:defyx_vpn/shared/widgets/defyx_switch.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,9 +36,56 @@ class DiagnosticsExperimentsDialog extends ConsumerStatefulWidget {
 class _DiagnosticsExperimentsDialogState
     extends ConsumerState<DiagnosticsExperimentsDialog> {
   final MenuController _languageMenuController = MenuController();
+  final FocusNode _languageTriggerFocusNode = FocusNode(
+    debugLabel: 'LanguageMenuTrigger',
+  );
+  final FocusNode _firstLanguageOptionFocusNode = FocusNode(
+    debugLabel: 'FirstLanguageOption',
+  );
+
+  // TelemetryConsent doesn't notify listeners, so the switch keeps its own copy.
+  bool _shareDiagnostics = TelemetryConsent.isGranted;
 
   bool get _isMobilePlatform =>
       !kIsWeb && (Platform.isAndroid || Platform.isIOS);
+
+  bool get _usingDpad =>
+      FocusManager.instance.highlightMode == FocusHighlightMode.traditional;
+
+  @override
+  void dispose() {
+    _languageTriggerFocusNode.dispose();
+    _firstLanguageOptionFocusNode.dispose();
+    super.dispose();
+  }
+
+  void _toggleLanguageMenu() {
+    if (_languageMenuController.isOpen) {
+      _closeLanguageMenu();
+      return;
+    }
+    _languageMenuController.open();
+    // With a remote, move focus into the menu so a language can be chosen.
+    if (_usingDpad) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _languageMenuController.isOpen) {
+          _firstLanguageOptionFocusNode.requestFocus();
+        }
+      });
+    }
+  }
+
+  void _closeLanguageMenu() {
+    _languageMenuController.close();
+    if (_usingDpad && mounted) _languageTriggerFocusNode.requestFocus();
+  }
+
+  /// Back closes the language menu instead of the dialog.
+  Future<bool> _handleBackButton() async {
+    if (!_languageMenuController.isOpen) return false;
+    _closeLanguageMenu();
+    return true;
+  }
 
   String _languageLabel(AppLocalizations l10n, AppLanguage language) {
     switch (language) {
@@ -49,12 +101,12 @@ class _DiagnosticsExperimentsDialogState
   }
 
   TextStyle get _labelStyle => TextStyle(
-    fontSize: 14.sp,
-    fontFamily: AppTheme.fontFamily,
-    fontWeight: FontWeight.w600,
-    color: Colors.black87,
-    letterSpacing: 0.3,
-  );
+        fontSize: 14.sp,
+        fontFamily: AppTheme.fontFamily,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        letterSpacing: 0.3,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -62,8 +114,11 @@ class _DiagnosticsExperimentsDialogState
     final languageState = ref.watch(languageProvider);
     final languageNotifier = ref.read(languageProvider.notifier);
     final hapticsEnabled = ref.watch(hapticsProvider);
+    ref.watch(settingsProvider);
+    final autoReconnectEnabled =
+        ref.read(settingsProvider.notifier).isHealthCheckEnabled();
 
-    return Dialog(
+    final dialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
       insetPadding: EdgeInsets.symmetric(horizontal: 24.w),
       child: Container(
@@ -90,7 +145,33 @@ class _DiagnosticsExperimentsDialogState
             _buildLanguageRow(l10n, languageState, languageNotifier),
             if (_isMobilePlatform) ...[
               SizedBox(height: 12.h),
-              _buildHapticsRow(l10n, hapticsEnabled),
+              _buildSwitchRow(
+                label: l10n.settingsHapticFeedback,
+                value: hapticsEnabled,
+                onChanged: (value) =>
+                    ref.read(hapticsProvider.notifier).setEnabled(value),
+              ),
+            ],
+            SizedBox(height: 12.h),
+            _buildSwitchRow(
+              label: l10n.settingsAutoReconnect,
+              value: autoReconnectEnabled,
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleSetting(
+                        SettingsGroupId.trafficControl,
+                        SettingsItemId.healthCheck,
+                      ),
+            ),
+            if (TelemetryConsent.isSupported) ...[
+              SizedBox(height: 12.h),
+              _buildSwitchRow(
+                label: l10n.settingsShareDiagnostics,
+                value: _shareDiagnostics,
+                onChanged: (value) {
+                  setState(() => _shareDiagnostics = value);
+                  TelemetryConsent.set(value);
+                },
+              ),
             ],
             SizedBox(height: 12.h),
             _buildAppLogsRow(l10n),
@@ -105,6 +186,12 @@ class _DiagnosticsExperimentsDialogState
         ),
       ),
     );
+
+    if (Router.maybeOf(context) == null) return dialog;
+    return BackButtonListener(
+      onBackButtonPressed: _handleBackButton,
+      child: dialog,
+    );
   }
 
   Widget _buildLanguageRow(
@@ -117,9 +204,17 @@ class _DiagnosticsExperimentsDialogState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l10n.language.toUpperCase(), style: _labelStyle),
+          GestureDetector(
+            onTap: _toggleLanguageMenu,
+            behavior: HitTestBehavior.opaque,
+            child: Text(
+              l10n.language.toUpperCase(),
+              style: _labelStyle,
+            ),
+          ),
           MenuAnchor(
             controller: _languageMenuController,
+            childFocusNode: _languageTriggerFocusNode,
             alignmentOffset: Offset(0, 4.h),
             consumeOutsideTap: true,
             useRootOverlay: true,
@@ -146,20 +241,20 @@ class _DiagnosticsExperimentsDialogState
                         _languageOption(
                           label: l10n.settingsAutoDetect,
                           selected: languageState.isAutoDetect,
+                          focusNode: _firstLanguageOptionFocusNode,
                           onTap: () {
                             languageNotifier.enableAutoDetect();
-                            _languageMenuController.close();
+                            _closeLanguageMenu();
                           },
                         ),
                         ...AppLanguage.values.map(
                           (language) => _languageOption(
                             label: _languageLabel(l10n, language),
-                            selected:
-                                !languageState.isAutoDetect &&
+                            selected: !languageState.isAutoDetect &&
                                 languageState.language == language,
                             onTap: () {
                               languageNotifier.changeLanguage(language);
-                              _languageMenuController.close();
+                              _closeLanguageMenu();
                             },
                           ),
                         ),
@@ -170,10 +265,14 @@ class _DiagnosticsExperimentsDialogState
               ),
             ],
             builder: (context, controller, child) {
-              return GestureDetector(
-                onTap: () =>
-                    controller.isOpen ? controller.close() : controller.open(),
-                child: child,
+              // First control in the dialog, so it gets focus on TV.
+              return TvFocusable(
+                focusNode: _languageTriggerFocusNode,
+                autofocus: TvSupport.isTv,
+                onTap: _toggleLanguageMenu,
+                borderRadius: BorderRadius.circular(6.r),
+                ringOutset: 4,
+                child: child!,
               );
             },
             child: Text(
@@ -196,54 +295,63 @@ class _DiagnosticsExperimentsDialogState
     required String label,
     required bool selected,
     required VoidCallback onTap,
+    FocusNode? focusNode,
   }) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
-        color: selected ? const Color(0xFFF0F0F0) : Colors.transparent,
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 15.sp,
-            fontFamily: AppTheme.fontFamily,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            color: Colors.black87,
+    return TvFocusRing(
+      child: InkWell(
+        onTap: onTap,
+        focusNode: focusNode,
+        child: Container(
+          width: double.infinity,
+          padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 12.h),
+          color: selected ? const Color(0xFFF0F0F0) : Colors.transparent,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 15.sp,
+              fontFamily: AppTheme.fontFamily,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+              color: Colors.black87,
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildHapticsRow(AppLocalizations l10n, bool hapticsEnabled) {
+  Widget _buildSwitchRow({
+    required String label,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
     return Padding(
       padding: EdgeInsets.symmetric(vertical: 6.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l10n.settingsHapticFeedback.toUpperCase(), style: _labelStyle),
-          DefyxSwitch(
-            value: hapticsEnabled,
-            onChanged: (value) =>
-                ref.read(hapticsProvider.notifier).setEnabled(value),
-          ),
+          Flexible(child: Text(label.toUpperCase(), style: _labelStyle)),
+          SizedBox(width: 12.w),
+          DefyxSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
   }
 
   Widget _buildAppLogsRow(AppLocalizations l10n) {
-    return InkWell(
-      onTap: () => showAppLogsOverlay(context),
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: 6.h),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(l10n.appLogs.toUpperCase(), style: _labelStyle),
-            Icon(Icons.chevron_right, size: 20.sp, color: Colors.grey[400]),
-          ],
+    return TvFocusRing(
+      borderRadius: BorderRadius.circular(6.r),
+      ringOutset: 4,
+      child: InkWell(
+        onTap: () => showAppLogsOverlay(context),
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 6.h),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(l10n.appLogs.toUpperCase(), style: _labelStyle),
+              Icon(Icons.chevron_right, size: 20.sp, color: Colors.grey[400]),
+            ],
+          ),
         ),
       ),
     );

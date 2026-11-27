@@ -753,10 +753,10 @@ packages:
     dependency: "direct main"
     description:
       name: google_mobile_ads
-      sha256: f35e040875bb54e8a3455bcffed3b4ac9e9263fbf7751b9fd1ae7f30793faee8
+      sha256: "439e018d73b47565d1cf21410e893a8f46d5fb95110c41c266a6fb78449d7106"
       url: "https://pub.dev"
     source: hosted
-    version: "7.0.0"
+    version: "9.2.0"
   graphs:
     dependency: transitive
     description:

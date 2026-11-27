@@ -108,6 +108,18 @@ abstract class AppLocalizations {
   /// **'Defyx VPN'**
   String get appTitle;
 
+  /// First part of the header brand title (large letter)
+  ///
+  /// In en, this message translates to:
+  /// **'D'**
+  String get headerTitleFirst;
+
+  /// Remaining part of the header brand title (smaller text)
+  ///
+  /// In en, this message translates to:
+  /// **'efyx'**
+  String get headerTitleRest;
+
   /// Subtitle shown on splash screen
   ///
   /// In en, this message translates to:
@@ -402,7 +414,7 @@ abstract class AppLocalizations {
   /// **'is chilling.'**
   String get statusIsChilling;
 
-  /// Status connector word
+  /// Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is one of: 'plugging in ...', 'powered up', 'doing science ...', 'testing speed ...', 'yours to shape'.
   ///
   /// In en, this message translates to:
   /// **'is'**
@@ -414,7 +426,7 @@ abstract class AppLocalizations {
   /// **'failed.'**
   String get statusFailed;
 
-  /// Status connector word
+  /// Headline line 1, shown right after the Defyx logo; line 2 finishes the sentence. Translate the two lines together so the whole sentence reads naturally, even if that moves words between them. Leave empty if your language needs nothing here (Persian and Russian do). Line 2 is 'exited the matrix' (no internet).
   ///
   /// In en, this message translates to:
   /// **'has'**
@@ -474,7 +486,7 @@ abstract class AppLocalizations {
   /// **'testing speed ...'**
   String get statusTestingSpeed;
 
-  /// Status message - ready state
+  /// Speed test headline line 1 after the Defyx logo; line 2 is 'to speed test'. Translate the two lines together.
   ///
   /// In en, this message translates to:
   /// **'is ready'**
@@ -492,7 +504,7 @@ abstract class AppLocalizations {
   /// **'DXcore down.'**
   String get statusDXcoreDown;
 
-  /// Status message - ready for speed test
+  /// Speed test headline line 2, after 'Defyx is ready'. Translate the two lines together.
   ///
   /// In en, this message translates to:
   /// **'to speed test'**
@@ -540,11 +552,11 @@ abstract class AppLocalizations {
   /// **'DEEP SCAN'**
   String get settingsDeepScan;
 
-  /// Settings section - health check
+  /// Diagnostics dialog - toggle that checks the tunnel while connected and reconnects when it stops working
   ///
   /// In en, this message translates to:
-  /// **'HEALTH MONITOR'**
-  String get settingsHealthCheck;
+  /// **'Auto Reconnect'**
+  String get settingsAutoReconnect;
 
   /// Settings label - included items
   ///
@@ -576,6 +588,12 @@ abstract class AppLocalizations {
   /// **'ONLY SELECTED'**
   String get splitTunnelModeOnly;
 
+  /// Note under the split tunnel mode selector explaining when changes apply
+  ///
+  /// In en, this message translates to:
+  /// **'changes to the split tunneling settings will take effect after connecting or reconnecting.'**
+  String get splitTunnelReconnectNote;
+
   /// Split tunnel tab - addresses
   ///
   /// In en, this message translates to:
@@ -588,6 +606,12 @@ abstract class AppLocalizations {
   /// **'APPS'**
   String get splitTunnelTabApps;
 
+  /// Toast shown on the first Back press on the home screen
+  ///
+  /// In en, this message translates to:
+  /// **'Press back again to exit'**
+  String get pressBackAgainToExit;
+
   /// Split tunnel search field hint
   ///
   /// In en, this message translates to:
@@ -599,6 +623,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'type here ...'**
   String get splitTunnelAddressHint;
+
+  /// Error shown when a split tunnel domain rule is not a valid domain
+  ///
+  /// In en, this message translates to:
+  /// **'enter a valid domain, e.g. example.com'**
+  String get splitTunnelInvalidDomain;
+
+  /// Error shown when a split tunnel geoip rule is not a country code, IP address or CIDR range
+  ///
+  /// In en, this message translates to:
+  /// **'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8'**
+  String get splitTunnelInvalidGeoip;
 
   /// Split tunnel app path input hint
   ///
@@ -738,6 +774,18 @@ abstract class AppLocalizations {
   /// **'Help us break down the walls of digital censorship and internet filtering.'**
   String get settingsDonationDescription;
 
+  /// Training center widget title
+  ///
+  /// In en, this message translates to:
+  /// **'Training center'**
+  String get settingsTrainingCenter;
+
+  /// Training center widget description text
+  ///
+  /// In en, this message translates to:
+  /// **'Learn how to use DefyxVPN through our YouTube tutorials.'**
+  String get settingsTrainingCenterDescription;
+
   /// Premium login dialog title
   ///
   /// In en, this message translates to:
@@ -852,11 +900,17 @@ abstract class AppLocalizations {
   /// **'Having trouble?'**
   String get havingTrouble;
 
-  /// Premium trouble dialog - signed in message prefix
+  /// Premium trouble dialog - text placed directly before the email address, which is followed by a period
   ///
   /// In en, this message translates to:
   /// **'You are currently signed in with the email address'**
   String get signedInAs;
+
+  /// Premium account tab - shown instead of the email address when signed in with an Apple guest account (created automatically when buying without signing in)
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently signed in with a guest account.'**
+  String get signedInAsGuest;
 
   /// Premium trouble dialog - import instructions
   ///
@@ -966,11 +1020,449 @@ abstract class AppLocalizations {
   /// **'Speed test failed. Please try again.'**
   String get speedTestFailed;
 
-  /// Speed test error message - connection unstable
+  /// Speed test message shown after a completed test when the connection was too slow or unstable
   ///
   /// In en, this message translates to:
-  /// **'Your connection was unstable, and the test was interrupted.'**
+  /// **'Your connection seems slow or unstable.'**
   String get speedTestConnectionUnstable;
+
+  /// TV remote hint under the connection method list: hold the remote's OK button on a method to start moving it
+  ///
+  /// In en, this message translates to:
+  /// **'Hold OK to reorder'**
+  String get tvHoldOkToReorder;
+
+  /// TV remote hint while a connection method is being moved: Up/Down move it, OK ends moving
+  ///
+  /// In en, this message translates to:
+  /// **'▲ ▼ to move · OK to finish'**
+  String get tvMoveModeHint;
+
+  /// Title of the notice shown after connecting on Android when Private DNS is set to a hostname
+  ///
+  /// In en, this message translates to:
+  /// **'Private DNS is on'**
+  String get privateDnsTitle;
+
+  /// Body of the Private DNS notice. Use the names Android shows for the Private DNS options in this language.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone sends its DNS lookups to {host}. If websites do not open while you are connected, set Private DNS to Automatic or Off in your network settings.'**
+  String privateDnsMessage(String host);
+
+  /// Button of the Private DNS notice that opens the Android network settings
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get privateDnsOpenSettings;
+
+  /// Button that closes the Private DNS notice
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get privateDnsDismiss;
+
+  /// Text under the subscription name in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'This premium subscription was purchased directly from Defyx.'**
+  String get marketplaceInfoDescription;
+
+  /// Label inside the data usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining data'**
+  String get marketplaceInfoRemainingData;
+
+  /// Label inside the time usage ring of the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining time'**
+  String get marketplaceInfoRemainingTime;
+
+  /// Gigabytes unit shown after the total data volume
+  ///
+  /// In en, this message translates to:
+  /// **'GB'**
+  String get marketplaceInfoGigabytes;
+
+  /// Days unit shown after the total subscription days
+  ///
+  /// In en, this message translates to:
+  /// **'Days'**
+  String get marketplaceInfoDays;
+
+  /// Warning shown in the marketplace info sheet when the usage request fails
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load your usage. Check your connection and try again.'**
+  String get marketplaceInfoUsageError;
+
+  /// Button that reloads the usage in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get marketplaceInfoRetry;
+
+  /// Text of the jump card in the marketplace info sheet
+  ///
+  /// In en, this message translates to:
+  /// **'Switch server without changing location.'**
+  String get marketplaceInfoJumpDescription;
+
+  /// Button that moves the subscription to another server in the same location
+  ///
+  /// In en, this message translates to:
+  /// **'Jump'**
+  String get marketplaceInfoJump;
+
+  /// Toast shown after the subscription moved to another server
+  ///
+  /// In en, this message translates to:
+  /// **'Server switched successfully.'**
+  String get marketplaceInfoJumpSuccess;
+
+  /// Toast shown when moving the subscription to another server fails. The reason is appended after a colon.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not switch server'**
+  String get marketplaceInfoJumpFailed;
+
+  /// Title of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'VPN will be disconnected'**
+  String get jumpDisconnectTitle;
+
+  /// Body of the warning shown before switching server while the VPN is running
+  ///
+  /// In en, this message translates to:
+  /// **'Switching server disconnects your VPN. Do you want to continue?'**
+  String get jumpDisconnectMessage;
+
+  /// Button that confirms disconnecting the VPN and switching server
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, switch server'**
+  String get jumpDisconnectConfirm;
+
+  /// Title of the privacy notice shown on first launch
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Notice'**
+  String get privacyNoticeTitle;
+
+  /// First line of the privacy notice, followed by a list
+  ///
+  /// In en, this message translates to:
+  /// **'What DefyxVPN sends, and where:'**
+  String get privacyNoticeIntro;
+
+  /// Privacy notice item about the app's own requests. Shown as a list item; the app draws the bullet, so do not add one.
+  ///
+  /// In en, this message translates to:
+  /// **'When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.'**
+  String get privacyNoticeConnection;
+
+  /// Privacy notice item about Firebase; only sent after consent. Shown as a list item; the app draws the bullet, so do not add one.
+  ///
+  /// In en, this message translates to:
+  /// **'Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.'**
+  String get privacyNoticeTelemetry;
+
+  /// Privacy notice item about AdMob. Shown as a list item; the app draws the bullet, so do not add one.
+  ///
+  /// In en, this message translates to:
+  /// **'Ads come from Google AdMob, which may ask for your consent to personalize them.'**
+  String get privacyNoticeAds;
+
+  /// Privacy notice item about the speed test. Shown as a list item; the app draws the bullet, so do not add one.
+  ///
+  /// In en, this message translates to:
+  /// **'Speed test results go to Cloudflare when you run a test.'**
+  String get privacyNoticeSpeedTest;
+
+  /// Privacy notice item: the app's own traffic also goes through the VPN. Shown as a list item; the app draws the bullet, so do not add one.
+  ///
+  /// In en, this message translates to:
+  /// **'While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.'**
+  String get privacyNoticeOwnTraffic;
+
+  /// Privacy notice paragraph about local storage
+  ///
+  /// In en, this message translates to:
+  /// **'Your internet provider\'s name is also kept on this device to speed up later connections.'**
+  String get privacyNoticeLocal;
+
+  /// Privacy notice hint under the consent checkbox. Use the names shown for Settings and for the Diagnostics & Experiments entry in this language.
+  ///
+  /// In en, this message translates to:
+  /// **'You can change this at any time in Settings › Diagnostics & Experiments.'**
+  String get privacyNoticeChangeLater;
+
+  /// Privacy notice line on Android and iOS
+  ///
+  /// In en, this message translates to:
+  /// **'By continuing, you agree to install the VPN profile.'**
+  String get privacyNoticeVpnProfile;
+
+  /// Label of the consent checkbox in the privacy notice
+  ///
+  /// In en, this message translates to:
+  /// **'Share usage statistics and crash reports'**
+  String get privacyNoticeShareDiagnostics;
+
+  /// Button that closes the privacy notice
+  ///
+  /// In en, this message translates to:
+  /// **'Got it'**
+  String get privacyNoticeGotIt;
+
+  /// Diagnostics dialog - toggle for sending usage statistics and crash reports
+  ///
+  /// In en, this message translates to:
+  /// **'Share Diagnostics'**
+  String get settingsShareDiagnostics;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on phones
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to learn more'**
+  String get adTapToLearnMore;
+
+  /// Call to action on our own (in-house) ad banner, shown above a bouncing down arrow on desktop
+  ///
+  /// In en, this message translates to:
+  /// **'Click to learn more'**
+  String get adClickToLearnMore;
+
+  /// Premium screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Premium'**
+  String get premiumTitle;
+
+  /// Premium tab - account
+  ///
+  /// In en, this message translates to:
+  /// **'ACCOUNT'**
+  String get premiumTabAccount;
+
+  /// Premium tab - plans
+  ///
+  /// In en, this message translates to:
+  /// **'PLANS'**
+  String get premiumTabPlans;
+
+  /// Premium tab - wallet
+  ///
+  /// In en, this message translates to:
+  /// **'WALLET'**
+  String get premiumTabWallet;
+
+  /// Premium tab - support
+  ///
+  /// In en, this message translates to:
+  /// **'SUPPORT'**
+  String get premiumTabSupport;
+
+  /// Plans screen - prompt to pick a plan duration
+  ///
+  /// In en, this message translates to:
+  /// **'Select the plan duration you\'d like to purchase:'**
+  String get selectPlanDuration;
+
+  /// Price label shown next to a plan or top-up amount
+  ///
+  /// In en, this message translates to:
+  /// **'{price} Credits'**
+  String creditsPrice(String price);
+
+  /// Button that confirms the selected plan
+  ///
+  /// In en, this message translates to:
+  /// **'Choose'**
+  String get choose;
+
+  /// Button that starts plan payment
+  ///
+  /// In en, this message translates to:
+  /// **'Pay Now'**
+  String get payNow;
+
+  /// Plan details section title
+  ///
+  /// In en, this message translates to:
+  /// **'What You\'ll Get'**
+  String get whatYoullGet;
+
+  /// Unit label for plan duration in months
+  ///
+  /// In en, this message translates to:
+  /// **'Months'**
+  String get months;
+
+  /// Toast shown after a successful plan subscription
+  ///
+  /// In en, this message translates to:
+  /// **'Successfully subscribed to the plan!'**
+  String get subscriptionSuccess;
+
+  /// Wallet top-up screen prompt
+  ///
+  /// In en, this message translates to:
+  /// **'Please select the wallet top-up amount:'**
+  String get selectTopUpAmount;
+
+  /// Title of the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Payment Successful'**
+  String get paymentSuccessful;
+
+  /// Message in the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Your wallet has been topped up'**
+  String get walletToppedUp;
+
+  /// Continue button in the payment success dialog
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get continueAction;
+
+  /// Button that starts a wallet top-up purchase
+  ///
+  /// In en, this message translates to:
+  /// **'Purchase credits'**
+  String get purchaseCredits;
+
+  /// Back button label
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get back;
+
+  /// Snackbar shown when no top-up amount is selected
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an amount'**
+  String get selectAmount;
+
+  /// Wallet balance label
+  ///
+  /// In en, this message translates to:
+  /// **'BALANCE'**
+  String get balance;
+
+  /// Button that opens the wallet top-up form
+  ///
+  /// In en, this message translates to:
+  /// **'Top up'**
+  String get topUp;
+
+  /// Dialog shown when a guest tries to use premium features
+  ///
+  /// In en, this message translates to:
+  /// **'You need to register to access premium features.'**
+  String get registerToAccessPremium;
+
+  /// Sign in / register with Apple button
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// Button that opens the premium login section
+  ///
+  /// In en, this message translates to:
+  /// **'Go to login section'**
+  String get goToLoginSection;
+
+  /// Button that opens login by code
+  ///
+  /// In en, this message translates to:
+  /// **'Easy Login'**
+  String get easyLogin;
+
+  /// Support screen title
+  ///
+  /// In en, this message translates to:
+  /// **'Need Help?'**
+  String get needHelp;
+
+  /// Support screen description
+  ///
+  /// In en, this message translates to:
+  /// **'Contact our support team through the following channels:'**
+  String get supportContactDescription;
+
+  /// Telegram support channel label
+  ///
+  /// In en, this message translates to:
+  /// **'Telegram'**
+  String get telegram;
+
+  /// Website support channel label
+  ///
+  /// In en, this message translates to:
+  /// **'Website'**
+  String get website;
+
+  /// Connection methods section: subscriptions bought from Defyx
+  ///
+  /// In en, this message translates to:
+  /// **'PREMIUM'**
+  String get settingsMethodsPremium;
+
+  /// Connection methods section: configs bought from other sellers in the marketplace
+  ///
+  /// In en, this message translates to:
+  /// **'MARKET'**
+  String get settingsMethodsMarket;
+
+  /// Connection methods section: the methods every user has
+  ///
+  /// In en, this message translates to:
+  /// **'BUILT-IN'**
+  String get settingsMethodsBuiltIn;
+
+  /// Connection methods section: free methods with limited time and data (invites, free trial, queue, gifts)
+  ///
+  /// In en, this message translates to:
+  /// **'REWARDS'**
+  String get settingsMethodsRewards;
+
+  /// Connection methods section header: how many of its methods are switched on, e.g. 2 of 3
+  ///
+  /// In en, this message translates to:
+  /// **'{active} of {total}'**
+  String settingsMethodsOnCount(int active, int total);
+
+  /// Under a market config: who sells it
+  ///
+  /// In en, this message translates to:
+  /// **'by {seller}'**
+  String settingsMethodsBySeller(String seller);
+
+  /// Under a paid plan or reward: days until it ends
+  ///
+  /// In en, this message translates to:
+  /// **'{days, plural, =1{1 day left} other{{days} days left}}'**
+  String settingsMethodsDaysLeft(int days);
+
+  /// Under a plan or reward that has ended
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get settingsMethodsExpired;
+
+  /// Under a plan: the row for the plan's own config (its subscription), next to its locations and SOS backup
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get settingsMethodsSubscription;
 }
 
 class _AppLocalizationsDelegate

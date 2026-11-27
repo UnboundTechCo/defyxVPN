@@ -1,7 +1,8 @@
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class QuickMenuItem extends StatefulWidget {
+class QuickMenuItem extends StatelessWidget {
   final String title;
   final TextStyle? titleStyle;
   final VoidCallback onTap;
@@ -9,6 +10,8 @@ class QuickMenuItem extends StatefulWidget {
   final bool? bottomBorderRadius;
   final Widget? icon;
   final Widget? leadingIcon;
+  final FocusNode? focusNode;
+  final bool autofocus;
 
   const QuickMenuItem({
     super.key,
@@ -19,83 +22,49 @@ class QuickMenuItem extends StatefulWidget {
     this.icon,
     this.leadingIcon,
     this.titleStyle,
+    this.focusNode,
+    this.autofocus = false,
   });
 
   @override
-  State<QuickMenuItem> createState() => _QuickMenuItemState();
-}
-
-class _QuickMenuItemState extends State<QuickMenuItem> {
-  late FocusNode _focusNode;
-  bool _hasFocus = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusNode();
-    _focusNode.addListener(_handleFocusChange);
-  }
-
-  @override
-  void dispose() {
-    _focusNode.removeListener(_handleFocusChange);
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _handleFocusChange() {
-    setState(() {
-      _hasFocus = _focusNode.hasFocus;
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Focus(
-      focusNode: _focusNode,
+    final borderRadius = BorderRadius.only(
+      topLeft: Radius.circular(topBorderRadius! ? 12.r : 0),
+      topRight: Radius.circular(topBorderRadius! ? 12.r : 0),
+      bottomLeft: Radius.circular(bottomBorderRadius! ? 12.r : 0),
+      bottomRight: Radius.circular(bottomBorderRadius! ? 12.r : 0),
+    );
+
+    // One focus stop for the remote; the InkWell only handles touch.
+    return TvFocusable(
+      onTap: onTap,
+      focusNode: focusNode,
+      autofocus: autofocus,
+      handleTaps: false,
+      borderRadius: borderRadius,
       child: InkWell(
-        onTap: widget.onTap,
+        onTap: onTap,
+        canRequestFocus: false,
         hoverColor: const Color(0xffDFDFDF),
         splashColor: const Color(0xffDFDFDF),
         highlightColor: const Color(0xffDFDFDF),
-        borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(widget.topBorderRadius! ? 12.r : 0),
-          topRight: Radius.circular(widget.topBorderRadius! ? 12.r : 0),
-          bottomLeft: Radius.circular(widget.bottomBorderRadius! ? 12.r : 0),
-          bottomRight: Radius.circular(widget.bottomBorderRadius! ? 12.r : 0),
-        ),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
+        borderRadius: borderRadius,
+        child: Container(
           height: 44,
           padding: EdgeInsets.symmetric(horizontal: 16.w),
-          decoration: BoxDecoration(
-            border: _hasFocus
-                ? Border.all(color: const Color(0xFFFFD700), width: 2)
-                : null,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(widget.topBorderRadius! ? 12.r : 0),
-              topRight: Radius.circular(widget.topBorderRadius! ? 12.r : 0),
-              bottomLeft: Radius.circular(
-                widget.bottomBorderRadius! ? 12.r : 0,
-              ),
-              bottomRight: Radius.circular(
-                widget.bottomBorderRadius! ? 12.r : 0,
-              ),
-            ),
-          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
-                  if (widget.leadingIcon != null) ...[
-                    widget.leadingIcon!,
+                  if (leadingIcon != null) ...[
+                    leadingIcon!,
                     SizedBox(width: 10.w),
                   ],
                   Text(
-                    widget.title,
+                    title,
                     style:
-                        widget.titleStyle ??
+                        titleStyle ??
                         TextStyle(
                           fontSize: 17.sp,
                           color: Colors.black,
@@ -104,7 +73,7 @@ class _QuickMenuItemState extends State<QuickMenuItem> {
                   ),
                 ],
               ),
-              widget.icon ?? const SizedBox.shrink(),
+              icon ?? const SizedBox.shrink(),
             ],
           ),
         ),

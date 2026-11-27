@@ -12,6 +12,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appTitle => 'Defyx VPN';
 
   @override
+  String get headerTitleFirst => 'D';
+
+  @override
+  String get headerTitleRest => 'efyx';
+
+  @override
   String get splashSubtitle =>
       'Crafted for secure internet access,\ndesigned for everyone, everywhere';
 
@@ -232,7 +238,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsDeepScan => 'DEEP SCAN';
 
   @override
-  String get settingsHealthCheck => 'HEALTH MONITOR';
+  String get settingsAutoReconnect => 'Auto Reconnect';
 
   @override
   String get settingsIncluded => 'INCLUDED';
@@ -250,16 +256,31 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splitTunnelModeOnly => 'ONLY SELECTED';
 
   @override
+  String get splitTunnelReconnectNote =>
+      'changes to the split tunneling settings will take effect after connecting or reconnecting.';
+
+  @override
   String get splitTunnelTabAddresses => 'ADDRESSES';
 
   @override
   String get splitTunnelTabApps => 'APPS';
 
   @override
+  String get pressBackAgainToExit => 'Press back again to exit';
+
+  @override
   String get splitTunnelSearch => 'Search';
 
   @override
   String get splitTunnelAddressHint => 'type here ...';
+
+  @override
+  String get splitTunnelInvalidDomain =>
+      'enter a valid domain, e.g. example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'enter a country code, IP address or CIDR range, e.g. ir, 8.8.8.8 or 10.0.0.0/8';
 
   @override
   String get splitTunnelAppHint => 'type or route it ...';
@@ -336,6 +357,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Help us break down the walls of digital censorship and internet filtering.';
 
   @override
+  String get settingsTrainingCenter => 'Training center';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'Learn how to use DefyxVPN through our YouTube tutorials.';
+
+  @override
   String get authenticationRequired => 'Authentication Required';
 
   @override
@@ -399,6 +427,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedInAs => 'You are currently signed in with the email address';
 
   @override
+  String get signedInAsGuest =>
+      'You are currently signed in with a guest account.';
+
+  @override
   String get premiumImportDescription =>
       'If your Premium subscriptions cannot be loaded due to internet restrictions and you\'re unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.';
 
@@ -458,5 +490,256 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get speedTestConnectionUnstable =>
-      'Your connection was unstable, and the test was interrupted.';
+      'Your connection seems slow or unstable.';
+
+  @override
+  String get tvHoldOkToReorder => 'Hold OK to reorder';
+
+  @override
+  String get tvMoveModeHint => '▲ ▼ to move · OK to finish';
+
+  @override
+  String get privateDnsTitle => 'Private DNS is on';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'Your phone sends its DNS lookups to $host. If websites do not open while you are connected, set Private DNS to Automatic or Off in your network settings.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'Open settings';
+
+  @override
+  String get privateDnsDismiss => 'Not now';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'This premium subscription was purchased directly from Defyx.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'Remaining data';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'Remaining time';
+
+  @override
+  String get marketplaceInfoGigabytes => 'GB';
+
+  @override
+  String get marketplaceInfoDays => 'Days';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'Could not load your usage. Check your connection and try again.';
+
+  @override
+  String get marketplaceInfoRetry => 'Retry';
+
+  @override
+  String get marketplaceInfoJumpDescription =>
+      'Switch server without changing location.';
+
+  @override
+  String get marketplaceInfoJump => 'Jump';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'Server switched successfully.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'Could not switch server';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN will be disconnected';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'Switching server disconnects your VPN. Do you want to continue?';
+
+  @override
+  String get jumpDisconnectConfirm => 'Yes, switch server';
+
+  @override
+  String get privacyNoticeTitle => 'Privacy Notice';
+
+  @override
+  String get privacyNoticeIntro => 'What DefyxVPN sends, and where:';
+
+  @override
+  String get privacyNoticeConnection =>
+      'When the app starts and when you connect, it fetches connection settings and looks up your internet provider from your IP address, using DefyxVPN\'s servers and IP lookup services such as freeipapi.com and ip.sb. Your account details are sent when you sign in to Premium.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      'Only if you allow it below: usage statistics and crash reports go to Google Firebase. They include your internet provider\'s name, the connection method and the country of the VPN exit.';
+
+  @override
+  String get privacyNoticeAds =>
+      'Ads come from Google AdMob, which may ask for your consent to personalize them.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      'Speed test results go to Cloudflare when you run a test.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      'While the VPN is connected, the app sends its own connections through it as well, apart from those that set up the VPN.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'Your internet provider\'s name is also kept on this device to speed up later connections.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'You can change this at any time in Settings › Diagnostics & Experiments.';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'By continuing, you agree to install the VPN profile.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'Share usage statistics and crash reports';
+
+  @override
+  String get privacyNoticeGotIt => 'Got it';
+
+  @override
+  String get settingsShareDiagnostics => 'Share Diagnostics';
+
+  @override
+  String get adTapToLearnMore => 'Tap to learn more';
+
+  @override
+  String get adClickToLearnMore => 'Click to learn more';
+
+  @override
+  String get premiumTitle => 'Premium';
+
+  @override
+  String get premiumTabAccount => 'ACCOUNT';
+
+  @override
+  String get premiumTabPlans => 'PLANS';
+
+  @override
+  String get premiumTabWallet => 'WALLET';
+
+  @override
+  String get premiumTabSupport => 'SUPPORT';
+
+  @override
+  String get selectPlanDuration =>
+      'Select the plan duration you\'d like to purchase:';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price Credits';
+  }
+
+  @override
+  String get choose => 'Choose';
+
+  @override
+  String get payNow => 'Pay Now';
+
+  @override
+  String get whatYoullGet => 'What You\'ll Get';
+
+  @override
+  String get months => 'Months';
+
+  @override
+  String get subscriptionSuccess => 'Successfully subscribed to the plan!';
+
+  @override
+  String get selectTopUpAmount => 'Please select the wallet top-up amount:';
+
+  @override
+  String get paymentSuccessful => 'Payment Successful';
+
+  @override
+  String get walletToppedUp => 'Your wallet has been topped up';
+
+  @override
+  String get continueAction => 'Continue';
+
+  @override
+  String get purchaseCredits => 'Purchase credits';
+
+  @override
+  String get back => 'Back';
+
+  @override
+  String get selectAmount => 'Please select an amount';
+
+  @override
+  String get balance => 'BALANCE';
+
+  @override
+  String get topUp => 'Top up';
+
+  @override
+  String get registerToAccessPremium =>
+      'You need to register to access premium features.';
+
+  @override
+  String get continueWithApple => 'Continue with Apple';
+
+  @override
+  String get goToLoginSection => 'Go to login section';
+
+  @override
+  String get easyLogin => 'Easy Login';
+
+  @override
+  String get needHelp => 'Need Help?';
+
+  @override
+  String get supportContactDescription =>
+      'Contact our support team through the following channels:';
+
+  @override
+  String get telegram => 'Telegram';
+
+  @override
+  String get website => 'Website';
+
+  @override
+  String get settingsMethodsPremium => 'PREMIUM';
+
+  @override
+  String get settingsMethodsMarket => 'MARKET';
+
+  @override
+  String get settingsMethodsBuiltIn => 'BUILT-IN';
+
+  @override
+  String get settingsMethodsRewards => 'REWARDS';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '$active of $total';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return 'by $seller';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    String _temp0 = intl.Intl.pluralLogic(
+      days,
+      locale: localeName,
+      other: '$days days left',
+      one: '1 day left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get settingsMethodsExpired => 'Expired';
+
+  @override
+  String get settingsMethodsSubscription => 'Subscription';
 }

@@ -10,4 +10,13 @@ abstract interface class IFlowlineService {
     bool forceUpdate = false,
   });
   Future<FlowlineSettings> getFlowlineSettings();
+
+  /// After signing out, removes the account's methods (premium, market and
+  /// rewards) from the saved methods, even when no new flowline can be
+  /// fetched. Methods from an imported file stay.
+  Future<void> dropAccountMethods();
+
+  /// The saved settings, or null when none have been saved yet (a fresh
+  /// install before the first flowline arrives).
+  Future<FlowlineSettings?> getSavedFlowlineSettings();
 }

@@ -1,4 +1,7 @@
+import 'package:defyx_vpn/core/utils/toast_util.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -9,6 +12,7 @@ import '../../modules/settings/presentation/screens/split_tunnel_screen.dart';
 import '../../modules/speed_test/presentation/screens/speed_test_screen.dart';
 import '../../modules/premium/presentation/screens/premium_screen.dart';
 import '../../shared/layout/navbar/defyx_navbar.dart';
+import 'dpad_shell_page.dart';
 
 enum SlideDirection { leftToRight, rightToLeft }
 
@@ -83,7 +87,8 @@ CustomTransitionPage<void> _createPageAnimation(
   LocalKey key,
   SlideDirection direction,
 ) {
-  return CustomTransitionPage<void>(
+  // DpadShellPage lets D-pad focus move from the page to the nav bar.
+  return DpadShellPage<void>(
     key: key,
     child: child,
     transitionDuration: const Duration(milliseconds: 320),
@@ -99,6 +104,69 @@ CustomTransitionPage<void> _createPageAnimation(
   );
 }
 
+/// Makes the system Back button step back through the app instead of closing
+/// it: Settings and Speed Test go Home, Premium and Split Tunnel go to
+/// Settings. Home leaves the app only on a second Back press shortly after
+/// the first, which shows an exit hint instead.
+///
+/// The top-level screens are opened with `go`, so there is no route to pop;
+/// go_router then asks the shell's route, which honors this [PopScope].
+/// Screens pushed on top (e.g. Split Tunnel via `push`) still pop normally.
+class _ShellBackHandler extends StatefulWidget {
+  const _ShellBackHandler({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_ShellBackHandler> createState() => _ShellBackHandlerState();
+}
+
+class _ShellBackHandlerState extends State<_ShellBackHandler> {
+  static const Duration _exitWindow = Duration(seconds: 2);
+
+  DateTime? _lastExitAttempt;
+
+  static String? _parentOf(String path) {
+    if (path == DefyxVPNRoutes.main.route) return null;
+    if (path == DefyxVPNRoutes.premium.route ||
+        path.startsWith('${DefyxVPNRoutes.settings.route}/')) {
+      return DefyxVPNRoutes.settings.route;
+    }
+    return DefyxVPNRoutes.main.route;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final parent = _parentOf(GoRouterState.of(context).uri.path);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) return;
+        if (parent != null) {
+          context.go(parent);
+        } else {
+          _confirmExit();
+        }
+      },
+      child: widget.child,
+    );
+  }
+
+  void _confirmExit() {
+    final now = DateTime.now();
+    final last = _lastExitAttempt;
+    if (last != null && now.difference(last) < _exitWindow) {
+      SystemNavigator.pop();
+      return;
+    }
+    _lastExitAttempt = now;
+    ToastUtil.showToast(
+      AppLocalizations.of(context).pressBackAgainToExit,
+      duration: _exitWindow,
+    );
+  }
+}
+
 final rootNavigatorKey = GlobalKey<NavigatorState>();
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -112,18 +180,25 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       ShellRoute(
         builder: (context, state, child) {
-          return Scaffold(
-            extendBody: true,
-            body: Stack(
-              children: [
-                child,
-                const Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: DefyxNavBar(),
-                ),
-              ],
+          final isKeyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
+          return _ShellBackHandler(
+            child: Scaffold(
+              extendBody: true,
+              body: Stack(
+                children: [
+                  child,
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Visibility(
+                      visible: !isKeyboardOpen,
+                      maintainState: true,
+                      child: const DefyxNavBar(),
+                    ),
+                  ),
+                ],
+              ),
             ),
           );
         },

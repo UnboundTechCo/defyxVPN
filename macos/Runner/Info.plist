@@ -16,6 +16,8 @@
 		<string>$(PRODUCT_NAME)</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
+		<key>LSApplicationCategoryType</key>
+		<string>public.app-category.utilities</string>
 		<key>CFBundleShortVersionString</key>
 		<string>$(FLUTTER_BUILD_NAME)</string>
 		<key>CFBundleVersion</key>
@@ -32,5 +34,10 @@
 		<array>
 			<string>packet-tunnel-provider</string>
 		</array>
+		<!-- Telemetry stays off until the user agrees to it, see TelemetryConsent. -->
+		<key>FIREBASE_ANALYTICS_COLLECTION_ENABLED</key>
+		<false />
+		<key>FirebaseCrashlyticsCollectionEnabled</key>
+		<false />
 	</dict>
 </plist>

@@ -8,6 +8,12 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(keystorePropertiesFile.inputStream())
 }
 
+// Play's dedicated Android TV track only takes bundles that require
+// android.software.leanback, and every bundle needs its own version code.
+// Build that bundle with: flutter build appbundle -P tvBuild=true
+val tvBuild = (project.findProperty("tvBuild") as String?)?.toBoolean() == true
+val tvVersionCodeOffset = 1_000_000
+
 plugins {
     id("com.android.application")
     id("com.google.gms.google-services")
@@ -29,8 +35,9 @@ android {
         applicationId = "de.unboundtech.defyxvpn"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
-        versionCode = flutter.versionCode
+        versionCode = flutter.versionCode + if (tvBuild) tvVersionCodeOffset else 0
         versionName = flutter.versionName
+        manifestPlaceholders["leanbackRequired"] = tvBuild.toString()
     }
 
     signingConfigs {
@@ -46,8 +53,9 @@ android {
 
     buildTypes {
         getByName("release") {
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 shrinks and obfuscates the DEX; Play flags 0% obfuscation otherwise.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig =
                 if (keystorePropertiesFile.exists()) signingConfigs.getByName("release")
                 else signingConfigs.getByName("debug")
@@ -81,11 +89,19 @@ dependencies {
     // Android TV support
     implementation("androidx.leanback:leanback:1.0.0")
 
-    implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+    // DXcore-android.zip also carries DXcore-sources.jar; as a dependency its
+    // .java files would be packaged into the APK as resources.
+    implementation(fileTree(mapOf(
+        "dir" to "libs",
+        "include" to listOf("*.jar"),
+        "exclude" to listOf("*-sources.jar"),
+    )))
     implementation(files("libs/DXcore.aar"))
 
     implementation("androidx.activity:activity-ktx:1.7.2")
     implementation("androidx.core:core-ktx:1.12.0")
+    // Web view proxy override, see AppProxy. Same version webview_flutter uses.
+    implementation("androidx.webkit:webkit:1.15.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 }

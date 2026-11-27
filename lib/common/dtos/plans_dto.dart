@@ -12,6 +12,8 @@ class PlansResponse with _$PlansResponse {
     @JsonKey(name: "duration_days") required int duration_days,
     @JsonKey(name: "bandwidth_limit") required int bandwidth_limit,
     @JsonKey(name: "price") required double price,
+    @JsonKey(name: "international_price_multiplier")
+    required double international_price_multiplier,
   }) = _PlansResponse;
 
   factory PlansResponse.fromJson(Map<String, dynamic> json) =>

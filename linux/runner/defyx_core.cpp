@@ -22,10 +22,12 @@ typedef void (*dx_stop_t2s_fn)();
 typedef int (*dx_start_tunnel_fn)();
 typedef void (*dx_set_split_tunnel_fn)(const char*, const char*, const char*);
 typedef void (*dx_stop_tunnel_fn)();
+typedef char* (*dx_get_tunnel_dns_fn)();
+typedef void (*dx_set_tunnel_dns_fn)(const char*);
 typedef void (*dx_stop_fn)();
 typedef long long (*dx_measure_ping_fn)();
 typedef char* (*dx_get_flag_fn)();
-typedef char* (*dx_get_flowline_fn)(int);
+typedef char* (*dx_get_flowline_fn)(int, const char*);
 typedef char* (*dx_get_cached_flowline_fn)();
 typedef char* (*dx_decode_verify_flowline_fn)(const char*);
 typedef char* (*dx_get_vpn_status_fn)();
@@ -39,6 +41,8 @@ typedef void (*dx_set_cache_dir_fn)(const char*);
 typedef int (*dx_is_tunnel_running_fn)();
 typedef char* (*dx_request_handshake_fn)(char*, char*);
 typedef char* (*dx_complete_handshake_fn)(char*);
+typedef char* (*dx_login_fn)(const char*, const char*);
+typedef char* (*dx_login_by_code_fn)(const char*);
 }
 
 static void* g_dx_dll = nullptr;
@@ -50,6 +54,8 @@ static dx_stop_t2s_fn g_stop_t2s = nullptr;
 static dx_start_tunnel_fn g_start_tunnel = nullptr;
 static dx_set_split_tunnel_fn g_set_split_tunnel = nullptr;
 static dx_stop_tunnel_fn g_stop_tunnel = nullptr;
+static dx_get_tunnel_dns_fn g_get_tunnel_dns = nullptr;
+static dx_set_tunnel_dns_fn g_set_tunnel_dns = nullptr;
 static dx_stop_fn g_stop_all = nullptr;
 static dx_measure_ping_fn g_measure_ping = nullptr;
 static dx_get_flag_fn g_get_flag = nullptr;
@@ -67,6 +73,8 @@ static dx_set_cache_dir_fn g_set_cache_dir = nullptr;
 static dx_is_tunnel_running_fn g_is_tunnel_running = nullptr;
 static dx_request_handshake_fn g_request_handshake = nullptr;
 static dx_complete_handshake_fn g_complete_handshake = nullptr;
+static dx_login_fn g_login = nullptr;
+static dx_login_by_code_fn g_login_by_code = nullptr;
 
 // Helper: get directory of current executable
 static std::string GetExeDir() {
@@ -162,6 +170,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_start_tunnel = (dx_start_tunnel_fn)dlsym(g_dx_dll, "StartTunnel");
   g_set_split_tunnel = (dx_set_split_tunnel_fn)dlsym(g_dx_dll, "SetSplitTunnel");
   g_stop_tunnel = (dx_stop_tunnel_fn)dlsym(g_dx_dll, "StopTunnel");
+  g_get_tunnel_dns = (dx_get_tunnel_dns_fn)dlsym(g_dx_dll, "GetTunnelDNS");
+  g_set_tunnel_dns = (dx_set_tunnel_dns_fn)dlsym(g_dx_dll, "SetTunnelDNS");
   g_stop_all = (dx_stop_fn)dlsym(g_dx_dll, "Stop");
   g_measure_ping = (dx_measure_ping_fn)dlsym(g_dx_dll, "MeasurePing");
   g_get_flag = (dx_get_flag_fn)dlsym(g_dx_dll, "GetFlag");
@@ -179,6 +189,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   g_is_tunnel_running = (dx_is_tunnel_running_fn)dlsym(g_dx_dll, "IsTunnelRunning");
   g_request_handshake = (dx_request_handshake_fn)dlsym(g_dx_dll, "RequestHandshake");
   g_complete_handshake = (dx_complete_handshake_fn)dlsym(g_dx_dll, "CompleteHandshake");
+  g_login = (dx_login_fn)dlsym(g_dx_dll, "Login");
+  g_login_by_code = (dx_login_by_code_fn)dlsym(g_dx_dll, "LoginByCode");
 
   auto check = [](const char* name, auto fn) {
     if (!fn) {
@@ -197,6 +209,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("StartTunnel", g_start_tunnel);
   check("SetSplitTunnel", g_set_split_tunnel);
   check("StopTunnel", g_stop_tunnel);
+  check("GetTunnelDNS", g_get_tunnel_dns);
+  check("SetTunnelDNS", g_set_tunnel_dns);
   check("Stop", g_stop_all);
   check("MeasurePing", g_measure_ping);
   check("GetFlag", g_get_flag);
@@ -209,6 +223,8 @@ bool LoadCoreDll(const std::string& dllPath) {
   check("SetConnectionMethod", g_set_connection_method);
   check("SetCacheDir", g_set_cache_dir);
   check("IsTunnelRunning", g_is_tunnel_running);
+  check("Login", g_login);
+  check("LoginByCode", g_login_by_code);
   defyx_core::LogMessage("libdxcore_amd64.so loaded and symbol lookup completed");
 
   return true;
@@ -239,6 +255,8 @@ void UnloadCoreDll() {
   g_is_tunnel_running = nullptr;
   g_request_handshake = nullptr;
   g_complete_handshake = nullptr;
+  g_login = nullptr;
+  g_login_by_code = nullptr;
 
     // Clear progress handler
     g_progress_handler = nullptr;
@@ -367,6 +385,27 @@ void StopTunnel() {
   } catch (...) {}
 }
 
+std::string GetTunnelDNS() {
+  try {
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_get_tunnel_dns) {
+      char* address = g_get_tunnel_dns();
+      std::string result = address ? std::string(address) : std::string();
+      if (g_free_string && address) g_free_string(address);
+      return result;
+    }
+  } catch (...) {}
+  return {};
+}
+
+void SetTunnelDNS(const std::string& address) {
+  try {
+    defyx_core::LogMessage("SetTunnelDNS called address=" + address);
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_set_tunnel_dns) g_set_tunnel_dns(address.c_str());
+  } catch (...) {}
+}
+
 void Stop() {
   try {
     defyx_core::LogMessage("Stop called");
@@ -411,12 +450,12 @@ void SetTimeZone(float tz) {
   (void)tz;
 }
 
-std::string GetFlowLine(bool isTest) {
+std::string GetFlowLine(bool isTest, const std::string& token) {
   try {
     defyx_core::LogMessage("GetFlowLine called isTest=" + std::to_string(isTest));
     if (!g_dx_dll) LoadCoreDll("");
     if (g_get_flowline) {
-      char* line = g_get_flowline(isTest ? 1 : 0);
+      char* line = g_get_flowline(isTest ? 1 : 0,token.c_str());
       std::string result;
       if (line && line[0] != '\0') {
         result = std::string(line);
@@ -524,6 +563,39 @@ bool IsTunnelRunning() {
     }
   } catch (...) {}
   return false;
+}
+
+// Credentials and codes are never logged.
+std::string Login(const std::string& email, const std::string& password) {
+  try {
+    defyx_core::LogMessage("Login called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_login) {
+      char* token = g_login(email.c_str(), password.c_str());
+      std::string result = token ? std::string(token) : std::string();
+      if (g_free_string && token) g_free_string(token);
+      defyx_core::LogMessage(std::string("Login ") + (result.empty() ? "failed" : "succeeded"));
+      return result;
+    }
+    defyx_core::LogMessage("Login unavailable: symbol missing");
+  } catch (...) {}
+  return {};
+}
+
+std::string LoginByCode(const std::string& code) {
+  try {
+    defyx_core::LogMessage("LoginByCode called");
+    if (!g_dx_dll) LoadCoreDll("");
+    if (g_login_by_code) {
+      char* token = g_login_by_code(code.c_str());
+      std::string result = token ? std::string(token) : std::string();
+      if (g_free_string && token) g_free_string(token);
+      defyx_core::LogMessage(std::string("LoginByCode ") + (result.empty() ? "failed" : "succeeded"));
+      return result;
+    }
+    defyx_core::LogMessage("LoginByCode unavailable: symbol missing");
+  } catch (...) {}
+  return {};
 }
 
 // --- Gateway handshake helpers (file-scope, not exported) --------------------

@@ -132,7 +132,7 @@ class BalancePurchaseService extends ChangeNotifier {
     try {
       final started = await _store.buyConsumable(
         purchaseParam: PurchaseParam(productDetails: product),
-        autoConsume: Platform.isIOS,
+        autoConsume: Platform.isIOS || Platform.isMacOS,
       );
 
       if (!started) {

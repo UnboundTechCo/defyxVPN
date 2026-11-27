@@ -58,10 +58,10 @@ class SplitTunnelNotifier extends StateNotifier<SplitTunnelConfig> {
 
   Future<bool> addRule(SplitTunnelRuleType type, String value) async {
     await _ready;
-    final trimmed = value.trim();
-    if (trimmed.isEmpty || trimmed.contains(RegExp(r'\s'))) return false;
+    final normalized = SplitTunnelRule.normalize(type, value);
+    if (normalized == null) return false;
 
-    final rule = SplitTunnelRule(type: type, value: trimmed);
+    final rule = SplitTunnelRule(type: type, value: normalized);
     if (state.rules.contains(rule)) return false;
 
     await _update(state.copyWith(rules: [...state.rules, rule]));
@@ -114,7 +114,7 @@ final splitTunnelProvider =
 final installedAppsProvider = FutureProvider.autoDispose<List<InstalledApp>>((
   ref,
 ) async {
-  if (Platform.isIOS) return _popularApps();
+  if (Platform.isIOS || Platform.isMacOS) return _popularApps();
   final apps = await VpnBridge().getInstalledApps();
   return [...apps]
     ..sort((a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));

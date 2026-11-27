@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_wallet_topup_form.dart';
 import 'package:defyx_vpn/modules/premium/presentation/widgets/premium_wallet_view.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
@@ -42,7 +43,10 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         ref: ref,
       ),
       error: (error, stack) => Center(
-        child: Text('Error: $error', style: const TextStyle(color: Colors.red)),
+        child: Text(
+          '${AppLocalizations.of(context).error}: $error',
+          style: const TextStyle(color: Colors.red),
+        ),
       ),
     );
   }

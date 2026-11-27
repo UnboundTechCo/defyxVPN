@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_icons.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -89,6 +90,7 @@ class CustomUpdateDialog {
                         width: double.infinity,
                         height: 44.h,
                         child: ElevatedButton(
+                          autofocus: TvSupport.isTv,
                           onPressed: () async {
                             final String url;
                             switch (GlobalVars.appBuildType) {

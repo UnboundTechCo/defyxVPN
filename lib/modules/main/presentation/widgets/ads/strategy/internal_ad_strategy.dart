@@ -4,8 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:defyx_vpn/app/advertise_director.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/services/firebase_analytics_service.dart';
 import '../ads_state.dart';
+import '../internal_ad_view.dart';
 import '../models/ad_load_result.dart';
 import 'ad_loading_strategy.dart';
 
@@ -46,6 +48,14 @@ class InternalAdStrategy implements AdLoadingStrategy {
 
   @override
   Future<AdLoadResult> loadAd({required Ref ref}) async {
+    // Premium users see no ads, in-house ones included.
+    if (!ref.read(adsAllowedProvider)) {
+      return const AdLoadResult.failure(
+        errorCode: 'PREMIUM',
+        errorMessage: 'No ads for premium users',
+      );
+    }
+
     try {
       // Track load attempt
       await _analytics.logEvent(
@@ -146,89 +156,61 @@ class InternalAdStrategy implements AdLoadingStrategy {
       return const SizedBox.shrink();
     }
 
-    return GestureDetector(
-      onTap: () async {
-        if (clickUrl.isEmpty) {
-          debugPrint('No click URL provided for internal ad');
-          return;
-        }
-
-        try {
-          final uri = Uri.parse(clickUrl);
-          debugPrint('Opening internal ad URL: $clickUrl');
-
-          // Track click
-          final analytics = FirebaseAnalyticsService();
-          await analytics.logEvent(
-            name: 'ads_internal_ad_clicked',
-            parameters: {'click_url': clickUrl},
-          );
-
-          final canLaunch = await canLaunchUrl(uri);
-          if (canLaunch) {
-            await launchUrl(uri, mode: LaunchMode.externalApplication);
-            debugPrint('Internal ad URL opened successfully');
-          } else {
-            debugPrint('Cannot launch URL: $clickUrl');
-          }
-        } catch (e) {
-          debugPrint('Error opening internal ad URL: $e');
-        }
-      },
-      child: Image.network(
-        imageUrl,
-        width: double.infinity,
-        height: double.infinity,
-        fit: BoxFit.cover, // Fill entire space like AdMob ads do
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-
-          // Show loading spinner on dark background (same as ad container) to prevent blink
-          return Container(
-            color: backgroundColor,
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-                color: Colors.green,
-                strokeWidth: 2.0,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          debugPrint('Failed to load internal ad image from: $imageUrl');
-          debugPrint('   Error: $error');
-
-          // Set local flag and trigger state update to hide widget
-          if (!_internalAdImageFailed) {
-            _internalAdImageFailed = true;
-
-            // Track error
-            Future(() {
-              final container = ProviderScope.containerOf(
-                context,
-                listen: false,
-              );
-              final analytics = FirebaseAnalyticsService();
-              analytics.logEvent(
-                name: 'ads_internal_ad_image_failure',
-                parameters: {'image_url': imageUrl, 'error': error.toString()},
-              );
-
-              // Clear all ad data so the container disappears completely
-              debugPrint('Clearing ad data due to image load failure');
-              container.read(adsProvider.notifier).clearCustomAdData();
-            });
-          }
-
-          // Return empty widget - parent will be hidden on next rebuild
-          return const SizedBox.shrink();
-        },
-      ),
+    return InternalAdView(
+      imageUrl: imageUrl,
+      backgroundColor: backgroundColor,
+      onTap: () => _openClickUrl(clickUrl),
+      onImageError: (error) => _handleImageError(context, imageUrl, error),
     );
+  }
+
+  Future<void> _openClickUrl(String clickUrl) async {
+    if (clickUrl.isEmpty) {
+      debugPrint('No click URL provided for internal ad');
+      return;
+    }
+
+    try {
+      final uri = Uri.parse(clickUrl);
+      debugPrint('Opening internal ad URL: $clickUrl');
+
+      await _analytics.logEvent(
+        name: 'ads_internal_ad_clicked',
+        parameters: {'click_url': clickUrl},
+      );
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+        debugPrint('Internal ad URL opened successfully');
+      } else {
+        debugPrint('Cannot launch URL: $clickUrl');
+      }
+    } catch (e) {
+      debugPrint('Error opening internal ad URL: $e');
+    }
+  }
+
+  /// Hides the ad box when its picture cannot be loaded. Runs once per ad.
+  void _handleImageError(BuildContext context, String imageUrl, Object error) {
+    debugPrint('Failed to load internal ad image from: $imageUrl');
+    debugPrint('   Error: $error');
+
+    if (_internalAdImageFailed) return;
+    _internalAdImageFailed = true;
+
+    // Deferred: this runs while the image widget is building.
+    Future(() {
+      if (!context.mounted) return;
+      final container = ProviderScope.containerOf(context, listen: false);
+      _analytics.logEvent(
+        name: 'ads_internal_ad_image_failure',
+        parameters: {'image_url': imageUrl, 'error': error.toString()},
+      );
+
+      // Clear all ad data so the container disappears completely
+      debugPrint('Clearing ad data due to image load failure');
+      container.read(adsProvider.notifier).clearCustomAdData();
+    });
   }
 
   @override

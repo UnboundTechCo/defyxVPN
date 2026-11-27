@@ -3,36 +3,36 @@ on:
 
 jobs:
   release-to-telegram:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get app version
         id: get_version
         uses: ./.github/actions/get-version
 
       - name: Download Android Google Play Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-googleplay
           path: android-files/
 
       - name: Download Android GitHub Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: android-github
           path: android-files/
   
       - name: Download Windows Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: windows-release
           path: windows-files/
       
       - name: Download Linux Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: linux-release
           path: linux-files/

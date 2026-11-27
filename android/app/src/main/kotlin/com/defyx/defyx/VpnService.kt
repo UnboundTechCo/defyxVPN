@@ -12,9 +12,10 @@ import android.os.Build
 import android.os.ParcelFileDescriptor
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.core.content.edit
 import java.io.File
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 
 class DefyxVpnService : VpnService() {
@@ -22,17 +23,38 @@ class DefyxVpnService : VpnService() {
         private const val TAG = "DefyxVpnService"
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "defyx_vpn_channel"
+        private const val INSTANCE_TIMEOUT_MS = 5_000L
+        private const val CORE_STOP_TIMEOUT_MS = 10_000L
+
         @Volatile private lateinit var instance: DefyxVpnService
         fun getInstance(): DefyxVpnService = instance
-        private var vpnInterface: ParcelFileDescriptor? = null
-        private var listener: ((String) -> Unit)? = null
-        private var tunnelFd = -1
-        private var isServiceRunning = false
-        private var isVpnConnected = false
+
+        // Completes with the instance the system is running. A stopped
+        // service leaves `instance` pointing at a destroyed object, on which
+        // startForeground does nothing.
+        @Volatile private var running = CompletableDeferred<DefyxVpnService>()
+
+        /** Starts the service if it is not running and returns the live instance. */
+        suspend fun awaitRunning(context: Context): DefyxVpnService {
+            context.startService(Intent(context, DefyxVpnService::class.java))
+            return withTimeout(INSTANCE_TIMEOUT_MS) { running.await() }
+        }
+
+        // Starting and stopping the tunnel run one at a time, so a disconnect
+        // during a connect cannot leave an interface that nothing reads.
+        private val lifecycle = Mutex()
+        private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
+        @Volatile private var vpnInterface: ParcelFileDescriptor? = null
+        @Volatile private var listener: ((String) -> Unit)? = null
+        @Volatile private var isVpnConnected = false
         private var connectionMethod: String? = ""
 
         fun setVpnStatusListener(l: (String) -> Unit) {
             listener = l
+        }
+        fun clearVpnStatusListener(l: (String) -> Unit) {
+            if (listener === l) listener = null
         }
         fun notifyVpnStatus(status: String) {
             listener?.invoke(status)
@@ -42,14 +64,23 @@ class DefyxVpnService : VpnService() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        AppProxy.install()
         createNotificationChannel()
+        if (!running.complete(this)) {
+            running = CompletableDeferred(this)
+        }
     }
 
     override fun onDestroy() {
-        try {
-            vpnInterface?.close()
-        } catch (_: Exception) {}
-        vpnInterface = null
+        running = CompletableDeferred()
+        // The system destroys the service on revoke and when it is stopped.
+        // The interface goes here; the core stops in the background because
+        // it can take long and this runs on the main thread.
+        if (vpnInterface != null || isVpnConnected) {
+            releaseTunnel()
+            scope.launch { stopCore() }
+            notifyVpnStatus("disconnected")
+        }
         super.onDestroy()
         log("VPN Service Destroyed")
     }
@@ -57,7 +88,7 @@ class DefyxVpnService : VpnService() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             "ACTION_DISCONNECT_VPN" -> {
-                disconnectVpn()
+                stopVpn()
             }
         }
         return START_STICKY
@@ -80,31 +111,24 @@ class DefyxVpnService : VpnService() {
         }
     }
 
-    private fun startAsForeground(title: String, contentText: String) {
+    // Returns whether the service became a foreground service. The type must
+    // match the manifest; Android lists VPN apps under systemExempted.
+    private fun startAsForeground(title: String, contentText: String): Boolean {
         val notification = buildNotification(title, contentText, isVpnConnected)
-        try {
-            if (Build.VERSION.SDK_INT >= 34) {
+        return try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                 startForeground(
                         NOTIFICATION_ID,
                         notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-                )
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                startForeground(
-                        NOTIFICATION_ID,
-                        notification,
-                        ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE
+                        ServiceInfo.FOREGROUND_SERVICE_TYPE_SYSTEM_EXEMPTED
                 )
             } else {
                 startForeground(NOTIFICATION_ID, notification)
             }
+            true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start foreground: ${e.message}", e)
-            try {
-                startForeground(NOTIFICATION_ID, notification)
-            } catch (e2: Exception) {
-                Log.e(TAG, "Fallback failed: ${e2.message}", e2)
-            }
+            false
         }
     }
 
@@ -165,70 +189,131 @@ class DefyxVpnService : VpnService() {
         return builder.build()
     }
 
-    fun startVpn(context: Context, splitMode: String, splitRules: String, splitApps: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            Log.d(TAG, "startVpn called")
+    fun startVpn(
+            context: Context,
+            splitMode: String,
+            splitRules: String,
+            splitApps: String,
+            onResult: (Boolean) -> Unit = {}
+    ) {
+        scope.launch {
+            val started =
+                    lifecycle.withLock { openTunnel(context, splitMode, splitRules, splitApps) }
+            onResult(started)
+        }
+    }
+
+    // Answers true only once the interface exists and the tunnel reads it.
+    private fun openTunnel(
+            context: Context,
+            splitMode: String,
+            splitRules: String,
+            splitApps: String
+    ): Boolean {
+        Log.d(TAG, "startVpn called")
+        try {
+            notifyVpnStatus("connecting")
+            if (!startAsForeground("DefyxVPN", "Connecting...")) {
+                failTunnel()
+                return false
+            }
+            logPrivateDns()
+
+            val builder =
+                    Builder()
+                            .setSession("DefyxVPN")
+                            .addAddress("172.18.0.1", 30)
+                            .addAddress("fdfe:dcba:9876::1", 126)
+                            .addRoute("0.0.0.0", 0)
+                            .addRoute("::", 0)
+                            .addDnsServer("172.18.0.2")
+                            .setMtu(1500)
+                            .setBlocking(false)
+
+            applySplitApps(builder, context.packageName, splitMode, splitApps)
+
+            releaseTunnel()
+            vpnInterface = builder.establish()
+
+            val fd = vpnInterface?.fd ?: -1
+            if (fd <= 0) {
+                Log.e(TAG, "Failed to establish tun interface")
+                failTunnel()
+                return false
+            }
+
+            Android.setSocketProtector(
+                    object : SocketProtector {
+                        override fun protect(fileDescriptor: Int): Boolean =
+                                this@DefyxVpnService.protect(fileDescriptor)
+                    }
+            )
+            Android.setSplitTunnel(splitMode, splitRules, splitApps)
+            if (!Android.startTunnel(fd.toLong())) {
+                Log.e(TAG, "Tunnel start failed")
+                failTunnel()
+                return false
+            }
+
+            isVpnConnected = true
+            AppProxy.setEnabled(true)
+            updateNotification("DefyxVPN", "Connected by $connectionMethod")
+            notifyVpnStatus("connected")
+            return true
+        } catch (e: Exception) {
+            Log.e(TAG, "startVpn failed: ${e.message}", e)
+            failTunnel()
+            return false
+        }
+    }
+
+    private fun failTunnel() {
+        releaseTunnel()
+        updateNotification("DefyxVPN", "Connection failed")
+        notifyVpnStatus("disconnected")
+    }
+
+    // An established interface that no tunnel reads from takes all traffic of
+    // the device and drops it, so it is closed as soon as the tunnel fails.
+    // The tunnel holds its own copy of the descriptor, so the interface only
+    // goes away once both are closed. Safe to call when nothing is open.
+    private fun releaseTunnel() {
+        AppProxy.setEnabled(false)
+        try {
+            Android.stopTunnel()
+        } catch (_: Exception) {}
+        try {
+            vpnInterface?.close()
+        } catch (_: Exception) {}
+        vpnInterface = null
+        isVpnConnected = false
+    }
+
+    // Stopping the core waits for its transports to shut down, which can take
+    // long. It runs apart, so a stuck core cannot hold up the disconnect.
+    private suspend fun stopCore(): Boolean {
+        val stopping = scope.async {
             try {
-                notifyVpnStatus("connecting")
-                startAsForeground("DefyxVPN", "Connecting...")
-
-                val builder =
-                        Builder()
-                                .setSession("DefyxVPN")
-                                .addAddress("172.18.0.1", 30)
-                                .addAddress("fdfe:dcba:9876::1", 126)
-                                .addRoute("0.0.0.0", 0)
-                                .addRoute("::", 0)
-                                .addDnsServer("1.1.1.1")
-                                .setMtu(1500)
-                                .setBlocking(false)
-
-                applySplitApps(builder, context.packageName, splitMode, splitApps)
-
-                vpnInterface?.close()
-                vpnInterface = builder.establish()
-
-                val fd = vpnInterface?.fd ?: -1
-
-                if (fd <= 0) {
-                    Log.e(TAG, "Failed to establish tun interface")
-                    tunnelFd = -1
-                    isVpnConnected = false
-                    withContext(Dispatchers.Main) { saveVpnState(false) }
-                    updateNotification("DefyxVPN", "Connection failed")
-                    notifyVpnStatus("disconnected")
-                    return@launch
-                }
-
-                tunnelFd = fd
-                Android.setSocketProtector(
-                        object : SocketProtector {
-                            override fun protect(fileDescriptor: Int): Boolean =
-                                    this@DefyxVpnService.protect(fileDescriptor)
-                        }
-                )
-                Android.setSplitTunnel(splitMode, splitRules, splitApps)
-                val success = Android.startTunnel(fd.toLong())
-
-                isVpnConnected = success
-                withContext(Dispatchers.Main) { saveVpnState(isVpnConnected) }
-
-                if (success) {
-                    updateNotification("DefyxVPN", "Connected by $connectionMethod")
-                    notifyVpnStatus("connected")
-                } else {
-                    Log.e(TAG, "Tunnel start failed")
-                    tunnelFd = -1
-                    updateNotification("DefyxVPN", "Connection failed")
-                    notifyVpnStatus("disconnected")
-                }
+                Android.stopVPN()
+                true
             } catch (e: Exception) {
-                Log.e(TAG, "startVpn failed: ${e.message}", e)
-                updateNotification("DefyxVPN", "Connection failed")
-                notifyVpnStatus("disconnected")
-                withContext(Dispatchers.Main) { saveVpnState(false) }
+                log("Error stopping VPN: ${e.message}")
+                false
             }
         }
+        val stopped = withTimeoutOrNull(CORE_STOP_TIMEOUT_MS) { stopping.await() }
+        if (stopped == null) {
+            log("Core still stopping after ${CORE_STOP_TIMEOUT_MS / 1000}s, not waiting for it")
+        }
+        return stopped == true
+    }
+
+    // A Private DNS hostname makes Android send all DNS to that server through
+    // the VPN. Servers that only accept local addresses then fail, so the
+    // setting is logged to explain such reports.
+    private fun logPrivateDns() {
+        val server = PrivateDns.host(this) ?: return
+        log("Private DNS is set to $server, DNS of other apps goes to it through the VPN")
     }
 
     private fun applySplitApps(builder: Builder, ownPackage: String, mode: String, apps: String) {
@@ -252,6 +337,10 @@ class DefyxVpnService : VpnService() {
             return
         }
 
+        // The core runs in this app and dials its servers without protect(),
+        // so its own traffic must stay outside the tunnel or it would loop
+        // back into itself. The app's other traffic is sent to the core's
+        // proxy instead, see AppProxy and AppTraffic.
         try {
             builder.addDisallowedApplication(ownPackage)
         } catch (_: Exception) {}
@@ -280,43 +369,34 @@ class DefyxVpnService : VpnService() {
                 false
             }
 
-    private fun disconnectVpn() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                withContext(Dispatchers.Main) {
-                    notifyVpnStatus("disconnecting")
-                    updateNotification("DefyxVPN", "Disconnecting...")
-                }
-
-                try {
-                    vpnInterface?.close()
-                } catch (_: Exception) {}
-                vpnInterface = null
-
-                Android.stopVPN()
-                Android.stopTunnel()
-
-                tunnelFd = -1
-                isVpnConnected = false
-                isServiceRunning = false
-                saveVpnState(false)
-
-                withContext(Dispatchers.Main) {
-                    notifyVpnStatus("disconnected")
-                    stopForeground(STOP_FOREGROUND_REMOVE)
-                    val notificationManager =
-                            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    notificationManager.cancel(NOTIFICATION_ID)
-                    stopSelf()
-                }
-            } catch (e: Exception) {
-                log("Error stopping VPN: ${e.message}")
-            }
+    /**
+     * Closes the tunnel, then stops the core. [onDone] runs once the
+     * interface is gone and the core has stopped or [CORE_STOP_TIMEOUT_MS]
+     * passed, with whether the core stopped in time.
+     */
+    fun stopVpn(onDone: (Boolean) -> Unit = {}) {
+        scope.launch {
+            val stopped =
+                    lifecycle.withLock {
+                        notifyVpnStatus("disconnecting")
+                        // The interface goes first: it carries the device's
+                        // traffic and closes at once.
+                        releaseTunnel()
+                        val coreStopped = stopCore()
+                        withContext(Dispatchers.Main) {
+                            stopForeground(STOP_FOREGROUND_REMOVE)
+                            val notificationManager =
+                                    getSystemService(Context.NOTIFICATION_SERVICE) as
+                                            NotificationManager
+                            notificationManager.cancel(NOTIFICATION_ID)
+                            // The next connect starts it again, see awaitRunning.
+                            stopSelf()
+                        }
+                        notifyVpnStatus("disconnected")
+                        coreStopped
+                    }
+            onDone(stopped)
         }
-    }
-
-    fun stopVpn() {
-        disconnectVpn()
     }
 
     fun measurePing(): Long {
@@ -335,7 +415,7 @@ class DefyxVpnService : VpnService() {
             deepScan: Boolean,
             healthCheck: Boolean
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             try {
                 Android.startVPN(cacheDir, flowLine, pattern, deepScan, healthCheck)
             } catch (e: Exception) {
@@ -423,14 +503,9 @@ class DefyxVpnService : VpnService() {
     override fun onRevoke() {
         super.onRevoke()
         Log.d("VPN_SERVICE", "Revoked")
-        disconnectVpn()
+        stopVpn()
     }
 
-    private fun saveVpnState(isRunning: Boolean) {
-        applicationContext.getSharedPreferences("defyx_vpn_prefs", Context.MODE_PRIVATE).edit {
-            putBoolean("vpn_running", isRunning)
-        }
-    }
     fun setConnectionMethod(method: String) {
         connectionMethod = method
     }

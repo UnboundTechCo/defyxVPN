@@ -50,44 +50,6 @@ class _MeasureSizeRenderObject extends RenderProxyBox {
   }
 }
 
-final tipsCurrentPageProvider = StateProvider<int>((ref) => 0);
-
-final tipsPageControllerProvider = Provider<PageController>((ref) {
-  final controller = PageController();
-  ref.onDispose(controller.dispose);
-  return controller;
-});
-
-// Timer for auto-advancing tips
-final tipsAutoAdvanceTimerProvider = Provider<Timer?>((ref) {
-  final pageController = ref.watch(tipsPageControllerProvider);
-  final tipsAsync = ref.watch(selectedHintsProvider);
-
-  return tipsAsync.when(
-    data: (hints) {
-      if (hints.isEmpty) return null;
-
-      final timer = Timer.periodic(const Duration(seconds: 30), (_) {
-        if (pageController.hasClients) {
-          final currentPage = ref.read(tipsCurrentPageProvider);
-          final nextPage = (currentPage + 1) % hints.length;
-          ref.read(tipsCurrentPageProvider.notifier).state = nextPage;
-          pageController.animateToPage(
-            nextPage,
-            duration: const Duration(milliseconds: 500),
-            curve: Curves.easeInOut,
-          );
-        }
-      });
-
-      ref.onDispose(timer.cancel);
-      return timer;
-    },
-    loading: () => null,
-    error: (_, __) => null,
-  );
-});
-
 class TipsSlider extends ConsumerStatefulWidget {
   const TipsSlider({super.key});
 
@@ -103,8 +65,40 @@ class _TipsSliderState extends ConsumerState<TipsSlider> {
   // block. These are plain layout constants, not language-dependent, so
   // they're safe to hardcode - only the text block itself needs measuring.
   static const double _structuralOverhead = 75.0;
+  // The card's border; Container adds it inside the height, on top of the
+  // padding, so it counts too (leaving it out clipped the last line).
+  static const double _borderWidth = 1;
 
   final Map<int, double> _measuredContentHeights = {};
+
+  // The page state lives and dies with the card, so the page shown, the dots
+  // and the height always agree. (Kept app-wide, it survived the card being
+  // rebuilt - e.g. on disconnect - while the new PageView started at the
+  // first tip, so the card was sized for another tip and cut text off.)
+  final PageController _pageController = PageController();
+  int _page = 0;
+  int _tipCount = 0;
+  Timer? _autoAdvance;
+
+  @override
+  void initState() {
+    super.initState();
+    _autoAdvance = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_tipCount < 2 || !_pageController.hasClients) return;
+      _pageController.animateToPage(
+        (_page + 1) % _tipCount,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _autoAdvance?.cancel();
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void _onContentMeasured(int index, Size size) {
     if (!mounted) return;
@@ -117,13 +111,9 @@ class _TipsSliderState extends ConsumerState<TipsSlider> {
 
   @override
   Widget build(BuildContext context) {
-    final pageController = ref.watch(tipsPageControllerProvider);
     final tipsAsync = ref.watch(selectedHintsProvider);
-    final currentPage = ref.watch(tipsCurrentPageProvider);
+    final currentPage = _page;
     final l10n = AppLocalizations.of(context);
-
-    // Start auto-advance timer
-    ref.watch(tipsAutoAdvanceTimerProvider);
 
     return tipsAsync.when(
       data: (hints) {
@@ -135,14 +125,13 @@ class _TipsSliderState extends ConsumerState<TipsSlider> {
             .map((hint) => {'title': hint.title, 'message': hint.message})
             .toList();
 
+        _tipCount = tips.length;
         final pageIndex = currentPage % tips.length;
         final measuredContentHeight = _measuredContentHeights[pageIndex];
         final dynamicHeight = measuredContentHeight == null
             ? _minHeight.h
-            : (measuredContentHeight + _structuralOverhead.h).clamp(
-                _minHeight.h,
-                double.infinity,
-              );
+            : (measuredContentHeight + _structuralOverhead.h + 2 * _borderWidth)
+                  .clamp(_minHeight.h, double.infinity);
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 300),
@@ -159,7 +148,7 @@ class _TipsSliderState extends ConsumerState<TipsSlider> {
             borderRadius: BorderRadius.circular(16.r),
             border: Border.all(
               color: Colors.white.withValues(alpha: 0.33),
-              width: 1,
+              width: _borderWidth,
             ),
           ),
           child: Stack(
@@ -204,11 +193,10 @@ class _TipsSliderState extends ConsumerState<TipsSlider> {
                           },
                         ),
                         child: PageView.builder(
-                          controller: pageController,
+                          controller: _pageController,
                           itemCount: tips.length,
                           onPageChanged: (page) {
-                            ref.read(tipsCurrentPageProvider.notifier).state =
-                                page;
+                            setState(() => _page = page);
                           },
                           itemBuilder: (context, index) {
                             final title = tips[index]['title'];

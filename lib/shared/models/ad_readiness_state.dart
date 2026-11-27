@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 /// Consolidated state for ad readiness and consent flow
-/// 
+///
 /// This replaces the fragmented state across:
 /// - privacy_notice_shown (MainScreenLogic)
 /// - vpnProfileSetup (AdPersonalizationProvider)
@@ -15,27 +15,30 @@ class AdReadinessState {
   /// Whether user has accepted privacy notice and completed VPN profile setup
   /// Replaces: privacy_notice_shown + vpnProfileSetup
   final bool privacyAccepted;
-  
+
   /// App Tracking Transparency status (iOS only, always authorized on Android)
   final TrackingStatus attStatus;
-  
-  /// Whether consent flow (ATT + UMP) has completed successfully
-  /// NOW PERSISTED (was volatile before)
+
+  /// Whether consent flow (ATT + UMP) has completed successfully this launch.
+  ///
+  /// Per launch, never persisted: Google expects the consent check on every
+  /// launch. (Persisting it stopped the check, and the SDK setup below, from
+  /// ever running again after the first launch.)
   final bool consentComplete;
-  
-  /// Whether AdMob SDK has been initialized
-  /// NOW PERSISTED (was volatile before)
+
+  /// Whether the AdMob SDK has been initialized in this process. Per launch,
+  /// never persisted.
   final bool adMobInitialized;
-  
+
   /// Whether user can use personalized ads (based on ATT status)
   final bool canUsePersonalizedAds;
-  
+
   /// Last time consent was checked (for UMP cache coordination)
   final DateTime? lastConsentCheck;
-  
+
   /// Number of initialization attempts (for exponential backoff)
   final int initAttempts;
-  
+
   /// Last error message if initialization failed
   final String? lastError;
 
@@ -63,8 +66,7 @@ class AdReadinessState {
       privacyAccepted && !adMobInitialized && !consentComplete;
 
   /// Whether ads can be loaded
-  bool get canLoadAds =>
-      privacyAccepted && consentComplete && adMobInitialized;
+  bool get canLoadAds => privacyAccepted && consentComplete && adMobInitialized;
 
   /// Whether ATT permission can be requested (iOS only)
   bool get canRequestATT =>
@@ -104,8 +106,6 @@ class AdReadinessState {
     return {
       'privacyAccepted': privacyAccepted,
       'attStatus': attStatus.index,
-      'consentComplete': consentComplete,
-      'adMobInitialized': adMobInitialized,
       'canUsePersonalizedAds': canUsePersonalizedAds,
       'lastConsentCheck': lastConsentCheck?.toIso8601String(),
       'initAttempts': initAttempts,
@@ -119,8 +119,8 @@ class AdReadinessState {
       return AdReadinessState(
         privacyAccepted: json['privacyAccepted'] as bool? ?? false,
         attStatus: _parseTrackingStatus(json['attStatus'] as int? ?? 0),
-        consentComplete: json['consentComplete'] as bool? ?? false,
-        adMobInitialized: json['adMobInitialized'] as bool? ?? false,
+        // consentComplete and adMobInitialized are per launch: older builds
+        // saved them, and are ignored here.
         canUsePersonalizedAds: json['canUsePersonalizedAds'] as bool? ?? false,
         lastConsentCheck: json['lastConsentCheck'] != null
             ? DateTime.tryParse(json['lastConsentCheck'] as String)

@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:defyx_vpn/app/advertise_director.dart';
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/ad_loading_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
     as conn;
 import 'package:flutter/material.dart';
@@ -11,8 +13,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Ad Environment Configuration
 ///
-/// Cached environment details to avoid repeated timezone/platform detection.
-/// This is computed once at app startup and used throughout the app lifecycle.
+/// Whether this device runs AdMob, as decided by [AdvertiseDirector.isAdMobDisabled].
+@immutable
 class AdEnvironment {
   final bool adMobIsDisabled;
   final bool isMobilePlatform;
@@ -25,32 +27,98 @@ class AdEnvironment {
   });
 
   @override
+  bool operator ==(Object other) =>
+      other is AdEnvironment &&
+      other.adMobIsDisabled == adMobIsDisabled &&
+      other.isMobilePlatform == isMobilePlatform &&
+      other.shouldInitializeAdMob == shouldInitializeAdMob;
+
+  @override
+  int get hashCode =>
+      Object.hash(adMobIsDisabled, isMobilePlatform, shouldInitializeAdMob);
+
+  @override
   String toString() =>
-      'AdEnvironment(isIranian: $adMobIsDisabled, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
+      'AdEnvironment(adMobDisabled: $adMobIsDisabled, isMobile: $isMobilePlatform, initAdMob: $shouldInitializeAdMob)';
+}
+
+/// Works out [AdEnvironment] and works it out again whenever new flowline
+/// settings are saved, so a change to `disabledAdmob` on the server takes
+/// effect as soon as the app downloads it.
+///
+/// Stays loading (no ads at all) until the settings exist: on a fresh install
+/// they arrive moments later, when the splash screen saves the flowline. It
+/// only emits when the decision changes, so dependants such as
+/// [adStrategyManagerProvider] are not rebuilt on every save.
+class AdEnvironmentNotifier extends StateNotifier<AsyncValue<AdEnvironment>> {
+  AdEnvironmentNotifier(this._isAdMobDisabled, {required bool isMobile})
+    : _isMobile = isMobile,
+      super(const AsyncValue.loading()) {
+    refresh();
+  }
+
+  /// [AdvertiseDirector.isAdMobDisabled] in the app: null while unknown.
+  final Future<bool?> Function() _isAdMobDisabled;
+  final bool _isMobile;
+  bool _refreshing = false;
+  bool _refreshAgain = false;
+
+  Future<void> refresh() async {
+    if (_refreshing) {
+      _refreshAgain = true;
+      return;
+    }
+    _refreshing = true;
+    try {
+      do {
+        _refreshAgain = false;
+        final adMobDisabled = await _isAdMobDisabled();
+        if (!mounted) return;
+        if (adMobDisabled == null) {
+          debugPrint('Ad environment: waiting for flowline settings');
+          continue;
+        }
+
+        final environment = AdEnvironment(
+          adMobIsDisabled: adMobDisabled,
+          isMobilePlatform: _isMobile,
+          shouldInitializeAdMob: _isMobile && !adMobDisabled,
+        );
+        if (state.valueOrNull != environment) {
+          debugPrint('Ad environment: $environment');
+          state = AsyncValue.data(environment);
+        }
+      } while (_refreshAgain && mounted);
+    } catch (e) {
+      // Keep the last decision; the next settings save tries again.
+      debugPrint('Ad environment: could not be worked out: $e');
+    } finally {
+      _refreshing = false;
+    }
+  }
 }
 
 /// Provider for ad environment configuration
 ///
-/// This is a FutureProvider because Iran detection is async (requires timezone check).
-/// It's computed once and cached for the app lifetime.
-///
 /// Business rules:
-/// - Iranian users: Don't initialize AdMob, only use internal ads
-/// - Desktop platforms: Don't initialize AdMob, only use internal ads
-/// - Mobile non-Iranian: Initialize AdMob, use both strategies
-final adEnvironmentProvider = FutureProvider<AdEnvironment>((ref) async {
-  final adMobIsDisabled = await AdvertiseDirector.shouldUseInternalAds(ref);
-  final isMobile = Platform.isAndroid || Platform.isIOS;
-  final shouldInitAdMob = isMobile && !adMobIsDisabled;
-
-  final environment = AdEnvironment(
-    adMobIsDisabled: adMobIsDisabled,
-    isMobilePlatform: isMobile,
-    shouldInitializeAdMob: shouldInitAdMob,
-  );
-
-  return environment;
-});
+/// - Time zones listed in the server's `disabledAdmob` (or "general"):
+///   don't initialize AdMob, only use internal ads
+/// - Desktop platforms: don't initialize AdMob, only use internal ads
+/// - Everyone else on mobile: initialize AdMob, use both strategies
+final adEnvironmentProvider =
+    StateNotifierProvider<AdEnvironmentNotifier, AsyncValue<AdEnvironment>>((
+      ref,
+    ) {
+      final notifier = AdEnvironmentNotifier(
+        () => AdvertiseDirector.isAdMobDisabled(ref),
+        isMobile: Platform.isAndroid || Platform.isIOS,
+      );
+      ref.listen(
+        flowlineSettingsRevisionProvider,
+        (_, _) => notifier.refresh(),
+      );
+      return notifier;
+    });
 
 /// Ad Strategy Manager - Handles strategy selection based on business rules
 ///
@@ -267,6 +335,16 @@ class AdStrategyManager {
     );
   }
 
+  /// Fills an empty ad box when the user comes back to it (see
+  /// [GoogleAdStrategy.refill]). Only while disconnected: connected, the box
+  /// holds in-house ads.
+  void refillGoogleAd() {
+    if (!_hasGoogleStrategy) return;
+    final status = _ref.read(conn.connectionStateProvider).status;
+    if (status != conn.ConnectionStatus.disconnected) return;
+    _googleStrategy!.refill(_ref);
+  }
+
   /// Dispose strategies and subscriptions
   void dispose() {
     debugPrint('AdStrategyManager - Disposing');
@@ -309,7 +387,8 @@ final adStrategyManagerProvider = Provider<AdStrategyManager?>((ref) {
       // (actual ad loading happens on connection changes, which is async)
       manager.initialize();
 
-      // Register disposal (only happens on app exit now)
+      // Disposed on app exit, and when the AdMob decision changes (the
+      // manager is then rebuilt with or without the Google strategy).
       ref.onDispose(() {
         manager.dispose();
       });
@@ -335,6 +414,7 @@ final adStrategyManagerProvider = Provider<AdStrategyManager?>((ref) {
 /// - When GoogleAdStrategy hasn't loaded yet (nativeAdIsLoaded = false)
 /// - When InternalAdStrategy has no ad data (customImageUrl = null/empty)
 final hasActiveAdProvider = Provider.autoDispose<bool>((ref) {
+  if (!ref.watch(adsAllowedProvider)) return false; // Premium: no ads.
   final manager = ref.watch(adStrategyManagerProvider);
   final connectionState = ref.watch(conn.connectionStateProvider);
   final adsState = ref.watch(adsProvider);

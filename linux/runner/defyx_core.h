@@ -16,18 +16,25 @@ void StopTun2Socks();
 bool StartTunnel();
 void SetSplitTunnel(const std::string& mode, const std::string& rules, const std::string& apps);
 void StopTunnel();
+// Resolver of the connected step, for the tunnel process; empty when the
+// library is too old to say.
+std::string GetTunnelDNS();
+void SetTunnelDNS(const std::string& address);
 void Stop();
 long long MeasurePing();
 std::string GetFlag();
 void SetAsnName();
 void SetTimeZone(float tz);
-std::string GetFlowLine(bool isTest = false);
+std::string GetFlowLine(bool isTest = false, const std::string& token = "");
 std::string GetCachedFlowLine();
 std::string DecodeAndVerifyFlowline(const std::string& flowLine);
 std::string GetVpnStatus();
 void SetConnectionMethod(const std::string& method);
 void SetCacheDir(const std::string& cacheDir);
 bool IsTunnelRunning();
+
+std::string Login(const std::string& email, const std::string& password);
+std::string LoginByCode(const std::string& code);
 
 // Shared library callback and logging setup
 void EnableVerboseLogs(bool enable);

@@ -16,6 +16,8 @@ import android.net.Uri
 import android.net.VpnService
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import android.provider.Settings
 import android.util.Log
@@ -43,19 +45,27 @@ class MainActivity : FlutterActivity() {
     private val VIBRATION_CHANNEL = "com.defyx.vibration"
     private var eventSink: EventChannel.EventSink? = null
     private var pendingVpnResult: MethodChannel.Result? = null
+    private var pendingConnectArgs: Map<String, Any>? = null
     private val NOTIFICATION_PERMISSION_REQUEST_CODE = 1010
     private lateinit var vibrationPlugin: VibrationPlugin
     private val iconPermits = Semaphore(2)
 
+    // Tells Flutter when the tunnel goes down outside the app's own
+    // disconnect: from the notification, on revoke, or when it fails.
+    private val vpnStatusListener: (String) -> Unit = { status ->
+        runOnUiThread { sendVpnStatusToFlutter(status) }
+    }
+
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
-        
+
+        DefyxVpnService.setVpnStatusListener(vpnStatusListener)
         vibrationPlugin = VibrationPlugin(applicationContext)
 
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler {
                 call,
                 result ->
-            lifecycleScope.launch { handleMethodCall(call, result) }
+            lifecycleScope.launch { handleMethodCall(call, MainThreadResult(result)) }
         }
 
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, STATUS_CHANNEL)
@@ -124,6 +134,11 @@ class MainActivity : FlutterActivity() {
         startService(intent)
     }
 
+    override fun onDestroy() {
+        DefyxVpnService.clearVpnStatusListener(vpnStatusListener)
+        super.onDestroy()
+    }
+
     private suspend fun handleMethodCall(call: MethodCall, result: MethodChannel.Result) {
         try {
             when (call.method) {
@@ -151,6 +166,8 @@ class MainActivity : FlutterActivity() {
                         setConnectionMethod(call.arguments as? Map<String, Any>, result)
                 "login" -> login(call.arguments as? Map<String, Any>, result)
                 "loginByCode" -> loginByCode(call.arguments as? Map<String, Any>, result)
+                "getPrivateDnsHost" -> result.success(PrivateDns.host(this) ?: "")
+                "openNetworkSettings" -> result.success(PrivateDns.openSettings(this))
                 else -> result.notImplemented()
             }
         } catch (e: Exception) {
@@ -168,26 +185,41 @@ class MainActivity : FlutterActivity() {
         }
     }
     private fun connectVpn(args: Map<String, Any>?, result: MethodChannel.Result) {
-        pendingVpnResult = result
-
-        // DefyxVpnService.setVpnStatusListener { status -> sendVpnStatusToFlutter(status) }
-
         val vpnIntent = VpnService.prepare(this)
         if (vpnIntent != null) {
+            pendingVpnResult = result
+            pendingConnectArgs = args ?: emptyMap()
             try {
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } catch (e: Exception) {
+                pendingVpnResult = null
+                pendingConnectArgs = null
                 result.error("VPN_PERMISSION_ERROR", "Failed to request VPN permission", e.message)
             }
         } else {
-            DefyxVpnService.getInstance()
-                    .startVpn(
-                            this,
-                            args?.get("mode") as? String ?: "off",
-                            args?.get("rules") as? String ?: "[]",
-                            args?.get("apps") as? String ?: "[]"
-                    )
-            result.success(true)
+            startTunnel(args, result)
+        }
+    }
+
+    // Answers with whether the tunnel really started, so a failure shows as
+    // one instead of a connection that carries no traffic. The service may
+    // have stopped since the last disconnect, so it is started first.
+    private fun startTunnel(args: Map<String, Any>?, result: MethodChannel.Result) {
+        lifecycleScope.launch {
+            val service =
+                    try {
+                        DefyxVpnService.awaitRunning(this@MainActivity)
+                    } catch (e: Exception) {
+                        Log.e(TAG, "VPN service did not start", e)
+                        result.success(false)
+                        return@launch
+                    }
+            service.startVpn(
+                    this@MainActivity,
+                    args?.get("mode") as? String ?: "off",
+                    args?.get("rules") as? String ?: "[]",
+                    args?.get("apps") as? String ?: "[]"
+            ) { started -> result.success(started) }
         }
     }
 
@@ -196,6 +228,7 @@ class MainActivity : FlutterActivity() {
             val vpnIntent = VpnService.prepare(this)
             if (vpnIntent != null) {
                 pendingVpnResult = result
+                pendingConnectArgs = null
                 startActivityForResult(vpnIntent, VPN_REQUEST_CODE)
             } else {
                 result.success(true)
@@ -214,21 +247,27 @@ class MainActivity : FlutterActivity() {
 
         if (requestCode == VPN_REQUEST_CODE) {
             val res = pendingVpnResult ?: return
+            val connectArgs = pendingConnectArgs
             pendingVpnResult = null
+            pendingConnectArgs = null
 
-            if (resultCode == Activity.RESULT_OK) {
-                res.success(true)
-            } else {
+            if (resultCode != Activity.RESULT_OK) {
                 res.success(false)
+            } else if (connectArgs != null) {
+                startTunnel(connectArgs, res)
+            } else {
+                res.success(true)
             }
         }
     }
 
+    // Answers once the interface is gone and the core has stopped, so the
+    // app never shows disconnected while the tunnel still exists.
     private fun disconnectVpn(result: MethodChannel.Result) =
             try {
-                DefyxVpnService.getInstance().stopVpn()
-                sendVpnStatusToFlutter("disconnected")
-                result.success(true)
+                DefyxVpnService.getInstance().stopVpn { coreStopped ->
+                    result.success(coreStopped)
+                }
             } catch (e: Exception) {
                 result.error("VPN_STOP_ERROR", "Failed to stop VPN", e.message)
             }
@@ -591,6 +630,32 @@ class MainActivity : FlutterActivity() {
                 }
             }
         }
+    }
+}
+
+/**
+ * Replies to Flutter on the main thread, where the embedding expects them,
+ * whichever thread the handler finished on. Several handlers finish on
+ * Dispatchers.IO.
+ */
+private class MainThreadResult(private val result: MethodChannel.Result) : MethodChannel.Result {
+    private fun reply(block: () -> Unit) {
+        if (Looper.myLooper() == Looper.getMainLooper()) {
+            block()
+        } else {
+            mainHandler.post(block)
+        }
+    }
+
+    override fun success(value: Any?) = reply { result.success(value) }
+
+    override fun error(code: String, message: String?, details: Any?) =
+            reply { result.error(code, message, details) }
+
+    override fun notImplemented() = reply { result.notImplemented() }
+
+    private companion object {
+        val mainHandler = Handler(Looper.getMainLooper())
     }
 }
 

@@ -189,11 +189,20 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
 
   // === Consent & AdMob Initialization Flow ===
 
-  /// Main initialization flow: ATT -> UMP -> AdMob
-  /// Called when canInitializeAdMob becomes true
+  Future<void>? _adFlow;
+
+  /// Main initialization flow: UMP -> ATT -> AdMob, once per launch.
+  /// Called when canInitializeAdMob becomes true, or when the AdMob decision
+  /// arrives; a call while the flow is running joins it.
   Future<void> initializeAdFlow({
     required Future<void> Function(bool shouldRequestUMP) onRunUMP,
-  }) async {
+  }) {
+    return _adFlow ??= _runAdFlow(onRunUMP).whenComplete(() => _adFlow = null);
+  }
+
+  Future<void> _runAdFlow(
+    Future<void> Function(bool shouldRequestUMP) onRunUMP,
+  ) async {
     if (!state.canInitializeAdMob) {
       debugPrint('Cannot initialize AdMob yet: $state');
       return;
@@ -220,6 +229,17 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       );
 
       await onRunUMP(shouldRequestUMP);
+
+      // Google's rule: request ads only when UMP says so. False when consent
+      // is required but was not collected (e.g. the form failed to load);
+      // the next launch asks again.
+      if (shouldRequestUMP &&
+          !await ConsentInformation.instance.canRequestAds()) {
+        debugPrint('UMP: ads may not be requested yet - AdMob stays off');
+        state = state.copyWith(lastError: 'UMP consent not obtained');
+        await _persistState();
+        return;
+      }
 
       // Step 2: Transition delay to ensure native UMP view controller dismiss animation finishes cleanly
       await Future.delayed(const Duration(milliseconds: 500));
@@ -296,12 +316,10 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     return true;
   }
 
-  /// Get ad request extras for AdMob
+  /// Get ad request extras for AdMob. No 'npa': personalization follows the
+  /// UMP consent, and the SDK applies the iOS tracking answer itself.
   Map<String, String> getAdRequestExtras() {
-    return {
-      'npa': state.canUsePersonalizedAds ? '0' : '1',
-      'att_status': state.attStatus.name,
-    };
+    return {'att_status': state.attStatus.name};
   }
 
   // === Error Recovery ===

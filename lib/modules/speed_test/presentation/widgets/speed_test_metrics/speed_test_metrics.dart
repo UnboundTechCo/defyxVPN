@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/core/utils/format_number.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -30,7 +31,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = AppLocalizations.of(context);
 
     // Keep download/upload/latency fields in the same left-right layout as
     // English regardless of locale, instead of mirroring for RTL languages.
@@ -53,6 +54,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
                       label: l10n.download,
                       value: downloadSpeed,
                       connectionStatus: connectionStatus,
+                      format: formatSpeed,
                     ),
                   ),
                 MetricItemCompact(
@@ -78,6 +80,7 @@ class SpeedTestMetricsDisplay extends StatelessWidget {
                       label: l10n.upload,
                       value: uploadSpeed,
                       connectionStatus: connectionStatus,
+                      format: formatSpeed,
                     ),
                   ),
                 Column(

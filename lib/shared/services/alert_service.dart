@@ -78,18 +78,36 @@ final class VibrationService extends AlertSub {
 
 final class AudioService extends AlertSub {
   static bool _soundEnabledState = true;
+  static const MethodChannel _vpnChannel = MethodChannel('com.defyx.vpn');
 
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  // Created in init(), and only when the platform can play sound.
+  AudioPlayer? _audioPlayer;
 
   @override
   Future<void> init() async {
     _hasAction = _soundEnabledState;
 
+    if (!await _canPlayAudio()) return;
+    final player = _audioPlayer = AudioPlayer();
+
     try {
-      await _audioPlayer.setPlayerMode(PlayerMode.lowLatency);
-      await _audioPlayer.setReleaseMode(ReleaseMode.stop);
+      await player.setPlayerMode(PlayerMode.lowLatency);
+      await player.setReleaseMode(ReleaseMode.stop);
     } catch (e) {
       debugPrint('Error initializing audio player: $e');
+    }
+  }
+
+  /// On Linux, audioplayers aborts the whole app (in native code, so it can't
+  /// be caught here) when GStreamer can't make a player, e.g. when no
+  /// GStreamer plugins are found. The runner checks that first.
+  static Future<bool> _canPlayAudio() async {
+    if (kIsWeb || !Platform.isLinux) return true;
+    try {
+      return await _vpnChannel.invokeMethod<bool>('canPlayAudio') ?? false;
+    } catch (e) {
+      debugPrint('Error checking audio support: $e');
+      return false;
     }
   }
 
@@ -100,18 +118,17 @@ final class AudioService extends AlertSub {
   }
 
   Future<void> _playSound() async {
-    if (!hasAction) return;
+    final player = _audioPlayer;
+    if (!hasAction || player == null) return;
 
     try {
       if (!kIsWeb &&
           (Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
         unawaited(
-          _audioPlayer
+          player
               .stop()
               .then((_) {
-                return _audioPlayer.play(
-                  AssetSource('sounds/notification.wav'),
-                );
+                return player.play(AssetSource('sounds/notification.wav'));
               })
               .catchError((e) {
                 debugPrint('Error playing sound on desktop: $e');
@@ -119,13 +136,13 @@ final class AudioService extends AlertSub {
         );
       } else {
         if (SchedulerBinding.instance.schedulerPhase == SchedulerPhase.idle) {
-          await _audioPlayer.stop();
-          await _audioPlayer.play(AssetSource('sounds/notification.wav'));
+          await player.stop();
+          await player.play(AssetSource('sounds/notification.wav'));
         } else {
           SchedulerBinding.instance.addPostFrameCallback((_) async {
             try {
-              await _audioPlayer.stop();
-              await _audioPlayer.play(AssetSource('sounds/notification.wav'));
+              await player.stop();
+              await player.play(AssetSource('sounds/notification.wav'));
             } catch (e) {
               debugPrint('Error playing sound in post frame callback: $e');
             }
@@ -149,7 +166,7 @@ final class AudioService extends AlertSub {
   @override
   Future<void> cancel() async {
     try {
-      await _audioPlayer.stop();
+      await _audioPlayer?.stop();
     } catch (e) {
       debugPrint('Error stopping sound: $e');
     }
@@ -184,8 +201,8 @@ final class AudioService extends AlertSub {
 
   Future<void> dispose() async {
     try {
-      await _audioPlayer.stop();
-      await _audioPlayer.dispose();
+      await _audioPlayer?.stop();
+      await _audioPlayer?.dispose();
     } catch (e) {
       debugPrint('Error disposing audio player: $e');
     }

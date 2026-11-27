@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
+import 'package:defyx_vpn/core/utils/update_version.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -106,9 +107,18 @@ class MainScreenLogic {
       apiAppVersion = Version.parse('0.0.0');
     }
 
+    // A version forced in an earlier release stays required even when the
+    // latest release isn't forced.
+    final minForcedVersion = parseAppVersion(
+      apiVersionParameters['minForcedVersion'],
+    );
+    final belowForcedVersion =
+        minForcedVersion != null && minForcedVersion > appVersion;
+    final update = apiAppVersion > appVersion;
+
     final response = {
-      'update': apiAppVersion > appVersion,
-      'forceUpdate': forceUpdate,
+      'update': update,
+      'forceUpdate': update && (forceUpdate == true || belowForcedVersion),
       'changeLog': apiVersionParameters['changeLog'],
     };
     return response;

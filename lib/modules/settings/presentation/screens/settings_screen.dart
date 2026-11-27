@@ -3,12 +3,16 @@ import 'dart:io';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_donate_widget.dart';
 import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_premium_widget.dart';
+import 'package:defyx_vpn/modules/settings/presentation/widgets/settings_training_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import '../../constants/settings_constants.dart';
@@ -32,6 +36,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final ScrollController _horizontalSliderScrollController;
   final GlobalKey _premiumWidgetKey = GlobalKey();
   final GlobalKey _donateWidgetKey = GlobalKey();
+  final GlobalKey _trainingWidgetKey = GlobalKey();
   bool _isMiddleMouseScrolling = false;
   Offset _middleMouseStartPosition = Offset.zero;
   bool _hasAppliedLocalization = false;
@@ -117,13 +122,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Get the viewport bounds
       final viewportLeft = scrollOffset;
-      final viewportRight =
-          scrollOffset +
+      final viewportRight = scrollOffset +
           _horizontalSliderScrollController.position.viewportDimension;
 
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
-      final isVisible =
-          widgetCenterInContent >= viewportLeft &&
+      final isVisible = widgetCenterInContent >= viewportLeft &&
           widgetCenterInContent <= viewportRight;
 
       return isVisible;
@@ -196,7 +199,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                               _buildSettingsContent(ref, context),
                               SizedBox(height: 8.h),
                               _buildDiagnosticsExperimentsRow(context),
-                              SizedBox(height: 130.h),
+                              SizedBox(
+                                height:
+                                    DefyxNavBar.coveredHeight(context) + 48.h,
+                              ),
                             ],
                           ),
                         ),
@@ -213,6 +219,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildHeaderSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -227,7 +234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: 'D',
+                      text: l10n.headerTitleFirst,
                       style: TextStyle(
                         fontSize: 35.sp,
                         fontFamily: AppTheme.fontFamily,
@@ -236,7 +243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx',
+                      text: l10n.headerTitleRest,
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontFamily: AppTheme.fontFamily,
@@ -348,6 +355,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     }
   }
 
+  bool _handleTrainingWidgetTap() {
+    if (_isWidgetVisibleInHorizontalScroll(_trainingWidgetKey)) {
+      return true;
+    } else {
+      _scrollToShowWidget(_trainingWidgetKey);
+      return false;
+    }
+  }
+
   Widget _buildSliderSection() {
     return Listener(
       onPointerMove: (event) {},
@@ -369,9 +385,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ref: ref,
                     shouldExecuteAction: true,
                     onTapBefore: _handlePremiumWidgetTap,
+                    // First control on the page gets focus on TV.
+                    autofocus: TvSupport.isTv,
                   ),
                 ),
-                if (!Platform.isIOS) ...[
+                if (!Platform.isIOS && !Platform.isMacOS) ...[
                   SizedBox(width: 15.w),
                   Container(
                     key: _donateWidgetKey,
@@ -382,6 +400,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                 ],
+                SizedBox(width: 15.w),
+                Container(
+                  key: _trainingWidgetKey,
+                  child: SettingsTrainingWidget(
+                    ref: ref,
+                    shouldExecuteAction: true,
+                    onTapBefore: _handleTrainingWidgetTap,
+                  ),
+                ),
               ],
             ),
           ),
@@ -398,6 +425,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     final groups = settingsState.groupList
         .map((group) => _withSplitTunnelSubtitle(group, splitTunnelMode))
+        .map(_withoutAutoReconnect)
         .toList();
     return Column(
       children: groups
@@ -409,15 +437,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               onToggle: (groupId, itemId) {
                 settingsNotifier.toggleSetting(groupId, itemId, context);
               },
-              onReorder: group.isDraggable
-                  ? (oldIndex, newIndex) {
-                      settingsNotifier.reorderItems(
+              onReorderBlocks: group.isDraggable
+                  ? (blocks, oldIndex, newIndex) {
+                      settingsNotifier.reorderBlocks(
                         group.id,
+                        blocks,
                         oldIndex,
                         newIndex,
                       );
                     }
                   : null,
+              onTogglePlan: (planId) {
+                settingsNotifier.togglePlan(group.id, planId, context);
+              },
+              onExpandedChange: (key, expanded) {
+                settingsNotifier.setExpanded(group.id, key, expanded);
+              },
               onReset: group.id == SettingsGroupId.connectionMethod
                   ? () {
                       settingsNotifier.resetGroupToDefault(
@@ -455,29 +490,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
+  // Auto Reconnect is saved with this group but toggled from the
+  // Diagnostics & Experiments dialog.
+  SettingsGroup _withoutAutoReconnect(SettingsGroup group) {
+    if (group.id != SettingsGroupId.trafficControl) return group;
+    return group.copyWith(
+      items: [
+        for (final item in group.items)
+          if (item.id != SettingsItemId.healthCheck) item,
+      ],
+    );
+  }
+
   Widget _buildDiagnosticsExperimentsRow(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Padding(
-      padding: EdgeInsets.only(left: 15.w),
-      child: GestureDetector(
-        onTap: () => DiagnosticsExperimentsDialog.show(context),
-        behavior: HitTestBehavior.opaque,
-        child: Row(
-          children: [
-            Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
-            SizedBox(width: 8.w),
-            Text(
-              l10n.settingsDiagnosticsExperiments.toUpperCase(),
-              style: TextStyle(
-                fontSize: 13.sp,
-                fontFamily: AppTheme.fontFamily,
-                fontWeight: FontWeight.w400,
-                color: Colors.grey[400],
-                letterSpacing: 0.5,
-              ),
+    return TvFocusable(
+      onTap: () => DiagnosticsExperimentsDialog.show(context),
+      borderRadius: BorderRadius.circular(6.r),
+      ringOutset: 4,
+      child: Row(
+        children: [
+          Icon(Icons.science_outlined, size: 16.sp, color: Colors.grey[400]),
+          SizedBox(width: 8.w),
+          Text(
+            l10n.settingsDiagnosticsExperiments.toUpperCase(),
+            style: TextStyle(
+              fontSize: 13.sp,
+              fontFamily: AppTheme.fontFamily,
+              fontWeight: FontWeight.w400,
+              color: Colors.grey[400],
+              letterSpacing: 0.5,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

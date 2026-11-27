@@ -1,4 +1,5 @@
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'dart:math' as math;
@@ -9,6 +10,7 @@ class SpeedTestStartButton extends StatefulWidget {
   final SpeedTestStep? previousStep;
   final bool isEnabled;
   final VoidCallback onTap;
+  final bool autofocus;
 
   const SpeedTestStartButton({
     super.key,
@@ -16,6 +18,7 @@ class SpeedTestStartButton extends StatefulWidget {
     required this.isEnabled,
     required this.onTap,
     this.previousStep,
+    this.autofocus = false,
   });
 
   @override
@@ -76,8 +79,12 @@ class _SpeedTestStartButtonState extends State<SpeedTestStartButton>
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: widget.isEnabled ? widget.onTap : null,
+    return TvFocusable(
+      onTap: widget.onTap,
+      enabled: widget.isEnabled,
+      autofocus: widget.autofocus,
+      behavior: HitTestBehavior.deferToChild,
+      shape: BoxShape.circle,
       child: Container(
         width: 60.w,
         height: 60.w,

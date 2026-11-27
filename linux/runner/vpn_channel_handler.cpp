@@ -1,9 +1,13 @@
 #include "vpn_channel_handler.h"
 
+#include <gst/gst.h>
+
 #include <thread>
 #include <chrono>
 #include <cstring>
 #include <filesystem>
+#include <functional>
+#include <string>
 #include <system_error>
 
 #include "defyx_core.h"
@@ -17,6 +21,36 @@ namespace
     constexpr int FLAG_TIMEOUT_MS = 3000;
     constexpr const char *DEFAULT_FLAG = "xx";
     constexpr int DEFAULT_PING = 999;
+
+    // audioplayers_linux throws a C string outside its try block when
+    // GStreamer can't make a "playbin", which aborts the whole app ("terminate
+    // called after throwing an instance of 'char const*'"). That happens when
+    // no GStreamer plugins are found, e.g. the AppImage's bundled Ubuntu
+    // libgstreamer looks for them only in Debian's path, so on Fedora or Arch
+    // it finds none. Make the same check here so Dart can skip creating an
+    // AudioPlayer instead of crashing.
+    bool CanCreateAudioPlayer()
+    {
+        static const bool available = []
+        {
+            g_autoptr(GError) error = nullptr;
+            if (!gst_init_check(nullptr, nullptr, &error))
+            {
+                defyx_core::LogMessage(std::string("GStreamer init failed, sound effects off: ") +
+                                       (error ? error->message : "unknown error"));
+                return false;
+            }
+            GstElement *playbin = gst_element_factory_make("playbin", nullptr);
+            if (playbin == nullptr)
+            {
+                defyx_core::LogMessage("GStreamer has no playbin element, sound effects off");
+                return false;
+            }
+            gst_object_unref(gst_object_ref_sink(playbin));
+            return true;
+        }();
+        return available;
+    }
 
     std::string LookupString(FlValue *map, const char *key)
     {
@@ -261,6 +295,50 @@ namespace
 
         auto *result_data = new std::pair<AsyncFlagTask *, std::string>(task, flag_result);
         g_idle_add(DeliverFlagResult, result_data);
+    }
+
+    struct AsyncLoginTask
+    {
+        FlMethodCall *method_call;
+        std::string token;
+
+        AsyncLoginTask(FlMethodCall *call) : method_call(call)
+        {
+            g_object_ref(method_call);
+        }
+
+        ~AsyncLoginTask()
+        {
+            if (method_call)
+            {
+                g_object_unref(method_call);
+            }
+        }
+    };
+
+    gboolean DeliverLoginResult(gpointer user_data)
+    {
+        auto *task = static_cast<AsyncLoginTask *>(user_data);
+        FinishWithString(task->method_call, task->token);
+        delete task;
+        return FALSE;
+    }
+
+    void RunLoginInBackground(FlMethodCall *method_call, std::function<std::string()> login)
+    {
+        auto *task = new AsyncLoginTask(method_call);
+        std::thread([task, login = std::move(login)]()
+                    {
+            try
+            {
+                task->token = login();
+            }
+            catch (...)
+            {
+                task->token.clear();
+            }
+            g_idle_add(DeliverLoginResult, task); })
+            .detach();
     }
 
 } // namespace
@@ -588,7 +666,12 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FlValue *args = fl_method_call_get_args(method_call);
             defyx_core::SetSplitTunnel(LookupString(args, "mode"), LookupString(args, "rules"), LookupString(args, "apps"));
+            defyx_core::SetTunnelDNS(LookupString(args, "dns"));
             FinishWithBool(method_call, defyx_core::StartTunnel());
+        }
+        else if (strcmp(method, "getTunnelDns") == 0)
+        {
+            FinishWithString(method_call, defyx_core::GetTunnelDNS());
         }
         else if (strcmp(method, "stopTunnel") == 0)
         {
@@ -652,7 +735,9 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             FlValue *args = fl_method_call_get_args(method_call);
             std::string is_test_str = LookupString(args, "isTest");
-            std::string flowLine = defyx_core::GetFlowLine();
+            std::string token = LookupString(args, "token");
+            bool is_test = (is_test_str == "true" || is_test_str == "1");
+            std::string flowLine = defyx_core::GetFlowLine(is_test, token);
             // Keep empty as empty: an empty string here must not be treated as a
             // valid flowline by the Dart side, or it overwrites good cached data.
             FinishWithString(method_call, flowLine);
@@ -823,6 +908,35 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
         {
             auto *gateway_task = new AsyncGatewayTask(method_call);
             std::thread(ExecuteGatewayHandshakeInBackground, gateway_task).detach();
+        }
+        else if (strcmp(method, "login") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string email = LookupString(args, "email");
+            std::string password = LookupString(args, "password");
+            if (email.empty() || password.empty())
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "email or password is missing or empty");
+                return;
+            }
+            RunLoginInBackground(method_call, [email, password]()
+                                 { return defyx_core::Login(email, password); });
+        }
+        else if (strcmp(method, "loginByCode") == 0)
+        {
+            FlValue *args = fl_method_call_get_args(method_call);
+            std::string code = LookupString(args, "code");
+            if (code.empty())
+            {
+                FinishWithError(method_call, "INVALID_ARGUMENT", "code is missing or empty");
+                return;
+            }
+            RunLoginInBackground(method_call, [code]()
+                                 { return defyx_core::LoginByCode(code); });
+        }
+        else if (strcmp(method, "canPlayAudio") == 0)
+        {
+            FinishWithBool(method_call, CanCreateAudioPlayer());
         }
         else
         {

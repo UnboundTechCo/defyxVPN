@@ -2,34 +2,84 @@ import MacDXcore
 import NetworkExtension
 import os.log
 
+// Mirrors ios/PacketTunnel/PacketTunnelProvider.swift: the same tunnel
+// addresses, the same commands from the app, and the same replies.
 class PacketTunnelProvider: NEPacketTunnelProvider {
 
-    private var logTimer: Timer?
+    private let tunnelAddress = "172.18.0.1"
+    private let tunnelMask = "255.255.255.252"
+    private let tunnelAddress6 = "fdfe:dcba:9876::1"
+    private let tunnelPrefix6: NSNumber = 126
+    private let tunnelDns = "172.18.0.2"
+    private let tunnelMtu = 1500
+
+    private var appliedSettings: NEPacketTunnelNetworkSettings?
 
     override init() {
         super.init()
-        let progressStream = ProgressStreamHandler()
-        MacosSetProgressListener(progressStream)
+        MacosSetProgressListener(ProgressStreamHandler())
     }
 
     override func startTunnel(
         options: [String: NSObject]?, completionHandler: @escaping (Error?) -> Void
     ) {
         os_log("Starting sing-box tunnel...")
-        
-        let success = MacosStartTunnel()
-        
-        if success {
-            os_log("Tunnel started successfully")
+
+        let settings = tunnelSettings()
+
+        setTunnelNetworkSettings(settings) { [weak self] error in
+            if let error = error {
+                os_log("Failed to apply tunnel settings: %{public}@", error.localizedDescription)
+                completionHandler(error)
+                return
+            }
+
+            self?.appliedSettings = settings
+            os_log("Tunnel settings applied, waiting for the core to be ready")
             completionHandler(nil)
-        } else {
-            os_log("Failed to start tunnel")
-            let error = NSError(
-                domain: "PacketTunnelProvider",
-                code: -1,
-                userInfo: [NSLocalizedDescriptionKey: "Failed to start sing-box tunnel"]
-            )
-            completionHandler(error)
+        }
+    }
+
+    private func tunnelSettings() -> NEPacketTunnelNetworkSettings {
+        let settings = NEPacketTunnelNetworkSettings(tunnelRemoteAddress: tunnelAddress)
+
+        let ipv4 = NEIPv4Settings(addresses: [tunnelAddress], subnetMasks: [tunnelMask])
+        ipv4.includedRoutes = [NEIPv4Route.default()]
+        settings.ipv4Settings = ipv4
+
+        let ipv6 = NEIPv6Settings(
+            addresses: [tunnelAddress6], networkPrefixLengths: [tunnelPrefix6])
+        ipv6.includedRoutes = [NEIPv6Route.default()]
+        settings.ipv6Settings = ipv6
+
+        let dns = NEDNSSettings(servers: [tunnelDns])
+        dns.matchDomains = [""]
+        settings.dnsSettings = dns
+
+        settings.mtu = NSNumber(value: tunnelMtu)
+
+        return settings
+    }
+
+    // Re-applying the settings makes the system drop the DNS answers it cached
+    // before the core took over.
+    private func clearDnsCache(completion: @escaping () -> Void) {
+        guard let settings = appliedSettings else {
+            completion()
+            return
+        }
+
+        reasserting = true
+        setTunnelNetworkSettings(nil) { [weak self] _ in
+            guard let self = self else {
+                completion()
+                return
+            }
+            self.setTunnelNetworkSettings(settings) { _ in
+                self.reasserting = false
+                os_log("System dns cache dropped")
+                completion()
+            }
         }
     }
 
@@ -39,7 +89,7 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
         os_log("VPN stopped with reason: %d", reason.rawValue)
         os_log("Stopping VPN tunnel...")
         MacosStopTunnel()
-        MacosStop()
+        _ = MacosStopVPN()
         os_log("Tunnel stopped successfully.")
         completionHandler()
     }
@@ -56,254 +106,82 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 
         os_log("Received command: %@", command)
 
+        let reply: (String) -> Void = { completionHandler?($0.data(using: .utf8)) }
+
         switch command {
         case "START_TUNNEL":
-            let success = MacosStartTunnel()
+            MacosSetSplitTunnel(dict["mode"] ?? "off", dict["rules"] ?? "[]", dict["apps"] ?? "[]")
+            // 0 lets the core find the tunnel's file descriptor itself, as on iOS.
+            let success = MacosStartTunnel(0)
             let response = success ? "TUNNEL_STARTED" : "TUNNEL_ERROR"
             os_log("Tunnel: %{public}@", response)
-            completionHandler?(response.data(using: .utf8))
+            if success {
+                clearDnsCache { reply(response) }
+            } else {
+                reply(response)
+            }
 
         case "MEASURE_PING":
-            do {
-                let ping = MacosMeasurePing()
-                let response = String(describing: ping)
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            reply(String(describing: MacosMeasurePing()))
 
         case "GET_FLAG":
-            do {
-                let flag = MacosGetFlag()
-                let response: String = flag
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            reply(MacosGetFlag())
 
         case "START_VPN":
-            do {
-                let cacheDir = dict["cacheDir"] ?? ""
-                let flowLine = dict["flowLine"] ?? ""
-                let pattern = dict["pattern"] ?? ""
-
-                MacosStartVPN(cacheDir, flowLine, pattern)
-
-                let response = "VPN started successfully"
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"
-                        ])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            MacosStartVPN(
+                dict["cacheDir"] ?? "",
+                dict["flowLine"] ?? "",
+                dict["pattern"] ?? "",
+                Bool(dict["deepScan"] ?? "false") ?? false,
+                Bool(dict["healthCheck"] ?? "false") ?? false)
+            reply("VPN started successfully")
 
         case "STOP_VPN":
-            do {
-                MacosStopVPN()
-                let response = "VPN_STOPPED"
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"
-                        ])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            _ = MacosStopVPN()
+            reply("VPN_STOPPED")
 
         case "SET_ASN_NAME":
-            do {
-                MacosSetAsnName()
-                let response = "ASN_NAME_SET"
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"
-                        ])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            MacosSetAsnName()
+            reply("ASN_NAME_SET")
 
         case "SET_TIMEZONE":
-            do {
-                let timezone = dict["timezone"] ?? "0.0"
-                let timezoneFloat = Float(timezone) ?? 0
-                let success = MacosSetTimeZone(timezoneFloat)
-
-                let response: String
-                if success {
-                    os_log("local time zone set successfully")
-                    response = "LOCAL_TIMEZONE_SET"
-                } else {
-                    os_log(
-                        "Failed to set local time zone: %{public}@", String(describing: success))
-                    response = "LOCAL_TIMEZONE_ERROR: \(success)"
-                }
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError", code: -1,
-                        userInfo: [
-                            NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"
-                        ])
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
+            let timezone = Float(dict["timezone"] ?? "0.0") ?? 0
+            if MacosSetTimeZone(timezone) {
+                os_log("local time zone set successfully")
+                reply("LOCAL_TIMEZONE_SET")
+            } else {
+                os_log("Failed to set local time zone")
+                reply("LOCAL_TIMEZONE_ERROR: false")
             }
 
         case "GET_FLOW_LINE":
-            do {
-                let isTime = dict["isTime"] ?? "false"
-                let isTimeBool = Bool(isTime) ?? false
-                let flowLine = MacosGetFlowLine(isTimeBool)
-                let response: String = flowLine
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError",
-                        code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
-                    )
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            let isTest = Bool(dict["isTest"] ?? "false") ?? false
+            reply(MacosGetFlowLine(isTest, dict["token"] ?? ""))
 
         case "GET_CACHED_FLOW_LINE":
-            do {
-                let flowLine = MacosGetCachedFlowLine()
-                let response: String = flowLine
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError",
-                        code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
-                    )
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            reply(MacosGetCachedFlowLine())
 
         case "DECODE_VERIFY_FLOWLINE":
-            do {
-                let flowLine = dict["flowLine"] ?? ""
-                let decodedFlowLine = MacosDecodeAndVerifyFlowline(flowLine)
-                let response: String = decodedFlowLine
-
-                if let data = response.data(using: .utf8) {
-                    completionHandler?(data)
-                } else {
-                    throw NSError(
-                        domain: "EncodingError",
-                        code: -1,
-                        userInfo: [NSLocalizedDescriptionKey: "Failed to encode response to UTF-8"]
-                    )
-                }
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            // The macOS core exports this one with a doubled prefix.
+            reply(MacosMacosDecodeAndVerifyFlowline(dict["flowLine"] ?? ""))
 
         case "SET_CACHE_DIR":
-            do {
-                let cacheDir = dict["cacheDir"] ?? ""
-                MacosSetCacheDir(cacheDir)
-                completionHandler?(Data())
-            } catch {
-                print("Error: \(error.localizedDescription)")
-                completionHandler?(nil)
-            }
+            MacosSetCacheDir(dict["cacheDir"] ?? "")
+            reply("true")
 
         default:
-            os_log("Unknown command received.")
+            os_log("⚠️ Unknown command received.")
             completionHandler?(nil)
         }
     }
 
     override func sleep(completionHandler: @escaping () -> Void) {
-        os_log("Tunnel going to sleep...")
+        os_log("😴 Tunnel going to sleep...")
         completionHandler()
     }
 
     override func wake() {
-        os_log("Tunnel waking up...")
-    }
-
-    func getLogFilePath() -> String {
-        guard
-            let groupURL = FileManager.default.containerURL(
-                forSecurityApplicationGroupIdentifier: "group.de.unboundtech.defyxvpn")
-        else {
-            os_log("Error getting file path..")
-            return "/dev/null"
-        }
-        let path = groupURL.appendingPathComponent("warp_logs.txt").path
-        os_log("FilePath received %@", path)
-        return path
-    }
-
-    private func saveLogToFile(_ logData: Data) {
-        let fileName = "warp_logs.txt"
-        let fileURL = FileManager.default
-            .urls(for: .documentDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent(fileName)
-
-        do {
-            if FileManager.default.fileExists(atPath: fileURL.path) {
-                let fileHandle = try FileHandle(forWritingTo: fileURL)
-                fileHandle.seekToEndOfFile()
-                fileHandle.write(logData)
-                fileHandle.closeFile()
-            } else {
-                try logData.write(to: fileURL, options: .atomic)
-            }
-        } catch {
-            os_log(
-                "[DXcore] ERROR: Writing Log File: %@", log: .default, type: .error,
-                error.localizedDescription)
-        }
+        os_log("🔄 Tunnel waking up...")
     }
 }
 

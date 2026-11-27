@@ -1,5 +1,6 @@
 import 'package:defyx_vpn/shared/layout/navbar/widgets/copyable_link.dart';
 import 'package:defyx_vpn/shared/layout/navbar/widgets/intro_link_item.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
@@ -67,6 +68,7 @@ class IntroductionDialog extends StatelessWidget {
               width: double.infinity,
               height: 46.h,
               child: ElevatedButton(
+                autofocus: TvSupport.isTv,
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
                   shadowColor: Colors.transparent,

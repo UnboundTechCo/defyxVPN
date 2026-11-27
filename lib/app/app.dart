@@ -1,7 +1,11 @@
 import 'dart:io';
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/app/router/app_router.dart';
+import 'package:defyx_vpn/app/router/dpad_shell_page.dart';
+import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
+import 'package:defyx_vpn/shared/tv/dpad_traversal_policy.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
@@ -23,6 +27,13 @@ import 'package:defyx_vpn/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
+/// D-pad/keyboard traversal for the whole app. Content focused inside a
+/// shell page is kept clear of the floating nav bar.
+final FocusTraversalPolicy _dpadTraversalPolicy = DpadTraversalPolicy(
+  bottomObstruction: (context) =>
+      DpadShellPage.contains(context) ? DefyxNavBar.coveredHeight(context) : 0,
+);
+
 class App extends ConsumerStatefulWidget {
   const App({super.key});
 
@@ -38,8 +49,18 @@ class _AppState extends ConsumerState<App> {
 
   @override
   Widget build(BuildContext context) {
-    // Eagerly trigger environment computation
-    final environmentAsync = ref.watch(adEnvironmentProvider);
+    // The AdMob decision can arrive after the privacy notice was accepted
+    // (fresh install) or change when new server settings are saved. Listening
+    // also creates the provider eagerly, without rebuilding the app.
+    ref.listen(adEnvironmentProvider, (previous, next) => _maybeStartAdFlow());
+
+    // Ads only for users known not to be premium. Once that is known (the
+    // settings loaded, or a plan ended), set ads up and fill the box.
+    ref.listen(adsAllowedProvider, (previous, allowed) {
+      if (!allowed) return;
+      _maybeStartAdFlow();
+      ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
+    });
 
     // Keep the vibration alert backend in sync with the Haptic Feedback setting
     ref.listen(hapticsProvider, (previous, next) {
@@ -54,15 +75,7 @@ class _AppState extends ConsumerState<App> {
 
       // When canInitializeAdMob transitions to true, start the flow
       if (next.canInitializeAdMob && !previous.canInitializeAdMob) {
-        environmentAsync.whenData((environment) {
-          if (environment.shouldInitializeAdMob) {
-            _initializeAdFlow();
-          } else {
-            debugPrint(
-              '📱 Using internal ads only (${environment.adMobIsDisabled ? "Iranian user" : "desktop platform"})',
-            );
-          }
-        });
+        _maybeStartAdFlow();
       }
 
       // When consent completes and we're disconnected, retry ad load
@@ -86,7 +99,7 @@ class _AppState extends ConsumerState<App> {
           _hasCheckedInitialization = true;
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            _checkAndInitializeAds(environmentAsync);
+            _maybeStartAdFlow();
           });
         }
         return _buildApp(context);
@@ -112,18 +125,20 @@ class _AppState extends ConsumerState<App> {
     await AnimationService().init();
   }
 
-  /// Check if ad initialization should happen (for migration/restart cases)
-  void _checkAndInitializeAds(AsyncValue<AdEnvironment> environmentAsync) {
-    final adReadiness = ref.read(adReadinessCoordinatorProvider);
-
-    // If canInitializeAdMob is already true (e.g., after migration), trigger flow
-    if (adReadiness.canInitializeAdMob) {
-      environmentAsync.whenData((environment) {
-        if (environment.shouldInitializeAdMob) {
-          _initializeAdFlow();
-        }
-      });
+  /// Runs the consent check and AdMob setup once both the AdMob decision and
+  /// the privacy notice allow it. Safe to call repeatedly: the coordinator
+  /// runs the flow once per launch.
+  void _maybeStartAdFlow() {
+    // Premium users get no ads, so no ad consent form or AdMob setup either.
+    if (!ref.read(adsAllowedProvider)) return;
+    final environment = ref.read(adEnvironmentProvider).valueOrNull;
+    if (environment == null) return; // Server settings not saved yet.
+    if (!environment.shouldInitializeAdMob) {
+      debugPrint('Using in-house ads only ($environment)');
+      return;
     }
+    if (!ref.read(adReadinessCoordinatorProvider).canInitializeAdMob) return;
+    _initializeAdFlow();
   }
 
   /// Initialize ad flow using the coordinator
@@ -206,7 +221,10 @@ class _AppState extends ConsumerState<App> {
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(1.0)),
-      child: child ?? const SizedBox.shrink(),
+      child: FocusTraversalGroup(
+        policy: _dpadTraversalPolicy,
+        child: child ?? const SizedBox.shrink(),
+      ),
     );
   }
 }

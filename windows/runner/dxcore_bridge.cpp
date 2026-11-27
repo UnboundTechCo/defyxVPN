@@ -66,6 +66,8 @@ bool DXCoreBridge::Load() {
   load(pStartTunnel_, "WinStartTunnel");
   load(pSetSplitTunnel_, "WinSetSplitTunnel");
   load(pStopTunnel_, "WinStopTunnel");
+  load(pGetTunnelDNS_, "WinGetTunnelDNS");
+  load(pSetTunnelDNS_, "WinSetTunnelDNS");
   ok &= load(pLogin_, "WinLogin");
   ok &= load(pLoginByCode_, "WinLoginByCode");
 
@@ -125,6 +127,18 @@ void DXCoreBridge::SetSplitTunnel(const std::string& mode,
 
 void DXCoreBridge::StopTunnel() {
   if (pStopTunnel_) pStopTunnel_();
+}
+
+std::string DXCoreBridge::GetTunnelDNS() {
+  if (!pGetTunnelDNS_) return {};
+  const char* s = pGetTunnelDNS_();
+  std::string out = s ? std::string(s) : std::string();
+  if (s && pFreeString_) pFreeString_(const_cast<char*>(s));
+  return out;
+}
+
+void DXCoreBridge::SetTunnelDNS(const std::string& address) {
+  if (pSetTunnelDNS_) pSetTunnelDNS_(address.c_str());
 }
 
 void DXCoreBridge::SetAsnName() {

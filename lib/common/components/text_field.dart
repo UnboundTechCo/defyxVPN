@@ -1,3 +1,4 @@
+import 'package:defyx_vpn/shared/widgets/dpad_text_field_scope.dart';
 import 'package:flutter/material.dart';
 
 enum AppTextFieldVariant { outlined, standard }
@@ -76,66 +77,79 @@ class _AppTextFieldState extends State<AppTextField> {
           ),
           const SizedBox(height: 8),
         ],
-        TextFormField(
-          controller: widget.controller,
-          obscureText: _obscureText,
-          keyboardType: widget.keyboardType,
-          validator: widget.validator,
-          style: TextStyle(fontSize: fontSize, color: Colors.black),
-          decoration: InputDecoration(
-            hintText: widget.hintText,
-            hintStyle: TextStyle(color: Colors.grey[400], fontSize: fontSize),
-
-            // Standard is explicitly transparent.
-            filled: isStandard ? true : false,
-            fillColor: Colors.transparent,
-
-            contentPadding: EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: verticalPadding,
-            ),
-
-            prefixIcon: widget.prefixIcon != null
-                ? Icon(widget.prefixIcon, size: fontSize + 5)
-                : null,
-            prefixIconColor: Colors.grey[400],
-
-            suffixIcon: widget.obscureText
-                ? IconButton(
-                    icon: Icon(
-                      _obscureText ? Icons.visibility_off : Icons.visibility,
-                      size: fontSize + 5,
-                    ),
-                    onPressed: () {
-                      setState(() => _obscureText = !_obscureText);
-                    },
-                    color: Colors.grey[400],
-                  )
-                : null,
-
-            border: isStandard ? InputBorder.none : border,
-            enabledBorder: isStandard ? InputBorder.none : border,
-            focusedBorder: isStandard
-                ? InputBorder.none
-                : OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: BorderSide(color: Colors.grey[500]!, width: 1),
-                  ),
-            errorBorder: isStandard
-                ? InputBorder.none
-                : OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red),
-                  ),
-            focusedErrorBorder: isStandard
-                ? InputBorder.none
-                : OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                    borderSide: const BorderSide(color: Colors.red),
-                  ),
-          ),
+        // Lets remote users move past the field and shows its focus.
+        DpadTextFieldScope(
+          focusRingRadius: BorderRadius.circular(8),
+          child: _buildField(isStandard, verticalPadding, fontSize, border),
         ),
       ],
+    );
+  }
+
+  Widget _buildField(
+    bool isStandard,
+    double verticalPadding,
+    double fontSize,
+    OutlineInputBorder border,
+  ) {
+    return TextFormField(
+      controller: widget.controller,
+      obscureText: _obscureText,
+      keyboardType: widget.keyboardType,
+      validator: widget.validator,
+      style: TextStyle(fontSize: fontSize, color: Colors.black),
+      decoration: InputDecoration(
+        hintText: widget.hintText,
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: fontSize),
+
+        // Standard is explicitly transparent.
+        filled: isStandard ? true : false,
+        fillColor: Colors.transparent,
+
+        contentPadding: EdgeInsets.symmetric(
+          horizontal: 12,
+          vertical: verticalPadding,
+        ),
+
+        prefixIcon: widget.prefixIcon != null
+            ? Icon(widget.prefixIcon, size: fontSize + 5)
+            : null,
+        prefixIconColor: Colors.grey[400],
+
+        suffixIcon: widget.obscureText
+            ? IconButton(
+                icon: Icon(
+                  _obscureText ? Icons.visibility_off : Icons.visibility,
+                  size: fontSize + 5,
+                ),
+                onPressed: () {
+                  setState(() => _obscureText = !_obscureText);
+                },
+                color: Colors.grey[400],
+              )
+            : null,
+
+        border: isStandard ? InputBorder.none : border,
+        enabledBorder: isStandard ? InputBorder.none : border,
+        focusedBorder: isStandard
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.grey[500]!, width: 1),
+              ),
+        errorBorder: isStandard
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+        focusedErrorBorder: isStandard
+            ? InputBorder.none
+            : OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Colors.red),
+              ),
+      ),
     );
   }
 }

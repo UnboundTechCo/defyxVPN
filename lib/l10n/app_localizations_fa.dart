@@ -9,11 +9,17 @@ class AppLocalizationsFa extends AppLocalizations {
   AppLocalizationsFa([String locale = 'fa']) : super(locale);
 
   @override
-  String get appTitle => 'دیفکس وی‌پی‌ان';
+  String get appTitle => 'Defyx VPN';
+
+  @override
+  String get headerTitleFirst => '';
+
+  @override
+  String get headerTitleRest => 'دیفیکس';
 
   @override
   String get splashSubtitle =>
-      'برای دسترسی امن به اینترنت طراحی شده،\nبرای همه، در همه جا';
+      'ساخته‌شده برای دسترسی امن به اینترنت،\nبرای همه، در همه‌جا';
 
   @override
   String get connect => 'اتصال';
@@ -22,21 +28,21 @@ class AppLocalizationsFa extends AppLocalizations {
   String get disconnect => 'قطع اتصال';
 
   @override
-  String get connected => 'متصل شد';
+  String get connected => 'متصل';
 
   @override
-  String get disconnected => 'قطع شد';
+  String get disconnected => 'قطع';
 
   @override
-  String get connecting => 'در حال اتصال';
+  String get connecting => 'درحال اتصال';
 
   @override
   String connectingVia(String groupName) {
-    return 'در حال اتصال از طریق $groupName';
+    return 'درحال اتصال از طریق $groupName';
   }
 
   @override
-  String get switchingMethod => 'در حال تغییر روش';
+  String get switchingMethod => 'در حال تغییر متد';
 
   @override
   String get speedTest => 'تست سرعت';
@@ -51,25 +57,25 @@ class AppLocalizationsFa extends AppLocalizations {
   String get ping => 'پینگ';
 
   @override
-  String get latency => 'تاخیر';
+  String get latency => 'تأخیر';
 
   @override
-  String get jitter => 'لرزش';
+  String get jitter => 'جیتر';
 
   @override
-  String get packetLoss => 'از دست دادن بسته';
+  String get packetLoss => 'افت بسته';
 
   @override
-  String get tapHere => 'اینجا ضربه بزنید';
+  String get tapHere => 'اینجا ضربه بزن';
 
   @override
-  String get settings => 'تنظیمات';
+  String get settings => 'ترجیحات';
 
   @override
   String get introduction => 'معرفی';
 
   @override
-  String get privacyPolicy => 'سیاست حفظ حریم خصوصی';
+  String get privacyPolicy => 'سیاست حریم خصوصی';
 
   @override
   String get termsAndConditions => 'شرایط و ضوابط';
@@ -78,16 +84,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get ourWebsite => 'وب‌سایت ما';
 
   @override
-  String get marketplace => 'فروشگاه';
+  String get marketplace => 'مارکت‌پلیس';
 
   @override
-  String get telegramBot => 'بات تلگرام';
+  String get telegramBot => 'ربات تلگرام';
 
   @override
   String get sourceCode => 'کد منبع';
 
   @override
-  String get openSourceLicenses => 'مجوزهای منبع باز';
+  String get openSourceLicenses => 'مجوزهای متن‌باز';
 
   @override
   String get betaCommunity => 'انجمن بتا';
@@ -96,16 +102,16 @@ class AppLocalizationsFa extends AppLocalizations {
   String get close => 'بستن';
 
   @override
-  String get copyLogs => 'کپی گزارش‌ها';
+  String get copyLogs => 'کپی لاگ‌ها';
 
   @override
-  String get logsCopied => 'گزارش‌ها در کلیپ‌بورد کپی شدند';
+  String get logsCopied => 'لاگ‌ها در کلیپ‌بورد کپی شد';
 
   @override
-  String get appLogs => 'گزارش‌های برنامه';
+  String get appLogs => 'لاگ‌های برنامه';
 
   @override
-  String get autoRefresh => 'به‌روزرسانی خودکار';
+  String get autoRefresh => 'تازه‌سازی خودکار';
 
   @override
   String get clear => 'پاک کردن';
@@ -114,22 +120,22 @@ class AppLocalizationsFa extends AppLocalizations {
   String get quickMenu => 'منوی سریع';
 
   @override
-  String get noInternet => 'اینترنت موجود نیست';
+  String get noInternet => 'اینترنت در دسترس نیست';
 
   @override
   String get error => 'خطا';
 
   @override
-  String get loading => 'در حال بارگیری';
+  String get loading => 'درحال بارگیری';
 
   @override
-  String get analyzing => 'در حال تحلیل';
+  String get analyzing => 'درحال بررسی';
 
   @override
-  String get mbps => 'مگابیت بر ثانیه';
+  String get mbps => 'Mbps';
 
   @override
-  String get ms => 'میلی‌ثانیه';
+  String get ms => 'ms';
 
   @override
   String get language => 'زبان';
@@ -153,101 +159,105 @@ class AppLocalizationsFa extends AppLocalizations {
   String get gotIt => 'متوجه شدم';
 
   @override
-  String get learnMore => 'بیشتر بدانید';
+  String get learnMore => 'اطلاعات بیشتر';
 
   @override
   String get defyxGoal =>
-      'هدف دیفکس اطمینان از دسترسی امن به اطلاعات عمومی و ارائه تجربه مرور رایگان است.';
+      'هدف دیفیکس اینه که دسترسی امن به اطلاعات عمومی رو تضمین کنه و تجربه‌ای آزاد از وب‌گردی فراهم بشه.';
 
   @override
-  String get statusIsChilling => 'در حال استراحت است.';
+  String get statusIsChilling => 'درحال استراحته';
 
   @override
-  String get statusIs => 'است';
+  String get statusIs => '';
 
   @override
-  String get statusFailed => 'ناموفق بود.';
+  String get statusFailed => 'موفق نشد.';
 
   @override
-  String get statusHas => 'دارد';
+  String get statusHas => '';
 
   @override
-  String get statusIsReturning => 'در حال بازگشت است';
+  String get statusIsReturning => 'درحال برگشت';
 
   @override
-  String get statusToStandbyMode => 'به حالت آماده باش.';
+  String get statusToStandbyMode => 'به حالت آماده‌به‌کاره';
 
   @override
-  String get statusPluggingIn => 'در حال اتصال ...';
+  String get statusPluggingIn => 'درحال اتصاله ...';
 
   @override
-  String get statusPoweredUp => 'روشن شد';
+  String get statusPoweredUp => 'روشن و آماده‌س';
 
   @override
-  String get statusDoingScience => 'در حال انجام کار ...';
+  String get statusDoingScience => 'مشغول آزمایشه ...';
 
   @override
-  String get statusExitedMatrix => 'از ماتریکس خارج شد';
+  String get statusExitedMatrix => 'از ماتریکس خارج شده';
 
   @override
-  String get statusSorry => 'متاسفیم :(';
+  String get statusSorry => 'متأسفیم :(';
 
   @override
-  String get statusConnectAlready => 'الان متصل شوید';
+  String get statusConnectAlready => 'همین حالا وصل‌شو';
 
   @override
-  String get statusTestingSpeed => 'تست سرعت در جریان است ...';
+  String get statusTestingSpeed => 'مشغول تست‌ گرفتنه ...';
 
   @override
-  String get statusIsReady => 'آماده است';
+  String get statusIsReady => 'برای';
 
   @override
-  String get statusIsInTrouble => 'به مشکل خورده.';
+  String get statusIsInTrouble => 'به دردسر افتاده.';
 
   @override
-  String get statusDXcoreDown => 'DXcore متوقف شده.';
+  String get statusDXcoreDown => 'DXcore از کار افتاده.';
 
   @override
-  String get statusToSpeedTest => 'برای تست سرعت';
+  String get statusToSpeedTest => 'تست سرعت آماده‌س';
 
   @override
-  String get statusYoursToShape => 'برای شما طراحی شده';
+  String get statusYoursToShape => 'توی مشتته';
 
   @override
-  String get settingsConnectionMethod => 'روش اتصال';
+  String get settingsConnectionMethod => 'متد اتصال';
 
   @override
-  String get settingsEscapeMode => 'حالت فرار';
+  String get settingsEscapeMode => 'حالت عبور از فیلترینگ';
 
   @override
   String get settingsDestination => 'مقصد';
 
   @override
-  String get settingsSplitTunnel => 'تونل تقسیم شده';
+  String get settingsSplitTunnel => 'تفکیک ترافیک';
 
   @override
-  String get settingsKillSwitch => 'کلید قطع';
+  String get settingsKillSwitch => 'قطع اضطراری';
 
   @override
   String get settingsDeepScan => 'اسکن عمیق';
 
   @override
-  String get settingsHealthCheck => 'بررسی سلامت';
+  String get settingsAutoReconnect => 'اتصال مجدد خودکار';
 
   @override
-  String get settingsIncluded => 'شامل شده';
+  String get settingsIncluded => 'فقط انتخاب‌شده‌ها';
 
   @override
-  String get splitTunnelPreferences => 'تنظیمات';
+  String get splitTunnelPreferences => 'ترجیحات';
 
   @override
   String get splitTunnelModeOff => 'خاموش';
 
   @override
-  String get splitTunnelModeExclude => 'حذف موارد انتخاب‌شده';
+  String get splitTunnelModeExclude => 'به‌جز موارد انتخاب‌شده';
 
   @override
   String get splitTunnelModeOnly => 'فقط موارد انتخاب‌شده';
+
+  @override
+  String get splitTunnelReconnectNote =>
+      'تغییرات تفکیک ترافیک بعد از اتصال، یا اتصال مجدد اعمال میشه.';
 
   @override
   String get splitTunnelTabAddresses => 'آدرس‌ها';
@@ -256,13 +266,24 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelTabApps => 'برنامه‌ها';
 
   @override
+  String get pressBackAgainToExit => 'برای خروج، دوباره دکمه بازگشت رو بزن';
+
+  @override
   String get splitTunnelSearch => 'جستجو';
 
   @override
-  String get splitTunnelAddressHint => 'اینجا تایپ کنید ...';
+  String get splitTunnelAddressHint => 'اینجا تایپ کن ...';
 
   @override
-  String get splitTunnelAppHint => 'تایپ کنید یا مسیر را انتخاب کنید ...';
+  String get splitTunnelInvalidDomain =>
+      'یک دامنه معتبر وارد کن؛ مثلاً example.com';
+
+  @override
+  String get splitTunnelInvalidGeoip =>
+      'کد کشور، آدرس IP یا محدوده CIDR وارد کن، مثلاً ir، 8.8.8.8 یا 10.0.0.0/8';
+
+  @override
+  String get splitTunnelAppHint => 'مسیر رو بنویس، یا انتخاب کن ...';
 
   @override
   String get splitTunnelBrowseFile => 'انتخاب فایل';
@@ -271,20 +292,20 @@ class AppLocalizationsFa extends AppLocalizations {
   String get splitTunnelBrowseFolder => 'انتخاب پوشه';
 
   @override
-  String get splitTunnelNoApps => 'برنامه‌ای یافت نشد';
+  String get splitTunnelNoApps => 'برنامه‌ای پیدا نشد';
 
   @override
-  String get settingsExcluded => 'حذف شده';
+  String get settingsExcluded => 'به‌جز انتخاب‌شده‌ها';
 
   @override
   String get settingsAtLeastOneCoreRequired =>
-      'حداقل یک هسته باید فعال باقی بماند';
+      'دست‌کم یه متد اتصال باید فعال بمونه';
 
   @override
-  String get settingsResetToDefault => 'بازنشانی';
+  String get settingsResetToDefault => 'ریست';
 
   @override
-  String get settingsDiagnosticsExperiments => 'تشخیص و آزمایش‌ها';
+  String get settingsDiagnosticsExperiments => 'عیب‌یابی و آزمایش‌ها';
 
   @override
   String get settingsAutoDetect => 'تشخیص خودکار';
@@ -294,53 +315,60 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get offlineFlowlineMessage =>
-      'به‌روزرسانی‌های Flowline متوقف شده‌اند زیرا نسخه آفلاین در حال استفاده است.';
+      'به‌روزرسانی فلولاین متوقف شده، چون الان از نسخه‌ی آفلاین استفاده میشه.';
 
   @override
-  String get offlineFlowlineUndo => 'لغو';
+  String get offlineFlowlineUndo => 'برگردوندن';
 
   @override
-  String get updateAvailable => 'به‌روزرسانی موجود است';
+  String get updateAvailable => 'به‌روزرسانی در دسترسه';
 
   @override
-  String get updateRequired => 'به‌روزرسانی الزامی است';
+  String get updateRequired => 'به‌روزرسانی الزامیه';
 
   @override
   String get updateOptionalMessage =>
-      'برای استفاده بهتر از برنامه و لذت بردن از آخرین بهبودها، لطفاً به جدیدترین نسخه به‌روزرسانی کنید.';
+      'برای استفاده بهتر از برنامه و لذت‌بردن از آخرین بهبودها، لطفاً به جدیدترین نسخه به‌روزرسانی کن.';
 
   @override
   String get updateRequiredMessage =>
-      'برای ادامه استفاده از Defyx، لطفاً به آخرین نسخه به‌روزرسانی کنید. این به‌روزرسانی شامل بهبودهای مهم است و برای عملکرد برنامه ضروری است.';
+      'برای ادامه استفاده از دیفیکس، لطفاً به آخرین نسخه به‌روزرسانی کن. این به‌روزرسانی شامل بهبودهای مهمیه، که برای عملکرد درست برنامه ضروریه.';
 
   @override
-  String get updateNow => 'اکنون به‌روزرسانی کنید';
+  String get updateNow => 'به‌روزرسانی';
 
   @override
-  String get notNow => 'الان نه';
+  String get notNow => 'بعداً';
 
   @override
-  String get updateMethods => 'به‌روزرسانی روش‌ها';
+  String get updateMethods => 'به‌روزرسانی متدها';
 
   @override
-  String get importConfig => 'وارد کردن پیکربندی';
+  String get importConfig => 'وارد کردن کانفیگ';
 
   @override
   String get synchronization => 'همگام‌سازی';
 
   @override
-  String get settingsDonation => 'کمک مالی';
+  String get settingsDonation => 'حمایت مالی';
 
   @override
   String get settingsDonationDescription =>
-      'به ما کمک کنید تا دیوارهای سانسور دیجیتال و فیلترینگ اینترنت را از بین ببریم.';
+      'به ما کمک کنین تا دیوارهای سانسور دیجیتال و فیلترینگ اینترنت رو فرو بریزیم.';
 
   @override
-  String get authenticationRequired => 'احراز هویت لازم است';
+  String get settingsTrainingCenter => 'مرکز آموزش';
+
+  @override
+  String get settingsTrainingCenterDescription =>
+      'نحوه استفاده از دیفیکس رو از طریق راهنماهای یوتیوب آموزش ببینین.';
+
+  @override
+  String get authenticationRequired => 'احراز هویت لازمه';
 
   @override
   String get premiumLoginDescription =>
-      'برای دسترسی به اشتراک پرمیوم خود، باید از طریق وب‌سایت Defyx وارد شوید یا حساب کاربری ایجاد کنید.';
+      'برای دسترسی به اشتراک‌های پریمیوم خودتون باید از طریق وب‌سایت دیفیکس وارد حساب شده، یا حساب جدید بسازین.';
 
   @override
   String get email => 'ایمیل';
@@ -349,77 +377,80 @@ class AppLocalizationsFa extends AppLocalizations {
   String get emailHint => 'example@domain.com';
 
   @override
-  String get emailValidation => 'لطفاً ایمیل خود را وارد کنید';
+  String get emailValidation => 'لطفاً ایمیلت رو وارد کن';
 
   @override
   String get password => 'رمز عبور';
 
   @override
-  String get passwordHint => 'رمز عبور خود را وارد کنید';
+  String get passwordHint => 'رمز عبورت رو وارد کن';
 
   @override
-  String get passwordValidation => 'لطفاً رمز عبور خود را وارد کنید';
+  String get passwordValidation => 'لطفاً رمز عبورت رو وارد کن';
 
   @override
-  String get passwordMinLength => 'رمز عبور باید حداقل ۶ کاراکتر باشد';
+  String get passwordMinLength => 'رمز عبور باید حداقل ۶ کاراکتر باشه';
 
   @override
   String get login => 'ورود';
 
   @override
-  String get noAccount => 'حساب کاربری ندارید؟';
+  String get noAccount => 'حساب کاربری نداری؟';
 
   @override
-  String get signUp => 'ثبت نام';
+  String get signUp => 'ثبت‌نام';
 
   @override
   String get loginFailed =>
-      'ورود ناموفق بود. لطفاً اطلاعات ورود خود را بررسی کنید و دوباره تلاش کنید.';
+      'ورود ناموفق بود. لطفاً اطلاعات ورودت رو بررسی کن و دوباره تلاش کن.';
 
   @override
-  String get loginSuccess => 'ورود موفقیت‌آمیز بود!';
+  String get loginSuccess => 'با موفقیت وارد شدی!';
 
   @override
   String get code => 'کد';
 
   @override
-  String get codeHint => 'کد دسترسی خود را وارد کنید';
+  String get codeHint => 'کد دسترسی خودت رو وارد کن';
 
   @override
-  String get codeValidation => 'لطفاً کد خود را وارد کنید';
+  String get codeValidation => 'لطفاً کدت رو وارد کن';
 
   @override
   String get premiumLoginByCodeDescription =>
-      'برای دسترسی به اشتراک پرمیوم خود، کد دسترسی ارائه شده به شما را وارد کنید.';
+      'برای دسترسی به اشتراک‌های پریمیوم خودت، کد دسترسی‌ای رو که گرفتی وارد کن.';
 
   @override
-  String get havingTrouble => 'مشکل دارید؟';
+  String get havingTrouble => 'مشکل داری؟';
 
   @override
-  String get signedInAs => 'شما در حال حاضر با آدرس ایمیل';
+  String get signedInAs => 'ایمیلی که با اون وارد شدی:';
+
+  @override
+  String get signedInAsGuest => 'الان با حساب مهمان وارد شدی.';
 
   @override
   String get premiumImportDescription =>
-      'اگر اشتراک‌های پرمیوم شما به دلیل محدودیت‌های اینترنتی قابل بارگذاری نیستند و نمی‌توانید با روش‌های موجود متصل شوید، می‌توانید فایل دریافتی از فروشگاه را در برنامه وارد کنید.';
+      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیومت بارگیری نمیشن و با روش‌های موجود هم نمی‌تونی وصل بشی، می‌تونی فایلی رو که از مارکت‌پلیس گرفتی توی برنامه وارد کنی.';
 
   @override
-  String get planningToExit => 'قصد خروج دارید؟';
+  String get planningToExit => 'قصد خروج داری؟';
 
   @override
-  String get signOut => 'خروج';
+  String get signOut => 'خروج از حساب';
 
   @override
-  String get signOutSuccess => 'خروج موفقیت‌آمیز بود!';
+  String get signOutSuccess => 'با موفقیت از حسابت خارج شدی!';
 
   @override
-  String get cancel => 'لغو';
+  String get cancel => 'انصراف';
 
   @override
   String get deleteAccount => 'حذف حساب کاربری';
 
   @override
   String get deleteAccountConfirmation =>
-      'این کار حساب شما را برای همیشه حذف می‌کند و قابل بازگشت نیست. ادامه می‌دهید؟';
+      'این کار حسابت رو برای همیشه حذف می‌کنه و قابل بازگشت نیست. ادامه میدی؟';
 
   @override
   String get deleteAccountSuccess => 'حساب کاربری با موفقیت حذف شد.';
@@ -428,17 +459,17 @@ class AppLocalizationsFa extends AppLocalizations {
   String get deleteAccountFailed => 'حذف حساب کاربری ناموفق بود';
 
   @override
-  String get settingsMarketplace => 'PREMIUM';
+  String get settingsMarketplace => 'پریمیوم';
 
   @override
   String get marketplaceDescription =>
-      'دسترسی VPN برتر با سرعت و\nاتصالات قابل اعتماد.';
+      'دسترسی VPN پریمیوم با\nاتصال سریع و پایدار.';
 
   @override
-  String get loggedIn => 'وارد شده';
+  String get loggedIn => 'وارد شدین';
 
   @override
-  String get loginOrRegister => 'ورود یا ثبت نام';
+  String get loginOrRegister => 'ورود یا ثبت‌نام';
 
   @override
   String get loginByCode => 'ورود با کد';
@@ -451,12 +482,256 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get connectionRequiredDescription =>
-      'برای تکمیل فرآیند امن ورود یا ثبت‌نام، ابتدا باید با استفاده از یکی از روش‌های اتصال موجود، اتصال برقرار کنید.';
+      'برای اینکه ورود یا ثبت‌نام به‌صورت امن انجام بشه، اول باید با یکی از متدهای اتصال موجود وصل بشی.';
 
   @override
-  String get speedTestFailed => 'تست سرعت ناموفق بود. لطفاً دوباره تلاش کنید.';
+  String get speedTestFailed => 'تست سرعت ناموفق بود؛ لطفاً دوباره تلاش کن.';
 
   @override
   String get speedTestConnectionUnstable =>
-      'اتصال شما ناپایدار بود و تست متوقف شد.';
+      'اتصالت کند یا ناپایدار به نظر می‌رسه.';
+
+  @override
+  String get tvHoldOkToReorder => 'برای جابه‌جایی، دکمه OK رو نگه‌دار';
+
+  @override
+  String get tvMoveModeHint => 'با ▲ ▼ جابه‌جا کن· OK برای پایان';
+
+  @override
+  String get privateDnsTitle => 'DNS خصوصی روشنه';
+
+  @override
+  String privateDnsMessage(String host) {
+    return 'گوشیت درخواست‌های DNS رو به $host می‌فرسته. اگر هنگام اتصال سایت‌ها باز نمیشن، در تنظیمات شبکه، DNS خصوصی رو روی «خودکار» یا «خاموش» بذار.';
+  }
+
+  @override
+  String get privateDnsOpenSettings => 'باز کردن تنظیمات';
+
+  @override
+  String get privateDnsDismiss => 'بعداً';
+
+  @override
+  String get marketplaceInfoDescription =>
+      'این اشتراک پریمیوم مستقیماً از دیفیکس خریداری شده.';
+
+  @override
+  String get marketplaceInfoRemainingData => 'حجم باقی‌مانده';
+
+  @override
+  String get marketplaceInfoRemainingTime => 'زمان باقی‌مانده';
+
+  @override
+  String get marketplaceInfoGigabytes => 'گیگابایت';
+
+  @override
+  String get marketplaceInfoDays => 'روز';
+
+  @override
+  String get marketplaceInfoUsageError =>
+      'دریافت میزان مصرف ممکن نشد؛ اتصالتون رو بررسی کرده و دوباره تلاش کنین.';
+
+  @override
+  String get marketplaceInfoRetry => 'تلاش دوباره';
+
+  @override
+  String get marketplaceInfoJumpDescription => 'تغییر سرور، بدون تغییر موقعیت.';
+
+  @override
+  String get marketplaceInfoJump => 'پرش';
+
+  @override
+  String get marketplaceInfoJumpSuccess => 'سرور با موفقیت تغییر کرد.';
+
+  @override
+  String get marketplaceInfoJumpFailed => 'تغییر سرور ممکن نشد';
+
+  @override
+  String get jumpDisconnectTitle => 'VPN قطع میشه';
+
+  @override
+  String get jumpDisconnectMessage =>
+      'با تغییر سرور، VPN قطع میشه. ادامه میدی؟';
+
+  @override
+  String get jumpDisconnectConfirm => 'بله، سرور رو تغییر بده';
+
+  @override
+  String get privacyNoticeTitle => 'اطلاعیه حریم خصوصی';
+
+  @override
+  String get privacyNoticeIntro => 'دیفیکس چه چیزهایی رو، به کجا می‌فرسته:';
+
+  @override
+  String get privacyNoticeConnection =>
+      'هنگام باز شدن برنامه و هنگام اتصال، تنظیمات اتصال دریافت میشه و ارائه‌دهنده اینترنتت از روی نشانی IP شناسایی میشه؛ این کار از طریق سرورهای دیفیکس و سرویس‌های شناسایی IP مثل freeipapi.com و ip.sb انجام میشه. هنگام ورود به حساب پریمیوم، اطلاعات حسابت ارسال میشه.';
+
+  @override
+  String get privacyNoticeTelemetry =>
+      'فقط اگر پایین اجازه بدی: آمار استفاده و گزارش‌های خرابی به Google Firebase ارسال میشه. این داده‌ها اسم ارائه‌دهنده اینترنتت، متد اتصال و کشور خروجی VPN رو هم داره.';
+
+  @override
+  String get privacyNoticeAds =>
+      'تبلیغات از Google AdMob نمایش داده میشه که ممکنه برای شخصی‌سازیشون ازت رضایت بخواد.';
+
+  @override
+  String get privacyNoticeSpeedTest =>
+      'هنگام اجرای تست سرعت، نتایجش به کلودفلر ارسال میشه.';
+
+  @override
+  String get privacyNoticeOwnTraffic =>
+      'هنگام اتصال VPN، برنامه اتصال‌های خودش رو هم از طریق اون می‌فرسته، به جز اتصال‌هایی که خود VPN رو برقرار می‌کنن.';
+
+  @override
+  String get privacyNoticeLocal =>
+      'نام ارائه‌دهنده اینترنتت روی همین دستگاه نگه داشته میشه، تا اتصال‌های بعدی سریع‌تر برقرار بشن.';
+
+  @override
+  String get privacyNoticeChangeLater =>
+      'هر وقت خواستی می‌تونی این انتخاب رو توی ترجیحات، بخش «عیب‌یابی و آزمایش‌ها»، عوض کنی.';
+
+  @override
+  String get privacyNoticeVpnProfile =>
+      'با ادامه، با نصب پروفایل VPN موافقت می‌کنی.';
+
+  @override
+  String get privacyNoticeShareDiagnostics =>
+      'ارسال آمار استفاده و گزارش‌های خرابی';
+
+  @override
+  String get privacyNoticeGotIt => 'متوجه شدم';
+
+  @override
+  String get settingsShareDiagnostics => 'ارسال داده‌های عیب‌یابی';
+
+  @override
+  String get adTapToLearnMore => 'برای اطلاعات بیشتر ضربه بزن';
+
+  @override
+  String get adClickToLearnMore => 'برای اطلاعات بیشتر کلیک کن';
+
+  @override
+  String get premiumTitle => 'پریمیوم';
+
+  @override
+  String get premiumTabAccount => 'حساب کاربری';
+
+  @override
+  String get premiumTabPlans => 'پلن‌ها';
+
+  @override
+  String get premiumTabWallet => 'کیف پول';
+
+  @override
+  String get premiumTabSupport => 'پشتیبانی';
+
+  @override
+  String get selectPlanDuration =>
+      'مدت‌زمان پلنی که میخوای خریداری کنی رو انتخاب کن:';
+
+  @override
+  String creditsPrice(String price) {
+    return '$price اعتبار';
+  }
+
+  @override
+  String get choose => 'انتخاب';
+
+  @override
+  String get payNow => 'پرداخت';
+
+  @override
+  String get whatYoullGet => 'چه چیزی دریافت می‌کنی';
+
+  @override
+  String get months => 'ماه';
+
+  @override
+  String get subscriptionSuccess => 'اشتراک پلن با موفقیت انجام شد!';
+
+  @override
+  String get selectTopUpAmount => 'لطفاً مبلغ شارژ کیف پول رو انتخاب کن:';
+
+  @override
+  String get paymentSuccessful => 'پرداخت موفق بود';
+
+  @override
+  String get walletToppedUp => 'کیف پولت شارژ شد';
+
+  @override
+  String get continueAction => 'ادامه';
+
+  @override
+  String get purchaseCredits => 'خرید اعتبار';
+
+  @override
+  String get back => 'بازگشت';
+
+  @override
+  String get selectAmount => 'لطفاً یک مبلغ انتخاب کن';
+
+  @override
+  String get balance => 'موجودی';
+
+  @override
+  String get topUp => 'شارژ';
+
+  @override
+  String get registerToAccessPremium =>
+      'برای دسترسی به امکانات پریمیوم باید ثبت‌نام کنی.';
+
+  @override
+  String get continueWithApple => 'ادامه با Apple';
+
+  @override
+  String get goToLoginSection => 'رفتن به بخش ورود';
+
+  @override
+  String get easyLogin => 'ورود آسان';
+
+  @override
+  String get needHelp => 'به کمک نیاز داری؟';
+
+  @override
+  String get supportContactDescription =>
+      'از طریق راه‌های ارتباطی زیر با تیم پشتیبانی ما در تماس باش:';
+
+  @override
+  String get telegram => 'تلگرام';
+
+  @override
+  String get website => 'وب‌سایت';
+
+  @override
+  String get settingsMethodsPremium => 'پریمیوم';
+
+  @override
+  String get settingsMethodsMarket => 'مارکت';
+
+  @override
+  String get settingsMethodsBuiltIn => 'پیشفرض';
+
+  @override
+  String get settingsMethodsRewards => 'جوایز';
+
+  @override
+  String settingsMethodsOnCount(int active, int total) {
+    return '$active از $total';
+  }
+
+  @override
+  String settingsMethodsBySeller(String seller) {
+    return 'از $seller';
+  }
+
+  @override
+  String settingsMethodsDaysLeft(int days) {
+    return '$days روز مانده';
+  }
+
+  @override
+  String get settingsMethodsExpired => 'منقضی شده';
+
+  @override
+  String get settingsMethodsSubscription => 'اشتراک';
 }

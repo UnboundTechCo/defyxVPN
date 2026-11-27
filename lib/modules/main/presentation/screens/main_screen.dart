@@ -5,21 +5,22 @@ import 'package:defyx_vpn/modules/core/vpn.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/core/desktop_platform_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/update_dialog_handler.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/scroll_manager.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/secret_tap_handler.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/privacy_notice_dialog.dart';
 import 'package:defyx_vpn/modules/main/application/main_screen_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/connection_button.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads_widget.dart';
-import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/dino.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/layout/main_screen_background.dart';
+import 'package:defyx_vpn/shared/layout/navbar/defyx_navbar.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/header_section.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/tips_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/ad_readiness_coordinator.dart';
 import 'package:defyx_vpn/shared/services/animation_service.dart';
+import 'package:defyx_vpn/shared/services/telemetry_consent.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flame/game.dart';
@@ -35,13 +36,11 @@ class MainScreen extends ConsumerStatefulWidget {
 class _MainScreenState extends ConsumerState<MainScreen> {
   static bool _gatewayVerified = false;
 
-  final ScrollController _scrollController = ScrollController();
   final AnimationService _animationService = AnimationService();
   bool _showHeaderShadow = false;
   ConnectionStatus? _previousConnectionStatus;
   late MainScreenLogic _logic;
   late final AdsWidget _adsWidget;
-  late ScrollManager _scrollManager;
   late SecretTapHandler _secretTapHandler;
 
   DinoGame? _dinoGame;
@@ -50,7 +49,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   void initState() {
     super.initState();
     _logic = MainScreenLogic(ref);
-    _scrollManager = ScrollManager(_scrollController);
     _secretTapHandler = SecretTapHandler();
 
     _adsWidget = AdsWidget(
@@ -76,6 +74,14 @@ class _MainScreenState extends ConsumerState<MainScreen> {
       final adReadiness = ref.read(adReadinessCoordinatorProvider);
       if (adReadiness.canShowPrivacyDialog) {
         _showPrivacyNoticeDialog();
+      } else if (TelemetryConsent.isSupported && !TelemetryConsent.isDecided) {
+        // Users who accepted an earlier notice were never asked about
+        // telemetry, which now stays off until they answer.
+        PrivacyNoticeDialog.show(
+          context,
+          () async => true,
+          mentionVpnProfile: false,
+        );
       }
 
       _checkInitialConnectionState();
@@ -101,7 +107,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
 
   @override
   void dispose() {
-    _scrollController.dispose();
     if (_dinoGame != null) {
       _dinoGame!.pauseEngine();
       _dinoGame!.onRemove();
@@ -110,6 +115,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     super.dispose();
   }
 
+  // The page used to scroll down on connect (pushing the title up) and back
+  // up afterwards. The ad box now has a fixed place under the shield, so the
+  // page never moves.
   void _handleConnectionStateChange(ConnectionStatus status) {
     // CRITICAL FIX: Check if widget is still mounted before setState
     Future.delayed(const Duration(milliseconds: 300), () {
@@ -120,12 +128,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         setState(() {
           _showHeaderShadow = newShadowState;
         });
-      }
-
-      if (status == ConnectionStatus.connected) {
-        _scrollManager.scrollToBottomWithRetry();
-      } else {
-        _scrollManager.scrollToTopWithRetry();
       }
     });
   }
@@ -144,8 +146,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
           _showHeaderShadow = newShadowState;
         });
       }
-
-      _scrollManager.checkInitialConnectionState(connectionState.status);
     });
   }
 
@@ -186,10 +186,16 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final connectionState = ref.watch(connectionStateProvider);
-    final adsState = ref.watch(adsProvider);
     final hasActiveAd = ref.watch(hasActiveAdProvider);
     final showTips =
         connectionState.status == ConnectionStatus.disconnected && !hasActiveAd;
+
+    final connectionButtonTop = 130.h;
+    final adBox = _adBoxGeometry(
+      context,
+      shieldTip: connectionButtonTop + ConnectionButton.shieldBottom,
+      inHouseAd: connectionState.status == ConnectionStatus.connected,
+    );
 
     if (!(Platform.isAndroid || Platform.isIOS)) {
       ref.listen<int>(trayConnectionToggleTriggerProvider, (previous, next) {
@@ -212,12 +218,18 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         bottom: false,
         child: Align(
           alignment: Alignment.topCenter,
+          // Full height, so the tips card below is placed from the bottom of
+          // the screen rather than from the end of the page content.
           child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 393.w),
+            constraints: BoxConstraints(
+              maxWidth: 393.w,
+              minHeight: double.infinity,
+            ),
             child: Stack(
               children: [
+                // Never scrolls; it only keeps tall content on short screens
+                // from overflowing.
                 SingleChildScrollView(
-                  controller: _scrollController,
                   physics: const NeverScrollableScrollPhysics(),
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 24.w),
@@ -225,7 +237,7 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                       alignment: Alignment.center,
                       children: [
                         Positioned(
-                          top: 130.h,
+                          top: connectionButtonTop,
                           child: ConnectionButton(
                             onTap:
                                 connectionState.status ==
@@ -238,28 +250,30 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                                 : _logic.connectOrDisconnect,
                           ),
                         ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            SizedBox(height: 45.h),
-                            HeaderSection(
-                              onSecretTap: _handleSecretTap,
-                              onPingRefresh: _logic.refreshPing,
-                            ),
-                            SizedBox(
-                              height: 50.h,
-                            ), // Reduced to raise ads higher
-                            SizedBox(
-                              height: 0.16.sh,
-                            ), // Reduced to raise ads higher
-                            _buildContentSection(
-                              connectionState.status,
-                              adsState,
-                            ),
-                            SizedBox(
-                              height: 0.15.sh,
-                            ), // Consistent bottom spacing
-                          ],
+                        // Tall enough to hold the ad box, so the Stack does not
+                        // clip it or swallow its taps.
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            minHeight: adBox.top + adBox.height,
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              SizedBox(height: 45.h),
+                              HeaderSection(
+                                onSecretTap: _handleSecretTap,
+                                onPingRefresh: _logic.refreshPing,
+                              ),
+                              SizedBox(height: 50.h),
+                              SizedBox(height: 0.16.sh),
+                              _buildContentSection(connectionState.status),
+                              SizedBox(height: 0.15.sh),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: adBox.top,
+                          child: _buildAdBox(adBox.height),
                         ),
                       ],
                     ),
@@ -292,11 +306,12 @@ class _MainScreenState extends ConsumerState<MainScreen> {
                     ),
                   ),
                 ),
+                // Sits a fixed gap above the nav bar on every device.
                 if (showTips)
                   Positioned(
                     left: 24.w,
                     right: 24.w,
-                    bottom: 100.h + MediaQuery.of(context).padding.bottom,
+                    bottom: DefyxNavBar.coveredHeight(context) + 15.h,
                     child: const TipsSlider(),
                   ),
               ],
@@ -307,71 +322,91 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     );
   }
 
-  Widget _buildContentSection(ConnectionStatus status, dynamic adsState) {
-    // Use hasActiveAdProvider as single source of truth for ad visibility
-    final hasActiveAd = ref.watch(hasActiveAdProvider);
+  /// Where the ad box goes, in the coordinates of the page under the status
+  /// bar.
+  ///
+  /// It hangs just below the shield, at the same spot in every state, so the
+  /// page never has to move. (It used to follow the header, which grows by
+  /// the flag/ping row once connected, and the page scrolled to keep it
+  /// above the nav bar.) On short screens it shrinks or rises to stay clear
+  /// of the nav bar.
+  ({double top, double height}) _adBoxGeometry(
+    BuildContext context, {
+    required double shieldTip,
+    required bool inHouseAd,
+  }) {
+    final preferredTop = shieldTip + 8.h;
+    final bottomLimit =
+        MediaQuery.sizeOf(context).height -
+        MediaQuery.paddingOf(context).top -
+        DefyxNavBar.coveredHeight(context) -
+        8.h;
+    final fullHeight = 280.h;
+    // In-house pictures scale to fit, so their box may shrink. AdMob's
+    // native template keeps its standard size.
+    final height = inHouseAd
+        ? (bottomLimit - preferredTop).clamp(200.h, fullHeight)
+        : fullHeight;
+    // Rise to clear the nav bar, but never over more than the bottom quarter
+    // of the shield.
+    final top = (bottomLimit - height).clamp(
+      shieldTip - ConnectionButton.shieldSize / 4,
+      preferredTop,
+    );
+    return (top: top, height: height);
+  }
 
-    bool shouldShowAd = hasActiveAd;
-    Widget? mainContent;
+  bool get _shouldShowAd =>
+      ref.watch(hasActiveAdProvider) && ref.watch(adsAllowedProvider);
 
-    switch (status) {
-      case ConnectionStatus.noInternet:
-        _dinoGame ??= DinoGame();
-        mainContent = SizedBox(
-          height: 200.h,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(16.r),
-            child: GameWidget(game: _dinoGame!),
-          ),
-        );
-        break;
-
-      case ConnectionStatus.disconnected:
-        break;
-
-      default:
-        // CONNECTED/CONNECTING: Show ad if available, else empty
-        if (!hasActiveAd) {
-          mainContent = const SizedBox.shrink();
-        }
+  /// What sits under the header when no ad is showing (the dino game while
+  /// offline).
+  Widget _buildContentSection(ConnectionStatus status) {
+    if (status != ConnectionStatus.noInternet || _shouldShowAd) {
+      return const SizedBox.shrink();
     }
+    _dinoGame ??= DinoGame();
+    return SizedBox(
+      height: 200.h,
+      // The game is touch-only. Flame's GameWidget would otherwise grab
+      // focus and swallow every key (D-pad and Back included).
+      child: ExcludeFocus(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16.r),
+          child: GameWidget(game: _dinoGame!, autofocus: false),
+        ),
+      ),
+    );
+  }
 
-    // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent dispose/recreate cycles
-    // Control visibility with AnimatedOpacity for smooth fade transitions
-    return Stack(
-      alignment:
-          Alignment.topCenter, // Align to top-center for consistent positioning
-      children: [
-        // Always in tree at same position - never recreated
-        AnimatedOpacity(
-          duration: _animationService.adjustDuration(
-            const Duration(milliseconds: 300),
-          ),
-          opacity: shouldShowAd ? 1.0 : 0.0,
-          child: IgnorePointer(
-            ignoring: !shouldShowAd, // Prevent touch events when hidden
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 50.h,
-              ), // Match the spacing above ads
-              child: SizedBox(
-                height: 280.h,
-                width: 336.w,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF19312F),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child:
-                      _adsWidget, // Always same widget instance, same position
-                ),
+  Widget _buildAdBox(double height) {
+    final shouldShowAd = _shouldShowAd;
+
+    // CRITICAL: Keep AdsWidget in ONE position in the tree to prevent
+    // dispose/recreate cycles; visibility fades with AnimatedOpacity.
+    // Ads are kept out of D-pad focus: the ad is a platform view that would
+    // be an invisible focus stop for remote users.
+    return ExcludeFocus(
+      child: AnimatedOpacity(
+        duration: _animationService.adjustDuration(
+          const Duration(milliseconds: 300),
+        ),
+        opacity: shouldShowAd ? 1.0 : 0.0,
+        child: IgnorePointer(
+          ignoring: !shouldShowAd, // Prevent touch events when hidden
+          child: SizedBox(
+            height: height,
+            width: 336.w,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xFF19312F),
+                borderRadius: BorderRadius.circular(10.r),
               ),
+              child: _adsWidget, // Always same widget instance, same position
             ),
           ),
         ),
-        // Show main content when not showing ad
-        if (!shouldShowAd && mainContent != null) mainContent,
-      ],
+      ),
     );
   }
 }

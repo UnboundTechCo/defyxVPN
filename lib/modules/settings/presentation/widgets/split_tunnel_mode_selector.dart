@@ -1,6 +1,7 @@
 import 'package:defyx_vpn/core/theme/app_colors.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -35,7 +36,8 @@ class SplitTunnelModeSelector extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16.r),
       ),
-      padding: EdgeInsets.fromLTRB(2.w, 1.h, 2.w, 1.h),
+      // Clip so the active row's background follows the rounded corners.
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           for (final mode in SplitTunnelMode.values)
@@ -63,11 +65,23 @@ class _ModeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return Material(
+      color: isSelected
+          ? Colors.black.withValues(alpha: 0.3)
+          : Colors.transparent,
+      child: TvFocusRing(
+        borderRadius: BorderRadius.circular(8.r),
+        child: _buildInkWell(),
+      ),
+    );
+  }
+
+  Widget _buildInkWell() {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8.r),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+        padding: EdgeInsets.symmetric(horizontal: 14.w, vertical: 11.h),
         child: Row(
           children: [
             Expanded(

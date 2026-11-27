@@ -19,6 +19,7 @@ abstract class SettingsItemId {
   static const splitTunnel = 'split_tunnel';
   static const killSwitch = 'kill_switch';
   static const deepScan = 'deep_scan';
+  // Shown as Auto Reconnect; the id is kept so saved choices still load.
   static const healthCheck = 'health_check';
 }
 
@@ -28,7 +29,7 @@ abstract class SettingsItemTitle {
   static const splitTunnel = 'SPLIT TUNNEL';
   static const killSwitch = 'KILL SWITCH';
   static const deepScan = 'DEEP SCAN';
-  static const healthCheck = 'HEALTH CHECK';
+  static const healthCheck = 'AUTO RECONNECT';
 }
 
 // Navigation Routes
@@ -56,18 +57,29 @@ abstract class SettingsStorageKey {
 // Localized text helper - fetches translations with fallback to defaults
 class SettingsText {
   final BuildContext? context;
-  
+
   SettingsText([this.context]);
-  
-  AppLocalizations? get _l10n => context != null ? AppLocalizations.of(context!) : null;
-  
-  String get escapeModeTitle => _l10n?.settingsEscapeMode ?? SettingsGroupTitle.trafficControl;
-  String get splitTunnelTitle => _l10n?.settingsSplitTunnel ?? SettingsItemTitle.splitTunnel;
-  String get splitTunnelSubtitle => _l10n?.settingsIncluded ?? SettingsSubtitle.splitTunnelIncluded;
-  String get deepScanTitle => _l10n?.settingsDeepScan ?? SettingsItemTitle.deepScan;
-  String get healthCheckTitle => _l10n?.settingsHealthCheck ?? SettingsItemTitle.healthCheck;
-  String get killSwitchTitle => _l10n?.settingsKillSwitch ?? SettingsItemTitle.killSwitch;
-  String get connectionMethodTitle => _l10n?.settingsConnectionMethod ?? SettingsGroupTitle.connectionMethod;
-  String get destinationTitle => _l10n?.settingsDestination ?? SettingsItemTitle.destination;
-  String get atLeastOneCoreRequired => _l10n?.settingsAtLeastOneCoreRequired ?? SettingsMessage.atLeastOneCoreRequired;
+
+  AppLocalizations? get _l10n =>
+      context != null ? AppLocalizations.of(context!) : null;
+
+  String get escapeModeTitle =>
+      _l10n?.settingsEscapeMode ?? SettingsGroupTitle.trafficControl;
+  String get splitTunnelTitle =>
+      _l10n?.settingsSplitTunnel ?? SettingsItemTitle.splitTunnel;
+  String get splitTunnelSubtitle =>
+      _l10n?.settingsIncluded ?? SettingsSubtitle.splitTunnelIncluded;
+  String get deepScanTitle =>
+      _l10n?.settingsDeepScan ?? SettingsItemTitle.deepScan;
+  String get healthCheckTitle =>
+      _l10n?.settingsAutoReconnect ?? SettingsItemTitle.healthCheck;
+  String get killSwitchTitle =>
+      _l10n?.settingsKillSwitch ?? SettingsItemTitle.killSwitch;
+  String get connectionMethodTitle =>
+      _l10n?.settingsConnectionMethod ?? SettingsGroupTitle.connectionMethod;
+  String get destinationTitle =>
+      _l10n?.settingsDestination ?? SettingsItemTitle.destination;
+  String get atLeastOneCoreRequired =>
+      _l10n?.settingsAtLeastOneCoreRequired ??
+      SettingsMessage.atLeastOneCoreRequired;
 }

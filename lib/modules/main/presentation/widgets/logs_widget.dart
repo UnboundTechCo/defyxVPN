@@ -1,6 +1,8 @@
 import 'package:defyx_vpn/common/components/button.dart';
 import 'package:defyx_vpn/core/theme/app_theme.dart';
 import 'package:defyx_vpn/modules/core/log.dart';
+import 'package:defyx_vpn/shared/tv/tv_support.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -355,34 +357,38 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                 Positioned(
                   top: 8.h,
                   right: 8.w,
-                  child: InkWell(
-                    onTap: () => ref.read(logsProvider.notifier).clearLogs(),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 4.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        borderRadius: BorderRadius.circular(4.r),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.clear_all,
-                            color: Colors.grey[700],
-                            size: 14.sp,
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            AppLocalizations.of(context).clear,
-                            style: TextStyle(
+                  child: TvFocusRing(
+                    borderRadius: BorderRadius.circular(4.r),
+                    ringOutset: 2,
+                    child: InkWell(
+                      onTap: () => ref.read(logsProvider.notifier).clearLogs(),
+                      child: Container(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 8.w,
+                          vertical: 4.h,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          borderRadius: BorderRadius.circular(4.r),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.clear_all,
                               color: Colors.grey[700],
-                              fontSize: 10.sp,
+                              size: 14.sp,
                             ),
-                          ),
-                        ],
+                            SizedBox(width: 4.w),
+                            Text(
+                              AppLocalizations.of(context).clear,
+                              style: TextStyle(
+                                color: Colors.grey[700],
+                                fontSize: 10.sp,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -399,6 +405,7 @@ class _LogPopupContentState extends ConsumerState<LogPopupContent> {
                   onPressed: () => Navigator.of(context).pop(),
                   size: AppButtonSize.small,
                   variant: AppButtonVariant.secondary,
+                  autofocus: TvSupport.isTv,
                 ),
               ),
               SizedBox(width: 12.w),

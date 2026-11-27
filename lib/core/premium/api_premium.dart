@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:defyx_vpn/common/dtos/balance_dto.dart';
 import 'package:defyx_vpn/common/dtos/plans_dto.dart';
 import 'package:defyx_vpn/common/dtos/login_response_dto.dart';
+import 'package:defyx_vpn/common/dtos/subscription_usage_dto.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -173,11 +174,38 @@ class PremiumApiService {
     }
   }
 
+  Future<SubscriptionUsageResponse> getSubscriptionUsage(String link) async {
+    try {
+      final response = await _dio.get(
+        '/subscription/usage-link/${Uri.encodeComponent(link)}',
+      );
+      return SubscriptionUsageResponse.fromJson(
+        response.data as Map<String, dynamic>,
+      );
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> transferServer(String link) async {
+    try {
+      await _dio.patch('/subscription/transfer-server', data: {'link': link});
+    } on DioException catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  String? _serverMessage(DioException error) {
+    final data = error.response?.data;
+    final message = data is Map ? data['message'] : null;
+    return message is String && message.isNotEmpty ? message : null;
+  }
+
   Exception _handleError(DioException error) {
     if (error.response?.statusCode == 401) {
       return Exception('Token expired. Please log in again.');
     } else if (error.response?.statusCode == 404) {
-      return Exception('Resource not found.');
+      return Exception(_serverMessage(error) ?? 'Resource not found.');
     } else if (error.response?.statusCode == 500) {
     } else if (error.response?.statusCode == 403) {
       return Exception(error.response?.data['message'] ?? 'Access denied.');

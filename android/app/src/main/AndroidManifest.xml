@@ -6,14 +6,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SYSTEM_EXEMPTED" />
     <uses-permission android:name="android.permission.BIND_VPN_SERVICE" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Support both Android TV and mobile devices. -->
+    <!-- Support both Android TV and mobile devices. The TV bundle requires
+         leanback, see tvBuild in build.gradle.kts. -->
     <uses-feature
         android:name="android.software.leanback"
-        android:required="false" />
+        android:required="${leanbackRequired}" />
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false" />
@@ -35,23 +35,22 @@
         android:label="DefyxVPN"
         android:icon="@drawable/tv_icon"
         android:banner="@drawable/tv_banner"
-        android:usesCleartextTraffic="true"
-        tools:ignore="ForegroundServicePermission">
+        android:networkSecurityConfig="@xml/network_security_config">
 
-        <receiver
-            android:name="com.dexterous.flutterlocalnotifications.ActionBroadcastReceiver"
-            android:exported="false" />
+        <!-- Telemetry stays off until the user agrees to it, see
+             TelemetryConsent. Firebase Sessions follows Crashlytics. -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="false" />
 
-        <service
-            android:name="com.dexterous.flutterlocalnotifications.ForegroundService"
-            android:exported="false"
-            android:stopWithTask="false"
-            android:foregroundServiceType="systemExempted" />
-
+        <!-- Android lists VPN apps among the users of systemExempted. -->
         <service
             android:name="de.unboundtech.defyxvpn.DefyxVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
-            android:foregroundServiceType="connectedDevice"
+            android:foregroundServiceType="systemExempted"
             android:exported="false"
             android:stopWithTask="false"
             android:enabled="true">

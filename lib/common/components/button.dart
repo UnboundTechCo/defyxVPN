@@ -17,6 +17,7 @@ class AppButton extends StatelessWidget {
   final bool isDisabled;
   final AppButtonRound? round;
   final double? width;
+  final bool autofocus;
 
   const AppButton({
     super.key,
@@ -28,6 +29,7 @@ class AppButton extends StatelessWidget {
     this.isDisabled = false,
     this.width = double.infinity,
     this.round,
+    this.autofocus = false,
   });
 
   @override
@@ -38,6 +40,7 @@ class AppButton extends StatelessWidget {
       height: config.height,
       width: width,
       child: ElevatedButton(
+        autofocus: autofocus,
         onPressed: isDisabled || isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
           minimumSize: Size.zero,

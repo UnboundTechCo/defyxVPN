@@ -15,7 +15,7 @@ class CustomToast extends StatelessWidget {
   final VoidCallback? onDismiss;
 
   const CustomToast({
-    Key? key,
+    super.key,
     required this.message,
     this.icon,
     this.svgIcon,
@@ -26,7 +26,7 @@ class CustomToast extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
     this.duration = const Duration(seconds: 3),
     this.onDismiss,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +60,10 @@ class CustomToast extends StatelessWidget {
     Color textColor = Colors.white,
     Color iconColor = Colors.white,
     double borderRadius = 6.0,
-    EdgeInsets padding = const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+    EdgeInsets padding = const EdgeInsets.symmetric(
+      horizontal: 16.0,
+      vertical: 14.0,
+    ),
     Duration duration = const Duration(seconds: 3),
     VoidCallback? onDismiss,
   }) {

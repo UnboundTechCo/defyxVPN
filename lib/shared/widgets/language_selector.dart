@@ -32,7 +32,7 @@ class LanguageSelector extends ConsumerWidget {
               isSelected: isSelected,
               onTap: () => languageNotifier.changeLanguage(language),
             );
-          }).toList(),
+          }),
         ],
       ),
     );
@@ -59,7 +59,7 @@ class _LanguageOption extends StatelessWidget {
         margin: EdgeInsets.only(bottom: 8.h),
         decoration: BoxDecoration(
           color: isSelected
-              ? const Color(0xFFFFC927).withOpacity(0.1)
+              ? const Color(0xFFFFC927).withValues(alpha: 0.1)
               : Colors.white,
           border: Border.all(
             color: isSelected ? const Color(0xFFFFC927) : Colors.grey.shade300,

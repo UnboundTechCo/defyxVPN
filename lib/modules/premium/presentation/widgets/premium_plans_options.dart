@@ -1,4 +1,7 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/core/utils/plans_price.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -11,6 +14,7 @@ class PremiumPlanSelect extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
     final selectedPlan = ref.watch(selectedPlanProvider);
 
     final planIsSelected = selectedPlan != null;
@@ -22,7 +26,7 @@ class PremiumPlanSelect extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            'Select the plan duration you\'d like to purchase:',
+            l10n.selectPlanDuration,
             style: TextStyle(
               color: Colors.black,
               fontSize: 30.sp,
@@ -37,69 +41,80 @@ class PremiumPlanSelect extends ConsumerWidget {
                 children: data.map((plan) {
                   final isSelectedPlan = selectedPlan == plan;
 
-                  return Padding(
-                    padding: EdgeInsets.only(bottom: 12.h),
-                    child: GestureDetector(
-                      onTap: () {
-                        ref.read(selectedPlanProvider.notifier).state = plan;
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(16.w),
-                        decoration: const BoxDecoration(
-                          color: Colors.transparent,
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 32.w,
-                              height: 32.h,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelectedPlan
-                                      ? const Color(0xFF2563EB)
-                                      : Colors.grey,
-                                  width: 2,
+                  return FutureBuilder<String>(
+                    future: calculateInternationalPrice(plan),
+                    builder: (context, snapshot) {
+                      final price =
+                          snapshot.data ?? plan.price.toStringAsFixed(2);
+
+                      return Padding(
+                        padding: EdgeInsets.only(bottom: 12.h),
+                        child: TvFocusable(
+                          onTap: () {
+                            ref.read(selectedPlanProvider.notifier).state =
+                                plan;
+                          },
+                          behavior: HitTestBehavior.deferToChild,
+                          borderRadius: BorderRadius.circular(12.r),
+                          child: Container(
+                            padding: EdgeInsets.all(16.w),
+                            decoration: const BoxDecoration(
+                              color: Colors.transparent,
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 32.w,
+                                  height: 32.h,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: isSelectedPlan
+                                          ? const Color(0xFF2563EB)
+                                          : Colors.grey,
+                                      width: 2,
+                                    ),
+                                    color: isSelectedPlan
+                                        ? const Color(0xFF2563EB)
+                                        : Colors.transparent,
+                                  ),
+                                  child: isSelectedPlan
+                                      ? Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 20.w,
+                                        )
+                                      : null,
                                 ),
-                                color: isSelectedPlan
-                                    ? const Color(0xFF2563EB)
-                                    : Colors.transparent,
-                              ),
-                              child: isSelectedPlan
-                                  ? Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 20.w,
-                                    )
-                                  : null,
-                            ),
-                            SizedBox(width: 12.w),
-                            Expanded(
-                              child: Text(
-                                plan.name,
-                                style: TextStyle(
-                                  color: isSelectedPlan
-                                      ? const Color(0xFF1849D6)
-                                      : Colors.black,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w600,
+                                SizedBox(width: 12.w),
+                                Expanded(
+                                  child: Text(
+                                    plan.name,
+                                    style: TextStyle(
+                                      color: isSelectedPlan
+                                          ? const Color(0xFF1849D6)
+                                          : Colors.black,
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                Text(
+                                  l10n.creditsPrice(price),
+                                  style: TextStyle(
+                                    color: isSelectedPlan
+                                        ? const Color(0xFF21AD86)
+                                        : Colors.grey,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
-                            Text(
-                              '${plan.price.toStringAsFixed(2)} Credits',
-                              style: TextStyle(
-                                color: isSelectedPlan
-                                    ? const Color(0xFF21AD86)
-                                    : Colors.grey,
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 }).toList(),
               );
@@ -107,12 +122,12 @@ class PremiumPlanSelect extends ConsumerWidget {
             loading: () {
               return const Center(child: CircularProgressIndicator());
             },
-            error: (error, stackTrace) => Center(child: Text('Error: $error')),
+            error: (error, stackTrace) =>
+                Center(child: Text('${l10n.error}: $error')),
           ),
-
           SizedBox(height: 32.h),
           AppButton(
-            label: 'Choose',
+            label: l10n.choose,
             onPressed: navigateToDetails,
             variant: AppButtonVariant.outline,
             round: AppButtonRound.circle,

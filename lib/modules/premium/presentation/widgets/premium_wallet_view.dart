@@ -1,6 +1,8 @@
 import 'package:defyx_vpn/common/components/button.dart';
+import 'package:defyx_vpn/l10n/app_localizations.dart';
 import 'package:defyx_vpn/modules/premium/providers/premium_wallet_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
+import 'package:defyx_vpn/shared/widgets/tv_focusable.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -23,10 +25,36 @@ class PremiumWalletView extends StatefulWidget {
   State<PremiumWalletView> createState() => _PremiumWalletViewState();
 }
 
-class _PremiumWalletViewState extends State<PremiumWalletView> {
+class _PremiumWalletViewState extends State<PremiumWalletView>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _refreshController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  );
+  bool _isRefreshing = false;
+
+  @override
+  void dispose() {
+    _refreshController.dispose();
+    super.dispose();
+  }
+
   Future<void> _refetchBalance(WidgetRef ref) async {
-    ref.invalidate(balanceProvider);
-    await ref.read(balanceProvider.future);
+    if (_isRefreshing) return;
+    setState(() => _isRefreshing = true);
+    _refreshController.repeat();
+    try {
+      ref.invalidate(balanceProvider);
+      await ref.read(balanceProvider.future);
+    } catch (_) {
+    } finally {
+      if (mounted) {
+        _refreshController
+          ..stop()
+          ..reset();
+        setState(() => _isRefreshing = false);
+      }
+    }
   }
 
   @override
@@ -47,7 +75,7 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                   child: Column(
                     children: [
                       Text(
-                        'BALANCE',
+                        AppLocalizations.of(context).balance,
                         style: TextStyle(
                           color: Colors.grey,
                           fontSize: 18.sp,
@@ -65,39 +93,39 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                               ),
                             )
                           : widget.isLoading
-                          ? const Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.black,
-                              ),
-                            )
-                          : RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: symbol,
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 36.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                              ? const Center(
+                                  child: CircularProgressIndicator(
+                                    color: Colors.black,
                                   ),
-                                  TextSpan(
-                                    text: widget.balance.toStringAsFixed(2),
-                                    style: TextStyle(
-                                      color: Colors.black,
-                                      fontSize: 36.sp,
-                                      fontWeight: FontWeight.bold,
-                                    ),
+                                )
+                              : RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      TextSpan(
+                                        text: symbol,
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 36.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: widget.balance.toStringAsFixed(2),
+                                        style: TextStyle(
+                                          color: Colors.black,
+                                          fontSize: 36.sp,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
+                                ),
                       SizedBox(height: 20.h),
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           AppButton(
-                            label: 'Top up',
+                            label: AppLocalizations.of(context).topUp,
                             onPressed: () {
                               widget.showTopUpForm();
                             },
@@ -107,12 +135,14 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                             isLoading: widget.isLoading,
                           ),
                           SizedBox(width: 12.w),
-                          GestureDetector(
+                          TvFocusable(
                             onTap: () {
                               if (isLoggedIn) {
                                 _refetchBalance(widget.ref);
                               }
                             },
+                            behavior: HitTestBehavior.deferToChild,
+                            shape: BoxShape.circle,
                             child: Container(
                               width: 40.w,
                               height: 40.h,
@@ -120,10 +150,13 @@ class _PremiumWalletViewState extends State<PremiumWalletView> {
                                 shape: BoxShape.circle,
                                 color: Colors.black.withValues(alpha: 0.6),
                               ),
-                              child: Icon(
-                                Icons.refresh,
-                                color: Colors.white,
-                                size: 20.w,
+                              child: RotationTransition(
+                                turns: _refreshController,
+                                child: Icon(
+                                  Icons.refresh,
+                                  color: Colors.white,
+                                  size: 20.w,
+                                ),
                               ),
                             ),
                           ),
