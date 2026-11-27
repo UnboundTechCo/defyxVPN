@@ -1,5 +1,7 @@
 #include "vpn_channel_handler.h"
 
+#include <gst/gst.h>
+
 #include <thread>
 #include <chrono>
 #include <cstring>
@@ -19,6 +21,36 @@ namespace
     constexpr int FLAG_TIMEOUT_MS = 3000;
     constexpr const char *DEFAULT_FLAG = "xx";
     constexpr int DEFAULT_PING = 999;
+
+    // audioplayers_linux throws a C string outside its try block when
+    // GStreamer can't make a "playbin", which aborts the whole app ("terminate
+    // called after throwing an instance of 'char const*'"). That happens when
+    // no GStreamer plugins are found, e.g. the AppImage's bundled Ubuntu
+    // libgstreamer looks for them only in Debian's path, so on Fedora or Arch
+    // it finds none. Make the same check here so Dart can skip creating an
+    // AudioPlayer instead of crashing.
+    bool CanCreateAudioPlayer()
+    {
+        static const bool available = []
+        {
+            g_autoptr(GError) error = nullptr;
+            if (!gst_init_check(nullptr, nullptr, &error))
+            {
+                defyx_core::LogMessage(std::string("GStreamer init failed, sound effects off: ") +
+                                       (error ? error->message : "unknown error"));
+                return false;
+            }
+            GstElement *playbin = gst_element_factory_make("playbin", nullptr);
+            if (playbin == nullptr)
+            {
+                defyx_core::LogMessage("GStreamer has no playbin element, sound effects off");
+                return false;
+            }
+            gst_object_unref(gst_object_ref_sink(playbin));
+            return true;
+        }();
+        return available;
+    }
 
     std::string LookupString(FlValue *map, const char *key)
     {
@@ -901,6 +933,10 @@ void VPNChannelHandler::HandleMethodCall(FlMethodChannel *channel,
             }
             RunLoginInBackground(method_call, [code]()
                                  { return defyx_core::LoginByCode(code); });
+        }
+        else if (strcmp(method, "canPlayAudio") == 0)
+        {
+            FinishWithBool(method_call, CanCreateAudioPlayer());
         }
         else
         {
