@@ -624,7 +624,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get selectPlanDuration =>
-      'مدت پلنی که میخوای خریداری کنی را انتخاب کن:';
+      'مدت‌زمان پلنی که میخوای خریداری کنی رو انتخاب کن:';
 
   @override
   String creditsPrice(String price) {
