@@ -107,7 +107,7 @@ jobs:
 
       - name: Set up App Store signing
         id: signing
-        uses: ./.github/actions/ios-signing
+        uses: ./.github/actions/apple-signing
         with:
           certificate-base64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
           certificate-password: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}

@@ -1,4 +1,4 @@
-name: Android & iOS & Linux & Windows Build with Store Uploads
+name: Android & iOS & macOS & Linux & Windows Build with Store Uploads
 
 permissions:
   contents: write
@@ -83,6 +83,20 @@ jobs:
       publish: ${{ needs.version.outputs.new == 'true' && (github.event_name == 'push' || inputs.publish) }}
     secrets: inherit
     # Signs build provenance for the IPA, see ios.yml.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+
+  # Mac App Store, on the same terms as iOS.
+  macos:
+    needs: [dxcore-lock, version]
+    if: needs.dxcore-lock.outputs.build == 'true'
+    uses: ./.github/workflows/macos.yml
+    with:
+      publish: ${{ needs.version.outputs.new == 'true' && (github.event_name == 'push' || inputs.publish) }}
+    secrets: inherit
+    # Signs build provenance for the .pkg, see macos.yml.
     permissions:
       contents: read
       id-token: write

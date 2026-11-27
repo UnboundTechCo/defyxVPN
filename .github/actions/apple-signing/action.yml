@@ -1,0 +1,118 @@
+name: "Apple App Store signing"
+description: >
+  Sets up manual App Store signing for the iOS or macOS build. The Xcode
+  projects in git keep automatic signing for local builds, which needs an
+  Apple account a runner does not have. This imports the distribution
+  certificate (and for macOS the installer certificate) into a temporary
+  keychain and installs the App Store provisioning profiles. For iOS it also
+  switches the targets they are for to manual signing and writes the export
+  options for flutter build ipa; for macOS, scripts/platform/macos.sh takes
+  the profile UUIDs from the outputs.
+
+inputs:
+  platform:
+    description: "ios or macos"
+    required: false
+    default: "ios"
+  certificate-base64:
+    description: "Apple Distribution certificate and private key, a base64 .p12 (one for all platforms)"
+    required: true
+  certificate-password:
+    description: "Password of the .p12"
+    required: true
+  installer-certificate-base64:
+    description: "macOS: Mac Installer Distribution certificate and private key, a base64 .p12"
+    required: false
+    default: ""
+  installer-certificate-password:
+    description: "macOS: password of the installer .p12"
+    required: false
+    default: ""
+  app-profile-base64:
+    description: "App Store provisioning profile of the app for this platform, base64"
+    required: true
+  extension-profile-base64:
+    description: "App Store provisioning profile of the PacketTunnel extension for this platform, base64"
+    required: true
+  project:
+    description: "iOS: the Xcode project to switch to manual signing"
+    required: false
+    default: "ios/Runner.xcodeproj"
+  configuration:
+    description: "iOS: the build configuration to switch"
+    required: false
+    default: "Release"
+
+outputs:
+  export-options:
+    description: "iOS: path of the ExportOptions.plist to pass to flutter build ipa"
+    value: ${{ steps.profiles.outputs.export-options }}
+  app-profile:
+    description: "UUID of the app's profile"
+    value: ${{ steps.profiles.outputs.app-profile }}
+  extension-profile:
+    description: "UUID of the extension's profile"
+    value: ${{ steps.profiles.outputs.extension-profile }}
+
+runs:
+  using: composite
+  steps:
+    # As in GitHub's guide to signing Xcode apps on macOS runners.
+    - name: Import the certificates into a temporary keychain
+      id: keychain
+      shell: bash
+      env:
+        CERTIFICATE_BASE64: ${{ inputs.certificate-base64 }}
+        CERTIFICATE_PASSWORD: ${{ inputs.certificate-password }}
+        INSTALLER_CERTIFICATE_BASE64: ${{ inputs.installer-certificate-base64 }}
+        INSTALLER_CERTIFICATE_PASSWORD: ${{ inputs.installer-certificate-password }}
+      run: |
+        set -euo pipefail
+        keychain="$RUNNER_TEMP/app-signing.keychain-db"
+        keychain_password=$(openssl rand -base64 32)
+        certificate="$RUNNER_TEMP/certificate.p12"
+        trap 'rm -f "$certificate"' EXIT
+
+        security create-keychain -p "$keychain_password" "$keychain"
+        security set-keychain-settings -lut 21600 "$keychain"
+        security unlock-keychain -p "$keychain_password" "$keychain"
+
+        printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$certificate"
+        security import "$certificate" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+        if [ -n "$INSTALLER_CERTIFICATE_BASE64" ]; then
+          printf '%s' "$INSTALLER_CERTIFICATE_BASE64" | base64 --decode > "$certificate"
+          security import "$certificate" -P "$INSTALLER_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain"
+        fi
+
+        security set-key-partition-list -S apple-tool:,apple: -k "$keychain_password" "$keychain" > /dev/null
+        # Search the new keychain first, keeping the ones already listed.
+        security list-keychains -d user -s "$keychain" $(security list-keychains -d user | tr -d '"')
+        echo "keychain=$keychain" >> "$GITHUB_OUTPUT"
+
+    - name: Install the profiles
+      id: profiles
+      shell: bash
+      env:
+        PLATFORM: ${{ inputs.platform }}
+        APP_PROFILE_BASE64: ${{ inputs.app-profile-base64 }}
+        EXTENSION_PROFILE_BASE64: ${{ inputs.extension-profile-base64 }}
+        KEYCHAIN: ${{ steps.keychain.outputs.keychain }}
+        PROJECT: ${{ inputs.project }}
+        CONFIGURATION: ${{ inputs.configuration }}
+      run: |
+        set -euo pipefail
+        profiles="$RUNNER_TEMP/profiles-$PLATFORM"
+        mkdir -p "$profiles"
+        printf '%s' "$APP_PROFILE_BASE64" | base64 --decode > "$profiles/app.profile"
+        printf '%s' "$EXTENSION_PROFILE_BASE64" | base64 --decode > "$profiles/extension.profile"
+
+        args=(--platform "$PLATFORM" --keychain "$KEYCHAIN"
+              --app-profile "$profiles/app.profile"
+              --extension-profile "$profiles/extension.profile"
+              --github-output "$GITHUB_OUTPUT")
+        if [ "$PLATFORM" = ios ]; then
+          export_options="$RUNNER_TEMP/ExportOptions.plist"
+          args+=(--project "$PROJECT" --configuration "$CONFIGURATION" --export-options "$export_options")
+          echo "export-options=$export_options" >> "$GITHUB_OUTPUT"
+        fi
+        python3 "$GITHUB_ACTION_PATH/signing.py" "${args[@]}"
