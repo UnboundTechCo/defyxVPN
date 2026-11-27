@@ -6,6 +6,8 @@ import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.da
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
 import 'package:defyx_vpn/core/utils/update_version.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
+import 'package:defyx_vpn/modules/settings/factories/settings_factory.dart';
+import 'package:defyx_vpn/modules/settings/models/method_sections.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
 import 'package:defyx_vpn/shared/global_vars.dart';
@@ -19,6 +21,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Goes up by one each time new flowline settings are saved, so whatever is
 /// derived from them (such as whether AdMob is on) can be worked out again.
 final flowlineSettingsRevisionProvider = StateProvider<int>((ref) => 0);
+
+/// [methods] without those that belong to an account: premium, market and
+/// rewards. Only built-in methods are left, sorted as [MethodSectionOf] does.
+@visibleForTesting
+List<dynamic> withoutAccountMethods(List<dynamic> methods) => [
+  for (final method in methods)
+    if (method is! Map<String, dynamic> ||
+        SettingsFactory.itemFromFlow(method, sortOrder: 0).section ==
+            MethodSection.builtIn)
+      method,
+];
 
 final flowlineServiceProvider = Provider<IFlowlineService>((ref) {
   final secureStorage = ref.watch(secureStorageProvider);
@@ -45,6 +58,49 @@ class FlowlineService implements IFlowlineService {
   @override
   Future<String> getCachedFlowLine() => _vpnBridge.getCachedFlowLine();
 
+  /// Whether account methods must be kept out of the saved methods: nobody is
+  /// signed in, and the methods don't come from an imported file (which works
+  /// signed out, so its premium methods stay).
+  Future<bool> _keepsOutAccountMethods(SharedPreferences prefs) async {
+    final token = await _container.read(authProvider.notifier).getToken();
+    if (token.isNotEmpty) return false;
+
+    final imported =
+        prefs.getString(FlowLineNotifier.modeKey) ==
+            FlowLineNotifier.importedMode ||
+        _container.read(flowLineProvider).mode == FlowLineNotifier.importedMode;
+    return !imported;
+  }
+
+  @override
+  Future<void> dropAccountMethods() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (!await _keepsOutAccountMethods(prefs)) return;
+
+      final saved = await _secureStorage.read(flowLineKey);
+      if (saved == null || saved.isEmpty) return;
+
+      final methods = json.decode(saved);
+      if (methods is! List) return;
+
+      final kept = withoutAccountMethods(methods);
+      if (kept.length == methods.length) return;
+
+      await _secureStorage.write(flowLineKey, json.encode(kept));
+      await _container
+          .read(settingsProvider.notifier)
+          .updateSettingsBasedOnFlowLine();
+    } catch (e, stack) {
+      debugPrint('Failed to drop account methods: $e');
+      await DesktopErrorLogger().logError(
+        'FlowlineService.dropAccountMethods',
+        e,
+        stack,
+      );
+    }
+  }
+
   @override
   Future<String> decodeAndVerifyFlowline(String flowLine) =>
       _vpnBridge.decodeAndVerifyFlowline(flowLine);
@@ -56,6 +112,7 @@ class FlowlineService implements IFlowlineService {
     bool forceUpdate = false,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    final isImport = offlineMode && (flowLine?.isNotEmpty ?? false);
     final lastFlowlineUpdate = prefs.getInt(lastFlowlineUpdateKey) ?? 0;
     final shouldUpdate =
         (DateTime.now().millisecondsSinceEpoch - lastFlowlineUpdate) >
@@ -128,10 +185,16 @@ class FlowlineService implements IFlowlineService {
           versionStorageMap,
         );
 
-        await _secureStorage.write(
-          flowLineKey,
-          json.encode(decoded['flowLine']),
-        );
+        // The cached flowline is the last one fetched, which can still hold
+        // the methods of an account that signed out while offline.
+        var methods = decoded['flowLine'];
+        if (!isImport &&
+            methods is List &&
+            await _keepsOutAccountMethods(prefs)) {
+          methods = withoutAccountMethods(methods);
+        }
+
+        await _secureStorage.write(flowLineKey, json.encode(methods));
         final settings = _container.read(settingsProvider.notifier);
         await settings.updateSettingsBasedOnFlowLine();
         if (!offlineMode) {

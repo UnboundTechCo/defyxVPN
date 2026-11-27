@@ -427,6 +427,9 @@ class AppLocalizationsFa extends AppLocalizations {
   String get signedInAs => 'ایمیلی که با اون وارد شدی:';
 
   @override
+  String get signedInAsGuest => 'الان با حساب مهمان وارد شدی.';
+
+  @override
   String get premiumImportDescription =>
       'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیومت بارگیری نمیشن و با روش‌های موجود هم نمی‌تونی وصل بشی، می‌تونی فایلی رو که از مارکت‌پلیس گرفتی توی برنامه وارد کنی.';
 

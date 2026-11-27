@@ -68,13 +68,6 @@ jobs:
         with:
           name: linux-release
           path: linux-release/
-      
-      - name: Download iOS artifacts
-        if: false
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: ios-release
-          path: ios-release/
 
       - name: Create GitHub Release
         if: steps.create_tag.outputs.created == 'true'
@@ -148,11 +141,4 @@ jobs:
           tracks: "tv:internal"
           status: draft
 
-      - name: Upload to TestFlight
-        if: false
-        uses: apple-actions/upload-testflight-build@9fd28d4e690396e43caca69cef54cccccce77034 # v3
-        with:
-          app-path: build/ios/ipa/Runner.ipa
-          issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
-          api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
-          api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+      # TestFlight uploads run in ios.yml, which has the macOS runner they need.

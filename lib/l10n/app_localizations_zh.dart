@@ -416,6 +416,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get signedInAs => '您当前登录所用的邮箱地址为';
 
   @override
+  String get signedInAsGuest => '您当前使用访客账户登录。';
+
+  @override
   String get premiumImportDescription =>
       '如果由于网络限制无法加载您的高级订阅，且无法通过现有连接方式连接，您可以将从商店获取的文件导入应用。';
 

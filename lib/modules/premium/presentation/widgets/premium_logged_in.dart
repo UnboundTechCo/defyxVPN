@@ -13,13 +13,25 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 class PremiumLoggedIn extends StatefulWidget {
   final WidgetRef ref;
   final String email;
+  final bool isGuest;
 
-  const PremiumLoggedIn({super.key, required this.ref, required this.email});
+  const PremiumLoggedIn({
+    super.key,
+    required this.ref,
+    required this.email,
+    this.isGuest = false,
+  });
 
-  static Future<void> show(BuildContext context, WidgetRef ref, String email) {
+  static Future<void> show(
+    BuildContext context,
+    WidgetRef ref,
+    String email, {
+    bool isGuest = false,
+  }) {
     return Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => PremiumLoggedIn(ref: ref, email: email),
+        builder: (_) =>
+            PremiumLoggedIn(ref: ref, email: email, isGuest: isGuest),
       ),
     );
   }
@@ -107,9 +119,40 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
     }
   }
 
+  /// Who is signed in: the email, or a note that it's a guest account.
+  Widget? _buildAccountLine(AppLocalizations l10n) {
+    final style = TextStyle(
+      fontSize: 17.sp,
+      fontFamily: AppTheme.fontFamily,
+      color: Colors.black.withValues(alpha: 0.5),
+      height: 1.4,
+    );
+
+    if (widget.email.isNotEmpty) {
+      return RichText(
+        text: TextSpan(
+          style: style,
+          children: [
+            TextSpan(text: '${l10n.signedInAs} '),
+            TextSpan(
+              text: widget.email,
+              style: const TextStyle(color: Color(0xFF5374BD)),
+            ),
+            const TextSpan(text: '.'),
+          ],
+        ),
+      );
+    }
+
+    if (widget.isGuest) return Text(l10n.signedInAsGuest, style: style);
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final accountLine = _buildAccountLine(l10n);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -119,26 +162,9 @@ class _PremiumLoggedInState extends State<PremiumLoggedIn> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (widget.email.isNotEmpty) ...[
+              if (accountLine != null) ...[
                 SizedBox(height: 18.h),
-                RichText(
-                  text: TextSpan(
-                    style: TextStyle(
-                      fontSize: 17.sp,
-                      fontFamily: AppTheme.fontFamily,
-                      color: Colors.black.withValues(alpha: 0.5),
-                      height: 1.4,
-                    ),
-                    children: [
-                      TextSpan(text: '${l10n.signedInAs} '),
-                      TextSpan(
-                        text: widget.email,
-                        style: const TextStyle(color: Color(0xFF5374BD)),
-                      ),
-                      const TextSpan(text: '.'),
-                    ],
-                  ),
-                ),
+                accountLine,
                 SizedBox(height: 18.h),
               ],
               Text(

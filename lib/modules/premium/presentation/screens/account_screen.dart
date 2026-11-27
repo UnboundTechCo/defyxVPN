@@ -31,7 +31,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     return authState.when(
       data: (user) {
         if (user.isLoggedIn) {
-          return _buildLoggedInView(user.email);
+          return _buildLoggedInView(user);
         } else {
           if (state == AccountScreenState.login) {
             return _buildLoginView();
@@ -63,7 +63,7 @@ class _AccountScreenState extends ConsumerState<AccountScreen> {
     );
   }
 
-  Widget _buildLoggedInView(String email) {
-    return PremiumLoggedIn(ref: ref, email: email);
+  Widget _buildLoggedInView(AuthData user) {
+    return PremiumLoggedIn(ref: ref, email: user.email, isGuest: user.isGuest);
   }
 }

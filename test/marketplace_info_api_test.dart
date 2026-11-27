@@ -142,6 +142,9 @@ class _FakeFlowlineService implements IFlowlineService {
   @override
   Future<FlowlineSettings?> getSavedFlowlineSettings() async =>
       FlowlineSettings(disabledAdmob: [], baseUrls: []);
+
+  @override
+  Future<void> dropAccountMethods() async {}
 }
 
 class _FakePremiumApiNotifier extends PremiumApiServiceNotifier {
