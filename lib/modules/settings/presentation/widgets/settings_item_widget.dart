@@ -149,6 +149,10 @@ class SettingsItemWidget extends StatelessWidget {
     final section = item.section;
     final isPremium = section == MethodSection.premium;
     final isMarket = section == MethodSection.market;
+    // A premium method's info icon opens its usage and server jump. Inside a
+    // plan, every location keeps it; the SOS backup has no subscription link
+    // to show them for.
+    final showsUsage = isPremium && !(compact && item.isSos);
     final handleColor = isMoving
         ? TvFocusable.focusRingColor
         : item.isAccessible
@@ -222,7 +226,7 @@ class SettingsItemWidget extends StatelessWidget {
                         SettingsToastMessage.show(item.description ?? ""),
                   ),
                 Flexible(
-                  fit: isPremium && !compact ? FlexFit.tight : FlexFit.loose,
+                  fit: showsUsage ? FlexFit.tight : FlexFit.loose,
                   child: Text(
                     methodTitle(titleOverride ?? item.title),
                     maxLines: 1,
@@ -237,16 +241,15 @@ class SettingsItemWidget extends StatelessWidget {
                     ),
                   ),
                 ),
-                if (compact)
-                  const SizedBox.shrink()
-                else if (isPremium)
+                if (showsUsage)
                   Padding(
                     padding: EdgeInsetsDirectional.only(end: 12.w),
                     child: _buildInfoIcon(
                       onTap: () => MarketplaceInfoSheet.show(context, item),
                     ),
                   )
-                else if (item.description != null &&
+                else if (!compact &&
+                    item.description != null &&
                     item.description!.isNotEmpty)
                   _buildInfoIcon(
                     onTap: () =>

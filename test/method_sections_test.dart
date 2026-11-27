@@ -678,6 +678,53 @@ void main() {
       );
     });
 
+    testWidgets('each premium location keeps its usage icon; SOS and market '
+        'locations have none', (tester) async {
+      final above = FocusNode();
+      addTearDown(above.dispose);
+      await pump(
+        tester,
+        above: above,
+        methods: MethodLayout.normalize(
+          MethodLayout.groupPlansByName([
+            _item('Gold DE', isPremium: true),
+            _item('Gold NL', isPremium: true),
+            _item('Gold SOS', isPremium: true),
+            _item('Fast TR', isMarket: true),
+            _item('Fast SOS', isMarket: true),
+          ]),
+        ),
+        expanded: const {
+          'section:market': true,
+          'plan:name:premium:Gold': true,
+          'plan:name:market:Fast': true,
+        },
+      );
+
+      Finder usageIcon(String rowTitle, {int row = 0}) => find.descendant(
+        of: find
+            .ancestor(
+              of: find.text(rowTitle),
+              matching: find.byType(SettingsItemWidget),
+            )
+            .at(row),
+        matching: find.byWidgetPredicate(
+          (widget) =>
+              widget is SvgPicture &&
+              widget.bytesLoader is SvgAssetLoader &&
+              (widget.bytesLoader as SvgAssetLoader).assetName ==
+                  'assets/icons/info.svg',
+        ),
+      );
+
+      expect(usageIcon('GERMANY'), findsOneWidget);
+      expect(usageIcon('NETHERLANDS'), findsOneWidget);
+      expect(find.text('SOS'), findsNWidgets(2));
+      expect(usageIcon('SOS', row: 0), findsNothing);
+      expect(usageIcon('TURKEY'), findsNothing);
+      expect(usageIcon('SOS', row: 1), findsNothing);
+    });
+
     testWidgets('TV: OK opens and closes; Right reaches the plan switch', (
       tester,
     ) async {
