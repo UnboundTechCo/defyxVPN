@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:defyx_vpn/core/data/local/remote/api/flowline_service.dart';
 import 'package:defyx_vpn/core/premium/api_premium.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
@@ -108,6 +109,10 @@ class AuthNotifier extends AsyncNotifier<AuthData> {
     await storage.delete(premiumEmailKey);
     clear();
     state = AsyncData(AuthData(email: '', isLoggedIn: false));
+
+    // The account's methods go now, not only once a new flowline arrives:
+    // signing out offline would otherwise keep them listed and connectable.
+    await ref.read(flowlineServiceProvider).dropAccountMethods();
   }
 
   Future<String> getToken() async {
