@@ -122,13 +122,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
       // Get the viewport bounds
       final viewportLeft = scrollOffset;
-      final viewportRight =
-          scrollOffset +
+      final viewportRight = scrollOffset +
           _horizontalSliderScrollController.position.viewportDimension;
 
       // Check if widget's CENTER is within viewport (more lenient, allows partial visibility)
-      final isVisible =
-          widgetCenterInContent >= viewportLeft &&
+      final isVisible = widgetCenterInContent >= viewportLeft &&
           widgetCenterInContent <= viewportRight;
 
       return isVisible;
@@ -221,6 +219,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Widget _buildHeaderSection() {
+    final l10n = AppLocalizations.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -235,7 +234,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: 'D',
+                      text: l10n.headerTitleFirst,
                       style: TextStyle(
                         fontSize: 35.sp,
                         fontFamily: AppTheme.fontFamily,
@@ -244,7 +243,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx',
+                      text: l10n.headerTitleRest,
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontFamily: AppTheme.fontFamily,
