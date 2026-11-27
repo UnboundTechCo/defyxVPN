@@ -906,6 +906,12 @@ abstract class AppLocalizations {
   /// **'You are currently signed in with the email address'**
   String get signedInAs;
 
+  /// Premium account tab - shown instead of the email address when signed in with an Apple guest account (created automatically when buying without signing in)
+  ///
+  /// In en, this message translates to:
+  /// **'You are currently signed in with a guest account.'**
+  String get signedInAsGuest;
+
   /// Premium trouble dialog - import instructions
   ///
   /// In en, this message translates to:
