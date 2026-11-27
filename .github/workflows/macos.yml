@@ -98,6 +98,23 @@ jobs:
             exit 1
           fi
 
+          # The tunnel links the core, so it runs only on the macOS the core
+          # was built for. Fail when that is newer than the app supports.
+          target=$(grep -oE 'MACOSX_DEPLOYMENT_TARGET = [0-9.]+' macos/Runner.xcodeproj/project.pbxproj | awk '{print $3}' | sort -u)
+          if [ "$(printf '%s\n' "$target" | grep -c .)" -ne 1 ]; then
+            echo "::error::macos/Runner.xcodeproj should have one MACOSX_DEPLOYMENT_TARGET, has: $(echo $target)"
+            exit 1
+          fi
+          binary=$(find macos/MacDXcore.xcframework -type f -path '*/Versions/A/MacDXcore' | head -1)
+          newer=$(otool -l "$binary" | awk -v max="$target" '
+            function v(s,  a) { split(s, a, "."); return a[1] * 10000 + a[2] * 100 + a[3] }
+            $1 == "minos" && v($2) > v(max) { print $2 }' | sort -u | paste -sd, -)
+          if [ -n "$newer" ]; then
+            echo "::error::The DXcore macOS core is built for macOS $newer, but the app supports macOS $target and its tunnel would not load there. Build DXcore with MACOS_MIN_VERSION=$target."
+            exit 1
+          fi
+          echo "The DXcore macOS core runs on macOS $target and later."
+
       - name: Generate .env
         uses: ./.github/actions/create-env
         with:
