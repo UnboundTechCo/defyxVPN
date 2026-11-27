@@ -310,7 +310,10 @@ class VPN {
         healthCheckEnabled,
       );
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        connectionNotifier?.setAnalyzing();
+        if (_container?.read(connectionStateProvider).status ==
+            ConnectionStatus.loading) {
+          connectionNotifier?.setAnalyzing();
+        }
       });
     } catch (e, stack) {
       // Report VPN start error
@@ -365,7 +368,9 @@ class VPN {
     );
     final connectionState = _container?.read(connectionStateProvider);
     final vpnData = await _container?.read(vpnDataProvider.future);
-    if (connectionState?.status != ConnectionStatus.analyzing) {
+    final status = connectionState?.status;
+    if (status != ConnectionStatus.analyzing &&
+        status != ConnectionStatus.loading) {
       return;
     }
 

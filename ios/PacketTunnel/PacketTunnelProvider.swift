@@ -377,10 +377,15 @@ class PacketTunnelProvider: NEPacketTunnelProvider {
 }
 
 class ProgressStreamHandler: NSObject, IosProgressListenerProtocol {
+    private let pendingLogLimit = 500
+
     func onProgress(_ msg: String?) {
         if let defaults = UserDefaults(suiteName: "group.de.unboundtech.defyxvpn") {
             var logs = defaults.stringArray(forKey: "vpn_logs") ?? []
             logs.append(msg ?? "")
+            if logs.count > pendingLogLimit {
+                logs.removeFirst(logs.count - pendingLogLimit)
+            }
             defaults.set(logs, forKey: "vpn_logs")
             defaults.synchronize()
         }
