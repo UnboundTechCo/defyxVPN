@@ -676,6 +676,11 @@
     "description": "Premium trouble dialog - text placed directly before the email address, which is followed by a period"
   },
 
+  "signedInAsGuest": "You are currently signed in with a guest account.",
+  "@signedInAsGuest": {
+    "description": "Premium account tab - shown instead of the email address when signed in with an Apple guest account (created automatically when buying without signing in)"
+  },
+
   "premiumImportDescription": "If your Premium subscriptions cannot be loaded due to internet restrictions and you're unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.",
   "@premiumImportDescription": {
     "description": "Premium trouble dialog - import instructions"

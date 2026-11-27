@@ -427,6 +427,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get signedInAs => 'You are currently signed in with the email address';
 
   @override
+  String get signedInAsGuest =>
+      'You are currently signed in with a guest account.';
+
+  @override
   String get premiumImportDescription =>
       'If your Premium subscriptions cannot be loaded due to internet restrictions and you\'re unable to connect using the available methods, you can import the file obtained from the Marketplace into the app.';
 

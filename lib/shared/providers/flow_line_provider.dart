@@ -26,7 +26,13 @@ final flowLineProvider = StateNotifierProvider<FlowLineNotifier, FlowLineState>(
 
 class FlowLineNotifier extends StateNotifier<FlowLineState> {
   static const String _flowLineStepKey = 'flow_line_step';
-  static const String _flowLineMode = 'flow_line_mode';
+
+  /// Where [FlowLineState.mode] is saved. It's loaded asynchronously, so code
+  /// that runs at startup reads it from SharedPreferences.
+  static const String modeKey = 'flow_line_mode';
+
+  /// The mode while the methods come from an imported flowline file.
+  static const String importedMode = 'offline';
 
   FlowLineNotifier() : super(const FlowLineState()) {
     _loadSavedData();
@@ -36,7 +42,7 @@ class FlowLineNotifier extends StateNotifier<FlowLineState> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedStep = prefs.getInt(_flowLineStepKey);
-      final savedMode = prefs.getString(_flowLineMode);
+      final savedMode = prefs.getString(modeKey);
 
       state = FlowLineState(step: savedStep ?? 0, mode: savedMode ?? '');
     } catch (e) {
@@ -76,6 +82,6 @@ class FlowLineNotifier extends StateNotifier<FlowLineState> {
   Future<void> setMode(String mode) async {
     state = state.copyWith(mode: mode);
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_flowLineMode, mode);
+    await prefs.setString(modeKey, mode);
   }
 }
