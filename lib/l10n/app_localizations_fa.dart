@@ -318,7 +318,7 @@ class AppLocalizationsFa extends AppLocalizations {
       'به‌روزرسانی فلولاین متوقف شده، چون الان از نسخه‌ی آفلاین استفاده میشه.';
 
   @override
-  String get offlineFlowlineUndo => 'برگرداندن';
+  String get offlineFlowlineUndo => 'برگردوندن';
 
   @override
   String get updateAvailable => 'به‌روزرسانی در دسترسه';
