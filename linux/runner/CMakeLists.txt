@@ -44,6 +44,12 @@ target_include_directories(${BINARY_NAME} PRIVATE ${APPINDICATOR_INCLUDE_DIRS})
 
 target_compile_options(${BINARY_NAME} PRIVATE ${APPINDICATOR_CFLAGS_OTHER})
 
+# GStreamer: lets the runner check that audioplayers_linux can make a player
+# before Dart creates one (see CanCreateAudioPlayer in vpn_channel_handler.cpp).
+# Already a dependency through audioplayers_linux, so nothing new is bundled.
+pkg_check_modules(GSTREAMER REQUIRED IMPORTED_TARGET gstreamer-1.0)
+target_link_libraries(${BINARY_NAME} PRIVATE PkgConfig::GSTREAMER)
+
 # --- Gateway key embedding ---
 set(GATEWAY_KEY_FILE "${CMAKE_CURRENT_LIST_DIR}/LINUX_KEY.txt")
 if(EXISTS "${GATEWAY_KEY_FILE}")
