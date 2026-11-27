@@ -84,7 +84,7 @@ class AppLocalizationsFa extends AppLocalizations {
   String get ourWebsite => 'وب‌سایت ما';
 
   @override
-  String get marketplace => 'فروشگاه';
+  String get marketplace => 'مارکت';
 
   @override
   String get telegramBot => 'ربات تلگرام';
@@ -428,7 +428,7 @@ class AppLocalizationsFa extends AppLocalizations {
 
   @override
   String get premiumImportDescription =>
-      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیوم شما بارگیری نمی‌شود و با روش‌های موجود هم نمی‌توانید متصل شوید، می‌توانید فایلی را که از فروشگاه گرفته‌اید در برنامه وارد کنید.';
+      'اگر به‌دلیل محدودیت‌های اینترنت، اشتراک‌های پریمیوم شما بارگیری نمی‌شود و با روش‌های موجود هم نمی‌توانید متصل شوید، می‌توانید فایلی را که از مارکت گرفته‌اید در برنامه وارد کنید.';
 
   @override
   String get planningToExit => 'قصد خروج دارید؟';
@@ -703,10 +703,10 @@ class AppLocalizationsFa extends AppLocalizations {
   String get settingsMethodsPremium => 'پریمیوم';
 
   @override
-  String get settingsMethodsMarket => 'فروشگاه';
+  String get settingsMethodsMarket => 'مارکت';
 
   @override
-  String get settingsMethodsBuiltIn => 'پیش‌فرض';
+  String get settingsMethodsBuiltIn => 'پیشفرض';
 
   @override
   String get settingsMethodsRewards => 'جوایز';
