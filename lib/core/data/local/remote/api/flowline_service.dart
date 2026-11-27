@@ -4,6 +4,7 @@ import 'package:defyx_vpn/core/data/local/remote/api/flowline_settings.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_const.dart';
 import 'package:defyx_vpn/core/data/local/secure_storage/secure_storage_interface.dart';
+import 'package:defyx_vpn/core/utils/update_version.dart';
 import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:defyx_vpn/modules/settings/providers/auth_provider.dart';
 import 'package:defyx_vpn/modules/settings/providers/settings_provider.dart';
@@ -114,9 +115,11 @@ class FlowlineService implements IFlowlineService {
           await _secureStorage.write(apiTipsKey, tipsJson);
         }
 
+        final forceUpdateMap = decoded['forceUpdate'] as Map?;
         final versionStorageMap = {
           'api_app_version': version,
-          'forceUpdate': (decoded['forceUpdate'] as Map?)?[version],
+          'forceUpdate': forceUpdateMap?[version],
+          'minForcedVersion': minimumForcedVersion(forceUpdateMap, version),
           'changeLog': (decoded['changeLog'] as Map?)?[version],
         };
 
