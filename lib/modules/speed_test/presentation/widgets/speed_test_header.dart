@@ -45,7 +45,7 @@ class SpeedTestHeader extends StatelessWidget {
                 text: TextSpan(
                   children: [
                     TextSpan(
-                      text: 'D',
+                      text: l10n.headerTitleFirst,
                       style: TextStyle(
                         fontSize: 35.sp,
                         fontFamily: AppTheme.fontFamily,
@@ -54,7 +54,7 @@ class SpeedTestHeader extends StatelessWidget {
                       ),
                     ),
                     TextSpan(
-                      text: 'efyx',
+                      text: l10n.headerTitleRest,
                       style: TextStyle(
                         fontSize: 32.sp,
                         fontFamily: AppTheme.fontFamily,
