@@ -178,12 +178,15 @@ jobs:
           if-no-files-found: warn
 
       # As in ios.yml: does not wait for App Store Connect to process it.
+      # The action's default backend, the App Store Connect API, takes only
+      # .ipa files; altool comes with Xcode and takes the .pkg.
       - name: Upload to TestFlight
         if: inputs.publish
         uses: apple-actions/upload-testflight-build@665328adbecbc3ad929d3da710696d928b8a7ba9 # v5.9.0
         with:
           app-type: macos
           app-path: ${{ steps.pkg.outputs.path }}
+          backend: altool
           issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
           api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
           api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
