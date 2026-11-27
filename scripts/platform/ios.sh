@@ -3,20 +3,37 @@
 build_ios() {
     local build_type=$1
     echo -e "${BLUE}📱 Building iOS for $build_type...${NC}"
+
+    if [ "$build_type" != "testFlight" ] && [ "$build_type" != "appStore" ]; then
+        echo -e "${RED}❌ Invalid iOS build type${NC}"
+        return 1
+    fi
+
     update_build_type "$build_type"
-    
+
     flutter clean
     flutter pub get
-    
-    if [ "$build_type" == "testFlight" ]; then
-        flutter build ipa --release
-    elif [ "$build_type" == "appStore" ]; then
-        flutter build ipa --release
-    else
-        echo -e "${RED}❌ Invalid iOS build type${NC}"
-        exit 1
+
+    # CI signs manually and points this at the export options it wrote
+    # (.github/actions/ios-signing). Without it, Xcode exports with the
+    # project's automatic signing, as on a developer's Mac.
+    local export_options=()
+    if [ -n "${IOS_EXPORT_OPTIONS_PLIST:-}" ]; then
+        export_options=(--export-options-plist="$IOS_EXPORT_OPTIONS_PLIST")
     fi
-    
+
+    # Return on a failed build, so the caller still restores the injected
+    # credentials and then fails.
+    if ! flutter build ipa --release "${export_options[@]}"; then
+        echo -e "${RED}❌ iOS build failed${NC}"
+        return 1
+    fi
+    if ! compgen -G "$PROJECT_ROOT/build/ios/ipa/*.ipa" >/dev/null; then
+        echo -e "${RED}❌ No IPA in $PROJECT_ROOT/build/ios/ipa${NC}"
+        return 1
+    fi
+    echo -e "${GREEN}✅ IPA built: $(ls "$PROJECT_ROOT"/build/ios/ipa/*.ipa)${NC}"
+
     # Post-build dSYM upload (safety net in case build phase fails)
     upload_dsyms_post_build
 }

@@ -72,11 +72,21 @@ jobs:
       id-token: write
       attestations: write
 
-  # iOS release builds are off for now.
+  # Uploads to TestFlight on the same terms as release.yml uploads to Play:
+  # a new version, on a push or a manual run with publish on. Not a need of
+  # release, so a failed iOS build holds up no other platform.
   ios:
-    if: false
+    needs: [dxcore-lock, version]
+    if: needs.dxcore-lock.outputs.build == 'true'
     uses: ./.github/workflows/ios.yml
+    with:
+      publish: ${{ needs.version.outputs.new == 'true' && (github.event_name == 'push' || inputs.publish) }}
     secrets: inherit
+    # Signs build provenance for the IPA, see ios.yml.
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
 
   windows:
     needs: dxcore-lock
