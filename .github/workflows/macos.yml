@@ -1,0 +1,173 @@
+name: Build macOS
+
+# Builds the Mac App Store .pkg and, with publish on, uploads it to TestFlight
+# for macOS. Signing needs these repository secrets:
+#   IOS_BUILD_CERTIFICATE_BASE64    the Apple Distribution .p12 the iOS build
+#   IOS_BUILD_CERTIFICATE_PASSWORD  uses too: one certificate for all platforms
+#   MACOS_INSTALLER_CERTIFICATE_BASE64    Mac Installer Distribution certificate
+#   MACOS_INSTALLER_CERTIFICATE_PASSWORD  with its private key, a base64 .p12
+#   MACOS_PROVISION_MAIN            Mac App Store profile of de.unboundtech.defyxvpn
+#   MACOS_PROVISION_TUNNEL          Mac App Store profile of
+#                                   de.unboundtech.defyxvpn.PacketTunnel
+#                                   (both base64, "Mac App Store Connect" type:
+#                                   iOS profiles do not sign a Mac app)
+# the app the Firebase ones (macOS reports through the iOS Firebase app), and
+# the upload the App Store Connect API key, as in ios.yml.
+
+on:
+  workflow_call:
+    inputs:
+      publish:
+        description: "Upload the build to TestFlight"
+        type: boolean
+        default: false
+
+jobs:
+  build-macos:
+    runs-on: macos-26
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Fails in seconds, not after a 20 minute build. The env writer turns a
+      # missing secret into the text "undefined", which would otherwise end
+      # up in the app.
+      - name: Check secrets
+        env:
+          IOS_BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
+          IOS_BUILD_CERTIFICATE_PASSWORD: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
+          MACOS_INSTALLER_CERTIFICATE_BASE64: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_BASE64 }}
+          MACOS_INSTALLER_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_PASSWORD }}
+          MACOS_PROVISION_MAIN: ${{ secrets.MACOS_PROVISION_MAIN }}
+          MACOS_PROVISION_TUNNEL: ${{ secrets.MACOS_PROVISION_TUNNEL }}
+          FIREBASE_IOS_API_KEY: ${{ secrets.FIREBASE_IOS_API_KEY }}
+          FIREBASE_IOS_APP_ID: ${{ secrets.FIREBASE_IOS_APP_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PROJECT_NUMBER: ${{ secrets.FIREBASE_PROJECT_NUMBER }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_KEY_ISSUER: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          required=(IOS_BUILD_CERTIFICATE_BASE64 IOS_BUILD_CERTIFICATE_PASSWORD
+                    MACOS_INSTALLER_CERTIFICATE_BASE64 MACOS_INSTALLER_CERTIFICATE_PASSWORD
+                    MACOS_PROVISION_MAIN MACOS_PROVISION_TUNNEL
+                    FIREBASE_IOS_API_KEY FIREBASE_IOS_APP_ID FIREBASE_PROJECT_ID FIREBASE_PROJECT_NUMBER)
+          if [ "$PUBLISH" = true ]; then
+            required+=(APPSTORE_API_KEY_ID APPSTORE_API_KEY_ISSUER APPSTORE_API_PRIVATE_KEY)
+          fi
+          missing=()
+          for name in "${required[@]}"; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repository secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Show Xcode
+        run: xcodebuild -version
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
+        with:
+          flutter-version: "3.47.6"
+          channel: "stable"
+
+      # build_release.sh patches packages in the pub cache before its own
+      # pub get, and logs an error when they are not there yet.
+      - name: Get dependencies
+        run: flutter pub get
+
+      - name: Download DXcore-macos.zip
+        uses: ./.github/actions/fetch-dxcore
+        with:
+          asset: DXcore-macos.zip
+          path: DXcore-macos.zip
+          token: ${{ secrets.DXCORE_PRIVATE_ACCESS_TOKEN }}
+
+      - name: Unpack macOS Framework
+        run: |
+          unpacked="$RUNNER_TEMP/dxcore-macos"
+          unzip -q -o DXcore-macos.zip -d "$unpacked"
+          mv "$unpacked"/build/macos/* macos/
+          rm -rf "$unpacked" DXcore-macos.zip
+          if [ ! -f macos/MacDXcore.xcframework/Info.plist ]; then
+            echo "::error::DXcore-macos.zip has no build/macos/MacDXcore.xcframework"
+            exit 1
+          fi
+
+      - name: Generate .env
+        uses: ./.github/actions/create-env
+        with:
+          secret_blob: ${{ toJson(secrets) }}
+          var_blob: ${{ toJson(vars) }}
+          os_name: "macos"
+
+      - name: Set up App Store signing
+        id: signing
+        uses: ./.github/actions/apple-signing
+        with:
+          platform: macos
+          certificate-base64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
+          certificate-password: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
+          installer-certificate-base64: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_BASE64 }}
+          installer-certificate-password: ${{ secrets.MACOS_INSTALLER_CERTIFICATE_PASSWORD }}
+          app-profile-base64: ${{ secrets.MACOS_PROVISION_MAIN }}
+          extension-profile-base64: ${{ secrets.MACOS_PROVISION_TUNNEL }}
+
+      # Menu answers: production, macOS App Store, same version. macos.sh signs
+      # manually with these profiles and exports a .pkg to build/macos/pkg.
+      - name: Build package
+        env:
+          MACOS_APP_PROFILE: ${{ steps.signing.outputs.app-profile }}
+          MACOS_TUNNEL_PROFILE: ${{ steps.signing.outputs.extension-profile }}
+        run: |
+          bash scripts/build_release.sh <<EOF
+          2
+          8
+          4
+          EOF
+
+      - name: Find package
+        id: pkg
+        run: |
+          shopt -s nullglob
+          pkgs=(build/macos/pkg/*.pkg)
+          if [ ${#pkgs[@]} -ne 1 ]; then
+            echo "::error::Expected one .pkg in build/macos/pkg, found ${#pkgs[@]}"
+            exit 1
+          fi
+          echo "path=${pkgs[0]}" >> "$GITHUB_OUTPUT"
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        with:
+          subject-path: ${{ steps.pkg.outputs.path }}
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-release
+          path: ${{ steps.pkg.outputs.path }}
+
+      # Crash reports from TestFlight and the Mac App Store symbolicate with these.
+      - name: Upload dSYMs artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-dsyms
+          path: build/macos/archive/Runner.xcarchive/dSYMs
+          if-no-files-found: warn
+
+      # As in ios.yml: does not wait for App Store Connect to process it.
+      - name: Upload to TestFlight
+        if: inputs.publish
+        uses: apple-actions/upload-testflight-build@665328adbecbc3ad929d3da710696d928b8a7ba9 # v5.9.0
+        with:
+          app-type: macos
+          app-path: ${{ steps.pkg.outputs.path }}
+          issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          wait-for-processing: "false"
