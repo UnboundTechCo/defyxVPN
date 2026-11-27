@@ -101,12 +101,12 @@ class _DiagnosticsExperimentsDialogState
   }
 
   TextStyle get _labelStyle => TextStyle(
-    fontSize: 14.sp,
-    fontFamily: AppTheme.fontFamily,
-    fontWeight: FontWeight.w600,
-    color: Colors.black87,
-    letterSpacing: 0.3,
-  );
+        fontSize: 14.sp,
+        fontFamily: AppTheme.fontFamily,
+        fontWeight: FontWeight.w600,
+        color: Colors.black87,
+        letterSpacing: 0.3,
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -115,9 +115,8 @@ class _DiagnosticsExperimentsDialogState
     final languageNotifier = ref.read(languageProvider.notifier);
     final hapticsEnabled = ref.watch(hapticsProvider);
     ref.watch(settingsProvider);
-    final autoReconnectEnabled = ref
-        .read(settingsProvider.notifier)
-        .isHealthCheckEnabled();
+    final autoReconnectEnabled =
+        ref.read(settingsProvider.notifier).isHealthCheckEnabled();
 
     final dialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15.r)),
@@ -157,12 +156,11 @@ class _DiagnosticsExperimentsDialogState
             _buildSwitchRow(
               label: l10n.settingsAutoReconnect,
               value: autoReconnectEnabled,
-              onChanged: (_) => ref
-                  .read(settingsProvider.notifier)
-                  .toggleSetting(
-                    SettingsGroupId.trafficControl,
-                    SettingsItemId.healthCheck,
-                  ),
+              onChanged: (_) =>
+                  ref.read(settingsProvider.notifier).toggleSetting(
+                        SettingsGroupId.trafficControl,
+                        SettingsItemId.healthCheck,
+                      ),
             ),
             if (TelemetryConsent.isSupported) ...[
               SizedBox(height: 12.h),
@@ -206,7 +204,14 @@ class _DiagnosticsExperimentsDialogState
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(l10n.language.toUpperCase(), style: _labelStyle),
+          GestureDetector(
+            onTap: _toggleLanguageMenu,
+            behavior: HitTestBehavior.opaque,
+            child: Text(
+              l10n.language.toUpperCase(),
+              style: _labelStyle,
+            ),
+          ),
           MenuAnchor(
             controller: _languageMenuController,
             childFocusNode: _languageTriggerFocusNode,
@@ -245,8 +250,7 @@ class _DiagnosticsExperimentsDialogState
                         ...AppLanguage.values.map(
                           (language) => _languageOption(
                             label: _languageLabel(l10n, language),
-                            selected:
-                                !languageState.isAutoDetect &&
+                            selected: !languageState.isAutoDetect &&
                                 languageState.language == language,
                             onTap: () {
                               languageNotifier.changeLanguage(language);
