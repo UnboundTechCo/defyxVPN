@@ -1,7 +1,27 @@
 name: Build iOS
 
+# Builds the App Store IPA and, with publish on, uploads it to TestFlight.
+# Signing needs these repository secrets:
+#   IOS_BUILD_CERTIFICATE_BASE64    Apple Distribution certificate with its
+#                                   private key, a base64 .p12
+#   IOS_BUILD_CERTIFICATE_PASSWORD  its password
+#   IOS_PROVISION_MAIN              App Store profile of de.unboundtech.defyxvpn
+#   IOS_PROVISION_TUNNEL            App Store profile of
+#                                   de.unboundtech.defyxvpn.PacketTunnel
+#                                   (both base64, made in the Apple Developer
+#                                   portal: Xcode-managed ones do not work)
+# the app these, besides those every platform's .env takes:
+#   FIREBASE_IOS_API_KEY, FIREBASE_IOS_APP_ID, IOS_AD_APP_ID, IOS_AD_UNIT_ID
+# and the upload these, from an App Store Connect API key:
+#   APPSTORE_API_KEY_ID, APPSTORE_API_KEY_ISSUER, APPSTORE_API_PRIVATE_KEY
+
 on:
   workflow_call:
+    inputs:
+      publish:
+        description: "Upload the build to TestFlight"
+        type: boolean
+        default: false
 
 jobs:
   build-ios:
@@ -11,10 +31,54 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      # Fails in seconds, not after a 20 minute build. The env writer turns a
+      # missing secret into the text "undefined", which would otherwise end
+      # up in the app (Firebase or AdMob not working).
+      - name: Check secrets
+        env:
+          IOS_BUILD_CERTIFICATE_BASE64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
+          IOS_BUILD_CERTIFICATE_PASSWORD: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
+          IOS_PROVISION_MAIN: ${{ secrets.IOS_PROVISION_MAIN }}
+          IOS_PROVISION_TUNNEL: ${{ secrets.IOS_PROVISION_TUNNEL }}
+          FIREBASE_IOS_API_KEY: ${{ secrets.FIREBASE_IOS_API_KEY }}
+          FIREBASE_IOS_APP_ID: ${{ secrets.FIREBASE_IOS_APP_ID }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          FIREBASE_PROJECT_NUMBER: ${{ secrets.FIREBASE_PROJECT_NUMBER }}
+          IOS_AD_APP_ID: ${{ secrets.IOS_AD_APP_ID }}
+          IOS_AD_UNIT_ID: ${{ secrets.IOS_AD_UNIT_ID }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_API_KEY_ISSUER: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          required=(IOS_BUILD_CERTIFICATE_BASE64 IOS_BUILD_CERTIFICATE_PASSWORD IOS_PROVISION_MAIN IOS_PROVISION_TUNNEL
+                    FIREBASE_IOS_API_KEY FIREBASE_IOS_APP_ID FIREBASE_PROJECT_ID FIREBASE_PROJECT_NUMBER
+                    IOS_AD_APP_ID IOS_AD_UNIT_ID)
+          if [ "$PUBLISH" = true ]; then
+            required+=(APPSTORE_API_KEY_ID APPSTORE_API_KEY_ISSUER APPSTORE_API_PRIVATE_KEY)
+          fi
+          missing=()
+          for name in "${required[@]}"; do
+            [ -n "${!name}" ] || missing+=("$name")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error::Missing repository secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Show Xcode
+        run: xcodebuild -version
+
       - name: Set up Flutter
         uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: "3.47.6"
+          channel: "stable"
+
+      # build_release.sh patches packages in the pub cache before its own
+      # pub get, and logs an error when they are not there yet.
+      - name: Get dependencies
+        run: flutter pub get
 
       - name: Download DXcore-ios.zip
         uses: ./.github/actions/fetch-dxcore
@@ -25,15 +89,14 @@ jobs:
 
       - name: Unpack iOS Framework
         run: |
-          mkdir -p ios/Frameworks
-          unzip -o DXcore-ios.zip -d ios
-          mv ios/build/ios/* ios/
-          rm -rf ios/build DXcore-ios.zip
-          ls -la ios
-
-      - name: Get app version
-        id: get_version
-        uses: ./.github/actions/get-version
+          unpacked="$RUNNER_TEMP/dxcore-ios"
+          unzip -q -o DXcore-ios.zip -d "$unpacked"
+          mv "$unpacked"/build/ios/* ios/
+          rm -rf "$unpacked" DXcore-ios.zip
+          if [ ! -f ios/IosDXcore.xcframework/Info.plist ]; then
+            echo "::error::DXcore-ios.zip has no build/ios/IosDXcore.xcframework"
+            exit 1
+          fi
 
       - name: Generate .env
         uses: ./.github/actions/create-env
@@ -42,47 +105,65 @@ jobs:
           var_blob: ${{ toJson(vars) }}
           os_name: "ios"
 
-      - name: Import iOS certificates
-        uses: apple-actions/import-codesign-certs@63fff01cd422d4b7b855d40ca1e9d34d2de9427d # v3
+      - name: Set up App Store signing
+        id: signing
+        uses: ./.github/actions/ios-signing
         with:
-          p12-file-base64: ${{ secrets.IOS_CERTIFICATE_P12 }}
-          p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          keychain-password: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          certificate-base64: ${{ secrets.IOS_BUILD_CERTIFICATE_BASE64 }}
+          certificate-password: ${{ secrets.IOS_BUILD_CERTIFICATE_PASSWORD }}
+          app-profile-base64: ${{ secrets.IOS_PROVISION_MAIN }}
+          extension-profile-base64: ${{ secrets.IOS_PROVISION_TUNNEL }}
 
-      - name: Install provisioning profiles
+      # Menu answers: production, iOS App Store, same version. The App Store
+      # build type is what TestFlight builds get promoted from.
+      - name: Build IPA
+        env:
+          IOS_EXPORT_OPTIONS_PLIST: ${{ steps.signing.outputs.export-options }}
         run: |
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          echo "${{ secrets.IOS_PROVISION_MAIN }}"   | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/main.mobileprovision
-          echo "${{ secrets.IOS_PROVISION_TUNNEL }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/tunnel.mobileprovision
-
-      - name: Build Flutter IPA (signed by Xcode)
-        run: |
-          chmod +x scripts/build_release.sh
           bash scripts/build_release.sh <<EOF
           2
           2
           4
           EOF
 
-      - name: Fix Signing (Apply identity + team)
+      - name: Find IPA
+        id: ipa
         run: |
-          xcodebuild -workspace ios/Runner.xcworkspace \
-            -scheme Runner \
-            -configuration Release \
-            -allowProvisioningUpdates \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            CODE_SIGN_IDENTITY="${{ secrets.IOS_CODE_SIGN_IDENTITY }}"
+          shopt -s nullglob
+          ipas=(build/ios/ipa/*.ipa)
+          if [ ${#ipas[@]} -ne 1 ]; then
+            echo "::error::Expected one IPA in build/ios/ipa, found ${#ipas[@]}"
+            exit 1
+          fi
+          echo "path=${ipas[0]}" >> "$GITHUB_OUTPUT"
 
-      - name: Upload IPA to TestFlight
-        uses: apple-actions/upload-testflight-build@54dc215b4cd5529730db39f11c84efdb71414e07 # v1
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
         with:
-          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
-          api-issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
-          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
-          app-path: build/ios/ipa/*.ipa
+          subject-path: ${{ steps.ipa.outputs.path }}
 
-      - name: Upload artifact
+      - name: Upload IPA artifact
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: ios-release
-          path: build/ios/ipa/*.ipa
+          path: ${{ steps.ipa.outputs.path }}
+
+      # Crash reports from TestFlight and the App Store symbolicate with these.
+      - name: Upload dSYMs artifact
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ios-dsyms
+          path: build/ios/archive/Runner.xcarchive/dSYMs
+          if-no-files-found: warn
+
+      # Skips waiting for App Store Connect to process the build, which also
+      # skips the action's check of the TestFlight test information.
+      - name: Upload to TestFlight
+        if: inputs.publish
+        uses: apple-actions/upload-testflight-build@665328adbecbc3ad929d3da710696d928b8a7ba9 # v5.9.0
+        with:
+          app-path: ${{ steps.ipa.outputs.path }}
+          issuer-id: ${{ secrets.APPSTORE_API_KEY_ISSUER }}
+          api-key-id: ${{ secrets.APPSTORE_API_KEY_ID }}
+          api-private-key: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          wait-for-processing: "false"

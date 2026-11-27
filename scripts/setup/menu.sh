@@ -89,17 +89,20 @@ execute_build() {
     inject_firebase_ios
     inject_firebase_macos
 
+    # A build that fails returns non-zero; restore first, then fail.
+    local status=0
     case $choice in
-        1) build_ios "testFlight" ;;
-        2) build_ios "appStore" ;;
-        3) build_android "googlePlay" ;;
-        4) build_android "github" ;;
-        5) build_windows "microsoftStore" ;;
-        6) build_windows "github" ;;
-        7) build_macos "testFlight" ;;
-        8) build_macos "appStore" ;;
+        1) build_ios "testFlight" || status=$? ;;
+        2) build_ios "appStore" || status=$? ;;
+        3) build_android "googlePlay" || status=$? ;;
+        4) build_android "github" || status=$? ;;
+        5) build_windows "microsoftStore" || status=$? ;;
+        6) build_windows "github" || status=$? ;;
+        7) build_macos "testFlight" || status=$? ;;
+        8) build_macos "appStore" || status=$? ;;
         *)
             echo -e "${RED}❌ Invalid choice${NC}"
+            status=1
             ;;
     esac
 
@@ -108,5 +111,10 @@ execute_build() {
     restore_firebase_android
     restore_firebase_ios
     restore_firebase_macos
+
+    if [ "$status" -ne 0 ]; then
+        echo -e "${RED}❌ Build failed${NC}"
+        exit "$status"
+    fi
     echo -e "${GREEN}✅ Build process completed!${NC}"
 }
