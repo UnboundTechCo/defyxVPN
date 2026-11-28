@@ -12,6 +12,11 @@ class VpnBridge {
   Future<String?> getVpnStatus() async =>
       await _methodChannel.invokeMethod('getVpnStatus');
 
+  /// Android: sends the app to the background (like Home) instead of closing
+  /// it.
+  Future<void> moveToBackground() async =>
+      await _methodChannel.invokeMethod('moveToBackground');
+
   Future<void> setAsnName() async =>
       await _methodChannel.invokeMethod('setAsnName');
 

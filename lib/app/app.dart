@@ -59,7 +59,7 @@ class _AppState extends ConsumerState<App> {
     ref.listen(adsAllowedProvider, (previous, allowed) {
       if (!allowed) return;
       _maybeStartAdFlow();
-      ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
+      ref.read(adStrategyManagerProvider)?.preloadGoogleAd();
     });
 
     // Keep the vibration alert backend in sync with the Haptic Feedback setting
@@ -84,7 +84,7 @@ class _AppState extends ConsumerState<App> {
         if (connectionState == conn.ConnectionStatus.disconnected) {
           debugPrint('Consent complete & disconnected - triggering ad load');
           Future.delayed(const Duration(milliseconds: 100), () {
-            ref.read(adStrategyManagerProvider)?.retryGoogleAdLoad();
+            ref.read(adStrategyManagerProvider)?.preloadGoogleAd();
           });
         }
       }

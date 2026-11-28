@@ -147,6 +147,10 @@ class MainActivity : FlutterActivity() {
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
                 "getVpnStatus" -> getVpnStatus(result)
+                // Back on the main screen: leave the app in the background
+                // instead of finishing the activity, so the Flutter side (and
+                // an ad on screen) survives and reopening comes straight back.
+                "moveToBackground" -> result.success(moveTaskToBack(true))
                 "isTunnelRunning" -> isTunnelRunning(result)
                 "calculatePing" -> calculatePing(result)
                 "getFlag" -> getFlag(result)

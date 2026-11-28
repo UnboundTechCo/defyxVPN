@@ -70,7 +70,7 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       onStateChange: (state) {
         final foreground = state == AppLifecycleState.resumed;
         _ads.setAppInForeground(foreground);
-        if (foreground && _onScreen) _refillWhenEmpty();
+        if (foreground && _onScreen) _preloadForNextConnect();
       },
     );
   }
@@ -81,16 +81,16 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     // False while another page covers the main screen.
     final onScreen = TickerMode.valuesOf(context).enabled;
     _ads.setAdOnScreen(onScreen);
-    if (onScreen && !_onScreen) _refillWhenEmpty();
+    if (onScreen && !_onScreen) _preloadForNextConnect();
     _onScreen = onScreen;
   }
 
-  /// The box is in view again (main screen shown, or the app back in the
-  /// foreground): fill it if it is empty.
-  void _refillWhenEmpty() {
+  /// The main screen is in view again (or the app back in the foreground):
+  /// make sure an AdMob ad is ready for the next connect tap.
+  void _preloadForNextConnect() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(adStrategyManagerProvider)?.refillGoogleAd();
+      ref.read(adStrategyManagerProvider)?.preloadGoogleAd();
     });
   }
 
