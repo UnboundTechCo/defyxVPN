@@ -191,6 +191,13 @@ class AdsNotifier extends StateNotifier<AdsState> {
   bool _adOnScreen = true;
   bool _appInForeground = true;
 
+  // When the last ad (AdMob or in-house) appeared: caps the in-house ad for
+  // a user back in the app (see AdStrategyManager.onAppReturned).
+  DateTime? _lastAdShownAt;
+  DateTime? get lastAdShownAt => _lastAdShownAt;
+  @visibleForTesting
+  set debugLastAdShownAt(DateTime? at) => _lastAdShownAt = at;
+
   /// Whether the ad box is on screen (false while another page covers it or
   /// the main screen is gone). Pauses the countdown when false.
   void setAdOnScreen(bool onScreen) => _adOnScreen = onScreen;
@@ -244,6 +251,7 @@ class AdsNotifier extends StateNotifier<AdsState> {
   /// in-house ads, [adMobDisplaySeconds] for AdMob.
   void startCountdownTimer({int seconds = countdownDuration}) {
     _countdownTimer?.cancel();
+    _lastAdShownAt = DateTime.now();
 
     // Update state immediately (synchronous)
     state = state.copyWith(countdown: seconds, showCountdown: true);

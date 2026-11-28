@@ -73,6 +73,8 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
   late final AdsNotifier _ads;
   late final AppLifecycleListener _lifecycle;
   bool _onScreen = false;
+  bool _foreground = true;
+  final _returns = AppReturnTracker();
 
   @override
   void initState() {
@@ -82,8 +84,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     _lifecycle = AppLifecycleListener(
       onStateChange: (state) {
         final foreground = state == AppLifecycleState.resumed;
+        _foreground = foreground;
         _ads.setAppInForeground(foreground);
+        _returns.onLifecycleChange(state);
         if (foreground && _onScreen) _preloadForNextConnect();
+        _checkReturn();
       },
     );
   }
@@ -96,6 +101,19 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     _ads.setAdOnScreen(onScreen);
     if (onScreen && !_onScreen) _preloadForNextConnect();
     _onScreen = onScreen;
+    _checkReturn();
+  }
+
+  /// Back in the app with the main screen in view: the manager may show an
+  /// in-house ad (connected users; capped).
+  void _checkReturn() {
+    if (!_returns.takeReturn(foreground: _foreground, onScreen: _onScreen)) {
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(adStrategyManagerProvider)?.onAppReturned();
+    });
   }
 
   /// The main screen is in view again (or the app back in the foreground):
@@ -264,4 +282,27 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       ),
     ),
   );
+}
+
+/// Tells the user coming back to the app (after it was in the background:
+/// hidden or paused) from brief interruptions that only make it inactive
+/// (the notification shade, Control Center, a system dialog such as the VPN
+/// permission). A return made on another page counts once the main screen
+/// is in view again.
+class AppReturnTracker {
+  bool _pending = false;
+
+  void onLifecycleChange(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _pending = true;
+    }
+  }
+
+  /// Whether the user is back, now; each return counts once.
+  bool takeReturn({required bool foreground, required bool onScreen}) {
+    if (!_pending || !foreground || !onScreen) return false;
+    _pending = false;
+    return true;
+  }
 }

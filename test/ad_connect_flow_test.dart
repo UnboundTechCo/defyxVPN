@@ -1,11 +1,14 @@
 // AdMob ads show from the connect tap: held while disconnected, shown at the
 // tap, kept through connecting and connected, removed on disconnect.
 
+import 'dart:ui' show AppLifecycleState;
+
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/models/ad_load_result.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads_widget.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
 import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:flutter/services.dart';
@@ -302,6 +305,88 @@ void main() {
       expect(ads().nativeAdIsLoaded, isFalse);
       expect(ads().showCountdown, isFalse);
       expect(strategy.isShowingAd, isFalse);
+    });
+  });
+
+  group('an in-house ad when the user comes back while connected', () {
+    final now = DateTime(2026, 11, 28, 12);
+
+    bool due({
+      bool adsAllowed = true,
+      ConnectionStatus status = ConnectionStatus.connected,
+      bool adOnScreen = false,
+      Duration? sinceLastAd,
+    }) => AdStrategyManager.returnAdDue(
+      adsAllowed: adsAllowed,
+      status: status,
+      adOnScreen: adOnScreen,
+      lastAdShownAt: sinceLastAd == null ? null : now.subtract(sinceLastAd),
+      now: now,
+    );
+
+    test('shows when connected and the last ad is long enough ago', () {
+      expect(due(), isTrue); // No ad yet this session.
+      expect(due(sinceLastAd: AdStrategyManager.returnAdInterval), isTrue);
+      expect(due(sinceLastAd: const Duration(hours: 1)), isTrue);
+    });
+
+    test('capped: not within the interval of the last ad', () {
+      expect(due(sinceLastAd: const Duration(minutes: 1)), isFalse);
+      expect(
+        due(
+          sinceLastAd:
+              AdStrategyManager.returnAdInterval - const Duration(seconds: 1),
+        ),
+        isFalse,
+      );
+    });
+
+    test('not while an ad is on screen, nor when not connected', () {
+      expect(due(adOnScreen: true), isFalse);
+      expect(due(status: ConnectionStatus.disconnected), isFalse);
+      expect(due(status: ConnectionStatus.analyzing), isFalse); // Switching.
+      expect(due(status: ConnectionStatus.loading), isFalse);
+    });
+
+    test('never for premium users', () {
+      expect(due(adsAllowed: false), isFalse);
+    });
+
+    test('every ad shown counts for the cap', () {
+      final container = _container();
+      addTearDown(pumpEventQueue);
+      final ads = container.read(adsProvider.notifier);
+      expect(ads.lastAdShownAt, isNull);
+      ads.startCountdownTimer(seconds: adMobDisplaySeconds);
+      expect(ads.lastAdShownAt, isNotNull);
+      ads.stopCountdownTimer();
+    });
+
+    group('coming back to the app', () {
+      test('from the background counts once', () {
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.inactive);
+        tracker.onLifecycleChange(AppLifecycleState.hidden);
+        tracker.onLifecycleChange(AppLifecycleState.paused);
+        tracker.onLifecycleChange(AppLifecycleState.resumed);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isTrue);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isFalse);
+      });
+
+      test('a brief interruption (only inactive) is no return', () {
+        // The notification shade, Control Center, a system dialog.
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.inactive);
+        tracker.onLifecycleChange(AppLifecycleState.resumed);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isFalse);
+      });
+
+      test('back on another page counts once the main screen shows', () {
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.paused);
+        expect(tracker.takeReturn(foreground: true, onScreen: false), isFalse);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isTrue);
+      });
     });
   });
 

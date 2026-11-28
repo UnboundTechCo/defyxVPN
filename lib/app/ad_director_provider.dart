@@ -325,6 +325,53 @@ class AdStrategyManager {
     }
   }
 
+  /// A connected user back in the app gets an in-house ad at most this
+  /// often, counted from the last ad of either kind.
+  static const returnAdInterval = Duration(minutes: 5);
+  bool _returnAdLoading = false;
+
+  /// The user came back to the app (it was in the background) and has the
+  /// main screen in view. While connected AdMob makes no requests (the real
+  /// IP), so an in-house ad shows instead, at most every
+  /// [returnAdInterval]. The box sits under the shield and covers nothing.
+  void onAppReturned() {
+    if (_returnAdLoading) return;
+    final due = returnAdDue(
+      adsAllowed: _ref.read(adsAllowedProvider),
+      status: _ref.read(conn.connectionStateProvider).status,
+      adOnScreen:
+          _ref.read(adsProvider).showCountdown ||
+          _inHouseAdShowing ||
+          (_googleStrategy?.isShowingAd ?? false),
+      lastAdShownAt: _ref.read(adsProvider.notifier).lastAdShownAt,
+      now: DateTime.now(),
+    );
+    if (!due) return;
+    debugPrint('Back in the app while connected - showing an in-house ad');
+    _returnAdLoading = true;
+    _internalStrategy
+        .showOnReturn(_ref)
+        .whenComplete(() => _returnAdLoading = false);
+  }
+
+  /// Whether a user back in the app gets an in-house ad: connected, ads
+  /// allowed, none on screen, and the last one [returnAdInterval] ago or
+  /// more (or none yet).
+  @visibleForTesting
+  static bool returnAdDue({
+    required bool adsAllowed,
+    required conn.ConnectionStatus status,
+    required bool adOnScreen,
+    required DateTime? lastAdShownAt,
+    required DateTime now,
+  }) {
+    if (!adsAllowed) return false;
+    if (status != conn.ConnectionStatus.connected) return false;
+    if (adOnScreen) return false;
+    return lastAdShownAt == null ||
+        now.difference(lastAdShownAt) >= returnAdInterval;
+  }
+
   /// The consent the AdMob ads were requested with no longer holds: drop
   /// them, shown or held.
   void dropGoogleAds() => _googleStrategy?.dropAds(_ref);
