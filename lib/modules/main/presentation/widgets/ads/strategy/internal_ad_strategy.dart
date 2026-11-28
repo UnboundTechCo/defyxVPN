@@ -238,6 +238,12 @@ class InternalAdStrategy implements AdLoadingStrategy {
       // causing "No host specified in URI file:///..." errors on first connection
       // Also allows time for VPN tunnel to stabilize (tun2socks, ping refresh, SSL/TLS)
       Future.delayed(const Duration(milliseconds: 2500), () {
+        // Disconnected (or switching) in the meantime: no ad for a
+        // connection that is gone.
+        if (ref.read(connectionStateProvider).status !=
+            ConnectionStatus.connected) {
+          return;
+        }
         debugPrint(
           'Network routing delay complete (2.5s) - loading fresh internal ad',
         );

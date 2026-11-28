@@ -42,7 +42,8 @@ class AdHelper {
 /// - No requests after the tap: once the tunnel is up AdMob's traffic leaves
 ///   through the VPN (AppProxy on Android, the tunnel on iOS). So no
 ///   rotation either.
-/// - Disconnecting removes it and loads the next one.
+/// - Disconnecting removes it and shows another one, loaded then with the
+///   real IP. When that one's time is up, the next is loaded and held.
 ///
 /// Only where AdMob is on; see AdStrategyManager.
 class GoogleAdStrategy implements AdLoadingStrategy {
@@ -54,6 +55,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   // tunnel was last down (the manager shows an in-house ad when not).
   static bool _shownNow = false;
   static bool _shownThisConnection = false;
+  // After a disconnect the next ad is shown as soon as it is ready, instead
+  // of held for the connect tap.
+  static bool _showAfterDisconnect = false;
   // AdMob: show an ad within an hour of loading it.
   static const _maxHeldAge = Duration(minutes: 50);
 
@@ -93,6 +97,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     _nativeAdSeen = false;
     _shownNow = false;
     _shownThisConnection = false;
+    _showAfterDisconnect = false;
   }
 
   /// Whether an AdMob ad is on screen.
@@ -163,7 +168,11 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   void preload(Ref ref) {
     if (_disposed || _loadInFlight) return;
     if (!_tunnelDown(ref.read(connectionStateProvider).status)) return;
-    if (_isShowing(ref) || _hasFreshUnseenAd) return;
+    if (_isShowing(ref)) return;
+    if (_hasFreshUnseenAd) {
+      if (_showAfterDisconnect) _showHeldAd(ref, forConnection: false);
+      return;
+    }
     if (_nativeAd != null) _releaseAd(); // seen, or too old to show
 
     _loadInFlight = true;
@@ -174,11 +183,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       if (_disposed) return;
       if (result.success) {
         _retryAttempt = 0;
+        final status = ref.read(connectionStateProvider).status;
         // Tapped connect while it loaded: show it now, the tunnel is not up
-        // yet (that comes with analyzing/connected).
-        if (ref.read(connectionStateProvider).status ==
-            ConnectionStatus.loading) {
-          _showHeldAd(ref);
+        // yet (that comes with analyzing/connected). Or it is the ad for
+        // after a disconnect.
+        if (status == ConnectionStatus.loading) {
+          _showHeldAd(ref, forConnection: true);
+        } else if (_showAfterDisconnect &&
+            status == ConnectionStatus.disconnected) {
+          _showHeldAd(ref, forConnection: false);
         }
         return;
       }
@@ -186,17 +199,20 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     });
   }
 
-  /// Shows the held ad, if a fresh one is ready. Never requests one: the
-  /// tunnel may come up any moment.
-  void _showHeldAd(Ref ref) {
+  /// Shows the held ad, if a fresh one is ready: for the connection being
+  /// made (the connect tap), or after a disconnect. Never requests one: at
+  /// the tap the tunnel may come up any moment.
+  void _showHeldAd(Ref ref, {required bool forConnection}) {
+    _showAfterDisconnect = false;
     if (_isShowing(ref)) return;
+    final moment = forConnection ? 'connect tap' : 'after disconnect';
     if (!_hasFreshUnseenAd) {
-      debugPrint('Connect tapped - no AdMob ad ready');
+      debugPrint('No AdMob ad ready ($moment)');
       return;
     }
-    debugPrint('Connect tapped - showing the held AdMob ad');
+    debugPrint('Showing the held AdMob ad ($moment)');
     _shownNow = true;
-    _shownThisConnection = true;
+    if (forConnection) _shownThisConnection = true;
     final notifier = ref.read(adsProvider.notifier);
     notifier.resetRotationCount();
     notifier.setAdLoaded(true);
@@ -554,17 +570,32 @@ class GoogleAdStrategy implements AdLoadingStrategy {
             previous == ConnectionStatus.error ||
             previous == ConnectionStatus.noInternet)) {
       _retryTimer?.cancel();
-      _showHeldAd(ref);
+      if (_isShowing(ref)) {
+        // The ad from after the last disconnect is still up: it carries on
+        // through this connection.
+        _showAfterDisconnect = false;
+        _shownThisConnection = true;
+        return;
+      }
+      _showHeldAd(ref, forConnection: true);
       return;
     }
 
-    // The tunnel is down again (disconnected, or the connection failed):
-    // the shown ad goes, and the next one loads with the real IP.
     if (_tunnelDown(current)) {
       _retryTimer?.cancel();
       _retryAttempt = 0;
       _shownThisConnection = false;
-      if (_isShowing(ref)) _hide(ref);
+      // The tunnel just went down (not a repeat of the same state): the ad
+      // of that connection goes. After a disconnect - not a failed
+      // connection, not the app starting - another ad shows, loaded now
+      // with the real IP; otherwise it is held for the next tap.
+      if (previous != current && !_tunnelDown(previous)) {
+        if (_isShowing(ref)) _hide(ref);
+        _showAfterDisconnect =
+            current == ConnectionStatus.disconnected &&
+            (previous == ConnectionStatus.connected ||
+                previous == ConnectionStatus.disconnecting);
+      }
       preload(ref);
     }
   }

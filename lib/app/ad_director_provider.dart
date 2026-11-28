@@ -136,6 +136,15 @@ class AdStrategyManager {
 
   ProviderSubscription<conn.ConnectionState>? _connectionSubscription;
 
+  // DXcore is switching method or reconnecting while connected: analyzing
+  // right after connected. The tunnel stays up throughout.
+  bool _switching = false;
+
+  bool get _inHouseAdShowing {
+    final url = _ref.read(adsProvider).customImageUrl;
+    return url != null && url.isNotEmpty;
+  }
+
   /// Private constructor - use factory method
   AdStrategyManager._({
     required Ref ref,
@@ -212,12 +221,22 @@ class AdStrategyManager {
   /// Get active strategy based on connection state
   /// Returns null if no ad should be shown
   AdLoadingStrategy? getActiveStrategy(conn.ConnectionStatus connectionState) {
+    // A DXcore switch keeps the tunnel up: an in-house ad on screen stays
+    // through it, instead of vanishing until the reconnect.
+    if (connectionState == conn.ConnectionStatus.analyzing &&
+        _switching &&
+        _inHouseAdShowing) {
+      return _internalStrategy;
+    }
     if (_hasGoogleStrategy) {
       // AdMob: from the connect tap through connecting and connected (the
-      // ad shown at the tap stays for its countdown). Nothing while
-      // disconnected: the ad is only loaded then, for the next tap.
-      // Connected without an AdMob ad on screen: the in-house fallback.
+      // ad shown at the tap stays for its countdown), and the ad shown
+      // after a disconnect. Otherwise nothing while disconnected: the ad is
+      // only loaded then, for the next tap. Connected without an AdMob ad
+      // on screen: the in-house fallback.
       switch (connectionState) {
+        case conn.ConnectionStatus.disconnected:
+          return _googleStrategy!.isShowingAd ? _googleStrategy : null;
         case conn.ConnectionStatus.loading:
         case conn.ConnectionStatus.analyzing:
           return _googleStrategy;
@@ -241,6 +260,12 @@ class AdStrategyManager {
     required conn.ConnectionStatus previous,
     required conn.ConnectionStatus current,
   }) {
+    if (current != conn.ConnectionStatus.analyzing) {
+      _switching = false;
+    } else if (previous == conn.ConnectionStatus.connected) {
+      _switching = true;
+    }
+
     // AdMob users: the AdMob strategy follows every change (shows at the
     // connect tap, loads the next ad once the tunnel is down).
     if (_hasGoogleStrategy) {
@@ -256,12 +281,14 @@ class AdStrategyManager {
     // In-house ads on connect: always where AdMob is off; for AdMob users
     // only as a fallback, when no AdMob ad was shown for this connection
     // (the app reopened while connected - the ad died with the closed app -
-    // or none was ready at the tap). Cleaned up on leaving connected.
+    // or none was ready at the tap). One still on screen (after a switch)
+    // is kept rather than replaced.
     final inHouseOnConnect =
         !_hasGoogleStrategy || !_googleStrategy!.shownThisConnection;
     if (current == conn.ConnectionStatus.connected &&
         previous != conn.ConnectionStatus.connected &&
-        inHouseOnConnect) {
+        inHouseOnConnect &&
+        !_inHouseAdShowing) {
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -269,15 +296,17 @@ class AdStrategyManager {
         hasInitialized: true,
         onRefreshNeeded: () => _internalStrategy.loadAd(ref: _ref),
       );
-    } else if (previous == conn.ConnectionStatus.connected &&
-        current != conn.ConnectionStatus.connected) {
-      _internalStrategy.onConnectionStateChanged(
-        ref: _ref,
-        previous: previous,
-        current: current,
-        hasInitialized: true,
-        onRefreshNeeded: () => _internalStrategy.loadAd(ref: _ref),
-      );
+    }
+
+    // The tunnel is down: the in-house ad goes, whatever came before
+    // (a disconnect passes through disconnecting first).
+    if (current != previous &&
+        (current == conn.ConnectionStatus.disconnected ||
+            current == conn.ConnectionStatus.error) &&
+        _inHouseAdShowing) {
+      final ads = _ref.read(adsProvider.notifier);
+      ads.stopCountdownTimer();
+      ads.clearCustomAdData();
     }
   }
 
