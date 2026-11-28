@@ -194,7 +194,6 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     final adBox = _adBoxGeometry(
       context,
       shieldTip: connectionButtonTop + ConnectionButton.shieldBottom,
-      inHouseAd: connectionState.status == ConnectionStatus.connected,
     );
 
     if (!(Platform.isAndroid || Platform.isIOS)) {
@@ -328,12 +327,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
   /// It hangs just below the shield, at the same spot in every state, so the
   /// page never has to move. (It used to follow the header, which grows by
   /// the flag/ping row once connected, and the page scrolled to keep it
-  /// above the nav bar.) On short screens it shrinks or rises to stay clear
-  /// of the nav bar.
+  /// above the nav bar.) On short screens it shrinks, and only past that
+  /// rises, to stay clear of the nav bar.
   ({double top, double height}) _adBoxGeometry(
     BuildContext context, {
     required double shieldTip,
-    required bool inHouseAd,
   }) {
     final preferredTop = shieldTip + 8.h;
     final bottomLimit =
@@ -342,11 +340,11 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         DefyxNavBar.coveredHeight(context) -
         8.h;
     final fullHeight = 280.h;
-    // In-house pictures scale to fit, so their box may shrink. AdMob's
-    // native template keeps its standard size.
-    final height = inHouseAd
-        ? (bottomLimit - preferredTop).clamp(200.h, fullHeight)
-        : fullHeight;
+    // Shrink first: the AdMob card appears just as the user taps the shield
+    // (to connect), so it shouldn't sit over the shield. The AdMob card
+    // (DefyxNativeAdFactory, Android and iOS) and the in-house pictures fit
+    // any height.
+    final height = (bottomLimit - preferredTop).clamp(200.h, fullHeight);
     // Rise to clear the nav bar, but never over more than the bottom quarter
     // of the shield.
     final top = (bottomLimit - height).clamp(

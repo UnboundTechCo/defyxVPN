@@ -28,6 +28,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
@@ -58,6 +59,13 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // The AdMob native card on the main screen.
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+                flutterEngine,
+                DefyxNativeAdFactory.FACTORY_ID,
+                DefyxNativeAdFactory(this),
+        )
 
         DefyxVpnService.setVpnStatusListener(vpnStatusListener)
         vibrationPlugin = VibrationPlugin(applicationContext)
@@ -134,6 +142,14 @@ class MainActivity : FlutterActivity() {
         startService(intent)
     }
 
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        GoogleMobileAdsPlugin.unregisterNativeAdFactory(
+                flutterEngine,
+                DefyxNativeAdFactory.FACTORY_ID,
+        )
+        super.cleanUpFlutterEngine(flutterEngine)
+    }
+
     override fun onDestroy() {
         DefyxVpnService.clearVpnStatusListener(vpnStatusListener)
         super.onDestroy()
@@ -147,6 +163,10 @@ class MainActivity : FlutterActivity() {
                 "isVPNPrepared" -> result.success(true)
                 "prepareVPN" -> grantVpnPermission(result)
                 "getVpnStatus" -> getVpnStatus(result)
+                // Back on the main screen: leave the app in the background
+                // instead of finishing the activity, so the Flutter side (and
+                // an ad on screen) survives and reopening comes straight back.
+                "moveToBackground" -> result.success(moveTaskToBack(true))
                 "isTunnelRunning" -> isTunnelRunning(result)
                 "calculatePing" -> calculatePing(result)
                 "getFlag" -> getFlag(result)

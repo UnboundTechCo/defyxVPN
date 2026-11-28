@@ -136,6 +136,15 @@ class AdStrategyManager {
 
   ProviderSubscription<conn.ConnectionState>? _connectionSubscription;
 
+  // DXcore is switching method or reconnecting while connected: analyzing
+  // right after connected. The tunnel stays up throughout.
+  bool _switching = false;
+
+  bool get _inHouseAdShowing {
+    final url = _ref.read(adsProvider).customImageUrl;
+    return url != null && url.isNotEmpty;
+  }
+
   /// Private constructor - use factory method
   AdStrategyManager._({
     required Ref ref,
@@ -212,19 +221,37 @@ class AdStrategyManager {
   /// Get active strategy based on connection state
   /// Returns null if no ad should be shown
   AdLoadingStrategy? getActiveStrategy(conn.ConnectionStatus connectionState) {
-    switch (connectionState) {
-      case conn.ConnectionStatus.connected:
-        // Connected state: Internal ads for all users
-        return _internalStrategy;
-
-      case conn.ConnectionStatus.disconnected:
-        // Disconnected state: AdMob for non-Iranian users, nothing for Iranian users
-        return _googleStrategy; // null for Iranian users = no ad
-
-      default:
-        // Intermediate states (connecting, loading, etc.): no ad
-        return null;
+    // A DXcore switch keeps the tunnel up: an in-house ad on screen stays
+    // through it, instead of vanishing until the reconnect.
+    if (connectionState == conn.ConnectionStatus.analyzing &&
+        _switching &&
+        _inHouseAdShowing) {
+      return _internalStrategy;
     }
+    if (_hasGoogleStrategy) {
+      // AdMob: from the connect tap through connecting and connected (the
+      // ad shown at the tap stays for its countdown), and the ad shown
+      // after a disconnect. Otherwise nothing while disconnected: the ad is
+      // only loaded then, for the next tap. Connected without an AdMob ad
+      // on screen: the in-house fallback.
+      switch (connectionState) {
+        case conn.ConnectionStatus.disconnected:
+          return _googleStrategy!.isShowingAd ? _googleStrategy : null;
+        case conn.ConnectionStatus.loading:
+        case conn.ConnectionStatus.analyzing:
+          return _googleStrategy;
+        case conn.ConnectionStatus.connected:
+          return _googleStrategy!.isShowingAd
+              ? _googleStrategy
+              : _internalStrategy;
+        default:
+          return null;
+      }
+    }
+    // AdMob off here (e.g. Iran time zones): in-house ads while connected.
+    return connectionState == conn.ConnectionStatus.connected
+        ? _internalStrategy
+        : null;
   }
 
   /// Handle connection state changes - orchestrates strategy transitions
@@ -233,21 +260,35 @@ class AdStrategyManager {
     required conn.ConnectionStatus previous,
     required conn.ConnectionStatus current,
   }) {
-    // When connecting: notify internal strategy
-    if (current == conn.ConnectionStatus.connected &&
-        previous != conn.ConnectionStatus.connected) {
-      _internalStrategy.onConnectionStateChanged(
+    if (current != conn.ConnectionStatus.analyzing) {
+      _switching = false;
+    } else if (previous == conn.ConnectionStatus.connected) {
+      _switching = true;
+    }
+
+    // AdMob users: the AdMob strategy follows every change (shows at the
+    // connect tap, loads the next ad once the tunnel is down).
+    if (_hasGoogleStrategy) {
+      _googleStrategy!.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
         current: current,
         hasInitialized: true,
-        onRefreshNeeded: () => _internalStrategy.loadAd(ref: _ref),
+        onRefreshNeeded: () => _googleStrategy.preload(_ref),
       );
     }
-    // When leaving connected state: Clean up internal ads immediately
-    // This handles: connected -> disconnecting, connected -> disconnected
-    else if (previous == conn.ConnectionStatus.connected &&
-        current != conn.ConnectionStatus.connected) {
+
+    // In-house ads on connect: always where AdMob is off; for AdMob users
+    // only as a fallback, when no AdMob ad was shown for this connection
+    // (the app reopened while connected - the ad died with the closed app -
+    // or none was ready at the tap). One still on screen (after a switch)
+    // is kept rather than replaced.
+    final inHouseOnConnect =
+        !_hasGoogleStrategy || !_googleStrategy!.shownThisConnection;
+    if (current == conn.ConnectionStatus.connected &&
+        previous != conn.ConnectionStatus.connected &&
+        inHouseOnConnect &&
+        !_inHouseAdShowing) {
       _internalStrategy.onConnectionStateChanged(
         ref: _ref,
         previous: previous,
@@ -257,19 +298,15 @@ class AdStrategyManager {
       );
     }
 
-    // When reaching disconnected state: Load AdMob ad (if available)
-    // This handles: disconnecting -> disconnected, connected -> disconnected, anything -> disconnected
-    if (current == conn.ConnectionStatus.disconnected &&
-        previous != conn.ConnectionStatus.disconnected) {
-      if (_hasGoogleStrategy) {
-        _googleStrategy!.onConnectionStateChanged(
-          ref: _ref,
-          previous: previous,
-          current: current,
-          hasInitialized: true,
-          onRefreshNeeded: () => _googleStrategy.loadAd(ref: _ref),
-        );
-      }
+    // The tunnel is down: the in-house ad goes, whatever came before
+    // (a disconnect passes through disconnecting first).
+    if (current != previous &&
+        (current == conn.ConnectionStatus.disconnected ||
+            current == conn.ConnectionStatus.error) &&
+        _inHouseAdShowing) {
+      final ads = _ref.read(adsProvider.notifier);
+      ads.stopCountdownTimer();
+      ads.clearCustomAdData();
     }
   }
 
@@ -280,69 +317,71 @@ class AdStrategyManager {
       await _googleStrategy!.initialize(_ref);
     }
 
-    // CRITICAL: Check initial connection state and load ad if already disconnected
-    // This handles the case where app starts in disconnected state (no state change)
-    final initialConnectionState = _ref.read(conn.connectionStateProvider);
-
-    if (initialConnectionState.status == conn.ConnectionStatus.disconnected &&
-        _hasGoogleStrategy) {
-      // Simulate a state change to trigger ad load
-      final googleStrategy = _googleStrategy!;
-      googleStrategy.onConnectionStateChanged(
-        ref: _ref,
-        previous: conn.ConnectionStatus.noInternet, // Fake previous state
-        current: conn.ConnectionStatus.disconnected,
-        hasInitialized: true,
-        onRefreshNeeded: () => googleStrategy.loadAd(ref: _ref),
-      );
-    } else if (initialConnectionState.status ==
-        conn.ConnectionStatus.connected) {
-      // Simulate a state change to trigger internal ad load
-      _internalStrategy.onConnectionStateChanged(
-        ref: _ref,
-        previous: conn.ConnectionStatus.disconnected, // Fake previous state
-        current: conn.ConnectionStatus.connected,
-        hasInitialized: true,
-        onRefreshNeeded: () => _internalStrategy.loadAd(ref: _ref),
-      );
+    // Start-up: AdMob users get an ad loaded (not shown) for the connect
+    // tap, if the tunnel is down. (Already connected: the listener's replay
+    // of the starting state brings the in-house ad.)
+    if (_hasGoogleStrategy) {
+      _googleStrategy!.preload(_ref);
     }
   }
 
-  /// Retry ad loading for Google Ads (after consent completes)
-  /// This is called when consent flow completes and user is still disconnected
-  void retryGoogleAdLoad() {
-    if (!_hasGoogleStrategy) {
-      debugPrint('Cannot retry - Google strategy not available');
-      return;
-    }
+  /// A connected user back in the app gets an in-house ad at most this
+  /// often, counted from the last ad of either kind.
+  static const returnAdInterval = Duration(minutes: 5);
+  bool _returnAdLoading = false;
 
-    final currentConnectionState = _ref.read(conn.connectionStateProvider);
-    if (currentConnectionState.status != conn.ConnectionStatus.disconnected) {
-      debugPrint(
-        'Cannot retry - not disconnected (${currentConnectionState.status.name})',
-      );
-      return;
-    }
-
-    debugPrint('Retrying Google ad load after consent');
-    final googleStrategy = _googleStrategy!;
-    googleStrategy.onConnectionStateChanged(
-      ref: _ref,
-      previous: conn.ConnectionStatus.disconnected,
-      current: conn.ConnectionStatus.disconnected,
-      hasInitialized: true,
-      onRefreshNeeded: () => googleStrategy.loadAd(ref: _ref),
+  /// The user came back to the app (it was in the background) and has the
+  /// main screen in view. While connected AdMob makes no requests (the real
+  /// IP), so an in-house ad shows instead, at most every
+  /// [returnAdInterval]. The box sits under the shield and covers nothing.
+  void onAppReturned() {
+    if (_returnAdLoading) return;
+    final due = returnAdDue(
+      adsAllowed: _ref.read(adsAllowedProvider),
+      status: _ref.read(conn.connectionStateProvider).status,
+      adOnScreen:
+          _ref.read(adsProvider).showCountdown ||
+          _inHouseAdShowing ||
+          (_googleStrategy?.isShowingAd ?? false),
+      lastAdShownAt: _ref.read(adsProvider.notifier).lastAdShownAt,
+      now: DateTime.now(),
     );
+    if (!due) return;
+    debugPrint('Back in the app while connected - showing an in-house ad');
+    _returnAdLoading = true;
+    _internalStrategy
+        .showOnReturn(_ref)
+        .whenComplete(() => _returnAdLoading = false);
   }
 
-  /// Fills an empty ad box when the user comes back to it (see
-  /// [GoogleAdStrategy.refill]). Only while disconnected: connected, the box
-  /// holds in-house ads.
-  void refillGoogleAd() {
+  /// Whether a user back in the app gets an in-house ad: connected, ads
+  /// allowed, none on screen, and the last one [returnAdInterval] ago or
+  /// more (or none yet).
+  @visibleForTesting
+  static bool returnAdDue({
+    required bool adsAllowed,
+    required conn.ConnectionStatus status,
+    required bool adOnScreen,
+    required DateTime? lastAdShownAt,
+    required DateTime now,
+  }) {
+    if (!adsAllowed) return false;
+    if (status != conn.ConnectionStatus.connected) return false;
+    if (adOnScreen) return false;
+    return lastAdShownAt == null ||
+        now.difference(lastAdShownAt) >= returnAdInterval;
+  }
+
+  /// The consent the AdMob ads were requested with no longer holds: drop
+  /// them, shown or held.
+  void dropGoogleAds() => _googleStrategy?.dropAds(_ref);
+
+  /// Makes sure an AdMob ad is loaded for the next connect tap (after
+  /// consent completes, when ads become allowed, or when the user comes back
+  /// to the main screen). Loads only while the tunnel is down.
+  void preloadGoogleAd() {
     if (!_hasGoogleStrategy) return;
-    final status = _ref.read(conn.connectionStateProvider).status;
-    if (status != conn.ConnectionStatus.disconnected) return;
-    _googleStrategy!.refill(_ref);
+    _googleStrategy!.preload(_ref);
   }
 
   /// Dispose strategies and subscriptions

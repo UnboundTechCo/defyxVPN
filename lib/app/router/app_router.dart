@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:defyx_vpn/core/utils/toast_util.dart';
 import 'package:defyx_vpn/l10n/app_localizations.dart';
+import 'package:defyx_vpn/modules/core/vpn_bridge.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,11 +155,27 @@ class _ShellBackHandlerState extends State<_ShellBackHandler> {
     );
   }
 
+  /// Android: to the background rather than closed. Closing threw away the
+  /// Flutter side, and with it the ad shown at the connect tap; reopening
+  /// while connected could not get it back. Elsewhere (and if that fails):
+  /// close as before.
+  Future<void> _leaveApp() async {
+    if (Platform.isAndroid) {
+      try {
+        await VpnBridge().moveToBackground();
+        return;
+      } catch (e) {
+        debugPrint('moveToBackground failed: $e');
+      }
+    }
+    SystemNavigator.pop();
+  }
+
   void _confirmExit() {
     final now = DateTime.now();
     final last = _lastExitAttempt;
     if (last != null && now.difference(last) < _exitWindow) {
-      SystemNavigator.pop();
+      _leaveApp();
       return;
     }
     _lastExitAttempt = now;

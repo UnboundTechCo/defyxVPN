@@ -17,7 +17,9 @@ import 'ad_loading_strategy.dart';
 /// Shows ads ONLY when VPN is connected (all users, including Iranian users).
 ///
 /// Behavior:
-/// - Connected state: Load and display internal ad with 60s countdown
+/// - Connected state: Load and display internal ad with its countdown
+/// - Back in the app while connected: another one, at most every few
+///   minutes (AdStrategyManager.onAppReturned)
 /// - Disconnected state: Clear ad data (GoogleAdStrategy handles disconnected for non-Iranian users)
 /// - Iranian users: Will see internal ads only when connected, nothing when disconnected
 ///
@@ -25,6 +27,9 @@ import 'ad_loading_strategy.dart';
 class InternalAdStrategy implements AdLoadingStrategy {
   bool _internalAdImageFailed = false;
   final FirebaseAnalyticsService _analytics = FirebaseAnalyticsService();
+  // Where the ad on screen was shown, for analytics: 'connect' (the
+  // connection came up) or 'return' (back in the app while connected).
+  String _shownAt = 'connect';
 
   // Visual properties
   final Color backgroundColor;
@@ -47,7 +52,25 @@ class InternalAdStrategy implements AdLoadingStrategy {
   }
 
   @override
-  Future<AdLoadResult> loadAd({required Ref ref}) async {
+  Future<AdLoadResult> loadAd({required Ref ref}) =>
+      _load(ref, shownAt: 'connect');
+
+  /// Shows an in-house ad now, for a connected user back in the app (see
+  /// AdStrategyManager.onAppReturned).
+  Future<void> showOnReturn(Ref ref) async {
+    final result = await _load(ref, shownAt: 'return');
+    if (!result.success) return;
+    final ads = ref.read(adsProvider.notifier);
+    // Disconnected while it loaded: no in-house ad then.
+    if (ref.read(connectionStateProvider).status !=
+        ConnectionStatus.connected) {
+      ads.clearCustomAdData();
+      return;
+    }
+    ads.startCountdownTimer();
+  }
+
+  Future<AdLoadResult> _load(Ref ref, {required String shownAt}) async {
     // Premium users see no ads, in-house ones included.
     if (!ref.read(adsAllowedProvider)) {
       return const AdLoadResult.failure(
@@ -60,7 +83,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
       // Track load attempt
       await _analytics.logEvent(
         name: 'ads_internal_ad_load_attempt',
-        parameters: {},
+        parameters: {'shown_at': shownAt},
       );
 
       // Load ad data from backend
@@ -108,11 +131,12 @@ class InternalAdStrategy implements AdLoadingStrategy {
       // Track success
       await _analytics.logEvent(
         name: 'ads_internal_ad_load_success',
-        parameters: {},
+        parameters: {'shown_at': shownAt},
       );
 
       // Reset failure flag for new ad attempt
       _internalAdImageFailed = false;
+      _shownAt = shownAt;
       ref.read(adsProvider.notifier).setCustomAdData(imageUrl, clickUrl);
 
       return const AdLoadResult.success();
@@ -176,7 +200,7 @@ class InternalAdStrategy implements AdLoadingStrategy {
 
       await _analytics.logEvent(
         name: 'ads_internal_ad_clicked',
-        parameters: {'click_url': clickUrl},
+        parameters: {'click_url': clickUrl, 'shown_at': _shownAt},
       );
 
       if (await canLaunchUrl(uri)) {
@@ -238,6 +262,14 @@ class InternalAdStrategy implements AdLoadingStrategy {
       // causing "No host specified in URI file:///..." errors on first connection
       // Also allows time for VPN tunnel to stabilize (tun2socks, ping refresh, SSL/TLS)
       Future.delayed(const Duration(milliseconds: 2500), () {
+        // Disconnected (or switching) in the meantime: no ad for a
+        // connection that is gone.
+        if (ref.read(connectionStateProvider).status !=
+            ConnectionStatus.connected) {
+          return;
+        }
+        // One came up meanwhile (the user came back to the app).
+        if ((ref.read(adsProvider).customImageUrl ?? '').isNotEmpty) return;
         debugPrint(
           'Network routing delay complete (2.5s) - loading fresh internal ad',
         );

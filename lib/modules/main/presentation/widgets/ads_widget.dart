@@ -32,6 +32,7 @@ library;
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
 import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
@@ -39,6 +40,18 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+/// The countdown text, decided when the ad appears so it does not flip
+/// halfway: an AdMob ad in the rotation after a disconnect that another one
+/// will replace says "Next ad"; the last one of the rotation, and every other
+/// ad, says "Closing". (Only if fetching the next ad fails does a "Next ad"
+/// turn into "Closing", as the box will then close.)
+String countdownLabel(AdsState state, {required bool nextAdExpected}) {
+  final nextAdFollows = nextAdExpected && state.rotationCount < maxAdRotations;
+  return nextAdFollows
+      ? "Next ad in ${state.countdown}s"
+      : "Closing in ${state.countdown}s";
+}
 
 /// Main ads widget - uses Strategy Pattern for ad loading
 class AdsWidget extends ConsumerStatefulWidget {
@@ -60,6 +73,8 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
   late final AdsNotifier _ads;
   late final AppLifecycleListener _lifecycle;
   bool _onScreen = false;
+  bool _foreground = true;
+  final _returns = AppReturnTracker();
 
   @override
   void initState() {
@@ -69,8 +84,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     _lifecycle = AppLifecycleListener(
       onStateChange: (state) {
         final foreground = state == AppLifecycleState.resumed;
+        _foreground = foreground;
         _ads.setAppInForeground(foreground);
-        if (foreground && _onScreen) _refillWhenEmpty();
+        _returns.onLifecycleChange(state);
+        if (foreground && _onScreen) _preloadForNextConnect();
+        _checkReturn();
       },
     );
   }
@@ -81,16 +99,29 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
     // False while another page covers the main screen.
     final onScreen = TickerMode.valuesOf(context).enabled;
     _ads.setAdOnScreen(onScreen);
-    if (onScreen && !_onScreen) _refillWhenEmpty();
+    if (onScreen && !_onScreen) _preloadForNextConnect();
     _onScreen = onScreen;
+    _checkReturn();
   }
 
-  /// The box is in view again (main screen shown, or the app back in the
-  /// foreground): fill it if it is empty.
-  void _refillWhenEmpty() {
+  /// Back in the app with the main screen in view: the manager may show an
+  /// in-house ad (connected users; capped).
+  void _checkReturn() {
+    if (!_returns.takeReturn(foreground: _foreground, onScreen: _onScreen)) {
+      return;
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      ref.read(adStrategyManagerProvider)?.refillGoogleAd();
+      ref.read(adStrategyManagerProvider)?.onAppReturned();
+    });
+  }
+
+  /// The main screen is in view again (or the app back in the foreground):
+  /// make sure an AdMob ad is ready for the next connect tap.
+  void _preloadForNextConnect() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(adStrategyManagerProvider)?.preloadGoogleAd();
     });
   }
 
@@ -153,7 +184,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
         ),
       ),
     );
-    final countdownText = "Closing in ${adsState.countdown}s";
+    final countdownText = countdownLabel(
+      adsState,
+      nextAdExpected:
+          activeStrategy is GoogleAdStrategy && activeStrategy.nextAdExpected,
+    );
 
     // Size is constrained by parent (main_screen.dart: 280.h x 336.w)
     if (activeStrategy is! InternalAdStrategy) {
@@ -247,4 +282,27 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
       ),
     ),
   );
+}
+
+/// Tells the user coming back to the app (after it was in the background:
+/// hidden or paused) from brief interruptions that only make it inactive
+/// (the notification shade, Control Center, a system dialog such as the VPN
+/// permission). A return made on another page counts once the main screen
+/// is in view again.
+class AppReturnTracker {
+  bool _pending = false;
+
+  void onLifecycleChange(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.paused) {
+      _pending = true;
+    }
+  }
+
+  /// Whether the user is back, now; each return counts once.
+  bool takeReturn({required bool foreground, required bool onScreen}) {
+    if (!_pending || !foreground || !onScreen) return false;
+    _pending = false;
+    return true;
+  }
 }

@@ -142,8 +142,13 @@ void main() {
           .setMockMethodCallHandler(ump, null);
     });
 
-    Future<AdReadinessCoordinator> privacyAccepted() async {
-      final coordinator = AdReadinessCoordinator();
+    Future<AdReadinessCoordinator> privacyAccepted({
+      Future<void> Function()? initializeSdk,
+    }) async {
+      final coordinator = AdReadinessCoordinator(
+        null,
+        initializeSdk ?? () async {},
+      );
       await pumpEventQueue();
       await coordinator.markPrivacyAccepted();
       return coordinator;
@@ -155,9 +160,10 @@ void main() {
 
       var umpRuns = 0;
       final umpDone = Completer<void>();
-      Future<void> runUmp(bool _) async {
+      Future<bool> runUmp(bool _) async {
         umpRuns++;
         await umpDone.future;
+        return false;
       }
 
       final first = coordinator.initializeAdFlow(onRunUMP: runUmp);
@@ -172,12 +178,108 @@ void main() {
       final coordinator = await privacyAccepted();
       addTearDown(coordinator.dispose);
 
-      await coordinator.initializeAdFlow(onRunUMP: (_) async {});
+      await coordinator.initializeAdFlow(onRunUMP: (_) async => false);
 
       expect(coordinator.state.consentComplete, isFalse);
       expect(coordinator.state.adMobInitialized, isFalse);
       expect(coordinator.state.canLoadAds, isFalse);
       expect(coordinator.state.lastError, 'UMP consent not obtained');
+    });
+
+    // Every value canLoadAds takes while the flow runs.
+    List<bool> watchCanLoadAds(AdReadinessCoordinator coordinator) {
+      final seen = <bool>[];
+      coordinator.addListener(
+        (state) => seen.add(state.canLoadAds),
+        fireImmediately: false,
+      );
+      return seen;
+    }
+
+    test(
+      'a fresh install sets AdMob up only after the consent check',
+      () async {
+        // UMP has no answer yet: nothing may start before the check.
+        final events = <String>[];
+        final coordinator = await privacyAccepted(
+          initializeSdk: () async => events.add('sdk'),
+        );
+        addTearDown(coordinator.dispose);
+
+        await coordinator.initializeAdFlow(
+          onRunUMP: (_) async {
+            events.add('consent check');
+            canRequestAds = true; // The user consented in the form.
+            return true;
+          },
+        );
+
+        expect(events, ['consent check', 'sdk']);
+        expect(coordinator.state.canLoadAds, isTrue);
+      },
+    );
+
+    test(
+      'consent from an earlier session sets AdMob up during the check',
+      () async {
+        canRequestAds = true; // UMP's answer from the last session.
+        var sdkSetups = 0;
+        final coordinator = await privacyAccepted(
+          initializeSdk: () async => sdkSetups++,
+        );
+        addTearDown(coordinator.dispose);
+
+        final checkDone = Completer<bool>();
+        final flow = coordinator.initializeAdFlow(
+          onRunUMP: (_) => checkDone.future,
+        );
+        await pumpEventQueue();
+        expect(coordinator.state.canLoadAds, isTrue); // While the check runs.
+
+        checkDone.complete(false); // No form: the answer stands.
+        await flow;
+        expect(coordinator.state.canLoadAds, isTrue);
+        expect(sdkSetups, 1);
+      },
+    );
+
+    test('ads stop when the check withdraws the earlier consent', () async {
+      canRequestAds = true;
+      final coordinator = await privacyAccepted();
+      addTearDown(coordinator.dispose);
+      final seen = watchCanLoadAds(coordinator);
+
+      await coordinator.initializeAdFlow(
+        onRunUMP: (_) async {
+          await pumpEventQueue(); // The early start completes meanwhile.
+          canRequestAds = false; // Consent is needed again; none given.
+          return false;
+        },
+      );
+
+      // On, then off: the App drops the ads loaded meanwhile.
+      expect(seen, containsAllInOrder([true, false]));
+      expect(coordinator.state.canLoadAds, isFalse);
+      expect(coordinator.state.lastError, 'UMP consent not obtained');
+    });
+
+    test('a consent form during the check reloads the ads', () async {
+      canRequestAds = true;
+      final coordinator = await privacyAccepted();
+      addTearDown(coordinator.dispose);
+      final seen = watchCanLoadAds(coordinator);
+
+      await coordinator.initializeAdFlow(
+        onRunUMP: (_) async {
+          await pumpEventQueue();
+          return true; // A form was shown and answered.
+        },
+      );
+
+      // On, off (ads loaded with the earlier answer are dropped), on again
+      // (loaded with the new one).
+      expect(seen, containsAllInOrder([true, false, true]));
+      expect(coordinator.state.canLoadAds, isTrue);
     });
   });
 }

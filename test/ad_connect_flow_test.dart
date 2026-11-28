@@ -1,0 +1,548 @@
+// AdMob ads show from the connect tap: held while disconnected, shown at the
+// tap, kept through connecting and connected, removed on disconnect.
+
+import 'dart:ui' show AppLifecycleState;
+
+import 'package:defyx_vpn/app/ad_director_provider.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/models/ad_load_result.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads_widget.dart';
+import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
+import 'package:defyx_vpn/shared/providers/premium_provider.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+final _refProvider = Provider<Ref>((ref) => ref);
+
+ProviderContainer _container() {
+  final container = ProviderContainer(
+    // No real ad requests in tests: loads stop at the premium check.
+    overrides: [adsAllowedProvider.overrideWithValue(false)],
+  );
+  addTearDown(container.dispose);
+  return container;
+}
+
+NativeAd _ad() => NativeAd(
+  adUnitId: 'test',
+  factoryId: 'test',
+  listener: NativeAdListener(),
+  request: const AdRequest(),
+);
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+    // The connection notifier listens to the native VPN events.
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(
+          const EventChannel('com.defyx.vpn_events'),
+          MockStreamHandler.inline(onListen: (_, _) {}),
+        );
+  });
+  tearDown(() => GoogleAdStrategy.debugHoldAd(null));
+
+  group('which strategy fills the box', () {
+    late ProviderContainer container;
+
+    AdStrategyManager manager({required bool adMob}) {
+      container = _container();
+      final provider = Provider(
+        (ref) => AdStrategyManager.create(
+          ref: ref,
+          environment: AdEnvironment(
+            adMobIsDisabled: !adMob,
+            isMobilePlatform: true,
+            shouldInitializeAdMob: adMob,
+          ),
+        ),
+      );
+      return container.read(provider);
+    }
+
+    test('AdMob: from the connect tap on, nothing while disconnected', () {
+      final m = manager(adMob: true);
+      expect(m.getActiveStrategy(ConnectionStatus.disconnected), isNull);
+      expect(m.getActiveStrategy(ConnectionStatus.error), isNull);
+      expect(
+        m.getActiveStrategy(ConnectionStatus.loading),
+        isA<GoogleAdStrategy>(),
+      );
+      expect(
+        m.getActiveStrategy(ConnectionStatus.analyzing),
+        isA<GoogleAdStrategy>(),
+      );
+
+      // Connected: the AdMob ad from the tap while it is on screen...
+      GoogleAdStrategy.debugHoldAd(_ad());
+      m.googleStrategy!.onConnectionStateChanged(
+        ref: container.read(_refProvider),
+        previous: ConnectionStatus.disconnected,
+        current: ConnectionStatus.loading,
+        hasInitialized: true,
+        onRefreshNeeded: () {},
+      );
+      expect(
+        m.getActiveStrategy(ConnectionStatus.connected),
+        isA<GoogleAdStrategy>(),
+      );
+      // ...and while disconnected only when an AdMob ad is on screen.
+      expect(
+        m.getActiveStrategy(ConnectionStatus.disconnected),
+        isA<GoogleAdStrategy>(),
+      );
+    });
+
+    test(
+      'AdMob: connected with no AdMob ad on screen gets the in-house ad',
+      () {
+        // E.g. the app reopened while connected: the tap's ad died with it.
+        final m = manager(adMob: true);
+        expect(m.googleStrategy!.shownThisConnection, isFalse);
+        expect(
+          m.getActiveStrategy(ConnectionStatus.connected),
+          isA<InternalAdStrategy>(),
+        );
+      },
+    );
+
+    test('AdMob off: in-house ads while connected only', () {
+      final m = manager(adMob: false);
+      expect(
+        m.getActiveStrategy(ConnectionStatus.connected),
+        isA<InternalAdStrategy>(),
+      );
+      expect(m.getActiveStrategy(ConnectionStatus.loading), isNull);
+      expect(m.getActiveStrategy(ConnectionStatus.disconnected), isNull);
+    });
+  });
+
+  group('in-house ads and DXcore switches', () {
+    late ProviderContainer container;
+    late AdStrategyManager m;
+
+    setUp(() {
+      container = _container();
+      // Let the notifier's async state saves finish before the container
+      // goes (teardowns run last-added first).
+      addTearDown(pumpEventQueue);
+      m = container.read(
+        Provider(
+          (ref) => AdStrategyManager.create(
+            ref: ref,
+            environment: const AdEnvironment(
+              adMobIsDisabled: true,
+              isMobilePlatform: true,
+              shouldInitializeAdMob: false,
+            ),
+          ),
+        ),
+      );
+    });
+
+    ConnectionStateNotifier conn() =>
+        container.read(connectionStateProvider.notifier);
+    String? inHouseAd() => container.read(adsProvider).customImageUrl;
+
+    test('an in-house ad stays through a switch and is not replaced', () {
+      container
+          .read(adsProvider.notifier)
+          .setCustomAdData('https://ads.example/a.png', '');
+      conn().setConnected();
+      expect(
+        m.getActiveStrategy(ConnectionStatus.connected),
+        isA<InternalAdStrategy>(),
+      );
+
+      conn().setAnalyzing(); // DXcore switches method, tunnel stays up.
+      expect(
+        m.getActiveStrategy(ConnectionStatus.analyzing),
+        isA<InternalAdStrategy>(),
+      );
+
+      conn().setConnected();
+      expect(inHouseAd(), 'https://ads.example/a.png');
+    });
+
+    test('a fresh connect shows no leftover in-house ad while analyzing', () {
+      container
+          .read(adsProvider.notifier)
+          .setCustomAdData('https://ads.example/old.png', '');
+      conn().setLoading();
+      conn().setAnalyzing();
+      expect(m.getActiveStrategy(ConnectionStatus.analyzing), isNull);
+    });
+
+    test('a disconnect through disconnecting clears the in-house ad', () {
+      container
+          .read(adsProvider.notifier)
+          .setCustomAdData('https://ads.example/a.png', '');
+      conn().setConnected();
+      conn().setDisconnecting();
+      conn().setDisconnected();
+      expect(inHouseAd(), isEmpty);
+    });
+  });
+
+  group('the AdMob ad', () {
+    late ProviderContainer container;
+    late GoogleAdStrategy strategy;
+
+    void change(ConnectionStatus from, ConnectionStatus to) =>
+        strategy.onConnectionStateChanged(
+          ref: container.read(_refProvider),
+          previous: from,
+          current: to,
+          hasInitialized: true,
+          onRefreshNeeded: () {},
+        );
+
+    AdsState ads() => container.read(adsProvider);
+
+    setUp(() {
+      container = _container();
+      strategy = GoogleAdStrategy(
+        backgroundColor: const Color(0xFF19312F),
+        cornerRadius: 10,
+      );
+      addTearDown(strategy.dispose);
+    });
+
+    test('shows at the connect tap and stays until disconnect', () {
+      GoogleAdStrategy.debugHoldAd(_ad()); // Loaded while disconnected.
+      expect(ads().nativeAdIsLoaded, isFalse); // Held, not shown.
+
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().showCountdown, isTrue);
+      expect(ads().countdown, adMobDisplaySeconds);
+
+      change(ConnectionStatus.loading, ConnectionStatus.analyzing);
+      change(ConnectionStatus.analyzing, ConnectionStatus.connected);
+      expect(ads().nativeAdIsLoaded, isTrue); // Kept after connecting.
+
+      expect(strategy.shownThisConnection, isTrue); // No in-house ad.
+
+      change(ConnectionStatus.connected, ConnectionStatus.disconnected);
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().showCountdown, isFalse);
+      expect(strategy.shownThisConnection, isFalse);
+    });
+
+    test('after a disconnect another ad shows', () {
+      // Connected with no ad at the tap; an ad loaded meanwhile is held.
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      change(ConnectionStatus.loading, ConnectionStatus.connected);
+      GoogleAdStrategy.debugHoldAd(_ad());
+
+      change(ConnectionStatus.connected, ConnectionStatus.disconnecting);
+      expect(ads().nativeAdIsLoaded, isFalse);
+      change(ConnectionStatus.disconnecting, ConnectionStatus.disconnected);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().showCountdown, isTrue);
+      expect(strategy.shownThisConnection, isFalse); // Not a connection's ad.
+    });
+
+    test('a tap while the post-disconnect ad is up keeps it', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.connected, ConnectionStatus.disconnected);
+      expect(ads().nativeAdIsLoaded, isTrue);
+
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(strategy.shownThisConnection, isTrue); // No in-house fallback.
+    });
+
+    test('the app starting only holds the ad', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.disconnected, ConnectionStatus.disconnected);
+      expect(ads().nativeAdIsLoaded, isFalse);
+    });
+
+    test('a failed connection removes the tap ad and shows none', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      change(ConnectionStatus.loading, ConnectionStatus.error);
+      expect(ads().nativeAdIsLoaded, isFalse);
+    });
+
+    test('the tap after a failed connection shows it too', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.error, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isTrue);
+    });
+
+    test('nothing shows when no ad is ready at the tap', () {
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().showCountdown, isFalse);
+    });
+
+    test('a consent change drops the held ad', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      strategy.dropAds(container.read(_refProvider));
+
+      // Nothing left to show at the tap.
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isFalse);
+    });
+
+    test('a consent change removes the ad on screen', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.connected, ConnectionStatus.disconnected);
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      expect(ads().nativeAdIsLoaded, isTrue);
+
+      strategy.dropAds(container.read(_refProvider));
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().showCountdown, isFalse);
+      expect(strategy.isShowingAd, isFalse);
+    });
+  });
+
+  group('an in-house ad when the user comes back while connected', () {
+    final now = DateTime(2026, 11, 28, 12);
+
+    bool due({
+      bool adsAllowed = true,
+      ConnectionStatus status = ConnectionStatus.connected,
+      bool adOnScreen = false,
+      Duration? sinceLastAd,
+    }) => AdStrategyManager.returnAdDue(
+      adsAllowed: adsAllowed,
+      status: status,
+      adOnScreen: adOnScreen,
+      lastAdShownAt: sinceLastAd == null ? null : now.subtract(sinceLastAd),
+      now: now,
+    );
+
+    test('shows when connected and the last ad is long enough ago', () {
+      expect(due(), isTrue); // No ad yet this session.
+      expect(due(sinceLastAd: AdStrategyManager.returnAdInterval), isTrue);
+      expect(due(sinceLastAd: const Duration(hours: 1)), isTrue);
+    });
+
+    test('capped: not within the interval of the last ad', () {
+      expect(due(sinceLastAd: const Duration(minutes: 1)), isFalse);
+      expect(
+        due(
+          sinceLastAd:
+              AdStrategyManager.returnAdInterval - const Duration(seconds: 1),
+        ),
+        isFalse,
+      );
+    });
+
+    test('not while an ad is on screen, nor when not connected', () {
+      expect(due(adOnScreen: true), isFalse);
+      expect(due(status: ConnectionStatus.disconnected), isFalse);
+      expect(due(status: ConnectionStatus.analyzing), isFalse); // Switching.
+      expect(due(status: ConnectionStatus.loading), isFalse);
+    });
+
+    test('never for premium users', () {
+      expect(due(adsAllowed: false), isFalse);
+    });
+
+    test('every ad shown counts for the cap', () {
+      final container = _container();
+      addTearDown(pumpEventQueue);
+      final ads = container.read(adsProvider.notifier);
+      expect(ads.lastAdShownAt, isNull);
+      ads.startCountdownTimer(seconds: adMobDisplaySeconds);
+      expect(ads.lastAdShownAt, isNotNull);
+      ads.stopCountdownTimer();
+    });
+
+    group('coming back to the app', () {
+      test('from the background counts once', () {
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.inactive);
+        tracker.onLifecycleChange(AppLifecycleState.hidden);
+        tracker.onLifecycleChange(AppLifecycleState.paused);
+        tracker.onLifecycleChange(AppLifecycleState.resumed);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isTrue);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isFalse);
+      });
+
+      test('a brief interruption (only inactive) is no return', () {
+        // The notification shade, Control Center, a system dialog.
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.inactive);
+        tracker.onLifecycleChange(AppLifecycleState.resumed);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isFalse);
+      });
+
+      test('back on another page counts once the main screen shows', () {
+        final tracker = AppReturnTracker();
+        tracker.onLifecycleChange(AppLifecycleState.paused);
+        expect(tracker.takeReturn(foreground: true, onScreen: false), isFalse);
+        expect(tracker.takeReturn(foreground: true, onScreen: true), isTrue);
+      });
+    });
+  });
+
+  test('a failed load is retried only when another try can succeed', () {
+    AdLoadResult failure(String code, String message) =>
+        AdLoadResult.failure(errorCode: code, errorMessage: message);
+
+    expect(GoogleAdStrategy.isRetryable(failure('3', 'No fill.')), isTrue);
+    expect(GoogleAdStrategy.isRetryable(failure('2', 'Network error')), isTrue);
+    expect(
+      GoogleAdStrategy.isRetryable(failure('0', 'Internal error.')),
+      isTrue,
+    );
+    // Google's own asset is missing for this device: fails every time.
+    expect(
+      GoogleAdStrategy.isRetryable(
+        failure('0', 'Retrieve required value in native ad response failed.'),
+      ),
+      isFalse,
+    );
+    expect(
+      GoogleAdStrategy.isRetryable(failure('1', 'Invalid request')),
+      isFalse,
+    );
+    expect(
+      GoogleAdStrategy.isRetryable(failure('PREMIUM', 'No ads for premium')),
+      isFalse,
+    );
+  });
+
+  group('rotation after a disconnect', () {
+    Future<({ProviderContainer container, Ref ref, GoogleAdStrategy strategy})>
+    setUpStrategy() async {
+      final container = _container();
+      final ref = container.read(_refProvider);
+      final strategy = GoogleAdStrategy(
+        backgroundColor: const Color(0xFF19312F),
+        cornerRadius: 10,
+      );
+      addTearDown(strategy.dispose);
+      await strategy.initialize(ref); // Registers the countdown callbacks.
+      return (container: container, ref: ref, strategy: strategy);
+    }
+
+    void change(
+      GoogleAdStrategy strategy,
+      Ref ref,
+      ConnectionStatus from,
+      ConnectionStatus to,
+    ) => strategy.onConnectionStateChanged(
+      ref: ref,
+      previous: from,
+      current: to,
+      hasInitialized: true,
+      onRefreshNeeded: () {},
+    );
+
+    testWidgets('the ad shown after a disconnect rotates to the next one', (
+      tester,
+    ) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      AdsState ads() => container.read(adsProvider);
+
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().rotationCount, 0);
+
+      // The next ad arrives before this one's time is up.
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      container.read(adsProvider.notifier).setNextAdReady(true);
+
+      await tester.pump(const Duration(seconds: adMobDisplaySeconds + 1));
+      expect(ads().rotationCount, 1);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().countdown, greaterThanOrEqualTo(adMobDisplaySeconds - 1));
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+
+    testWidgets('the connect tap\'s ad never expects a next ad', (
+      tester,
+    ) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.disconnected,
+        ConnectionStatus.loading,
+      );
+      expect(strategy.nextAdExpected, isFalse);
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('the ad after a disconnect expects a next ad from its first '
+        'second, until fetching it fails', (tester) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      expect(strategy.nextAdExpected, isTrue);
+
+      // At the cue the next ad is fetched; here it fails (no requests in
+      // tests), so the label turns to closing.
+      await tester.pump(
+        const Duration(seconds: adMobDisplaySeconds - adMobPreloadLeadSeconds),
+      );
+      await tester.pump();
+      expect(strategy.nextAdExpected, isFalse);
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+
+    testWidgets('a connect tap stops the rotation', (tester) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      AdsState ads() => container.read(adsProvider);
+
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      container.read(adsProvider.notifier).setNextAdReady(true);
+
+      // The user taps connect: the ad carries on through the connection...
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.disconnected,
+        ConnectionStatus.loading,
+      );
+      expect(ads().nativeAdIsLoaded, isTrue);
+
+      // ...and when its time is up nothing new shows over the VPN.
+      await tester.pump(const Duration(seconds: adMobDisplaySeconds + 1));
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().rotationCount, 0);
+
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+  });
+}
