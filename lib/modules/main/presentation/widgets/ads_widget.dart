@@ -32,6 +32,7 @@ library;
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
 import 'package:defyx_vpn/shared/providers/premium_provider.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
@@ -39,6 +40,18 @@ import 'package:defyx_vpn/shared/providers/connection_state_provider.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
+/// The countdown text, decided when the ad appears so it does not flip
+/// halfway: an AdMob ad in the rotation after a disconnect that another one
+/// will replace says "Next ad"; the last one of the rotation, and every other
+/// ad, says "Closing". (Only if fetching the next ad fails does a "Next ad"
+/// turn into "Closing", as the box will then close.)
+String countdownLabel(AdsState state, {required bool nextAdExpected}) {
+  final nextAdFollows = nextAdExpected && state.rotationCount < maxAdRotations;
+  return nextAdFollows
+      ? "Next ad in ${state.countdown}s"
+      : "Closing in ${state.countdown}s";
+}
 
 /// Main ads widget - uses Strategy Pattern for ad loading
 class AdsWidget extends ConsumerStatefulWidget {
@@ -153,7 +166,11 @@ class _AdsWidgetState extends ConsumerState<AdsWidget> {
         ),
       ),
     );
-    final countdownText = "Closing in ${adsState.countdown}s";
+    final countdownText = countdownLabel(
+      adsState,
+      nextAdExpected:
+          activeStrategy is GoogleAdStrategy && activeStrategy.nextAdExpected,
+    );
 
     // Size is constrained by parent (main_screen.dart: 280.h x 336.w)
     if (activeStrategy is! InternalAdStrategy) {

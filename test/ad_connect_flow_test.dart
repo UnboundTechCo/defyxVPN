@@ -282,4 +282,133 @@ void main() {
       expect(ads().showCountdown, isFalse);
     });
   });
+
+  group('rotation after a disconnect', () {
+    Future<({ProviderContainer container, Ref ref, GoogleAdStrategy strategy})>
+    setUpStrategy() async {
+      final container = _container();
+      final ref = container.read(_refProvider);
+      final strategy = GoogleAdStrategy(
+        backgroundColor: const Color(0xFF19312F),
+        cornerRadius: 10,
+      );
+      addTearDown(strategy.dispose);
+      await strategy.initialize(ref); // Registers the countdown callbacks.
+      return (container: container, ref: ref, strategy: strategy);
+    }
+
+    void change(
+      GoogleAdStrategy strategy,
+      Ref ref,
+      ConnectionStatus from,
+      ConnectionStatus to,
+    ) => strategy.onConnectionStateChanged(
+      ref: ref,
+      previous: from,
+      current: to,
+      hasInitialized: true,
+      onRefreshNeeded: () {},
+    );
+
+    testWidgets('the ad shown after a disconnect rotates to the next one', (
+      tester,
+    ) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      AdsState ads() => container.read(adsProvider);
+
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().rotationCount, 0);
+
+      // The next ad arrives before this one's time is up.
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      container.read(adsProvider.notifier).setNextAdReady(true);
+
+      await tester.pump(const Duration(seconds: adMobDisplaySeconds + 1));
+      expect(ads().rotationCount, 1);
+      expect(ads().nativeAdIsLoaded, isTrue);
+      expect(ads().countdown, greaterThanOrEqualTo(adMobDisplaySeconds - 1));
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+
+    testWidgets('the connect tap\'s ad never expects a next ad', (
+      tester,
+    ) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.disconnected,
+        ConnectionStatus.loading,
+      );
+      expect(strategy.nextAdExpected, isFalse);
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1));
+    });
+
+    testWidgets('the ad after a disconnect expects a next ad from its first '
+        'second, until fetching it fails', (tester) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      expect(strategy.nextAdExpected, isTrue);
+
+      // At the cue the next ad is fetched; here it fails (no requests in
+      // tests), so the label turns to closing.
+      await tester.pump(
+        const Duration(seconds: adMobDisplaySeconds - adMobPreloadLeadSeconds),
+      );
+      await tester.pump();
+      expect(strategy.nextAdExpected, isFalse);
+
+      container.read(adsProvider.notifier).stopCountdownTimer();
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+
+    testWidgets('a connect tap stops the rotation', (tester) async {
+      final (:container, :ref, :strategy) = await setUpStrategy();
+      AdsState ads() => container.read(adsProvider);
+
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.connected,
+        ConnectionStatus.disconnected,
+      );
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      container.read(adsProvider.notifier).setNextAdReady(true);
+
+      // The user taps connect: the ad carries on through the connection...
+      change(
+        strategy,
+        ref,
+        ConnectionStatus.disconnected,
+        ConnectionStatus.loading,
+      );
+      expect(ads().nativeAdIsLoaded, isTrue);
+
+      // ...and when its time is up nothing new shows over the VPN.
+      await tester.pump(const Duration(seconds: adMobDisplaySeconds + 1));
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().rotationCount, 0);
+
+      await tester.pump(const Duration(seconds: 1)); // Deferred disposals.
+    });
+  });
 }

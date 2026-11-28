@@ -41,9 +41,13 @@ class AdHelper {
 ///   a fast connection doesn't cut it short, then hides.
 /// - No requests after the tap: once the tunnel is up AdMob's traffic leaves
 ///   through the VPN (AppProxy on Android, the tunnel on iOS). So no
-///   rotation either.
+///   rotation then.
 /// - Disconnecting removes it and shows another one, loaded then with the
-///   real IP. When that one's time is up, the next is loaded and held.
+///   real IP. That one rotates while the user stays disconnected: the next
+///   ad is fetched [adMobPreloadLeadSeconds] before its time is up and
+///   cross-faded in, up to [maxAdRotations] times; the countdown pauses
+///   while the ad is out of sight. A connect tap stops the rotation. When
+///   it ends, the next ad is loaded and held for the tap.
 ///
 /// Only where AdMob is on; see AdStrategyManager.
 class GoogleAdStrategy implements AdLoadingStrategy {
@@ -58,6 +62,15 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   // After a disconnect the next ad is shown as soon as it is ready, instead
   // of held for the connect tap.
   static bool _showAfterDisconnect = false;
+  // The ad on screen was shown after a disconnect (it may rotate), not for
+  // a connection.
+  static bool _onScreenAfterDisconnect = false;
+  // The next ad for a rotation, fetched shortly before the current one's
+  // time is up.
+  static NativeAd? _nextAd;
+  static DateTime? _nextAdLoadedAt;
+  // Fetching the next ad failed: the box closes when this one's time is up.
+  static bool _nextFetchFailed = false;
   // AdMob: show an ad within an hour of loading it.
   static const _maxHeldAge = Duration(minutes: 50);
 
@@ -98,10 +111,24 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     _shownNow = false;
     _shownThisConnection = false;
     _showAfterDisconnect = false;
+    _onScreenAfterDisconnect = false;
+    _nextFetchFailed = false;
+  }
+
+  /// Tests: [ad] as the next ad for a rotation.
+  @visibleForTesting
+  static void debugSetNextAd(NativeAd? ad) {
+    _nextAd = ad;
+    _nextAdLoadedAt = ad == null ? null : DateTime.now();
   }
 
   /// Whether an AdMob ad is on screen.
   bool get isShowingAd => _shownNow && _nativeAd != null;
+
+  /// Whether another AdMob ad will replace the one on screen when its time is
+  /// up (the rotation after a disconnect), as far as known now.
+  bool get nextAdExpected =>
+      _shownNow && _onScreenAfterDisconnect && !_nextFetchFailed;
 
   /// Whether an AdMob ad was shown for the current connection.
   bool get shownThisConnection => _shownThisConnection;
@@ -121,18 +148,88 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
   @override
   Future<void> initialize(Ref ref, {OnFallbackNeeded? onFallbackNeeded}) async {
+    // (Only created on Android/iOS; see AdStrategyManager.)
     if (_hasInitialized) return;
-    if (!(Platform.isAndroid || Platform.isIOS)) {
-      debugPrint('Google Ads only supported on Android/iOS');
-      return;
-    }
     _hasInitialized = true;
 
-    // The shown ad's countdown ends in here. (No rotation: it would need a
-    // request after the tap.)
+    // The shown ad's countdown ends in here, or rotates to the next ad.
     final adsNotifier = ref.read(adsProvider.notifier);
     _adsNotifier = adsNotifier;
     adsNotifier.setAdDisposalCallback(() => _onShownAdEnded(ref));
+    adsNotifier.setAdPreloadCallback(() => _loadNextForRotation(ref));
+    adsNotifier.setAdRotationCallback(() => _rotate(ref));
+  }
+
+  /// Rotation is for the ad shown after a disconnect, while the tunnel is
+  /// still down (so requests carry the real IP).
+  bool _canRotate(Ref ref) =>
+      _shownNow &&
+      _onScreenAfterDisconnect &&
+      ref.read(connectionStateProvider).status == ConnectionStatus.disconnected;
+
+  /// Fetches the next ad shortly before the current one's time is up.
+  void _loadNextForRotation(Ref ref) {
+    if (_disposed || _loadInFlight || !_canRotate(ref)) return;
+    _loadInFlight = true;
+    _loadAdInstance(
+      ref,
+      forRotation: true,
+    ).whenComplete(() => _loadInFlight = false).then((result) {
+      if (_disposed) return;
+      if (result.success && _nextAd != null) {
+        ref.read(adsProvider.notifier).setNextAdReady(true);
+      } else {
+        _nextFetchFailed = true; // The countdown now says it is closing.
+      }
+    });
+  }
+
+  /// The current ad's time is up and the next one is ready: cross-fade to
+  /// it. Not after a connect tap: then the next ad is kept, unseen, for
+  /// later, and the box empties.
+  void _rotate(Ref ref) {
+    final next = _nextAd;
+    final nextLoadedAt = _nextAdLoadedAt;
+    _nextAd = null;
+    _nextAdLoadedAt = null;
+    final notifier = ref.read(adsProvider.notifier);
+    notifier.setNextAdReady(false);
+
+    if (next == null || !_canRotate(ref)) {
+      _shownNow = false;
+      _onScreenAfterDisconnect = false;
+      notifier.stopCountdownTimer();
+      notifier.setAdLoaded(false);
+      notifier.resetRotationCount();
+      _releaseAd();
+      if (next != null) _holdAd(next, nextLoadedAt);
+      return;
+    }
+
+    debugPrint('Rotating to the next AdMob ad');
+    _nextFetchFailed = false;
+    _releaseAd(); // Disposed after the box's cross-fade.
+    _holdAd(next, nextLoadedAt);
+    notifier.incrementRotationCount();
+    notifier.setAdLoaded(true);
+    notifier.startCountdownTimer(seconds: adMobDisplaySeconds);
+  }
+
+  static void _holdAd(NativeAd ad, DateTime? loadedAt) {
+    _nativeAd = ad;
+    _nativeAdLoadedAt = loadedAt;
+    _nativeAdSeen = false;
+  }
+
+  static void _disposeNextAd() {
+    final ad = _nextAd;
+    _nextAd = null;
+    _nextAdLoadedAt = null;
+    try {
+      ad?.dispose();
+    } catch (e) {
+      debugPrint('Error disposing NativeAd: $e');
+    }
   }
 
   /// The shown ad's time is up: remove it, and load the next one if the
@@ -142,8 +239,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     // AdMob ad.
     if (!_shownNow) return;
     _shownNow = false;
+    _onScreenAfterDisconnect = false;
     debugPrint('AdMob ad time is up');
     _releaseAd();
+    _disposeNextAd();
     preload(ref);
   }
 
@@ -212,6 +311,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     }
     debugPrint('Showing the held AdMob ad ($moment)');
     _shownNow = true;
+    _onScreenAfterDisconnect = !forConnection;
+    _nextFetchFailed = false;
+    _disposeNextAd(); // A leftover from an earlier rotation, if any.
     if (forConnection) _shownThisConnection = true;
     final notifier = ref.read(adsProvider.notifier);
     notifier.resetRotationCount();
@@ -222,17 +324,23 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   /// Hides a shown ad and frees it.
   void _hide(Ref ref) {
     _shownNow = false;
+    _onScreenAfterDisconnect = false;
     final notifier = ref.read(adsProvider.notifier);
     notifier.stopCountdownTimer();
     notifier.setAdLoaded(false);
+    notifier.resetRotationCount();
     _releaseAd();
+    _disposeNextAd();
   }
 
   /// Loads an ad and holds it (does not show it).
   @override
   Future<AdLoadResult> loadAd({required Ref ref}) => _loadAdInstance(ref);
 
-  Future<AdLoadResult> _loadAdInstance(Ref ref) async {
+  Future<AdLoadResult> _loadAdInstance(
+    Ref ref, {
+    bool forRotation = false,
+  }) async {
     const logPrefix = '[LOAD]';
 
     // Premium users never see ads (nor users whose status is not known yet);
@@ -327,7 +435,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       // Analytics
       final analytics = FirebaseAnalyticsService();
       await analytics.logEvent(
-        name: 'ad_load_attempt',
+        name: forRotation ? 'ad_preload_attempt' : 'ad_load_attempt',
         parameters: {
           'rotation_position': ref.read(adsProvider).rotationCount.toString(),
         },
@@ -375,14 +483,18 @@ class GoogleAdStrategy implements AdLoadingStrategy {
           onAdLoaded: (ad) {
             debugPrint('$logPrefix Ad loaded successfully');
 
-            // Hold it, unseen, for the connect tap.
-            _nativeAd = ad as NativeAd;
-            _nativeAdLoadedAt = DateTime.now();
-            _nativeAdSeen = false;
+            if (forRotation) {
+              _disposeNextAd();
+              _nextAd = ad as NativeAd;
+              _nextAdLoadedAt = DateTime.now();
+            } else {
+              // Hold it, unseen, for the connect tap.
+              _holdAd(ad as NativeAd, DateTime.now());
+            }
 
             // Log success
             analytics.logEvent(
-              name: 'ad_load_success',
+              name: forRotation ? 'ad_preload_success' : 'ad_load_success',
               parameters: {
                 'rotation_position': ref
                     .read(adsProvider)
@@ -403,7 +515,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
 
             // Log failure
             analytics.logEvent(
-              name: 'ad_load_failure',
+              name: forRotation ? 'ad_preload_failure' : 'ad_load_failure',
               parameters: {
                 'error_code': error.code.toString(),
                 'error_message': error.message,
@@ -431,7 +543,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               name: 'admob_ad_click',
               parameters: {
                 'rotation_position': rotationPosition.toString(),
-                'shown_on_connect': 'true',
+                // At the connect tap, or after a disconnect.
+                'shown_at': _onScreenAfterDisconnect ? 'disconnect' : 'connect',
               },
             );
           },
@@ -445,7 +558,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
               name: 'admob_ad_impression',
               parameters: {
                 'rotation_position': rotationPosition.toString(),
-                'shown_on_connect': 'true',
+                // At the connect tap, or after a disconnect.
+                'shown_at': _onScreenAfterDisconnect ? 'disconnect' : 'connect',
                 'ip_consistent': 'true',
               },
             );
@@ -572,8 +686,9 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       _retryTimer?.cancel();
       if (_isShowing(ref)) {
         // The ad from after the last disconnect is still up: it carries on
-        // through this connection.
+        // through this connection, and stops rotating.
         _showAfterDisconnect = false;
+        _onScreenAfterDisconnect = false;
         _shownThisConnection = true;
         return;
       }
@@ -611,6 +726,8 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     // The callback holds this instance's Ref, which is dead from here on. A
     // replacement strategy registers its own.
     _adsNotifier?.clearAdDisposalCallback();
+    _adsNotifier?.clearAdPreloadCallback();
+    _adsNotifier?.clearAdRotationCallback();
     // Keep static _nativeAd alive for reuse
   }
 }
