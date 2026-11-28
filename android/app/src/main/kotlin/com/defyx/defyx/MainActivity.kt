@@ -28,6 +28,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugins.googlemobileads.GoogleMobileAdsPlugin
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.*
@@ -58,6 +59,13 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
+        // The AdMob native card on the main screen.
+        GoogleMobileAdsPlugin.registerNativeAdFactory(
+                flutterEngine,
+                DefyxNativeAdFactory.FACTORY_ID,
+                DefyxNativeAdFactory(this),
+        )
 
         DefyxVpnService.setVpnStatusListener(vpnStatusListener)
         vibrationPlugin = VibrationPlugin(applicationContext)
@@ -132,6 +140,14 @@ class MainActivity : FlutterActivity() {
         grantNotificationPermission()
         requestIgnoreBatteryOptimizations()
         startService(intent)
+    }
+
+    override fun cleanUpFlutterEngine(flutterEngine: FlutterEngine) {
+        GoogleMobileAdsPlugin.unregisterNativeAdFactory(
+                flutterEngine,
+                DefyxNativeAdFactory.FACTORY_ID,
+        )
+        super.cleanUpFlutterEngine(flutterEngine)
     }
 
     override fun onDestroy() {

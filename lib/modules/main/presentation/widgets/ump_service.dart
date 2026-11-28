@@ -13,21 +13,25 @@ class UmpService {
   ///
   /// The caller (AdReadinessCoordinator) determines whether this should run
   /// based on ATT status and platform. This method just executes the UMP flow.
-  Future<void> requestConsentWithATT({
+  /// Returns whether a consent form was shown.
+  Future<bool> requestConsentWithATT({
     required WidgetRef ref,
     required VoidCallback onDone,
   }) async {
     debugPrint('Starting UMP consent flow...');
-    await requestConsent(onDone: onDone);
+    return requestConsent(onDone: onDone);
   }
 
-  Future<void> requestConsent({required VoidCallback onDone}) async {
-    final completer = Completer<void>();
+  /// Returns whether a consent form was shown (the user answered again, or
+  /// dismissed it).
+  Future<bool> requestConsent({required VoidCallback onDone}) async {
+    final completer = Completer<bool>();
+    var formShown = false;
 
     void finish() {
       if (!completer.isCompleted) {
         onDone();
-        completer.complete();
+        completer.complete(formShown);
       }
     }
 
@@ -40,7 +44,11 @@ class UmpService {
     debugPrint('Requesting UMP consent info update...');
     consentInfo.requestConsentInfoUpdate(
       params,
-      () => _onConsentInfoSuccess(consentInfo, finish),
+      () => _onConsentInfoSuccess(
+        consentInfo,
+        finish,
+        onFormShown: () => formShown = true,
+      ),
       (FormError error) => _onConsentInfoFailure(error, finish),
     );
 
@@ -49,8 +57,9 @@ class UmpService {
 
   void _onConsentInfoSuccess(
     ConsentInformation consentInfo,
-    VoidCallback onDone,
-  ) async {
+    VoidCallback onDone, {
+    required VoidCallback onFormShown,
+  }) async {
     try {
       final status = await consentInfo.getConsentStatus();
       debugPrint('📋 UMP consent status: ${status.name}');
@@ -58,7 +67,7 @@ class UmpService {
       if (await consentInfo.isConsentFormAvailable() &&
           status == ConsentStatus.required) {
         ConsentForm.loadConsentForm(
-          (ConsentForm form) => _onFormLoaded(form, onDone),
+          (ConsentForm form) => _onFormLoaded(form, onDone, onFormShown),
           (FormError error) => _onFormLoadFailed(error, onDone),
         );
       } else {
@@ -77,8 +86,13 @@ class UmpService {
     onDone();
   }
 
-  void _onFormLoaded(ConsentForm form, VoidCallback onDone) {
+  void _onFormLoaded(
+    ConsentForm form,
+    VoidCallback onDone,
+    VoidCallback onFormShown,
+  ) {
     debugPrint('UMP consent form loaded, showing to user...');
+    onFormShown();
     form.show((FormError? error) => _onFormDismissed(error, onDone));
   }
 

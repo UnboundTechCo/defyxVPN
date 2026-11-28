@@ -73,6 +73,10 @@ class GoogleAdStrategy implements AdLoadingStrategy {
   static bool _nextFetchFailed = false;
   // AdMob: show an ad within an hour of loading it.
   static const _maxHeldAge = Duration(minutes: 50);
+  // Raised when the consent the ads were requested with no longer holds: a
+  // load started before that is thrown away when it arrives.
+  static int _consentEpoch = 0;
+  static const _consentChanged = 'CONSENT_CHANGED';
 
   bool _hasInitialized = false;
   bool _disposed = false;
@@ -280,6 +284,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       result,
     ) {
       if (_disposed) return;
+      if (result.errorCode == _consentChanged) {
+        // Thrown away; load again if the consent allows it now (otherwise
+        // the readiness check refuses without a request).
+        preload(ref);
+        return;
+      }
       if (result.success) {
         _retryAttempt = 0;
         final status = ref.read(connectionStateProvider).status;
@@ -296,6 +306,23 @@ class GoogleAdStrategy implements AdLoadingStrategy {
       }
       _scheduleRetry(ref, result);
     });
+  }
+
+  /// The consent the ads were requested with no longer holds (this launch's
+  /// consent refresh withdrew it, or the user answered a form again): drop
+  /// the shown, held and next ads, and throw away a load still on its way.
+  /// Loading resumes once the consent allows it again (see App).
+  void dropAds(Ref ref) {
+    _consentEpoch++;
+    _retryTimer?.cancel();
+    _retryAttempt = 0;
+    debugPrint('AdMob ads dropped: the consent changed');
+    if (_shownNow) {
+      _hide(ref);
+    } else {
+      _releaseAd();
+      _disposeNextAd();
+    }
   }
 
   /// Shows the held ad, if a fresh one is ready: for the connection being
@@ -342,6 +369,7 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     bool forRotation = false,
   }) async {
     const logPrefix = '[LOAD]';
+    final epoch = _consentEpoch;
 
     // Premium users never see ads (nor users whose status is not known yet);
     // a request would only be thrown away.
@@ -441,46 +469,37 @@ class GoogleAdStrategy implements AdLoadingStrategy {
         },
       );
 
-      // Create template style
-      final templateStyle = NativeTemplateStyle(
-        templateType: TemplateType.medium,
-        mainBackgroundColor: backgroundColor,
-        cornerRadius: cornerRadius,
-        // The card is dark: light text, and the brand yellow for the button
-        // so it stands out. (Black and dark grey text were near invisible.)
-        callToActionTextStyle: NativeTemplateTextStyle(
-          textColor: const Color(0xFF19312F),
-          backgroundColor: const Color(0xFFFFC927),
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
-        ),
-        primaryTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.white,
-          backgroundColor: Colors.transparent,
-          style: NativeTemplateFontStyle.bold,
-          size: 16.0,
-        ),
-        secondaryTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.white70,
-          backgroundColor: Colors.transparent,
-          style: NativeTemplateFontStyle.normal,
-          size: 14.0,
-        ),
-        tertiaryTextStyle: NativeTemplateTextStyle(
-          textColor: Colors.white60,
-          backgroundColor: Colors.transparent,
-          style: NativeTemplateFontStyle.normal,
-          size: 12.0,
-        ),
-      );
-
       // Create ad with listener
       final completer = Completer<AdLoadResult>();
+
+      // The consent changed during the checks above.
+      if (epoch != _consentEpoch) {
+        return AdLoadResult.failure(
+          errorCode: _consentChanged,
+          errorMessage: 'Consent changed before the request',
+        );
+      }
 
       final ad = NativeAd(
         adUnitId: adUnitId,
         listener: NativeAdListener(
           onAdLoaded: (ad) {
+            // Requested under a consent that no longer holds.
+            if (epoch != _consentEpoch) {
+              debugPrint(
+                '$logPrefix Ad loaded after a consent change - dropped',
+              );
+              ad.dispose();
+              if (!completer.isCompleted) {
+                completer.complete(
+                  AdLoadResult.failure(
+                    errorCode: _consentChanged,
+                    errorMessage: 'Consent changed during the request',
+                  ),
+                );
+              }
+              return;
+            }
             debugPrint('$logPrefix Ad loaded successfully');
 
             if (forRotation) {
@@ -613,12 +632,12 @@ class GoogleAdStrategy implements AdLoadingStrategy {
                 .getAdRequestExtras(),
           },
         ),
-        // iOS: our own layout (DefyxNativeAdFactory in AppDelegate.swift),
-        // since Google's medium template is too tall for the box. Android:
-        // the medium template, its layout overridden to fit the box
-        // (android/app/src/main/res/layout/gnt_medium_template_view.xml).
-        factoryId: Platform.isIOS ? 'defyxNative' : null,
-        nativeTemplateStyle: Platform.isIOS ? null : templateStyle,
+        // Our own card on both platforms (DefyxNativeAdFactory: Android's in
+        // DefyxNativeAdFactory.kt, iOS's in AppDelegate.swift). Google's
+        // medium template is too tall for the box; ours fills it, and turns
+        // side by side in a short box to keep the media at AdMob's minimum
+        // size.
+        factoryId: 'defyxNative',
       );
 
       // Load ad
@@ -649,8 +668,31 @@ class GoogleAdStrategy implements AdLoadingStrategy {
     }
   }
 
+  /// Whether a failed load is worth trying again.
+  ///
+  /// Not the internal error "Retrieve required value in native ad response
+  /// failed": the SDK fails to fetch one of Google's own assets for this
+  /// device (the AdChoices icon, missing for some screen densities), so
+  /// every retry fails the same way and only adds a request.
+  @visibleForTesting
+  static bool isRetryable(AdLoadResult result) {
+    if (!_retryableErrorCodes.contains(result.errorCode)) return false;
+    final message = (result.errorMessage ?? '').toLowerCase();
+    if (result.errorCode == '0' &&
+        message.contains('retrieve required value')) {
+      return false;
+    }
+    return true;
+  }
+
   void _scheduleRetry(Ref ref, AdLoadResult result) {
-    if (!_retryableErrorCodes.contains(result.errorCode)) return;
+    if (!isRetryable(result)) {
+      debugPrint(
+        'AdMob load failed (${result.errorCode}: ${result.errorMessage}) - '
+        'not retried',
+      );
+      return;
+    }
     if (_retryAttempt >= _retryDelays.length) {
       debugPrint('AdMob load failed (${result.errorCode}) - no retries left');
       return;

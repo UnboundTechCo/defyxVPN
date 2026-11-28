@@ -325,6 +325,10 @@ class AdStrategyManager {
     }
   }
 
+  /// The consent the AdMob ads were requested with no longer holds: drop
+  /// them, shown or held.
+  void dropGoogleAds() => _googleStrategy?.dropAds(_ref);
+
   /// Makes sure an AdMob ad is loaded for the next connect tap (after
   /// consent completes, when ads become allowed, or when the user comes back
   /// to the main screen). Loads only while the tunnel is down.

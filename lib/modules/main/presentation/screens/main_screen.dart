@@ -341,9 +341,9 @@ class _MainScreenState extends ConsumerState<MainScreen> {
         8.h;
     final fullHeight = 280.h;
     // Shrink first: the AdMob card appears just as the user taps the shield
-    // (to connect), so it shouldn't sit over the shield. Both AdMob layouts
-    // (Android's template override, iOS's DefyxNativeAdFactory) and the
-    // in-house pictures fit any height.
+    // (to connect), so it shouldn't sit over the shield. The AdMob card
+    // (DefyxNativeAdFactory, Android and iOS) and the in-house pictures fit
+    // any height.
     final height = (bottomLimit - preferredTop).clamp(200.h, fullHeight);
     // Rise to clear the nav bar, but never over more than the bottom quarter
     // of the shield.

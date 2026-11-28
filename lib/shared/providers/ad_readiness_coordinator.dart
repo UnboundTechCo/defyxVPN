@@ -26,8 +26,19 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   // ignore: unused_field
   final UmpConsentCacheService? _umpCache;
 
-  AdReadinessCoordinator([this._umpCache]) : super(AdReadinessState.initial()) {
+  // Sets the AdMob SDK up (MobileAds.initialize); replaceable in tests.
+  final Future<void> Function() _initializeSdk;
+
+  AdReadinessCoordinator([
+    this._umpCache,
+    Future<void> Function()? initializeSdk,
+  ]) : _initializeSdk = initializeSdk ?? _initializeMobileAds,
+       super(AdReadinessState.initial()) {
     _loadPersistedState();
+  }
+
+  static Future<void> _initializeMobileAds() async {
+    await MobileAds.instance.initialize();
   }
 
   // === State Loading & Persistence ===
@@ -194,14 +205,17 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
   /// Main initialization flow: UMP -> ATT -> AdMob, once per launch.
   /// Called when canInitializeAdMob becomes true, or when the AdMob decision
   /// arrives; a call while the flow is running joins it.
+  ///
+  /// [onRunUMP] runs the consent refresh and returns whether a consent form
+  /// was shown.
   Future<void> initializeAdFlow({
-    required Future<void> Function(bool shouldRequestUMP) onRunUMP,
+    required Future<bool> Function(bool shouldRequestUMP) onRunUMP,
   }) {
     return _adFlow ??= _runAdFlow(onRunUMP).whenComplete(() => _adFlow = null);
   }
 
   Future<void> _runAdFlow(
-    Future<void> Function(bool shouldRequestUMP) onRunUMP,
+    Future<bool> Function(bool shouldRequestUMP) onRunUMP,
   ) async {
     if (!state.canInitializeAdMob) {
       debugPrint('Cannot initialize AdMob yet: $state');
@@ -228,7 +242,20 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
         '🔍 Should request UMP: $shouldRequestUMP (ATT: ${state.attStatus.name})',
       );
 
-      await onRunUMP(shouldRequestUMP);
+      // Consent the user gave in an earlier session, as UMP itself reports
+      // it, already allows ad requests: set AdMob up now, so the first ad
+      // loads while the consent refresh below runs (Google's recommended
+      // start). Never on a fresh install (UMP has no answer yet) and never
+      // before the iOS tracking prompt was answered. If the refresh
+      // withdraws the permission or shows a form, whatever loaded meanwhile
+      // is dropped below.
+      Future<void>? earlyStart;
+      if (shouldRequestUMP && await _consentFromEarlierSession()) {
+        debugPrint('UMP: consent from an earlier session - AdMob starts now');
+        earlyStart = markConsentComplete();
+      }
+
+      final formShown = await onRunUMP(shouldRequestUMP);
 
       // Google's rule: request ads only when UMP says so. False when consent
       // is required but was not collected (e.g. the form failed to load);
@@ -236,13 +263,28 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       if (shouldRequestUMP &&
           !await ConsentInformation.instance.canRequestAds()) {
         debugPrint('UMP: ads may not be requested yet - AdMob stays off');
+        if (earlyStart != null) {
+          await earlyStart;
+          _revokeConsent();
+        }
         state = state.copyWith(lastError: 'UMP consent not obtained');
         await _persistState();
         return;
       }
 
-      // Step 2: Transition delay to ensure native UMP view controller dismiss animation finishes cleanly
-      await Future.delayed(const Duration(milliseconds: 500));
+      // A form was shown, so the user's new answer governs: ads loaded with
+      // the earlier one are dropped and loaded again with this one.
+      if (earlyStart != null && formShown) {
+        await earlyStart;
+        debugPrint('UMP: consent answered again - reloading AdMob ads');
+        _revokeConsent();
+      }
+
+      // Step 2: iOS shows the tracking prompt next; let the consent form's
+      // dismiss animation finish first.
+      if (Platform.isIOS && formShown) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
 
       // Step 3: ATT permission request SECOND (iOS only)
       if (Platform.isIOS) {
@@ -266,8 +308,36 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
     }
   }
 
-  /// Mark consent flow as complete and initialize AdMob SDK
-  Future<void> markConsentComplete() async {
+  /// UMP's own answer from an earlier session, before this launch's refresh:
+  /// whether it allows ad requests (consent obtained, or not required where
+  /// the user is). On iOS also the tracking prompt must have been answered.
+  Future<bool> _consentFromEarlierSession() async {
+    if (Platform.isIOS && state.attStatus == TrackingStatus.notDetermined) {
+      return false;
+    }
+    try {
+      return await ConsentInformation.instance.canRequestAds();
+    } catch (e) {
+      debugPrint('UMP: earlier consent unknown ($e)');
+      return false;
+    }
+  }
+
+  /// Ads may no longer be requested on the consent they started with: ad
+  /// loading stops until the flow completes again, and the App drops the
+  /// ads loaded so far.
+  void _revokeConsent() {
+    state = state.copyWith(consentComplete: false, adMobInitialized: false);
+  }
+
+  Future<void>? _completing;
+
+  /// Mark consent flow as complete and initialize AdMob SDK. Calls while
+  /// one runs join it.
+  Future<void> markConsentComplete() =>
+      _completing ??= _completeConsent().whenComplete(() => _completing = null);
+
+  Future<void> _completeConsent() async {
     if (state.consentComplete) {
       debugPrint('ℹ Consent already marked complete');
       return;
@@ -277,7 +347,7 @@ class AdReadinessCoordinator extends StateNotifier<AdReadinessState> {
       debugPrint('Marking consent complete - Initializing AdMob SDK...');
 
       // Initialize AdMob SDK
-      await MobileAds.instance.initialize();
+      await _initializeSdk();
 
       state = state.copyWith(
         consentComplete: true,

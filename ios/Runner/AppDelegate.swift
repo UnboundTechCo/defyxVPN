@@ -188,44 +188,77 @@ class CrashStreamHandler: NSObject, FlutterStreamHandler {
 }
 
 /// AdMob native card for the main screen's ad box (Dart factoryId
-/// "defyxNative").
+/// "defyxNative"; the Android twin is DefyxNativeAdFactory.kt).
 ///
 /// Google's medium template does not fit the box: its 16:9 media plus the
 /// header row and the button need more height than the box has, so the
-/// button was cut off. This layout fills whatever height it is given; the
-/// media takes what the header row and the button leave.
+/// button was cut off. This card fills whatever size it is given; see
+/// DefyxNativeAdView.
 final class DefyxNativeAdFactory: NSObject, FLTNativeAdFactory {
   static let factoryId = "defyxNative"
-
-  private static let background = UIColor(
-    red: 0x19 / 255.0, green: 0x31 / 255.0, blue: 0x2F / 255.0, alpha: 1)
-  private static let brandYellow = UIColor(
-    red: 0xFF / 255.0, green: 0xC9 / 255.0, blue: 0x27 / 255.0, alpha: 1)
 
   func createNativeAd(
     _ nativeAd: NativeAd,
     customOptions: [AnyHashable: Any]? = nil
   ) -> NativeAdView? {
-    let adView = NativeAdView()
-    adView.backgroundColor = Self.background
+    let adView = DefyxNativeAdView(frame: .zero)
+    adView.bind(nativeAd)
+    return adView
+  }
+}
 
-    let media = MediaView()
+/// Tall enough, the media sits on top with the icon and headline row and
+/// the button below it. In a shorter box that would squeeze the media under
+/// AdMob's 120x120pt minimum, so there the media is a square on the left
+/// with the headline, attribution and button beside it.
+final class DefyxNativeAdView: NativeAdView {
+  private static let background = UIColor(
+    red: 0x19 / 255.0, green: 0x31 / 255.0, blue: 0x2F / 255.0, alpha: 1)
+  private static let brandYellow = UIColor(
+    red: 0xFF / 255.0, green: 0xC9 / 255.0, blue: 0x27 / 255.0, alpha: 1)
+
+  private static let inset: CGFloat = 5
+  // The vertical arrangement keeps the media at 120pt from this height on:
+  // 120 + 6 + 40 (icon row) + 6 + 40 (button) + 2 x 5.
+  private static let verticalMinHeight: CGFloat = 222
+
+  private let media = MediaView()
+  private let icon = UIImageView()
+  private let headline = UILabel()
+  private let badge = UILabel()
+  private let secondary = UILabel()
+  private let cta = UIButton(type: .custom)
+
+  private var verticalConstraints: [NSLayoutConstraint] = []
+  private var compactConstraints: [NSLayoutConstraint] = []
+  private var mediaWidth: NSLayoutConstraint!
+  private var mediaHeight: NSLayoutConstraint!
+  private var isCompact: Bool?
+
+  override init(frame: CGRect) {
+    super.init(frame: frame)
+    build()
+  }
+
+  required init?(coder: NSCoder) {
+    super.init(coder: coder)
+    build()
+  }
+
+  private func build() {
+    backgroundColor = Self.background
+
     media.contentMode = .scaleAspectFit
-    media.mediaContent = nativeAd.mediaContent
 
-    let icon = UIImageView(image: nativeAd.icon?.image)
     icon.contentMode = .scaleAspectFit
     icon.layer.cornerRadius = 6
     icon.clipsToBounds = true
 
-    let headline = UILabel()
-    headline.text = nativeAd.headline
     headline.font = .boldSystemFont(ofSize: 15)
     headline.textColor = .white
     headline.lineBreakMode = .byTruncatingTail
 
     // Ad attribution, required on native ads.
-    let badge = UILabel()
     badge.text = "Ad"
     badge.font = .boldSystemFont(ofSize: 10)
     badge.textColor = Self.background
@@ -234,53 +267,55 @@ final class DefyxNativeAdFactory: NSObject, FLTNativeAdFactory {
     badge.layer.cornerRadius = 3
     badge.clipsToBounds = true
 
-    let secondary = UILabel()
     secondary.font = .systemFont(ofSize: 12)
     secondary.textColor = UIColor.white.withAlphaComponent(0.7)
     secondary.lineBreakMode = .byTruncatingTail
-    if let advertiser = nativeAd.advertiser, !advertiser.isEmpty {
-      secondary.text = advertiser
-      adView.advertiserView = secondary
-    } else if let store = nativeAd.store, !store.isEmpty {
-      secondary.text = store
-      adView.storeView = secondary
-    }
 
-    let cta = UIButton(type: .custom)
-    cta.setTitle(nativeAd.callToAction, for: .normal)
     cta.setTitleColor(Self.background, for: .normal)
     cta.titleLabel?.font = .boldSystemFont(ofSize: 16)
+    cta.titleLabel?.lineBreakMode = .byTruncatingTail
     cta.backgroundColor = Self.brandYellow
     cta.layer.cornerRadius = 8
-    cta.isHidden = nativeAd.callToAction == nil
     // The ad view handles the tap; the button must not swallow it.
     cta.isUserInteractionEnabled = false
 
     for view in [media, icon, headline, badge, secondary, cta] as [UIView] {
       view.translatesAutoresizingMaskIntoConstraints = false
-      adView.addSubview(view)
+      addSubview(view)
     }
+  }
 
-    let inset: CGFloat = 5
-    let iconSize: CGFloat = nativeAd.icon == nil ? 0 : 40
+  func bind(_ nativeAd: NativeAd) {
+    media.mediaContent = nativeAd.mediaContent
+    icon.image = nativeAd.icon?.image
+    headline.text = nativeAd.headline
+    if let advertiser = nativeAd.advertiser, !advertiser.isEmpty {
+      secondary.text = advertiser
+      advertiserView = secondary
+    } else if let store = nativeAd.store, !store.isEmpty {
+      secondary.text = store
+      storeView = secondary
+    }
+    cta.setTitle(nativeAd.callToAction, for: .normal)
+    cta.isHidden = nativeAd.callToAction == nil
+
+    makeConstraints(hasIcon: nativeAd.icon != nil)
+
+    mediaView = media
+    iconView = icon
+    headlineView = headline
+    callToActionView = cta
+    self.nativeAd = nativeAd
+  }
+
+  private func makeConstraints(hasIcon: Bool) {
+    let inset = Self.inset
+    let iconSize: CGFloat = hasIcon ? 40 : 0
+
+    // In both arrangements.
     NSLayoutConstraint.activate([
-      media.topAnchor.constraint(equalTo: adView.topAnchor, constant: inset),
-      media.leadingAnchor.constraint(
-        equalTo: adView.leadingAnchor, constant: inset),
-      media.trailingAnchor.constraint(
-        equalTo: adView.trailingAnchor, constant: -inset),
-
-      icon.topAnchor.constraint(equalTo: media.bottomAnchor, constant: 6),
-      icon.leadingAnchor.constraint(
-        equalTo: adView.leadingAnchor, constant: inset),
-      icon.widthAnchor.constraint(equalToConstant: iconSize),
-      icon.heightAnchor.constraint(equalToConstant: 40),
-
-      headline.topAnchor.constraint(equalTo: icon.topAnchor),
-      headline.leadingAnchor.constraint(
-        equalTo: icon.trailingAnchor, constant: iconSize == 0 ? 0 : 8),
       headline.trailingAnchor.constraint(
-        equalTo: adView.trailingAnchor, constant: -inset),
+        equalTo: trailingAnchor, constant: -inset),
 
       badge.topAnchor.constraint(equalTo: headline.bottomAnchor, constant: 4),
       badge.leadingAnchor.constraint(equalTo: headline.leadingAnchor),
@@ -291,23 +326,81 @@ final class DefyxNativeAdFactory: NSObject, FLTNativeAdFactory {
       secondary.leadingAnchor.constraint(
         equalTo: badge.trailingAnchor, constant: 6),
       secondary.trailingAnchor.constraint(
-        lessThanOrEqualTo: adView.trailingAnchor, constant: -inset),
+        lessThanOrEqualTo: trailingAnchor, constant: -inset),
 
-      cta.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 6),
-      cta.leadingAnchor.constraint(
-        equalTo: adView.leadingAnchor, constant: inset),
-      cta.trailingAnchor.constraint(
-        equalTo: adView.trailingAnchor, constant: -inset),
+      cta.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -inset),
       cta.heightAnchor.constraint(equalToConstant: 40),
-      cta.bottomAnchor.constraint(
-        equalTo: adView.bottomAnchor, constant: -inset),
+      cta.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -inset),
     ])
 
-    adView.mediaView = media
-    adView.iconView = icon
-    adView.headlineView = headline
-    adView.callToActionView = cta
-    adView.nativeAd = nativeAd
-    return adView
+    // Media on top, then the icon and headline row, then the button.
+    verticalConstraints = [
+      media.topAnchor.constraint(equalTo: topAnchor, constant: inset),
+      media.leadingAnchor.constraint(equalTo: leadingAnchor, constant: inset),
+      media.trailingAnchor.constraint(
+        equalTo: trailingAnchor, constant: -inset),
+
+      icon.topAnchor.constraint(equalTo: media.bottomAnchor, constant: 6),
+      icon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: inset),
+      icon.widthAnchor.constraint(equalToConstant: iconSize),
+      icon.heightAnchor.constraint(equalToConstant: 40),
+
+      headline.topAnchor.constraint(equalTo: icon.topAnchor),
+      headline.leadingAnchor.constraint(
+        equalTo: icon.trailingAnchor, constant: hasIcon ? 8 : 0),
+
+      cta.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 6),
+      cta.leadingAnchor.constraint(equalTo: leadingAnchor, constant: inset),
+    ]
+
+    // The media as a square on the left, as large as the height allows (at
+    // most half the width; set in layoutSubviews); beside it the headline
+    // (two lines), the attribution and the button. No room for the icon.
+    mediaWidth = media.widthAnchor.constraint(equalToConstant: 0)
+    mediaHeight = media.heightAnchor.constraint(equalToConstant: 0)
+    compactConstraints = [
+      media.leadingAnchor.constraint(equalTo: leadingAnchor, constant: inset),
+      media.centerYAnchor.constraint(equalTo: centerYAnchor),
+      mediaWidth,
+      mediaHeight,
+
+      icon.topAnchor.constraint(equalTo: media.topAnchor),
+      icon.leadingAnchor.constraint(equalTo: media.trailingAnchor),
+      icon.widthAnchor.constraint(equalToConstant: 0),
+      icon.heightAnchor.constraint(equalToConstant: 0),
+
+      headline.topAnchor.constraint(equalTo: topAnchor, constant: inset),
+      headline.leadingAnchor.constraint(
+        equalTo: media.trailingAnchor, constant: 10),
+
+      cta.leadingAnchor.constraint(
+        equalTo: media.trailingAnchor, constant: 10),
+    ]
+  }
+
+  override func layoutSubviews() {
+    // Not bound to an ad yet.
+    guard !verticalConstraints.isEmpty else {
+      super.layoutSubviews()
+      return
+    }
+    let compact = bounds.height < Self.verticalMinHeight
+    if compact {
+      let side = max(
+        0,
+        min(
+          bounds.height - 2 * Self.inset,
+          (bounds.width - 2 * Self.inset) / 2))
+      mediaWidth?.constant = side
+      mediaHeight?.constant = side
+    }
+    if compact != isCompact {
+      isCompact = compact
+      NSLayoutConstraint.deactivate(compact ? verticalConstraints : compactConstraints)
+      NSLayoutConstraint.activate(compact ? compactConstraints : verticalConstraints)
+      headline.numberOfLines = compact ? 2 : 1
+      icon.isHidden = compact
+    }
+    super.layoutSubviews()
   }
 }

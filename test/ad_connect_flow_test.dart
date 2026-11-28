@@ -3,6 +3,7 @@
 
 import 'package:defyx_vpn/app/ad_director_provider.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/ads_state.dart';
+import 'package:defyx_vpn/modules/main/presentation/widgets/ads/models/ad_load_result.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/google_ad_strategy.dart';
 import 'package:defyx_vpn/modules/main/presentation/widgets/ads/strategy/internal_ad_strategy.dart';
 import 'package:defyx_vpn/shared/providers/connection_state_provider.dart';
@@ -281,6 +282,54 @@ void main() {
       expect(ads().nativeAdIsLoaded, isFalse);
       expect(ads().showCountdown, isFalse);
     });
+
+    test('a consent change drops the held ad', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      strategy.dropAds(container.read(_refProvider));
+
+      // Nothing left to show at the tap.
+      change(ConnectionStatus.disconnected, ConnectionStatus.loading);
+      expect(ads().nativeAdIsLoaded, isFalse);
+    });
+
+    test('a consent change removes the ad on screen', () {
+      GoogleAdStrategy.debugHoldAd(_ad());
+      change(ConnectionStatus.connected, ConnectionStatus.disconnected);
+      GoogleAdStrategy.debugSetNextAd(_ad());
+      expect(ads().nativeAdIsLoaded, isTrue);
+
+      strategy.dropAds(container.read(_refProvider));
+      expect(ads().nativeAdIsLoaded, isFalse);
+      expect(ads().showCountdown, isFalse);
+      expect(strategy.isShowingAd, isFalse);
+    });
+  });
+
+  test('a failed load is retried only when another try can succeed', () {
+    AdLoadResult failure(String code, String message) =>
+        AdLoadResult.failure(errorCode: code, errorMessage: message);
+
+    expect(GoogleAdStrategy.isRetryable(failure('3', 'No fill.')), isTrue);
+    expect(GoogleAdStrategy.isRetryable(failure('2', 'Network error')), isTrue);
+    expect(
+      GoogleAdStrategy.isRetryable(failure('0', 'Internal error.')),
+      isTrue,
+    );
+    // Google's own asset is missing for this device: fails every time.
+    expect(
+      GoogleAdStrategy.isRetryable(
+        failure('0', 'Retrieve required value in native ad response failed.'),
+      ),
+      isFalse,
+    );
+    expect(
+      GoogleAdStrategy.isRetryable(failure('1', 'Invalid request')),
+      isFalse,
+    );
+    expect(
+      GoogleAdStrategy.isRetryable(failure('PREMIUM', 'No ads for premium')),
+      isFalse,
+    );
   });
 
   group('rotation after a disconnect', () {

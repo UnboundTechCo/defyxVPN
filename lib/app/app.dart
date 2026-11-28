@@ -78,6 +78,13 @@ class _AppState extends ConsumerState<App> {
         _maybeStartAdFlow();
       }
 
+      // The consent the loaded AdMob ads were requested with no longer holds
+      // (the launch's consent refresh withdrew it, or a form was answered
+      // again): drop them, shown or held. Loads again once allowed.
+      if (previous.canLoadAds && !next.canLoadAds) {
+        ref.read(adStrategyManagerProvider)?.dropGoogleAds();
+      }
+
       // When consent completes and we're disconnected, retry ad load
       if (next.canLoadAds && !previous.canLoadAds) {
         final connectionState = ref.read(conn.connectionStateProvider).status;
@@ -147,10 +154,10 @@ class _AppState extends ConsumerState<App> {
     final umpService = ref.read(umpServiceProvider);
 
     coordinator.initializeAdFlow(
+      // Returns whether a consent form was shown.
       onRunUMP: (shouldRequestUMP) async {
-        if (shouldRequestUMP) {
-          await umpService.requestConsentWithATT(ref: ref, onDone: () {});
-        }
+        if (!shouldRequestUMP) return false;
+        return umpService.requestConsentWithATT(ref: ref, onDone: () {});
       },
     );
   }
